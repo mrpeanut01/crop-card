@@ -688,6 +688,34 @@
     {
       "pluginId": "glyphosate-generic",
       "reason": "Generic glyphosate 41% with no single registrant (ruling P571-3, issue #571): generic labels differ on grazing, haying, lactating dairy and pre-slaughter intervals, so no value ships and grazing reads unknown by design; the owner enters the number from the label they bought."
+    },
+    {
+      "pluginId": "warrior-ii-with-zeon",
+      "reason": "Issue #661: the Warrior II with Zeon label (EPA 100-1295, stamped 2025-07-03) lists alfalfa and grass forage, fodder and hay, and its grazing and feeding intervals differ by crop (alfalfa 1 day for forage and 7 for hay, pasture grass 0 days for grazing and 7 for hay, corn forage 1 day, wheat forage 7 days). grazingRestrictions holds one value for every crop, so none ships yet and grazing reads unknown; the by-crop PHIs for alfalfa and grass hay are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "mustang-maxx",
+      "reason": "Issue #661: the Mustang Maxx label (EPA 279-3426, stamped 2022-08-16 as F9114 EC Insecticide) lists alfalfa, nongrass animal feeds and grass forage, fodder and hay, and its grazing and feeding intervals differ by crop (alfalfa and clover 3 days for cutting or grazing, grass 0 days for forage and hay, sweet corn 3 days for forage or grazing, sorghum 45 days for forage, no grazing of treated soybean). grazingRestrictions holds one value for every crop, so none ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "baythroid-xl",
+      "reason": "Issue #661: the Baythroid XL label (EPA 264-840, stamped 2019-10-07) lists alfalfa and grass pasture, rangeland and hay, and its grazing and forage intervals differ by crop (alfalfa 7 days, pasture grass 0 days, grass in mixed stands with alfalfa 7 days, cereal grain forage 3 days, corn green forage 0 days, soybean forage 15 days, sunflower 30 days). grazingRestrictions holds one value for every crop, so none ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "quadris-flowable",
+      "reason": "Issue #661: the stamped label for EPA 100-1098 (2018-12-19, printed as Abound Flowable) lists nongrass animal feeds including alfalfa and clover, and its grazing and forage intervals differ by crop (alfalfa and clover 14 days for grazing or harvest of forage and hay, wheat and quinoa 14 days for grazing and 7 for forage and hay, barley, oats and rye 7 days for forage and hay, soybean forage and hay 0 days). grazingRestrictions holds one value for every crop, so none ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "headline-sc",
+      "reason": "Issue #661: the Headline SC label (EPA 7969-289, stamped 2026-02-23) lists alfalfa and grass grown for seed, and its feeding and grazing restrictions differ by crop (alfalfa 14 days to harvest, grass seed fields not grazed or fed within 27 days, barley and oat hay 14 days, soybean forage 14 and hay 21 days, bean and pea forage and hay 14 days, peanut never grazed, corn none). grazingRestrictions holds one value for every crop, so none ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "sevin-xlr-plus",
+      "reason": "Issue #661: the Sevin XLR Plus label (EPA 61842-37, stamped 2025-07-17) lists forage crops, pasture, grasses grown for hay and rangeland, and its grazing intervals differ by crop (alfalfa and clovers 7 days for harvest or grazing, pasture and grass hay 14 days, corn and sorghum forage 14 days, legume forage 14 days, sunflower forage 30 days). grazingRestrictions holds one value for every crop, so none ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "coragen",
+      "reason": "Issue #661: the Coragen label (EPA 279-9606, stamped 2020-10-27) lists grass forage, fodder and hay and nongrass animal feeds (alfalfa, clover) with 0 days to harvest, forage and straw of cereal grains with 1 day, and field corn with 14 days, but gives no separate grazing, haying or slaughter interval to read as grazingRestrictions. None ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
     }
   ]
 }

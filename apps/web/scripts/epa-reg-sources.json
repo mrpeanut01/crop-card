@@ -5173,7 +5173,7 @@
     }
   },
   "phiByCrop": {
-    "$comment": "#661 — label pre-harvest intervals by crop. One list per plugin carrying preHarvestIntervalsByCrop: [{ cropPluginId | cropFamily, preHarvestIntervalDays, sourceUrl, docDate, page, quote }], where the quote names the crop and states the number of days. Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read.",
+    "$comment": "#661 — label pre-harvest intervals by crop. One list per plugin carrying preHarvestIntervalsByCrop: [{ cropPluginId | cropPluginIds | cropFamily, preHarvestIntervalDays, sourceUrl, docDate, page, quote, note? }]. cropPluginIds shares one quote across several crop plugins; a cropFamily entry covers every crop of that family that has no plugin entry of its own, so a family entry carries the longest interval the label gives any crop in it. The quote names the crop and states the number of days; it is copied from the stamped label's extracted text with layout whitespace collapsed, and ' ... ' joins separate pieces of the same page range (the crop column, then the restriction). 'page' counts pages of the stamped PDF, cover letter included. Where the label gives different intervals for one crop by use (forage or hay, grain or forage, rate band) the longer one is kept and 'note' says why. Crops the label lists that are not in the library are left out, and crops in the library that the label does not list read the longest interval on file. Checked by pesticideLabelSources.gate.test.ts.",
     "miravis-ace": [
       {
         "cropPluginId": "wheat-soft-red-winter",
@@ -5279,6 +5279,2986 @@
         "docDate": "2025-03-24",
         "page": 10,
         "quote": "Barley Fusarium Head Blight (Suppression) ... Restrictions: Do not apply more than 8.2 fl oz of Prosaro 421 SC Fungicide per acre per crop year. Do not apply within 30 days of harvest."
+      }
+    ],
+    "warrior-ii-with-zeon": [
+      {
+        "cropPluginIds": ["alfalfa-hi-gest-660", "alfalfa-vernema"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 19-20",
+        "quote": "ALFALFA AND ALFALFA GROWN FOR SEED ... Do not apply within 1 day of harvest for forage or within 7 days of harvest for hay.",
+        "note": "Hay interval (7 days) kept over the 1-day forage interval: the record cannot tell forage from hay."
+      },
+      {
+        "cropFamily": "corn",
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 23-24",
+        "quote": "CEREAL GRAINS Corn (Foliar) Field Corn Popcorn Seed Corn ... Do not apply within 21 days of harvest.",
+        "note": "Corn family: the field corn, popcorn and seed corn interval, the longest corn PHI on the label. Sweet corn is listed by plugin."
+      },
+      {
+        "cropPluginIds": [
+          "corn-bantam-sweet",
+          "corn-sweet-bodacious",
+          "sweet-corn-american-dream-f1-seed",
+          "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+          "sweet-corn-honey-select-f1",
+          "sweet-corn-mirai-f1",
+          "sweet-corn-silver-queen-f1",
+          "sweet-corn-sugar-buns-f1"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 25",
+        "quote": "CEREAL GRAINS Sweet Corn (Foliar) ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": ["sorghum-grain-pioneer"],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 29",
+        "quote": "CEREAL GRAINS Sorghum (Grain) ... Do not apply within 30 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "wheat-hard-red-spring",
+          "wheat-hard-white-winter",
+          "wheat-soft-red-winter",
+          "barley-grain-thoroughbred",
+          "barley-hulless-streaker",
+          "oats-grain-jerry",
+          "oats-hulless-streaker",
+          "rye-grain-aroostook",
+          "triticale-fridge"
+        ],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 30",
+        "quote": "CEREAL GRAINS Barley Buckwheat Oats Rye Triticale Wheat Wheat Hay ... Do not apply within 30 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "broccoli-arcadia-f1",
+          "broccoli-de-cicco",
+          "brussels-sprouts-jade-cross-f1",
+          "brussels-sprouts-long-island",
+          "cabbage-early-jersey-wakefield",
+          "cabbage-pointed-caraflex",
+          "cabbage-red-acre",
+          "cabbage-savoy-king",
+          "cabbage-storage-no-4-f1",
+          "cauliflower-cheddar-f1",
+          "cauliflower-snowball-y",
+          "kohlrabi-azur-star",
+          "kohlrabi-early-white-vienna",
+          "napa-cabbage-michihili"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 32",
+        "quote": "COLE CROPS (HEAD AND STEM BRASSICA) Broccoli Brussels Sprouts Cabbage Cavalo Broccolo Cauliflower Chinese Broccoli (gai lon) Chinese Cabbage (napa) Chinese Mustard Cabbage (gai choy) Kohlrabi ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropFamily": "cucurbit",
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 35-36",
+        "quote": "CUCURBIT VEGETABLES Cucumber Gourd (edible) Muskmelon (hybrids and/or Pumpkin Squash, summer (Cucurbita Squash, winter (Cucurbita Watermelon – includes: ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "eggplant-black-beauty",
+          "asian-eggplant-ping-tung-long",
+          "ground-cherry-aunt-mollys",
+          "pepper-anaheim-college-64",
+          "pepper-bell-california-wonder",
+          "pepper-bell-chocolate-beauty",
+          "pepper-bell-orange-sun",
+          "pepper-bell-red-revolution",
+          "pepper-bell-yellow-flamingo",
+          "pepper-carolina-reaper",
+          "pepper-corno-di-toro-rosso",
+          "pepper-cubanelle",
+          "pepper-habanero-orange",
+          "pepper-jalapeno",
+          "pepper-jimmy-nardello",
+          "pepper-lipstick",
+          "pepper-padron",
+          "pepper-poblano-ancho",
+          "pepper-purple-beauty",
+          "pepper-serrano-tampiqueno",
+          "pepper-shishito",
+          "pepper-sweet-banana",
+          "pepper-thai-hot",
+          "snack-pepper-mini-mix",
+          "tomatillo-de-milpa",
+          "tomato-amish-paste",
+          "tomato-better-boy-f1",
+          "tomato-bhn-589-f1",
+          "tomato-big-beef-f1",
+          "tomato-black-cherry",
+          "tomato-black-krim",
+          "tomato-brandywine-pink",
+          "tomato-celebrity-f1",
+          "tomato-cherokee-purple",
+          "tomato-defiant-phr-f1",
+          "tomato-early-girl-f1",
+          "tomato-green-zebra",
+          "tomato-indigo-rose",
+          "tomato-iron-lady-f1",
+          "tomato-juliet-f1",
+          "tomato-matts-wild-cherry",
+          "tomato-mortgage-lifter",
+          "tomato-mountain-magic-f1",
+          "tomato-mountain-merit-f1",
+          "tomato-pink-bumblebee",
+          "tomato-plum-regal-f1",
+          "tomato-roma-vf",
+          "tomato-roma-vfn",
+          "tomato-san-marzano",
+          "tomato-sun-gold-f1",
+          "tomato-sweet-100-f1",
+          "tomato-yellow-mini-grape",
+          "tomato-yellow-pear"
+        ],
+        "preHarvestIntervalDays": 5,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 37",
+        "quote": "FRUITING VEGETABLES Eggplant Ground cherry Pepino Peppers (bell and nonbell) Tomatillo Tomato ... Do not apply within 5 days of harvest."
+      },
+      {
+        "cropPluginIds": ["orchard-grass-potomac", "timothy-climax"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 39-40",
+        "quote": "GRASS FORAGE, FODDER, AND HAY Pasture and Rangeland Grass, Grass Grown for Hay or Silage and ... Do not cut grass to be dried and harvested for hay until 7 days after the last application.",
+        "note": "Hay interval (7 days) kept over the 0-day grazing and forage interval."
+      },
+      {
+        "cropPluginIds": [
+          "bush-bean-blue-lake-274",
+          "bush-bean-provider",
+          "bush-bean-roma-ii",
+          "bush-bean-royal-burgundy",
+          "pole-bean-kentucky-wonder",
+          "pole-beans-rattlesnake",
+          "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 41-42",
+        "quote": "LEGUME VEGETABLES (BEANS AND PEAS) Edible Podded, Phaseolus species – includes: field, kidney, lima, navy, pinto, runner, snap, tepary and wax beans ... For edible podded and succulent shelled legume vegetables, do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": ["snap-pea-sugar-snap", "snow-pea-oregon-sugar-pod-ii"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 41-42",
+        "quote": "LEGUME VEGETABLES (BEANS AND PEAS) Pisum species – includes: dwarf, edible- pod, English, field, garden, green, snow and sugar snap peas ... For edible podded and succulent shelled legume vegetables, do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": ["yardlong-bean-red-noodle"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 41-42",
+        "quote": "LEGUME VEGETABLES (BEANS AND PEAS) Vigna species – asparagus, moth, mung, rice, urd and yardlong ... For edible podded and succulent shelled legume vegetables, do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": ["edamame-midori-giant", "edamame-tohya"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 41-42",
+        "quote": "LEGUME VEGETABLES (BEANS AND PEAS) Edible Podded (Only) Glycine max - soybean (immature seed) ... For edible podded and succulent shelled legume vegetables, do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "black-bean-black-turtle",
+          "pinto-bean-othello",
+          "lima-bean-fordhook-242"
+        ],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 41-42",
+        "quote": "LEGUME VEGETABLES (BEANS AND PEAS) Phaseolus species – includes: field, kidney, lima, navy, pinto, runner, snap, tepary and wax beans ... For dried shelled legume vegetables, do not apply within 21 days of harvest.",
+        "note": "Lima beans may be picked green or dry; the dried shelled interval is kept."
+      },
+      {
+        "cropPluginIds": ["southern-pea-pinkeye-purple-hull"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 41-42",
+        "quote": "LEGUME VEGETABLES (BEANS AND PEAS) Vigna species – beans, black–eye pea, longbean, cowpea, Crowder pea, and Southern pea ... For dried shelled legume vegetables, do not apply within 21 days of harvest.",
+        "note": "Southern peas may be picked green or dry; the dried shelled interval is kept."
+      },
+      {
+        "cropPluginIds": ["field-pea-aragorn"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 41-42",
+        "quote": "LEGUME VEGETABLES (BEANS AND PEAS) Pisum species – pod, English, field, ... For dried shelled legume vegetables, do not apply within 21 days of harvest."
+      },
+      {
+        "cropPluginIds": ["lentil-pardina"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 42",
+        "quote": "Dried Shelled (Only) Lens esculata – Lentils ... For dried shelled legume vegetables, do not apply within 21 days of harvest."
+      },
+      {
+        "cropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend"],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 44-45",
+        "quote": "LEGUME VEGETABLES (SOYBEANS) Soybeans ... Do not apply within 30 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "lettuce-black-seeded-simpson",
+          "lettuce-buttercrunch",
+          "lettuce-iceberg-great-lakes",
+          "lettuce-little-gem",
+          "lettuce-oak-leaf-green",
+          "lettuce-red-sails",
+          "lettuce-romaine-paris-island-cos",
+          "lettuce-salanova-mix"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 46",
+        "quote": "LETTUCE (HEAD AND LEAF) ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "onion-candy-sweet-f1",
+          "onion-long-day-patterson-f1",
+          "onion-red-burgundy",
+          "onion-storage-yellow-stuttgarter",
+          "onion-walla-walla",
+          "garlic-german-extra-hardy",
+          "garlic-inchelium-red-softneck",
+          "garlic-music-hardneck",
+          "garlic-spanish-roja-hardneck"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 47",
+        "quote": "ONION (BULB) AND GARLIC ... Do not apply within 14 days of harvest."
+      },
+      {
+        "cropPluginIds": ["peanut-virginia-jumbo"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 48",
+        "quote": "PEANUTS ... Do not apply within 14 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "apple-cortland",
+          "apple-fuji",
+          "apple-gala",
+          "apple-honeycrisp",
+          "apple-orchard",
+          "pear-bartlett",
+          "pear-bosc",
+          "pear-asian-shinseiki",
+          "quince-orange"
+        ],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 49",
+        "quote": "POME FRUITS Apple Crabapple Loquat Mayhaw Oriental Pear Pear Quince ... Do not apply within 21 days of harvest."
+      },
+      {
+        "cropFamily": "stone-fruit",
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 50",
+        "quote": "STONE FRUITS Apricot Chickasaw Plum Damson Plum Japanese Plum Nectarine Peach Plum Plumcot Prune Sweet and Tart Cherry ... Do not apply within 14 days of harvest."
+      },
+      {
+        "cropPluginIds": ["sunflower-mammoth-russian"],
+        "preHarvestIntervalDays": 45,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 52",
+        "quote": "SUNFLOWER ... Do not apply within 45 days of harvest."
+      },
+      {
+        "cropPluginIds": ["chestnut-dunstan", "hazelnut-jefferson", "walnut-carpathian-english"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF page 54",
+        "quote": "TREE NUTS Chestnut Filbert (Hazlenut) Walnut, English (Persian) ... Do not apply within 14 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "potato-french-fingerling",
+          "potato-german-butterball",
+          "potato-kennebec",
+          "potato-purple-majesty",
+          "potato-russet-burbank",
+          "potato-yukon-gold",
+          "sweet-potato-beauregard",
+          "sweet-potato-georgia-jet",
+          "sunchoke-stampede",
+          "taro-bun-long",
+          "ginger-yellow-hawaiian",
+          "turmeric-yellow"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+        "docDate": "2025-07-03",
+        "page": "PDF pages 55-56",
+        "quote": "TUBEROUS AND CORM VEGETABLES (Potato, Sweet Potato, Yams and Related) Artichoke (Chinese and Jerusalem only) Dasheen Ginger Potato Sweet Potato Turmeric ... Do not apply within 7 days of harvest."
+      }
+    ],
+    "mustang-maxx": [
+      {
+        "cropPluginIds": ["alfalfa-hi-gest-660", "alfalfa-vernema"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 12",
+        "quote": "Alfalfa; Alfalfa grown for seed: ... Applications may be made up to 3 days of cutting or grazing or up to 7 days of harvesting seed.",
+        "note": "Seed interval (7 days) kept over the 3-day cutting interval: the record cannot tell hay from seed."
+      },
+      {
+        "cropPluginIds": ["clover-red-mammoth", "red-clover-medium-mammoth"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 11",
+        "quote": "Nongrass Animal Feeds (Forage, Fodder, Straw and Hay) Group – Except Alfalfa and Alfalfa Velvet Bean; Clover (Trifolium, Melilotus); Kudzu; Lespedeza; Lupin; Sainfoin; Trefoil; Vetch; Crown Vetch; and Milk ... Applications may be made up to 3 days of cutting or grazing or up to 7 days of harvesting seed.",
+        "note": "Seed interval (7 days) kept over the 3-day cutting interval."
+      },
+      {
+        "cropPluginIds": [
+          "barley-grain-thoroughbred",
+          "barley-hulless-streaker",
+          "oats-grain-jerry",
+          "oats-hulless-streaker",
+          "rye-grain-aroostook",
+          "quinoa-cherry-vanilla"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 13-14",
+        "quote": "Barley (including malt barley), Buckwheat, Oats, Rye and Quinoa ... Do not apply within 14 days of harvest for grain, straw, and hay."
+      },
+      {
+        "cropPluginIds": [
+          "blackberry-prime-ark-freedom",
+          "blackberry-triple-crown",
+          "raspberry-caroline-primocane",
+          "raspberry-heritage"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 10-14",
+        "quote": "Caneberry Crop Subgroup 13-07A Blackberry; Loganberry, Red and Black Raspberry; Wild Raspberry; and cultivars, varieties, and/or hybrids of these ... Caneberries 0.15 24.0 1"
+      },
+      {
+        "cropPluginIds": [
+          "aronia-viking",
+          "blueberry-bluecrop",
+          "blueberry-duke-northern-highbush",
+          "blueberry-pink-lemonade",
+          "currant-black-titania",
+          "currant-red-jonkheer",
+          "currant-red-lake",
+          "elderberry-adams",
+          "elderberry-bob-gordon",
+          "gooseberry-hinnonmaki-red",
+          "gooseberry-invicta",
+          "honeyberry-haskap-aurora",
+          "jostaberry",
+          "saskatoon-northline",
+          "sea-buckthorn-russian"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 10-14",
+        "quote": "Bushberry Crop Subgroup 13-07B Aronia Berry; Blueberry, Highbush and Lowbush; Buffalo Currant; Chilean Guava; Cranberry, Highbush; Currant, Black and Red; Elderberry; European Barberry; Gooseberry; Honeysuckle, Edible; Huckleberry; Jostaberry; Juneberry (Saskatoon berry); Lingonberry; Native Currant; Salal; Sea Buckthorn; and cultivars, varieties, and/or hybrids of these ... Bushberries 0.15 24.0 1"
+      },
+      {
+        "cropPluginIds": ["basil-genovese"],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 10-14",
+        "quote": "Basil ... Basil 0.15 24.0 1"
+      },
+      {
+        "cropPluginIds": [
+          "broccoli-arcadia-f1",
+          "broccoli-de-cicco",
+          "brussels-sprouts-jade-cross-f1",
+          "brussels-sprouts-long-island",
+          "cabbage-early-jersey-wakefield",
+          "cabbage-pointed-caraflex",
+          "cabbage-red-acre",
+          "cabbage-savoy-king",
+          "cabbage-storage-no-4-f1",
+          "cauliflower-cheddar-f1",
+          "cauliflower-snowball-y",
+          "napa-cabbage-michihili"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 15",
+        "quote": "Head and Stem Brassica Vegetables Crop Group 5-16 Broccoli; Brussels Sprouts; Cauliflower; Cavalo Broccolo; Cabbage; Chinese Cabbage (napa); and cultivars, varieties, ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "arugula-astro",
+          "arugula-rocket",
+          "broccoli-raab-rapini",
+          "bok-choy-white-stem",
+          "collards-georgia-southern",
+          "kale-lacinato",
+          "kale-red-russian",
+          "kale-winterbor-f1",
+          "baby-kale-blend",
+          "mizuna-purple",
+          "mustard-greens-southern-giant-curled",
+          "sea-kale"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 15",
+        "quote": "Leafy Brassica Greens Crop Subgroup 4-16B Arugula; Broccoli Raab ; Chinese Broccoli; Cabbage, Abyssinian; Chinese Cabbage (Bok Choy); Cabbage, Seakale; Collards; Cress, Garden; Cress, Upland; Hanover Salad; Kale; Maca, Leaves; Mizuna; Mustard Greens; Radish, Leaves; ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": ["kohlrabi-azur-star", "kohlrabi-early-white-vienna"],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 10",
+        "quote": "Maximum Yearly Usage and PHI (Pre-Harvest Interval) for F9114 EC Insecticide Labeled Crops ... Kohlrabi 0.15 24.0 1"
+      },
+      {
+        "cropPluginIds": [
+          "onion-candy-sweet-f1",
+          "onion-long-day-patterson-f1",
+          "onion-red-burgundy",
+          "onion-storage-yellow-stuttgarter",
+          "onion-walla-walla",
+          "garlic-german-extra-hardy",
+          "garlic-inchelium-red-softneck",
+          "garlic-music-hardneck",
+          "garlic-spanish-roja-hardneck",
+          "elephant-garlic",
+          "leek-american-flag",
+          "leek-bandit-overwinter",
+          "scallion-evergreen-bunching",
+          "scallion-nabechan",
+          "shallot-french-red",
+          "chives-common",
+          "perennial-onion-egyptian-walking",
+          "ramp-wild-leek"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 16",
+        "quote": "Bulb Vegetables Crop Group 3-07 Chive, Fresh Leaves; Chive, Chinese, Fresh Leaves; Daylily, Bulb, Elegans Hosta; Fritillaria, Bulb and Leaves; Garlic, Bulb, Great Headed, Bulb, Serpent, Bulb; Kurrat; Lady’s Leek; Leek, Leek, Wild; Lily, Bulb; Onion, Beltsville Bunching, Bulb, Chinese Bulb, Fresh, Green, Macrostem, Pearl, Potato Bulb, Tree Tops, Welsh Tops; Shallot, Bulb ... Do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": ["citrus-meyer-lemon"],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 10-17",
+        "quote": "Citrus Fruits Crop Group 10-10 Tangor); Grapefruit (Citrus paradisi); Japanese Summer Grapefruit; Kumquat (Fortunella spp.); Lemon (Citrus jambhiri, ... Citrus 0.1 16.0 1"
+      },
+      {
+        "cropPluginIds": ["fennel-bulb-perfection", "fennel-florence-zefa-fino"],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 10",
+        "quote": "Maximum Yearly Usage and PHI (Pre-Harvest Interval) for F9114 EC Insecticide Labeled Crops ... Celtuce, Florence Fennel 0.15 24.0 1"
+      },
+      {
+        "cropPluginIds": [
+          "corn-bantam-sweet",
+          "corn-sweet-bodacious",
+          "sweet-corn-american-dream-f1-seed",
+          "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+          "sweet-corn-honey-select-f1",
+          "sweet-corn-mirai-f1",
+          "sweet-corn-silver-queen-f1",
+          "sweet-corn-sugar-buns-f1"
+        ],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 18",
+        "quote": "Corn, Sweet ... Do not apply within 3 days of harvest of ears or forage or livestock grazing."
+      },
+      {
+        "cropFamily": "corn",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 18-19",
+        "quote": "Corn (Field), Field Corn Grown for Seed, Popcorn ... Do not apply within 7 days of harvest for grain, stover, and forage.",
+        "note": "Corn family: the field corn, seed corn and popcorn interval, the longest corn PHI on the label. Sweet corn is listed by plugin."
+      },
+      {
+        "cropPluginIds": ["flax-grain-omega"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 21",
+        "quote": "Rapeseed Subgroup 20A Canola; Crambe; Rapeseed; Borage; Cuphea; Echium; Flax seed; Gold of Pleasure; Hare’s-Ear Mustard; Lesquerella; ... Do not apply within 7 days of harvest."
+      },
+      {
+        "cropFamily": "cucurbit",
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 21-22",
+        "quote": "Cucurbit Vegetables Crop Group 9 ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "tomato-amish-paste",
+          "tomato-better-boy-f1",
+          "tomato-bhn-589-f1",
+          "tomato-big-beef-f1",
+          "tomato-black-cherry",
+          "tomato-black-krim",
+          "tomato-brandywine-pink",
+          "tomato-celebrity-f1",
+          "tomato-cherokee-purple",
+          "tomato-defiant-phr-f1",
+          "tomato-early-girl-f1",
+          "tomato-green-zebra",
+          "tomato-indigo-rose",
+          "tomato-iron-lady-f1",
+          "tomato-juliet-f1",
+          "tomato-matts-wild-cherry",
+          "tomato-mortgage-lifter",
+          "tomato-mountain-magic-f1",
+          "tomato-mountain-merit-f1",
+          "tomato-pink-bumblebee",
+          "tomato-plum-regal-f1",
+          "tomato-roma-vf",
+          "tomato-roma-vfn",
+          "tomato-san-marzano",
+          "tomato-sun-gold-f1",
+          "tomato-sweet-100-f1",
+          "tomato-yellow-mini-grape",
+          "tomato-yellow-pear",
+          "pepper-anaheim-college-64",
+          "pepper-bell-california-wonder",
+          "pepper-bell-chocolate-beauty",
+          "pepper-bell-orange-sun",
+          "pepper-bell-red-revolution",
+          "pepper-bell-yellow-flamingo",
+          "pepper-carolina-reaper",
+          "pepper-corno-di-toro-rosso",
+          "pepper-cubanelle",
+          "pepper-habanero-orange",
+          "pepper-jalapeno",
+          "pepper-jimmy-nardello",
+          "pepper-lipstick",
+          "pepper-padron",
+          "pepper-poblano-ancho",
+          "pepper-purple-beauty",
+          "pepper-serrano-tampiqueno",
+          "pepper-shishito",
+          "pepper-sweet-banana",
+          "pepper-thai-hot",
+          "snack-pepper-mini-mix",
+          "eggplant-black-beauty",
+          "asian-eggplant-ping-tung-long",
+          "tomatillo-de-milpa",
+          "ground-cherry-aunt-mollys",
+          "okra-clemson-spineless",
+          "goji-berry-phoenix-tears"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 22-23",
+        "quote": "Fruiting Vegetables Crop Group 8-10: African Eggplant; Bush Tomato; Cocona; Currant Tomato; Eggplant; Garden Huckleberry; Goji Berry; Groundcherry (Physalis spp.); Martynia; Naranjilla; Okra; Pea Eggplant; Pepino (Melon pear); Pepper (Bell and Non-bell); Roselle; Scarlet Eggplant; Sunberry; Tomatillo; Tomato; Tree Tomato; and cultivars, varieties, and/or hybrids of these ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "grape-cabernet-franc",
+          "grape-chardonnay",
+          "grape-concord",
+          "grape-marquette",
+          "grape-niagara",
+          "grape-pinot-noir"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 10-23",
+        "quote": "Small Fruit Vine Climbing (except fuzzy kiwifruit) Subgroup 13-07F Amur River Grape; Gooseberry; Grape; Kiwifruit, Hardy: Maypop; Schisandra Berry; cultivars, varieties, and/or hybrids ... Grapes 0.15 24.0 1"
+      },
+      {
+        "cropPluginIds": ["orchard-grass-potomac", "timothy-climax"],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 10-23",
+        "quote": "Grass Forage, Fodder, and Hay Group and Grass Grown for Seed and Pasture and Lovegrass, Napiergrass, Oatgrass, Orchardgrass, Pangolagrass, Paspalum, Redtop, Italian Ryegrass, St. Augustine Grass, Sprangletop, Squirreltailgrass, Stargrass, Switchgrass, Timothy, Crested Wheatgrass, Wildrye Grass and Zoysia ... Grass Forage, Fodder, and Hay Hay 0.10/season 16.0 0 (Forage and Hay)"
+      },
+      {
+        "cropPluginIds": ["celery-tall-utah-52-70", "rhubarb-victoria"],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 25",
+        "quote": "Leaf Petiole Vegetables Crop Subgroup 22B Cardoon; Celery; Celery, Chinese; Fuki; Rhubarb; Udo; Zuiki; cultivars, varieties, and hybrids of these commodities ... Do not make applications within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "lettuce-black-seeded-simpson",
+          "lettuce-buttercrunch",
+          "lettuce-iceberg-great-lakes",
+          "lettuce-little-gem",
+          "lettuce-oak-leaf-green",
+          "lettuce-red-sails",
+          "lettuce-romaine-paris-island-cos",
+          "lettuce-salanova-mix",
+          "spinach-bloomsdale-long-standing",
+          "spinach-space-f1",
+          "spinach-malabar-red",
+          "new-zealand-spinach",
+          "swiss-chard-bright-lights",
+          "endive-frisee",
+          "mache-corn-salad",
+          "good-king-henry",
+          "cilantro-santo",
+          "chervil",
+          "parsley-italian-flat-leaf",
+          "dill-mammoth",
+          "claytonia-miners-lettuce"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 26",
+        "quote": "Leafy Greens Crop Subgroup 4-16A Chinese Amaranth; Leafy Amaranth; Aster, Indian; Blackjack; Cat’s Whiskers; Cham-chwi; Cham-na-mul; Chervil, Fresh Leaves; Chipilin; Chrysanthemum, Garland; Cilantro, Fresh Leaves; Corn Salad; Cosmos; Dandelion, leaves; Dang-gwi, leaves; Dillweed; Dock; Dol-nam-mul; Ebolo; Endive; Escarole; Flameflower; Feather Cockscomb; Good King Henry; Huauzontle; Jute, Leaves; Lettuce, Bitter; Lettuce, Head and Leaf; Orach; Parsley, Fresh Leaves; Plantain, Buckhorn; Primrose, English; Purslane, Garden; Purslane, Winter; Radicchio; Spinach; Spinach Malabar; Spinach, New Zealand; Spinach, Tanier; Swiss Chard; Violet, Chinese, leaves; and cultivars, varieties, and hybrids of these commodities ... Do not make applications within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "bush-bean-blue-lake-274",
+          "bush-bean-provider",
+          "bush-bean-roma-ii",
+          "bush-bean-royal-burgundy",
+          "pole-bean-kentucky-wonder",
+          "pole-beans-rattlesnake",
+          "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed",
+          "yardlong-bean-red-noodle",
+          "edamame-midori-giant",
+          "edamame-tohya"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 27-29",
+        "quote": "Edible-Podded Beans Bean (Phaseolus spp.;includes French Bean; Garden Bean; Green Bean; Scarlett Runner Bean; Snap Bean; Kidney Bean; Navy Bean; Wax Bean); Bean (Vigna spp.; includes Asparagus Bean; Catjang Bean; Chinese Longbean; Cowpea; Moth Bean; Mung Bean; Rice Bean; Urd Bean; Yardlong Bean); Goa Bean; Guar Bean; Jackbean; Lablab Bean; Vegetable Soybean; Sword Bean; Winged Pea; Velvet Bean; cultivars, varieties, and/or hybrids of these ... Do not apply within 1 day of harvest for succulent shelled or edible-podded peas or beans; within 21 days for dried shelled peas or beans"
+      },
+      {
+        "cropPluginIds": ["snap-pea-sugar-snap", "snow-pea-oregon-sugar-pod-ii"],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 27-29",
+        "quote": "Edible-Podded Peas Pea (Pisum spp.; includes Dwarf Pea, Edible Podded Pea, Green Pea, Snap Pea, Snow Pea, Sugar Snap Pea); ... Do not apply within 1 day of harvest for succulent shelled or edible-podded peas or beans; within 21 days for dried shelled peas or beans"
+      },
+      {
+        "cropPluginIds": [
+          "black-bean-black-turtle",
+          "pinto-bean-othello",
+          "lima-bean-fordhook-242",
+          "southern-pea-pinkeye-purple-hull"
+        ],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 27-29",
+        "quote": "Dried Shelled Beans (except Soybean) Bean; Navy Bean; Pink Bean; Pinto Bean; Red Bean; Scarlett Runner Bean; Tepary Bean; Yellow Bean); Bean (Vigna Pea; Mung Bean; Moth Bean; Rice Bean; Southern Pea; Urd Bean; Yardlong Bean); Broad Bean; Guar Bean; Goa ... Do not apply within 1 day of harvest for succulent shelled or edible-podded peas or beans; within 21 days for dried shelled peas or beans",
+        "note": "Lima beans and southern peas may be picked green or dry; the dried shelled interval is kept."
+      },
+      {
+        "cropPluginIds": ["field-pea-aragorn", "lentil-pardina"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 27-29",
+        "quote": "Dried Shelled Peas Pea (Pisum spp.; includes Field Pea, Dry Pea, Green Pea, Garden Pea); Chickpea; Lentil; Grass-Pea; Pigeon Pea; ... Do not apply within 1 day of harvest for succulent shelled or edible-podded peas or beans; within 21 days for dried shelled peas or beans"
+      },
+      {
+        "cropPluginIds": ["peanut-virginia-jumbo"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 29",
+        "quote": "Peanut ... Do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "apple-cortland",
+          "apple-fuji",
+          "apple-gala",
+          "apple-honeycrisp",
+          "apple-orchard",
+          "pear-bartlett",
+          "pear-bosc",
+          "pear-asian-shinseiki",
+          "quince-orange"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 30",
+        "quote": "Pome Fruit Crop Group 11-10 Apple; Azarole; Crabapple; Loquat; Mayhaw; Medlar; Pear; Asian Pear; Quince; Chinese Quince; Japanese Quince; ... Do not apply within 14 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "beet-chioggia",
+          "beet-detroit-dark-red",
+          "beet-golden-touchstone",
+          "burdock-takinogawa",
+          "carrot-chantenay-red-cored",
+          "carrot-cosmic-purple",
+          "carrot-danvers-126",
+          "carrot-imperator-58",
+          "carrot-nantes-half-long",
+          "carrot-rainbow-mix",
+          "carrot-scarlet-nantes-seed",
+          "celeriac-brilliant",
+          "ginger-yellow-hawaiian",
+          "parsnip-hollow-crown",
+          "daikon-radish-april-cross",
+          "radish-cherry-belle",
+          "radish-french-breakfast",
+          "radish-watermelon",
+          "taro-bun-long",
+          "turmeric-yellow",
+          "turnip-hakurei",
+          "turnip-purple-top-white-globe",
+          "sunchoke-stampede",
+          "potato-french-fingerling",
+          "potato-german-butterball",
+          "potato-kennebec",
+          "potato-purple-majesty",
+          "potato-russet-burbank",
+          "potato-yukon-gold",
+          "sweet-potato-beauregard",
+          "sweet-potato-georgia-jet"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 31-32",
+        "quote": "Root and Tuber Vegetables Crop Group 1 (except Sugar Beet) Arracacha; Arrowroot; Artichoke (Chinese and Jerusalem); Garden Beet; Edible Burdock; Edible Canna; Carrot; Cassava (Bitter and Sweet); Celeriac (Celery Root); Chayote (Root); Turnip-Rooted Chervil; Chicory; Chufa; Dasheen (Taro); Ginger; Ginseng; Horseradish; Leren; Turnip-Rooted Parsley; Parsnip; Potato; Oriental Radish (Daikon); Radish; Rutabaga; Salsify (Oyster Plant); Black Salsify; Spanish Salsify; Skirret; Sweet Potato; Tanier (Cocoyam); Turmeric; ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "sorghum-grain-pioneer",
+          "foxtail-millet-japanese",
+          "pearl-millet-tifleaf",
+          "proso-millet-cope"
+        ],
+        "preHarvestIntervalDays": 45,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 34",
+        "quote": "Sorghum (Grain) and Millet ... Do not apply within 14 days of harvest for grain and stover; within 45 days of harvest for forage.",
+        "note": "Forage interval (45 days) kept over the 14-day grain interval: the record cannot tell grain from forage."
+      },
+      {
+        "cropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF pages 34-35",
+        "quote": "Soybeans ... Do not apply within 21 days of harvest."
+      },
+      {
+        "cropFamily": "stone-fruit",
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 36",
+        "quote": "Stone Fruit Crop Group 12-12 Apricot; Apricot, Japanese; Capulin; Cherry (Black, Nanking, Sweet, and Tart); Jujube, Chinese; Nectarine; Peach; ... Do not apply within 3 days of harvest for cherries and 14 days of harvest for all other listed stone fruits.",
+        "note": "Stone fruit family: the interval for stone fruits other than cherries. Cherries are listed by plugin."
+      },
+      {
+        "cropPluginIds": ["jujube-li"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 36",
+        "quote": "Stone Fruit Crop Group 12-12 Apricot; Apricot, Japanese; Capulin; Cherry (Black, Nanking, Sweet, and Tart); Jujube, Chinese; Nectarine; Peach; ... Do not apply within 3 days of harvest for cherries and 14 days of harvest for all other listed stone fruits.",
+        "note": "Stone fruit family: the interval for stone fruits other than cherries. Cherries are listed by plugin."
+      },
+      {
+        "cropPluginIds": ["cherry-bing-sweet", "cherry-rainier-sweet", "cherry-tart-montmorency"],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 36",
+        "quote": "Stone Fruit Crop Group 12-12 Apricot; Apricot, Japanese; Capulin; Cherry (Black, Nanking, Sweet, and Tart); Jujube, Chinese; Nectarine; Peach; ... Do not apply within 3 days of harvest for cherries and 14 days of harvest for all other listed stone fruits."
+      },
+      {
+        "cropPluginIds": ["sunflower-mammoth-russian"],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 38",
+        "quote": "Sunflower Crop Subgroup 20B (except Safflower) Aster; Sunflower, Tallowwood; Tea Oil Plant; Vernonia; and cultivars, varieties, and/or hybrids of these ... Do not apply within 30 days of harvest."
+      },
+      {
+        "cropPluginIds": ["chestnut-dunstan", "hazelnut-jefferson", "walnut-carpathian-english"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 40",
+        "quote": "Tree Nuts Crop Group 14-12 Cashew; Chestnut; Chinquapin; Coconut; Coquito Nut; Dika Nut; Ginkgo; Guiana Chestnut; Filbert (Hazelnut); Heartnut; (Black and English); Yellowhorn; and cultivars, varieties, and/or hybrids of these commodities ... Do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "wheat-hard-red-spring",
+          "wheat-hard-white-winter",
+          "wheat-soft-red-winter",
+          "triticale-fridge",
+          "teff-grain-tiffany"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+        "docDate": "2022-08-16",
+        "page": "PDF page 41",
+        "quote": "Wheat, Triticale, and Teff ... Do not apply within 14 days of harvest for grain, forage, and hay."
+      }
+    ],
+    "baythroid-xl": [
+      {
+        "cropPluginIds": ["alfalfa-hi-gest-660", "alfalfa-vernema"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF pages 9-10",
+        "quote": "ALFALFA ... Pre-Harvest Interval (PHI) / Pre-Grazing Interval: 7 days."
+      },
+      {
+        "cropFamily": "corn",
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 10",
+        "quote": "CORN – Foliar Applications Field Corn, Popcorn, Seed Corn, Teosinte – (see Sweet Corn application information in Vegetable Crops Section) ... Pre-Harvest Interval (PHI): Grain or fodder – 21 days; Green forage – 0 day.",
+        "note": "Corn family: the field corn, popcorn and seed corn interval for grain or fodder, the longest corn PHI on the label. Sweet corn is listed by plugin."
+      },
+      {
+        "cropPluginIds": ["orchard-grass-potomac", "timothy-climax"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 13",
+        "quote": "GRASS Pasture / Rangeland / Grass for Seed / Grass for Hay / Grass in mixed-stands with Alfalfa Foliar Application Restrictions: Grass for Hay Foliar Application Restrictions: Grass in mixed-stands with Alfalfa ... Pre-Harvest Interval (PHI): 0 day (minimum time between last application and baling for harvest). ... Pre-Harvest Interval (PHI) / Pre-Grazing Interval: 7 days (minimum time between last application and beginning of foraging or baling).",
+        "note": "Grass for hay is 0 days and grass in mixed stands with alfalfa is 7 days; the 7 days is kept because a grass hay planting may share the field with alfalfa."
+      },
+      {
+        "cropPluginIds": ["peanut-virginia-jumbo"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 14",
+        "quote": "PEANUT ... Pre-Harvest Interval (PHI): 14 days (minimum time between final application and threshing for seed)."
+      },
+      {
+        "cropPluginIds": ["sorghum-grain-pioneer"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 15",
+        "quote": "SORGHUM ... Pre-Harvest Interval (PHI): 14 days."
+      },
+      {
+        "cropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 16",
+        "quote": "SOYBEAN ... Pre-Harvest Interval (PHI) for seed: 21 days; dry vines (hay) and green forage may be fed 15 days after last application."
+      },
+      {
+        "cropPluginIds": ["sunflower-mammoth-russian"],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 17",
+        "quote": "SUNFLOWER ... Pre-Harvest Interval (PHI) and Pre-grazing or Foraging Interval: 30 days."
+      },
+      {
+        "cropPluginIds": [
+          "barley-grain-thoroughbred",
+          "barley-hulless-streaker",
+          "oats-grain-jerry",
+          "oats-hulless-streaker",
+          "rye-grain-aroostook",
+          "triticale-fridge",
+          "wheat-hard-red-spring",
+          "wheat-hard-white-winter",
+          "wheat-soft-red-winter",
+          "pearl-millet-tifleaf",
+          "proso-millet-cope"
+        ],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 18",
+        "quote": "BARLEY, BUCKWHEAT, MILLET (PEARL and PROSO), OAT, RYE, TRITICALE and WHEAT ... Pre-Grazing or Foraging Interval: 3 days. Pre-Harvest Interval (PHI): 30 days."
+      },
+      {
+        "cropPluginIds": [
+          "broccoli-arcadia-f1",
+          "broccoli-de-cicco",
+          "brussels-sprouts-jade-cross-f1",
+          "brussels-sprouts-long-island",
+          "cabbage-early-jersey-wakefield",
+          "cabbage-pointed-caraflex",
+          "cabbage-red-acre",
+          "cabbage-savoy-king",
+          "cabbage-storage-no-4-f1",
+          "cauliflower-cheddar-f1",
+          "cauliflower-snowball-y",
+          "kohlrabi-azur-star",
+          "kohlrabi-early-white-vienna",
+          "napa-cabbage-michihili",
+          "broccoli-raab-rapini",
+          "bok-choy-white-stem",
+          "collards-georgia-southern",
+          "kale-lacinato",
+          "kale-red-russian",
+          "kale-winterbor-f1",
+          "baby-kale-blend",
+          "mizuna-purple",
+          "mustard-greens-southern-giant-curled",
+          "komatsuna"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 19",
+        "quote": "BRASSICA (COLE) LEAFY VEGETABLES Includes all members of Crop Group 5: Broccoli, Broccoli raab (rapini), Chinese (gai lon) broccoli, Brussels sprouts, Cabbage, Chinese (bok choy) cabbage, Chinese (napa) cabbage, Chinese mustard (gai choy) cabbage, Cauliflower, Cavalo broccolo, Collards, Kale, Kohlrabi, Mizuna, Mustard greens, Mustard spinach, Rape greens, and Turnip greens. ... Pre-Harvest Interval (PHI): 0 day."
+      },
+      {
+        "cropFamily": "cucurbit",
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 21",
+        "quote": "CUCURBITS (except crops grown for seed) Includes all members of Crop Group 9: ... Pre-Harvest Interval (PHI): 0 day."
+      },
+      {
+        "cropPluginIds": [
+          "tomato-amish-paste",
+          "tomato-better-boy-f1",
+          "tomato-bhn-589-f1",
+          "tomato-big-beef-f1",
+          "tomato-black-cherry",
+          "tomato-black-krim",
+          "tomato-brandywine-pink",
+          "tomato-celebrity-f1",
+          "tomato-cherokee-purple",
+          "tomato-defiant-phr-f1",
+          "tomato-early-girl-f1",
+          "tomato-green-zebra",
+          "tomato-indigo-rose",
+          "tomato-iron-lady-f1",
+          "tomato-juliet-f1",
+          "tomato-matts-wild-cherry",
+          "tomato-mortgage-lifter",
+          "tomato-mountain-magic-f1",
+          "tomato-mountain-merit-f1",
+          "tomato-pink-bumblebee",
+          "tomato-plum-regal-f1",
+          "tomato-roma-vf",
+          "tomato-roma-vfn",
+          "tomato-san-marzano",
+          "tomato-sun-gold-f1",
+          "tomato-sweet-100-f1",
+          "tomato-yellow-mini-grape",
+          "tomato-yellow-pear"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 22",
+        "quote": "FRUITING VEGETABLES Includes all members of Crop Group 8: Eggplant, Groundcherry, Pepino, Pepper (includes: bell pepper, chili pepper, cooking pepper, pimento, sweet pepper), Tomatillo, and Tomato ... Pre-Harvest Interval (PHI) for tomato: 0 day. PHI for all other fruiting vegetables included in this section: 7 days."
+      },
+      {
+        "cropPluginIds": [
+          "eggplant-black-beauty",
+          "asian-eggplant-ping-tung-long",
+          "ground-cherry-aunt-mollys",
+          "pepper-anaheim-college-64",
+          "pepper-bell-california-wonder",
+          "pepper-bell-chocolate-beauty",
+          "pepper-bell-orange-sun",
+          "pepper-bell-red-revolution",
+          "pepper-bell-yellow-flamingo",
+          "pepper-carolina-reaper",
+          "pepper-corno-di-toro-rosso",
+          "pepper-cubanelle",
+          "pepper-habanero-orange",
+          "pepper-jalapeno",
+          "pepper-jimmy-nardello",
+          "pepper-lipstick",
+          "pepper-padron",
+          "pepper-poblano-ancho",
+          "pepper-purple-beauty",
+          "pepper-serrano-tampiqueno",
+          "pepper-shishito",
+          "pepper-sweet-banana",
+          "pepper-thai-hot",
+          "snack-pepper-mini-mix",
+          "tomatillo-de-milpa"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 22",
+        "quote": "FRUITING VEGETABLES Includes all members of Crop Group 8: Eggplant, Groundcherry, Pepino, Pepper (includes: bell pepper, chili pepper, cooking pepper, pimento, sweet pepper), Tomatillo, and Tomato ... Pre-Harvest Interval (PHI) for tomato: 0 day. PHI for all other fruiting vegetables included in this section: 7 days."
+      },
+      {
+        "cropPluginIds": [
+          "lettuce-black-seeded-simpson",
+          "lettuce-buttercrunch",
+          "lettuce-iceberg-great-lakes",
+          "lettuce-little-gem",
+          "lettuce-oak-leaf-green",
+          "lettuce-red-sails",
+          "lettuce-romaine-paris-island-cos",
+          "lettuce-salanova-mix",
+          "spinach-bloomsdale-long-standing",
+          "spinach-space-f1",
+          "spinach-malabar-red",
+          "new-zealand-spinach",
+          "swiss-chard-bright-lights",
+          "arugula-astro",
+          "arugula-rocket",
+          "celery-tall-utah-52-70",
+          "chervil",
+          "mache-corn-salad",
+          "endive-frisee",
+          "fennel-bulb-perfection",
+          "fennel-florence-zefa-fino",
+          "parsley-italian-flat-leaf",
+          "rhubarb-victoria",
+          "claytonia-miners-lettuce",
+          "sorrel-french"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 23",
+        "quote": "LEAFY VEGETABLES Includes all members of Crop Group 4: Amaranth (Chinese spinach), Arugula (rouquette), Cardoon, Celery, Chinese celery, Celtuce, Chervil, Chrysanthemum (edible- leaved and garland), Corn salad, Cress (garden and upland), Dandelion, Dock (sorrel), Endive (escarole), Florence fennel, Lettuce (head and leaf), New Zealand spinach, Orach, Parsley, Purslane (garden and winter), Radicchio (red chicory), Rhubarb, Spinach, Swiss chard, Vine spinach ... Pre-Harvest Interval (PHI): 0 day."
+      },
+      {
+        "cropPluginIds": [
+          "black-bean-black-turtle",
+          "pinto-bean-othello",
+          "field-pea-aragorn",
+          "lentil-pardina"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 24",
+        "quote": "DRIED SHELLED LEGUME VEGETABLES Includes all members of Crop Subgroup 6C: Guar, Kidney bean, Lablab bean, Lentil, Dry Lima bean, Lupin (grain, sweet, white and white sweet), Moth bean, Mung bean, Navy bean, Pigeon pea, Pinto bean, Rice bean, Tepary bean, Urd bean ... Pre-Harvest Interval (PHI): 7 days (minimum time between final application and threshing for seed).",
+        "note": "Lima beans are left out: the label covers dry lima beans only, and a lima planting may be picked green."
+      },
+      {
+        "cropPluginIds": ["southern-pea-pinkeye-purple-hull"],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 25",
+        "quote": "PEA, SOUTHERN ... Pre-Harvest Interval (PHI): 3 day."
+      },
+      {
+        "cropPluginIds": [
+          "potato-french-fingerling",
+          "potato-german-butterball",
+          "potato-kennebec",
+          "potato-purple-majesty",
+          "potato-russet-burbank",
+          "potato-yukon-gold",
+          "sweet-potato-beauregard",
+          "sweet-potato-georgia-jet",
+          "ginger-yellow-hawaiian",
+          "turmeric-yellow",
+          "taro-bun-long",
+          "sunchoke-stampede"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 26",
+        "quote": "POTATO AND OTHER TUBEROUS AND CORM VEGETABLES Includes all members of Crop Subgroup 1C: Arracacha, Arrowroot, Artichoke (Chinese and Jerusalem), Edible canna, Cassava (bitter and sweet), Chayote root, Chufa, Dasheen (taro), Ginger, Leren, Potato, Sweet potato, Tanier, True yam, Turmeric, Yam bean ... Pre-Harvest Interval (PHI): 0 day."
+      },
+      {
+        "cropPluginIds": [
+          "carrot-chantenay-red-cored",
+          "carrot-cosmic-purple",
+          "carrot-danvers-126",
+          "carrot-imperator-58",
+          "carrot-nantes-half-long",
+          "carrot-rainbow-mix",
+          "carrot-scarlet-nantes-seed",
+          "radish-cherry-belle",
+          "radish-french-breakfast",
+          "radish-watermelon",
+          "daikon-radish-april-cross"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 26",
+        "quote": "CARROT AND RADISH ... Pre-Harvest Interval (PHI): 0 day."
+      },
+      {
+        "cropPluginIds": [
+          "corn-bantam-sweet",
+          "corn-sweet-bodacious",
+          "sweet-corn-american-dream-f1-seed",
+          "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+          "sweet-corn-honey-select-f1",
+          "sweet-corn-mirai-f1",
+          "sweet-corn-silver-queen-f1",
+          "sweet-corn-sugar-buns-f1"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 27",
+        "quote": "SWEET CORN – FOLIAR APPLICATIONS ... Pre-Harvest Interval (PHI): 0 day."
+      },
+      {
+        "cropPluginIds": [
+          "grape-cabernet-franc",
+          "grape-chardonnay",
+          "grape-concord",
+          "grape-marquette",
+          "grape-niagara",
+          "grape-pinot-noir"
+        ],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 29",
+        "quote": "GRAPE Includes: Table grape, Raisin, Wine and Muscadine grape ... Pre-Harvest Interval (PHI): 3 days."
+      },
+      {
+        "cropPluginIds": ["hops-cascade", "hops-centennial"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 30",
+        "quote": "HOP ... Pre-Harvest Interval (PHI): 7 days."
+      },
+      {
+        "cropPluginIds": [
+          "apple-cortland",
+          "apple-fuji",
+          "apple-gala",
+          "apple-honeycrisp",
+          "apple-orchard",
+          "pear-bartlett",
+          "pear-bosc",
+          "pear-asian-shinseiki",
+          "quince-orange"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 30",
+        "quote": "POME FRUIT Includes all members of Crop Group 11: Apple, Crabapple, Loquat, Mayhaw, Pear, Oriental pear, Quince ... Pre-Harvest Interval (PHI): 7 days."
+      },
+      {
+        "cropFamily": "stone-fruit",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 31",
+        "quote": "STONE FRUIT Includes all members of Crop Group 12: Apricot, Cherry (sweet and tart), Nectarine, Peach, Plum (includes Chickasaw, Damson, and Japanese), Plumcot, Prune (fresh ... Pre-Harvest Interval (PHI): 7 days."
+      },
+      {
+        "cropPluginIds": ["chestnut-dunstan", "hazelnut-jefferson", "walnut-carpathian-english"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+        "docDate": "2019-10-07",
+        "page": "PDF page 32",
+        "quote": "TREE NUT CROPS Almond, Beechnut, Brazil nut, Butternut, Cashew, Chestnut, Chinquapin, Filbert, Hickory nut, Macadamia nut, Pecan, Pistachio, Walnut (black and English) ... Pre-Harvest Interval (PHI): 14 days."
+      }
+    ],
+    "sevin-xlr-plus": [
+      {
+        "cropPluginIds": [
+          "asparagus-jersey-knight",
+          "asparagus-millennium",
+          "asparagus-purple-passion"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 11",
+        "quote": "ASPARAGUS RESTRICTIONS: ASPARAGUS ... Do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "broccoli-arcadia-f1",
+          "broccoli-de-cicco",
+          "brussels-sprouts-jade-cross-f1",
+          "brussels-sprouts-long-island",
+          "cabbage-early-jersey-wakefield",
+          "cabbage-pointed-caraflex",
+          "cabbage-red-acre",
+          "cabbage-savoy-king",
+          "cabbage-storage-no-4-f1",
+          "cauliflower-cheddar-f1",
+          "cauliflower-snowball-y",
+          "kohlrabi-azur-star",
+          "kohlrabi-early-white-vienna",
+          "napa-cabbage-michihili"
+        ],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 12",
+        "quote": "BRASSICA LEAFY VEGETABLES CROPS AND TURNIP GREENS RESTRICTIONS: BRASSICA LEAFY VEGETABLES ... For Head and Stem Brassica subgroup 5A [including Broccoli, Chinese broccoli (gai lon), Brussels sprouts, Cabbage, Chinese cabbage (napa), Chinese mustard cabbage (gai choy), Cauliflower, Cavalo broccolo, and Kohlrabi], do not apply within 3 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "broccoli-raab-rapini",
+          "bok-choy-white-stem",
+          "collards-georgia-southern",
+          "kale-lacinato",
+          "kale-red-russian",
+          "kale-winterbor-f1",
+          "baby-kale-blend",
+          "mizuna-purple",
+          "mustard-greens-southern-giant-curled",
+          "komatsuna"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 12",
+        "quote": "BRASSICA LEAFY VEGETABLES CROPS AND TURNIP GREENS RESTRICTIONS: BRASSICA LEAFY VEGETABLES ... For Leafy Brassica Greens subgroup 5B [Broccoli raab (rapini), Chinese cabbage (bok choy), Collards, Kale, Mizuna, Mustard greens, Mustard spinach, Rape greens, and Turnip greens], do not apply within 14 days of harvest"
+      },
+      {
+        "cropFamily": "corn",
+        "preHarvestIntervalDays": 48,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF pages 13-14",
+        "quote": "FIELD CORN AND POPCORN RESTRICTIONS: FIELD AND POP CORN SWEET CORN RESTRICTIONS: SWEET CORN ... Do not apply within 48 days of harvest of grain and fodder or within 14 days of harvest or grazing of forage or silage. ... Do not apply within 2 days of harvest of ears, within 14 days of harvest or grazing of forage, or within 48 days of harvest of fodder.",
+        "note": "Corn family, sweet corn included: the 48-day grain and fodder interval is kept over the 2-day sweet corn ear interval because the record cannot tell ears from fodder."
+      },
+      {
+        "cropPluginIds": ["sorghum-grain-pioneer"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 13",
+        "quote": "GRAIN SORGHUM RESTRICTIONS: GRAIN SORGHUM ... Do not apply within 21 days of harvest for grain or fodder or within 14 days of harvest or grazing of forage or silage."
+      },
+      {
+        "cropFamily": "cucurbit",
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 15",
+        "quote": "CUCURBIT VEGETABLES RESTRICTIONS: CUCURBIT VEGETABLES ... Do not apply within 3 days of harvest."
+      },
+      {
+        "cropPluginIds": ["flax-grain-omega"],
+        "preHarvestIntervalDays": 42,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 15",
+        "quote": "FLAX RESTRICTIONS: FLAX ... Do not apply within 42 days of harvest for seed or straw."
+      },
+      {
+        "cropPluginIds": [
+          "alfalfa-hi-gest-660",
+          "alfalfa-vernema",
+          "clover-red-mammoth",
+          "red-clover-medium-mammoth"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 16",
+        "quote": "FORAGE CROPS ALFALFA, CLOVERS, AND BIRDSFOOT TREFOIL RESTRICTIONS: FORAGE CROPS ... Do not apply within 7 days of harvest or grazing."
+      },
+      {
+        "cropPluginIds": ["orchard-grass-potomac", "timothy-climax"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 16",
+        "quote": "PASTURE AND GRASSES GROWN FOR HAY AND/OR SEED RESTRICTIONS: PASTURE AND GRASSES GROWN FOR HAY AND/OR SEED ... Do not apply within 14 days of harvest or grazing."
+      },
+      {
+        "cropPluginIds": [
+          "tomato-amish-paste",
+          "tomato-better-boy-f1",
+          "tomato-bhn-589-f1",
+          "tomato-big-beef-f1",
+          "tomato-black-cherry",
+          "tomato-black-krim",
+          "tomato-brandywine-pink",
+          "tomato-celebrity-f1",
+          "tomato-cherokee-purple",
+          "tomato-defiant-phr-f1",
+          "tomato-early-girl-f1",
+          "tomato-green-zebra",
+          "tomato-indigo-rose",
+          "tomato-iron-lady-f1",
+          "tomato-juliet-f1",
+          "tomato-matts-wild-cherry",
+          "tomato-mortgage-lifter",
+          "tomato-mountain-magic-f1",
+          "tomato-mountain-merit-f1",
+          "tomato-pink-bumblebee",
+          "tomato-plum-regal-f1",
+          "tomato-roma-vf",
+          "tomato-roma-vfn",
+          "tomato-san-marzano",
+          "tomato-sun-gold-f1",
+          "tomato-sweet-100-f1",
+          "tomato-yellow-mini-grape",
+          "tomato-yellow-pear",
+          "pepper-anaheim-college-64",
+          "pepper-bell-california-wonder",
+          "pepper-bell-chocolate-beauty",
+          "pepper-bell-orange-sun",
+          "pepper-bell-red-revolution",
+          "pepper-bell-yellow-flamingo",
+          "pepper-carolina-reaper",
+          "pepper-corno-di-toro-rosso",
+          "pepper-cubanelle",
+          "pepper-habanero-orange",
+          "pepper-jalapeno",
+          "pepper-jimmy-nardello",
+          "pepper-lipstick",
+          "pepper-padron",
+          "pepper-poblano-ancho",
+          "pepper-purple-beauty",
+          "pepper-serrano-tampiqueno",
+          "pepper-shishito",
+          "pepper-sweet-banana",
+          "pepper-thai-hot",
+          "snack-pepper-mini-mix",
+          "eggplant-black-beauty",
+          "asian-eggplant-ping-tung-long",
+          "tomatillo-de-milpa",
+          "ground-cherry-aunt-mollys"
+        ],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 18",
+        "quote": "FRUITING VEGETABLES All members of the Fruiting Vegetable Group 8 including: Eggplant, Groundcherry, Pepinos, Pepper (includes: bell pepper, chili pepper, cooking pepper, pimento, sweet pepper), Tomatillo, Tomato. RESTRICTIONS: FRUITING VEGETABLES ... Do not apply within 3 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "lettuce-black-seeded-simpson",
+          "lettuce-buttercrunch",
+          "lettuce-iceberg-great-lakes",
+          "lettuce-little-gem",
+          "lettuce-oak-leaf-green",
+          "lettuce-red-sails",
+          "lettuce-romaine-paris-island-cos",
+          "lettuce-salanova-mix",
+          "spinach-bloomsdale-long-standing",
+          "spinach-space-f1",
+          "endive-frisee",
+          "parsley-italian-flat-leaf",
+          "celery-tall-utah-52-70",
+          "fennel-bulb-perfection",
+          "fennel-florence-zefa-fino",
+          "rhubarb-victoria",
+          "swiss-chard-bright-lights"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 18",
+        "quote": "LEAFY VEGETABLES Dandelion; Endive (escarole); Lettuce (head and leaf); Parsley; Spinach; All members of the Leaf Petiole Vegetable Subgroup 4B including: Cardoon, Celery, Celtuce, Chinese celery, Florence fennel (including sweet anise, sweet fennel, Finocchio), Rhubarb, Swiss chard. RESTRICTIONS: LEAFY VEGETABLES ... Do not apply within 14 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "bush-bean-blue-lake-274",
+          "bush-bean-provider",
+          "bush-bean-roma-ii",
+          "bush-bean-royal-burgundy",
+          "pole-bean-kentucky-wonder",
+          "pole-beans-rattlesnake",
+          "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed",
+          "yardlong-bean-red-noodle",
+          "snap-pea-sugar-snap",
+          "snow-pea-oregon-sugar-pod-ii",
+          "edamame-midori-giant",
+          "edamame-tohya"
+        ],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 19",
+        "quote": "LEGUME VEGETABLES All members of the Edible Podded Legume Vegetable Subgroup 6A including: Phaseolus sp. including runner bean, snap bean, and wax bean; Vigna sp. including asparagus bean, Chinese longbean, moth bean, and yardlong bean; Pisum sp. including dwarf pea, edible-pod pea, snow pea, sugar snap pea; Jackbean; Pigeon pea; Soybean (immature seed); Sword bean; RESTRICTIONS: LEGUME VEGETABLES ... Do not apply within 14 days of grazing or harvest for forage or within 3 days of harvest of fresh edible-podded beans or peas or within 21 days of harvest of dried beans or peas, seed, or hay."
+      },
+      {
+        "cropPluginIds": [
+          "black-bean-black-turtle",
+          "pinto-bean-othello",
+          "lima-bean-fordhook-242",
+          "southern-pea-pinkeye-purple-hull",
+          "field-pea-aragorn",
+          "lentil-pardina",
+          "soybean-asgrow-roundup-ready-2-xtend"
+        ],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 19",
+        "quote": "LEGUME VEGETABLES All members of the Dried Shelled Legume Vegetable (except soybean) Subgroup 6C including: Lupinus sp. including grain lupin, sweet lupin, white lupin, and white sweet lupin; Phaseolus sp. including field bean, kidney bean, dry lima bean, navy bean, pinto bean, southern pea, Urd bean; Pisum sp. including dwarf pea, edible-podded pea, English pea, field pea, garden pea, green pea, snow pea, sugar snap pea; Broad bean (dry); Chickpea (dry); Guar (dry); Lablab bean (dry); Lentil (dry); Pigeon pea (dry); Soybeans. RESTRICTIONS: LEGUME VEGETABLES ... Do not apply within 14 days of grazing or harvest for forage or within 3 days of harvest of fresh edible-podded beans or peas or within 21 days of harvest of dried beans or peas, seed, or hay.",
+        "note": "Lima beans and southern peas may be picked green or dry; the dried interval is kept. Use on succulent shelled peas and beans (subgroup 6B) is prohibited on this label."
+      },
+      {
+        "cropPluginIds": ["okra-clemson-spineless"],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 20",
+        "quote": "OKRA* RESTRICTIONS: OKRA ... Do not apply within 3 days of harvest."
+      },
+      {
+        "cropPluginIds": ["peanut-virginia-jumbo"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 21",
+        "quote": "PEANUTS RESTRICTIONS: PEANUTS ... Do not apply within 14 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "beet-chioggia",
+          "beet-detroit-dark-red",
+          "beet-golden-touchstone",
+          "burdock-takinogawa",
+          "carrot-chantenay-red-cored",
+          "carrot-cosmic-purple",
+          "carrot-danvers-126",
+          "carrot-imperator-58",
+          "carrot-nantes-half-long",
+          "carrot-rainbow-mix",
+          "carrot-scarlet-nantes-seed",
+          "celeriac-brilliant",
+          "ginger-yellow-hawaiian",
+          "parsnip-hollow-crown",
+          "daikon-radish-april-cross",
+          "radish-cherry-belle",
+          "radish-french-breakfast",
+          "radish-watermelon",
+          "taro-bun-long",
+          "turmeric-yellow",
+          "turnip-hakurei",
+          "turnip-purple-top-white-globe",
+          "sunchoke-stampede",
+          "potato-french-fingerling",
+          "potato-german-butterball",
+          "potato-kennebec",
+          "potato-purple-majesty",
+          "potato-russet-burbank",
+          "potato-yukon-gold"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 22",
+        "quote": "ROOT AND TUBER CROPS EXCEPT SUGAR BEETS AND SWEET POTATOES All members of the Root and Tuber Vegetable Crop Group 1 except sugar beet and sweet potato: Arracacha, Arrowroot, Artichoke (Chinese and Jerusalem), Beet (garden), Beet (sugar, root),Burdock (edible), Canna (edible, Queensland arrowroot), Carrot, Cassava (bitter & sweet), Celeriac (celery root), Chayote (root), Chervil (turnip-rooted), Chicory, Chufa, Dasheen (taro), Ginger, Ginseng, Horseradish, Leren, Parsley (turnip-rooted), Parsnip, Potato, Radish, Oriental radish (daikon), Rutabaga, Salsify (black), Salsify (oyster plant), Salsify (Spanish), Skirret, Tanier (cocoyam), Turmeric, Turnip, Yam bean (jicama, manoic pea), Yam (true). ... Do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": ["sweet-potato-beauregard", "sweet-potato-georgia-jet"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 23",
+        "quote": "SWEET POTATOES RESTRICTIONS: SWEET POTATOES ... Do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "blackberry-prime-ark-freedom",
+          "blackberry-triple-crown",
+          "raspberry-caroline-primocane",
+          "raspberry-heritage",
+          "aronia-viking",
+          "blueberry-bluecrop",
+          "blueberry-duke-northern-highbush",
+          "blueberry-pink-lemonade",
+          "currant-black-titania",
+          "currant-red-jonkheer",
+          "currant-red-lake",
+          "elderberry-adams",
+          "elderberry-bob-gordon",
+          "gooseberry-hinnonmaki-red",
+          "gooseberry-invicta",
+          "honeyberry-haskap-aurora",
+          "jostaberry",
+          "saskatoon-northline",
+          "sea-buckthorn-russian",
+          "grape-cabernet-franc",
+          "grape-chardonnay",
+          "grape-concord",
+          "grape-marquette",
+          "grape-niagara",
+          "grape-pinot-noir",
+          "strawberry-albion-day-neutral",
+          "strawberry-earliglow-june-bearing",
+          "strawberry-jewel"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 24",
+        "quote": "SMALL FRUITS AND BERRIES All members of the Caneberry Subgroup 13-07A including: All members of the Bushberry Subgroup 13-07B including: Aronia berry, Blueberry (Vaccinium spp. - highbush, lowbush and cultivars and/or hybrids of these [= all blueberry species]), Chilean guava, Currant (black, buffalo, native and red), European barberry, Gooseberry, Highbush cranberry, Honeysuckle (edible), Huckleberry, Jostaberry, Juneberry, Lingonberry, Salal, Sea buckthorn, plus Cranberries; Grapes; Strawberries. RESTRICTIONS: SMALL FRUITS AND BERRIES ... Do not apply within 7 days of harvest."
+      },
+      {
+        "cropPluginIds": ["sunflower-mammoth-russian"],
+        "preHarvestIntervalDays": 60,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 25",
+        "quote": "SUNFLOWERS RESTRICTIONS: SUNFLOWERS ... Do not apply within 30 days of grazing or harvest for forage or within 60 days of harvest for seed."
+      },
+      {
+        "cropPluginIds": ["citrus-meyer-lemon"],
+        "preHarvestIntervalDays": 5,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 26",
+        "quote": "CITRUS FRUITS tangelo and tangor), Grapefruit, Kumquat, Lemon, Lime, Mandarin (tangerine), Orange (sweet and sour), Pummelo, Satsuma RESTRICTIONS: CITRUS FRUITS ... Do not apply within 5 days of harvest."
+      },
+      {
+        "cropPluginIds": [
+          "apple-cortland",
+          "apple-fuji",
+          "apple-gala",
+          "apple-honeycrisp",
+          "apple-orchard",
+          "pear-bartlett",
+          "pear-bosc",
+          "pear-asian-shinseiki"
+        ],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF pages 27-28",
+        "quote": "POME FRUITS Members of the Pome Fruit Group 11 including: Apple, Crabapple, Loquat, Mayhaw, Pear, Oriental pear. RESTRICTIONS: POME FRUITS ... Do not apply within 3 days of harvest.",
+        "note": "Quince is not named in the pome fruit list on this label, so it is left out."
+      },
+      {
+        "cropFamily": "stone-fruit",
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 29",
+        "quote": "STONE FRUITS All members of the Stone Fruit Group 12 including: Apricot, Cherry (including sweet and tart), Nectarine, Peach, Plum (including RESTRICTIONS: STONE FRUIT ... Do not apply within 3 days of harvest, except in California. In California, do not apply within 1 day of harvest."
+      },
+      {
+        "cropPluginIds": ["chestnut-dunstan", "hazelnut-jefferson", "walnut-carpathian-english"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+        "docDate": "2025-07-17",
+        "page": "PDF page 31",
+        "quote": "TREE NUTS All members of the Tree Nut Group 14 including: Almond, Beech nut, Brazil nut, Butternut, Cashew, Chestnut, Chinquapin, Filbert (hazelnut), Hickory nut, Macadamia nut (bush nut), Pecan, Walnut [including black and English (Persian) walnuts]. RESTRICTIONS: TREE NUTS ... Do not apply within 14 days of harvest."
+      }
+    ],
+    "coragen": [
+      {
+        "cropPluginIds": [
+          "asparagus-jersey-knight",
+          "asparagus-millennium",
+          "asparagus-purple-passion"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 12",
+        "quote": "(Days to Harvest) ... Asparagus FOLIAR Beet armyworm 0.045 - 0.098 3.5 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "onion-candy-sweet-f1",
+          "onion-long-day-patterson-f1",
+          "onion-red-burgundy",
+          "onion-storage-yellow-stuttgarter",
+          "onion-walla-walla",
+          "garlic-german-extra-hardy",
+          "garlic-inchelium-red-softneck",
+          "garlic-music-hardneck",
+          "garlic-spanish-roja-hardneck",
+          "elephant-garlic",
+          "leek-american-flag",
+          "leek-bandit-overwinter",
+          "scallion-evergreen-bunching",
+          "scallion-nabechan",
+          "shallot-french-red",
+          "chives-common",
+          "perennial-onion-egyptian-walking",
+          "ramp-wild-leek"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 12",
+        "quote": "(Days to Harvest) subgroups: (EPA Crop Group 3-07A and 3-07B) including Garlic, bulb; Garlic, great-headed, bulb; leek; leek, wild; Lily, Onion, bulb; Onion, tree, tops; onion, Welsh, tops; Shallot, ... Onion bulbs, and FOLIAR Beet armyworm 0.045 - 0.098 3.5 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "broccoli-arcadia-f1",
+          "broccoli-de-cicco",
+          "brussels-sprouts-jade-cross-f1",
+          "brussels-sprouts-long-island",
+          "cabbage-early-jersey-wakefield",
+          "cabbage-pointed-caraflex",
+          "cabbage-red-acre",
+          "cabbage-savoy-king",
+          "cabbage-storage-no-4-f1",
+          "cauliflower-cheddar-f1",
+          "cauliflower-snowball-y",
+          "kohlrabi-azur-star",
+          "kohlrabi-early-white-vienna",
+          "napa-cabbage-michihili",
+          "broccoli-raab-rapini",
+          "bok-choy-white-stem",
+          "collards-georgia-southern",
+          "kale-lacinato",
+          "kale-red-russian",
+          "kale-winterbor-f1",
+          "baby-kale-blend",
+          "mizuna-purple",
+          "mustard-greens-southern-giant-curled",
+          "komatsuna"
+        ],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 13",
+        "quote": "(Days to Harvest) Brassica and Leafy Brassica Greens Subgroups 5A and 5B) including: (rapini), Brussels sprouts, Cabbage, Kale, Kohlrabi, Mizuna, Mustard greens, spinach, Rape greens ... Head and Stem SOIL AT Beet armyworm 0.045 - 0.098 3.5 – 7.5 3 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "barley-grain-thoroughbred",
+          "barley-hulless-streaker",
+          "oats-grain-jerry",
+          "oats-hulless-streaker",
+          "rye-grain-aroostook",
+          "triticale-fridge",
+          "wheat-hard-red-spring",
+          "wheat-hard-white-winter",
+          "wheat-soft-red-winter",
+          "sorghum-grain-pioneer",
+          "pearl-millet-tifleaf",
+          "proso-millet-cope"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 14",
+        "quote": "(Days to Harvest) Crop Group 15) except Corn and Rice Including: Barley, Buckwheat, Pearl Millet, Proso Millet, Oats, Rye, Sorghum (milo), Sorghum spp. [grain sorghum, Triticale, Wheat, ... Cereal Grains (EPA FOLIAR Corn earworm 0.045 - 0.098 3.5 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropFamily": "corn",
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 15",
+        "quote": "(Days to Harvest) Corn (pop) ... Corn (field) SOIL AT European corn borer 0.065 - 0.098 5.0 - 7.5 14 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours). Corn family: the field corn and popcorn interval, the longest corn PHI on the label. Sweet corn is listed by plugin."
+      },
+      {
+        "cropPluginIds": [
+          "corn-bantam-sweet",
+          "corn-sweet-bodacious",
+          "sweet-corn-american-dream-f1-seed",
+          "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+          "sweet-corn-honey-select-f1",
+          "sweet-corn-mirai-f1",
+          "sweet-corn-silver-queen-f1",
+          "sweet-corn-sugar-buns-f1"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 15",
+        "quote": "(Days to Harvest) ... Corn (sweet) SOIL AT European corn borer 0.065 - 0.098 5.0 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropFamily": "cucurbit",
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 17",
+        "quote": "(Days to Harvest) (EPA Crop Group 9) Cucumber, Gherkin, Pumpkin, Summer squash (includes Watermelon ... Cucurbit Vegetables, SOIL AT Beet armyworm 0.045 - 0.098 3.5 – 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "tomato-amish-paste",
+          "tomato-better-boy-f1",
+          "tomato-bhn-589-f1",
+          "tomato-big-beef-f1",
+          "tomato-black-cherry",
+          "tomato-black-krim",
+          "tomato-brandywine-pink",
+          "tomato-celebrity-f1",
+          "tomato-cherokee-purple",
+          "tomato-defiant-phr-f1",
+          "tomato-early-girl-f1",
+          "tomato-green-zebra",
+          "tomato-indigo-rose",
+          "tomato-iron-lady-f1",
+          "tomato-juliet-f1",
+          "tomato-matts-wild-cherry",
+          "tomato-mortgage-lifter",
+          "tomato-mountain-magic-f1",
+          "tomato-mountain-merit-f1",
+          "tomato-pink-bumblebee",
+          "tomato-plum-regal-f1",
+          "tomato-roma-vf",
+          "tomato-roma-vfn",
+          "tomato-san-marzano",
+          "tomato-sun-gold-f1",
+          "tomato-sweet-100-f1",
+          "tomato-yellow-mini-grape",
+          "tomato-yellow-pear",
+          "pepper-anaheim-college-64",
+          "pepper-bell-california-wonder",
+          "pepper-bell-chocolate-beauty",
+          "pepper-bell-orange-sun",
+          "pepper-bell-red-revolution",
+          "pepper-bell-yellow-flamingo",
+          "pepper-carolina-reaper",
+          "pepper-corno-di-toro-rosso",
+          "pepper-cubanelle",
+          "pepper-habanero-orange",
+          "pepper-jalapeno",
+          "pepper-jimmy-nardello",
+          "pepper-lipstick",
+          "pepper-padron",
+          "pepper-poblano-ancho",
+          "pepper-purple-beauty",
+          "pepper-serrano-tampiqueno",
+          "pepper-shishito",
+          "pepper-sweet-banana",
+          "pepper-thai-hot",
+          "snack-pepper-mini-mix",
+          "eggplant-black-beauty",
+          "asian-eggplant-ping-tung-long",
+          "tomatillo-de-milpa",
+          "ground-cherry-aunt-mollys",
+          "okra-clemson-spineless"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 18",
+        "quote": "(Days to Harvest) Including: Eggplant, Groundcherry (Physalis spp.), okra, Pepino, Pepper, pepper), Tomatillo, Tomato ... Fruiting Vegetables SOIL AT Beet armyworm 0.045 - 0.098 3.5 – 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": ["orchard-grass-potomac", "timothy-climax"],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 19",
+        "quote": "(Days to Harvest) and Hay: (EPA Crop Group 17) Any grass, and range grasses and grasses grown for hay or silage ... Grass Forage, Fodder FOLIAR Beet armyworm 0.045 - 0.098 3.5 - 7.5 0 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "basil-genovese",
+          "catnip-common",
+          "cilantro-santo",
+          "dill-mammoth",
+          "hyssop-officinalis",
+          "lavender-english-munstead",
+          "lemongrass-east-indian",
+          "lovage",
+          "marjoram-sweet",
+          "nasturtium-companion",
+          "rosemary-tuscan-blue",
+          "sage-broadleaf",
+          "summer-savory",
+          "tarragon-french",
+          "thyme-german-winter",
+          "lemon-balm",
+          "chamomile-german"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 20",
+        "quote": "(Days to Harvest) Crop Subgroup 19A) Including Angelica; balm; basil; borage; burnet; camomile; catnip; chervil coriander (leaf); dillweed; horehound; hyssop; lavender; lemongrass; lovage marjoram; nasturtium; parsley rosemary; rue; sage; savory, summer and tansy; tarragon; thyme; wintergreen; ... Herb subgroup (EPA FOLIAR Beet armyworm 0.045 - 0.065 3.5 - 5.0 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": ["hops-cascade", "hops-centennial"],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 20",
+        "quote": "(Days to Harvest) ... Hops (except FOLIAR Western 0.045 - 0.098 3.5 - 7.5 0 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "lettuce-black-seeded-simpson",
+          "lettuce-buttercrunch",
+          "lettuce-iceberg-great-lakes",
+          "lettuce-little-gem",
+          "lettuce-oak-leaf-green",
+          "lettuce-red-sails",
+          "lettuce-romaine-paris-island-cos",
+          "lettuce-salanova-mix",
+          "spinach-bloomsdale-long-standing",
+          "spinach-space-f1",
+          "spinach-malabar-red",
+          "new-zealand-spinach",
+          "swiss-chard-bright-lights",
+          "arugula-astro",
+          "arugula-rocket",
+          "celery-tall-utah-52-70",
+          "chervil",
+          "mache-corn-salad",
+          "endive-frisee",
+          "fennel-bulb-perfection",
+          "fennel-florence-zefa-fino",
+          "parsley-italian-flat-leaf",
+          "rhubarb-victoria",
+          "claytonia-miners-lettuce",
+          "sorrel-french"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 21",
+        "quote": "(Days to Harvest) except brassica (EPA Crop Group 4) leafy, Arugula Celery, Celery Chevril, Chinese garland, Corn salad, leaves, Dock (sorrel), Endive (escarole), Florence fennel, Lettuce (head & leaf), Orach, Parsley, (winter), Radicchio Rhubarb, Spinach, Spinach (vine), Spinach (New Zeland), Swiss chard, ... Leafy Vegetables SOIL AT Beet armyworm 0.045 - 0.098 3.5 – 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "bush-bean-blue-lake-274",
+          "bush-bean-provider",
+          "bush-bean-roma-ii",
+          "bush-bean-royal-burgundy",
+          "pole-bean-kentucky-wonder",
+          "pole-beans-rattlesnake",
+          "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed",
+          "snap-pea-sugar-snap",
+          "snow-pea-oregon-sugar-pod-ii",
+          "yardlong-bean-red-noodle",
+          "black-bean-black-turtle",
+          "pinto-bean-othello",
+          "lima-bean-fordhook-242",
+          "southern-pea-pinkeye-purple-hull",
+          "field-pea-aragorn",
+          "lentil-pardina"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 22",
+        "quote": "(Days to Harvest) (EPA Crop Group 6) (For soybean see (Succulent or Dried, (Phaseolus) (includes field bean, kidney bean, lima bean, navy bean, pinto bean, runner bean, snap bean, southern pea, urd bean, yardlong bean; lentil; pea dwarf pea, edible- pea, green pea, snowpea, sugar snap ... Legume vegetables SOIL AT Corn earworm 0.065 - 0.098 5.0 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": ["mint-spearmint"],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 23",
+        "quote": "(Days to Harvest) ... Mint: Peppermint and FOLIAR Armyworms 0.045 - 0.098 3.5 - 7.5 3 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "alfalfa-hi-gest-660",
+          "alfalfa-vernema",
+          "clover-red-mammoth",
+          "red-clover-medium-mammoth"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 24",
+        "quote": "(Days to Harvest) feeds (EPA Crop Group 18) Including: Alfalfa;bean, velvet; clover (Trifolium, ... Non-grass animal FOLIAR Alfalfa caterpillar 0.045 - 0.098 3.5 - 7.5 0 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": ["peanut-virginia-jumbo"],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 24",
+        "quote": "(Days to Harvest) ... Peanut FOLIAR Corn earworm 0.045 - 0.098 3.5 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "potato-french-fingerling",
+          "potato-german-butterball",
+          "potato-kennebec",
+          "potato-purple-majesty",
+          "potato-russet-burbank",
+          "potato-yukon-gold"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 25",
+        "quote": "(Days to Harvest) ... Potato FOLIAR Beet and 0.045 - 0.098 3.5 - 7.5 14 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": ["sunflower-mammoth-russian", "flax-grain-omega"],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 26",
+        "quote": "(Days to Harvest) Crop Group 20) flax seed; gold of sunflower; sweet ... Oilseed Group: (EPA FOLIAR Diamondback moth 0.045 - 0.098 3.5 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "beet-chioggia",
+          "beet-detroit-dark-red",
+          "beet-golden-touchstone",
+          "burdock-takinogawa",
+          "carrot-chantenay-red-cored",
+          "carrot-cosmic-purple",
+          "carrot-danvers-126",
+          "carrot-imperator-58",
+          "carrot-nantes-half-long",
+          "carrot-rainbow-mix",
+          "carrot-scarlet-nantes-seed",
+          "celeriac-brilliant",
+          "ginger-yellow-hawaiian",
+          "parsnip-hollow-crown",
+          "daikon-radish-april-cross",
+          "radish-cherry-belle",
+          "radish-french-breakfast",
+          "radish-watermelon",
+          "taro-bun-long",
+          "turmeric-yellow",
+          "turnip-hakurei",
+          "turnip-purple-top-white-globe",
+          "sunchoke-stampede",
+          "sweet-potato-beauregard",
+          "sweet-potato-georgia-jet"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 27",
+        "quote": "(Days to Harvest) Vegetables (EPA Crop Group 1), except potato: arrowroot; artichoke, Chinese; artichoke, Jerusalem; beet, edible; carrot; dasheen (taro); ginger; ginseng; rooted; parsnip; radish; radish, skirret; sweet potato; tanier; turmeric; turnip; yam bean; ... Root and Tuber FOLIAR Beet armyworm 0.045 - 0.098 3.5 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "soybean-asgrow-roundup-ready-2-xtend",
+          "edamame-midori-giant",
+          "edamame-tohya"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 29",
+        "quote": "(Days to Harvest) edamame (immature soybean) ... Soybean Including FOLIAR Corn earworm 0.045 - 0.098 3.5 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": [
+          "strawberry-albion-day-neutral",
+          "strawberry-earliglow-june-bearing",
+          "strawberry-jewel"
+        ],
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 29",
+        "quote": "(Days to Harvest) ... Strawberry FOLIAR Beet armyworm 0.045 - 0.098 3.5 - 7.5 1 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": ["teff-grain-tiffany"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 30",
+        "quote": "(Days to Harvest) ... Teff FOLIAR Corn earworm 0.045 - 0.067 3.5 - 5.1 14 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      },
+      {
+        "cropPluginIds": ["quinoa-cherry-vanilla"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+        "docDate": "2020-10-27",
+        "page": "PDF page 31",
+        "quote": "(Days to Harvest) ... Quinoa FOLIAR Corn earworm 0.045 – 0.067 3.5 - 5.1 14 4",
+        "note": "Table columns: crop, application method, target pest, lb ai per acre, fluid ounces product per acre, last application (days to harvest), REI (hours)."
+      }
+    ],
+    "quadris-flowable": [
+      {
+        "cropPluginIds": [
+          "asparagus-jersey-knight",
+          "asparagus-millennium",
+          "asparagus-purple-passion"
+        ],
+        "preHarvestIntervalDays": 100,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 24",
+        "quote": "Asparagus ... Pre-Harvest Interval (PHI): Do not apply within 100 days of harvest (100-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "aronia-viking",
+          "blueberry-bluecrop",
+          "blueberry-duke-northern-highbush",
+          "blueberry-pink-lemonade",
+          "currant-black-titania",
+          "currant-red-jonkheer",
+          "currant-red-lake",
+          "elderberry-adams",
+          "elderberry-bob-gordon",
+          "gooseberry-hinnonmaki-red",
+          "gooseberry-invicta",
+          "honeyberry-haskap-aurora",
+          "jostaberry",
+          "saskatoon-northline",
+          "sea-buckthorn-russian"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 27",
+        "quote": "Berries, Bushberry Subgroup 13-07B Aronia Berry Blueberry, Highbush Currant, Black Currant, Red Elderberry Gooseberry Honeysuckle, Edible Jostaberry Juneberry (Saskatoon Berry) Sea Buckthorn ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "blackberry-prime-ark-freedom",
+          "blackberry-triple-crown",
+          "raspberry-caroline-primocane",
+          "raspberry-heritage"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 28",
+        "quote": "Berries, Caneberry Subgroup 13-07A Blackberry Red and Black Raspberry ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "strawberry-albion-day-neutral",
+          "strawberry-earliglow-june-bearing",
+          "strawberry-jewel"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 29",
+        "quote": "Berries, Low Growing Subgroup 13-07G Strawberry ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "broccoli-arcadia-f1",
+          "broccoli-de-cicco",
+          "brussels-sprouts-jade-cross-f1",
+          "brussels-sprouts-long-island",
+          "cabbage-early-jersey-wakefield",
+          "cabbage-pointed-caraflex",
+          "cabbage-red-acre",
+          "cabbage-savoy-king",
+          "cabbage-storage-no-4-f1",
+          "cauliflower-cheddar-f1",
+          "cauliflower-snowball-y",
+          "kohlrabi-azur-star",
+          "kohlrabi-early-white-vienna",
+          "napa-cabbage-michihili"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 31",
+        "quote": "Brassica, Head and Stem Subgroup 5A Broccoli Brussels Sprouts Cabbage Chinese (napa) Cauliflower Kohlrabi ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "broccoli-raab-rapini",
+          "bok-choy-white-stem",
+          "collards-georgia-southern",
+          "kale-lacinato",
+          "kale-red-russian",
+          "kale-winterbor-f1",
+          "baby-kale-blend",
+          "mizuna-purple",
+          "mustard-greens-southern-giant-curled",
+          "komatsuna"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 32",
+        "quote": "Brassica, Leafy Greens Subgroup 5B Broccoli Raab Cabbage, Chinese Collards Kale Mizuna Mustard Greens Mustard Spinach ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "onion-candy-sweet-f1",
+          "onion-long-day-patterson-f1",
+          "onion-red-burgundy",
+          "onion-storage-yellow-stuttgarter",
+          "onion-walla-walla",
+          "garlic-german-extra-hardy",
+          "garlic-inchelium-red-softneck",
+          "garlic-music-hardneck",
+          "garlic-spanish-roja-hardneck",
+          "elephant-garlic",
+          "leek-american-flag",
+          "leek-bandit-overwinter",
+          "scallion-evergreen-bunching",
+          "scallion-nabechan",
+          "shallot-french-red",
+          "chives-common",
+          "perennial-onion-egyptian-walking",
+          "ramp-wild-leek"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 33",
+        "quote": "Bulb Vegetables Crop Group 3-07 Garlic Leek Onion, bulb Garlic, great-headed, Shallot, bulb Onion, green Chive, fresh leaves Leek, wild Onion, tree, tops Onion, Welsh, tops ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": ["citrus-meyer-lemon"],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF pages 37-38",
+        "quote": "Citrus Fruit Crop Group 10-10 Lemon ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropFamily": "corn",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 39",
+        "quote": "Corn Field Pop Sweet (Includes Seed Production) ... Pre-Harvest Interval (PHI): Do not apply within 7 days of harvest (7-day PHI)."
+      },
+      {
+        "cropFamily": "cucurbit",
+        "preHarvestIntervalDays": 1,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 42",
+        "quote": "Cucurbits, Crop Group 9 Cantaloupe Cucumber Gourds Watermelon Pumpkin Squash Zucchini ... Pre-Harvest Interval (PHI): Do not apply within 1 day of harvest (1-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "pepper-anaheim-college-64",
+          "pepper-bell-california-wonder",
+          "pepper-bell-chocolate-beauty",
+          "pepper-bell-orange-sun",
+          "pepper-bell-red-revolution",
+          "pepper-bell-yellow-flamingo",
+          "pepper-carolina-reaper",
+          "pepper-corno-di-toro-rosso",
+          "pepper-cubanelle",
+          "pepper-habanero-orange",
+          "pepper-jalapeno",
+          "pepper-jimmy-nardello",
+          "pepper-lipstick",
+          "pepper-padron",
+          "pepper-poblano-ancho",
+          "pepper-purple-beauty",
+          "pepper-serrano-tampiqueno",
+          "pepper-shishito",
+          "pepper-sweet-banana",
+          "pepper-thai-hot",
+          "snack-pepper-mini-mix",
+          "eggplant-black-beauty",
+          "asian-eggplant-ping-tung-long",
+          "okra-clemson-spineless"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 43",
+        "quote": "Fruiting Vegetables Crop Group 8-10 Pepper Bell Pepper Non-Bell Pepper Eggplant Okra ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "grape-cabernet-franc",
+          "grape-chardonnay",
+          "grape-concord",
+          "grape-marquette",
+          "grape-niagara",
+          "grape-pinot-noir"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 44",
+        "quote": "Grapes and Other Small Fruit Vine Climbing Subgroup 13-07F Grape ... Pre-Harvest Interval (PHI): Do not apply within 14 days of harvest (14-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "basil-genovese",
+          "catnip-common",
+          "cilantro-santo",
+          "dill-mammoth",
+          "hyssop-officinalis",
+          "lavender-english-munstead",
+          "lemongrass-east-indian",
+          "lovage",
+          "marjoram-sweet",
+          "rosemary-tuscan-blue",
+          "sage-broadleaf",
+          "summer-savory",
+          "tarragon-french",
+          "thyme-german-winter",
+          "saffron-crocus",
+          "lemon-balm",
+          "nasturtium-companion",
+          "chamomile-german"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF pages 46-47",
+        "quote": "Herbs & Spices (except black pepper) Crop Group 19 Balm; Basil; Borage; Burnet; Camomile; Caper (buds); Catnip; Celery Seed; Chervil Clove (buds); Coriander (cilantro or Chinese parsley) Dill (seed); Dillweed; Horehound; Hyssop; Juniper (berry); Lavender; Lemongrass; Lovage (leaf Marigold; Marjoram; Mustard (seed), Nasturtium; Nutmeg; Rosemary; Rue; Saffron; Sage; Savory, Summer and Sweet Bay; Tansy; Tarragon; Thyme; Vanilla; Wintergreen; ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "lettuce-black-seeded-simpson",
+          "lettuce-buttercrunch",
+          "lettuce-iceberg-great-lakes",
+          "lettuce-little-gem",
+          "lettuce-oak-leaf-green",
+          "lettuce-red-sails",
+          "lettuce-romaine-paris-island-cos",
+          "lettuce-salanova-mix",
+          "spinach-bloomsdale-long-standing",
+          "spinach-space-f1",
+          "swiss-chard-bright-lights",
+          "arugula-astro",
+          "arugula-rocket",
+          "celery-tall-utah-52-70",
+          "chervil",
+          "mache-corn-salad",
+          "endive-frisee",
+          "fennel-bulb-perfection",
+          "fennel-florence-zefa-fino",
+          "parsley-italian-flat-leaf",
+          "rhubarb-victoria",
+          "claytonia-miners-lettuce",
+          "sorrel-french"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF pages 47-48",
+        "quote": "Leafy Vegetables (except Brassica), Crop Group 4 Arugula Celery Chervil Corn Salad Dock Endive Fennel Lettuce, Head and Leaf Parsley Purslane Rhubarb Spinach Swiss Chard ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "bush-bean-blue-lake-274",
+          "bush-bean-provider",
+          "bush-bean-roma-ii",
+          "bush-bean-royal-burgundy",
+          "pole-bean-kentucky-wonder",
+          "pole-beans-rattlesnake",
+          "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed",
+          "snap-pea-sugar-snap",
+          "snow-pea-oregon-sugar-pod-ii",
+          "yardlong-bean-red-noodle"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF pages 49-50",
+        "quote": "Legume Vegetables, Dry and Succulent, Crop Group Bean (Phaseolus spp.) (includes field bean, kidney bean, lima bean, navy bean, pinto bean, runner bean, snap bean, tepary bean, wax bean) Bean (Vigna spp.) pea, urd bean, yardlong Pea (Pisum spp.) (includes dwarf pea, edible- pod pea, English pea, garden pea, green pea, field pea, snow pea, sugar snap ... b. Abound may be applied the day of harvest (0-day PHI) for succulent beans and peas."
+      },
+      {
+        "cropPluginIds": [
+          "black-bean-black-turtle",
+          "pinto-bean-othello",
+          "lima-bean-fordhook-242",
+          "southern-pea-pinkeye-purple-hull",
+          "field-pea-aragorn",
+          "lentil-pardina"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF pages 49-50",
+        "quote": "Legume Vegetables, Dry and Succulent, Crop Group Bean (Phaseolus spp.) (includes field bean, kidney bean, lima bean, navy bean, pinto bean, runner bean, Bean (Vigna spp.) pea, cowpea, catjang, bean, rice bean, southern Lentil (Lens Pea (Pisum spp.) garden pea, green pea, field ... a. Do not apply within 14 days of harvest (14-day PHI) of dry legume vegetables (dry bean and dry pea seeds).",
+        "note": "Lima beans and southern peas may be picked green or dry; the dry interval is kept."
+      },
+      {
+        "cropPluginIds": ["mint-spearmint"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 50",
+        "quote": "Mint (Fresh or for processing into mint oil) ... a. For processed mint, do not apply within 7 days of harvest (7-day PHI). ... b. For fresh mint, Abound may be applied the day of harvest (0-day PHI).",
+        "note": "Processed mint interval (7 days) kept over the 0-day fresh mint interval."
+      },
+      {
+        "cropPluginIds": [
+          "alfalfa-hi-gest-660",
+          "alfalfa-vernema",
+          "clover-red-mammoth",
+          "red-clover-medium-mammoth"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF pages 51-52",
+        "quote": "Nongrass Animal Feeds Forage, Fodder, Straw and Hay, Crop Group Alfalfa (Medicago Clover ... Pre-Harvest Interval (PHI): Do not apply within 14 days of grazing or harvest (14-day PHI) for forage and hay."
+      },
+      {
+        "cropPluginIds": ["sunflower-mammoth-russian", "flax-grain-omega"],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 53",
+        "quote": "Oilseed Crops Crop Group 20 Flax Sunflower ... Pre-Harvest Interval (PHI): Do not apply within 30 days of harvest (30-day PHI)."
+      },
+      {
+        "cropPluginIds": ["peanut-virginia-jumbo"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF pages 54-55",
+        "quote": "Peanuts ... Pre-Harvest Interval (PHI): Do not apply within 14 days of harvest (14-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "potato-french-fingerling",
+          "potato-german-butterball",
+          "potato-kennebec",
+          "potato-purple-majesty",
+          "potato-russet-burbank",
+          "potato-yukon-gold",
+          "sweet-potato-beauregard",
+          "sweet-potato-georgia-jet",
+          "ginger-yellow-hawaiian",
+          "turmeric-yellow",
+          "taro-bun-long",
+          "sunchoke-stampede"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF pages 56-71",
+        "quote": "Potatoes Vegetables, Tuberous and Corm Subgroup Chinese and Jerusalem Dasheen (Taro) Ginger Potato Sweet Potato Turmeric ... Pre-Harvest Interval (PHI): Do not apply within 14 days of harvest (14-day PHI)."
+      },
+      {
+        "cropPluginIds": ["quinoa-cherry-vanilla"],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 57",
+        "quote": "Quinoa ... a. Do not apply within 7 days (7-day PHI) for forage and hay. ... b. Do not apply within 14 days of grazing (14-day PHI). ... c. Do not apply within 30 days of harvest (30-day PHI)."
+      },
+      {
+        "cropPluginIds": ["sorghum-grain-pioneer"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 59",
+        "quote": "Sorghum ... Pre-Harvest Interval (PHI): Do not apply within 14 days of harvest (14-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "soybean-asgrow-roundup-ready-2-xtend",
+          "edamame-midori-giant",
+          "edamame-tohya"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 60",
+        "quote": "Soybeans Soybean, Immature Seed (edamame) ... a. Do not apply within 14 days of harvest (14-day PHI) of soybeans (beans). ... b. Abound may be applied the day of harvest (0-day PHI) to soybean forage and hay.",
+        "note": "Edamame is listed in the soybean section (14 days for beans) and the legume vegetable section (0 days for succulent beans); the 14 days is kept."
+      },
+      {
+        "cropFamily": "stone-fruit",
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 61",
+        "quote": "Stone Fruits, Crop Group 12-12 Apricot Cherry, Tart Peach Plum ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "tomato-amish-paste",
+          "tomato-better-boy-f1",
+          "tomato-bhn-589-f1",
+          "tomato-big-beef-f1",
+          "tomato-black-cherry",
+          "tomato-black-krim",
+          "tomato-brandywine-pink",
+          "tomato-celebrity-f1",
+          "tomato-cherokee-purple",
+          "tomato-defiant-phr-f1",
+          "tomato-early-girl-f1",
+          "tomato-green-zebra",
+          "tomato-indigo-rose",
+          "tomato-iron-lady-f1",
+          "tomato-juliet-f1",
+          "tomato-matts-wild-cherry",
+          "tomato-mortgage-lifter",
+          "tomato-mountain-magic-f1",
+          "tomato-mountain-merit-f1",
+          "tomato-pink-bumblebee",
+          "tomato-plum-regal-f1",
+          "tomato-roma-vf",
+          "tomato-roma-vfn",
+          "tomato-san-marzano",
+          "tomato-sun-gold-f1",
+          "tomato-sweet-100-f1",
+          "tomato-yellow-mini-grape",
+          "tomato-yellow-pear",
+          "tomatillo-de-milpa",
+          "ground-cherry-aunt-mollys"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 67",
+        "quote": "Tomatoes Tomatillos Subgroup 8-10A ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": ["chestnut-dunstan", "hazelnut-jefferson", "walnut-carpathian-english"],
+        "preHarvestIntervalDays": 45,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 68",
+        "quote": "Tree Nuts, Crop Group 14-12 Chestnut Filbert (hazelnut) Walnut ... Pre-Harvest Interval (PHI): Do not apply within 45 days of harvest (45-day PHI)."
+      },
+      {
+        "cropPluginIds": ["pawpaw-overleese", "persimmon-fuyu"],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 69",
+        "quote": "Tropical Fruit Pawpaw Persimmon ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "beet-chioggia",
+          "beet-detroit-dark-red",
+          "beet-golden-touchstone",
+          "burdock-takinogawa",
+          "carrot-chantenay-red-cored",
+          "carrot-cosmic-purple",
+          "carrot-danvers-126",
+          "carrot-imperator-58",
+          "carrot-nantes-half-long",
+          "carrot-rainbow-mix",
+          "carrot-scarlet-nantes-seed",
+          "celeriac-brilliant",
+          "parsnip-hollow-crown",
+          "radish-cherry-belle",
+          "radish-french-breakfast",
+          "radish-watermelon",
+          "daikon-radish-april-cross",
+          "turnip-hakurei",
+          "turnip-purple-top-white-globe"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 70",
+        "quote": "Vegetables, Leaves of Root and Tuber Group and Root Subgroup Beet, Garden1,2 Burdock1,2 Carrot1,2 Celeriac (celery Parsnip1,2 Radish1,2 Radish, Oriental (daikon)1,2 Turnip1,2 ... Pre-Harvest Interval (PHI): Abound may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": ["watercress-true"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01098-20181219.pdf",
+        "docDate": "2018-12-19",
+        "page": "PDF page 72",
+        "quote": "Watercress ... Pre-Harvest Interval (PHI): Do not apply within 7 days of harvest (7-day PHI)."
+      }
+    ],
+    "headline-sc": [
+      {
+        "cropPluginIds": ["alfalfa-hi-gest-660", "alfalfa-vernema"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 14",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Alfalfa ... Alfalfa Anthracnose 6 to 9 3 27 14",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      },
+      {
+        "cropPluginIds": ["citrus-meyer-lemon"],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 17",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Citrus Fruits Group Lemon ... Citrus Fruits Group Greasy spot 9 to 12 2 54 0",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      },
+      {
+        "cropFamily": "corn",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 18",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Corn Field corn Popcorn Sweet corn Seed production corn ... Corn Anthracnose** 6 to 12 2 72 7",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      },
+      {
+        "cropPluginIds": [
+          "black-bean-black-turtle",
+          "pinto-bean-othello",
+          "lima-bean-fordhook-242",
+          "southern-pea-pinkeye-purple-hull",
+          "field-pea-aragorn",
+          "lentil-pardina"
+        ],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF pages 22-23",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Dried Shelled Peas and Beans (except soybeans) Lentil Phaseolus spp. Lima bean Pinto bean Vigna spp. Southern pea Pisum spp. Field pea ... Dried Shelled Anthracnose 6 to 9 2 18 21",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days). Lima beans and southern peas are also listed as succulent shelled (7 days); the dried shelled 21 days is kept because the planting may be picked dry."
+      },
+      {
+        "cropPluginIds": [
+          "bush-bean-blue-lake-274",
+          "bush-bean-provider",
+          "bush-bean-roma-ii",
+          "bush-bean-royal-burgundy",
+          "pole-bean-kentucky-wonder",
+          "pole-beans-rattlesnake",
+          "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed",
+          "yardlong-bean-red-noodle",
+          "snap-pea-sugar-snap",
+          "snow-pea-oregon-sugar-pod-ii"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 24",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Edible-podded Legume Vegetables Phaseolus spp. Snap bean Vigna spp. Yardlong bean Pisum spp. Snowpea Sugar snap pea ... Edible-podded Alternaria leaf and pod spot 6 to 9 2 18 7",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      },
+      {
+        "cropPluginIds": ["edamame-midori-giant", "edamame-tohya"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 24",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Edible-podded Legume Vegetables Soybean (immature seed) ... Edible-podded Alternaria leaf and pod spot 6 to 9 2 18 7",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      },
+      {
+        "cropPluginIds": ["mint-spearmint"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 25",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Mint ... Mint Leaf spot 9 to 12 2 48 14",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      },
+      {
+        "cropPluginIds": ["sunflower-mammoth-russian", "flax-grain-omega"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 27",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Oilseed Crops Flax seed Sunﬂower ... Oilseed Crops Pasmo 6 to 12 2 24 21",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      },
+      {
+        "cropPluginIds": ["peanut-virginia-jumbo"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 30",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Peanut ... Peanut Early leaf spot 6 to 15 2 45 14",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      },
+      {
+        "cropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 36",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Soybean ... Soybean Alternaria leaf spot 6 to 12 2 24 21",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      },
+      {
+        "cropPluginIds": [
+          "potato-french-fingerling",
+          "potato-german-butterball",
+          "potato-kennebec",
+          "potato-purple-majesty",
+          "potato-russet-burbank",
+          "potato-yukon-gold",
+          "sweet-potato-beauregard",
+          "sweet-potato-georgia-jet",
+          "ginger-yellow-hawaiian",
+          "turmeric-yellow",
+          "taro-bun-long",
+          "sunchoke-stampede"
+        ],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+        "docDate": "2026-02-23",
+        "page": "PDF page 42",
+        "quote": "Table 2. Headline® SC fungicide Crop-speciﬁc Requirements Tuberous and Corm Vegetables Subgroup Jerusalem artichoke Dasheen Ginger Sweet potato Turmeric Potato ... Tuberous and Downy mildew 6 to 12 1 72 3",
+        "note": "Table 2 columns: product rate per application (fl oz/A), maximum sequential foliar applications, maximum product per year (fl oz/A), minimum time from application to harvest (PHI, days)."
+      }
+    ],
+    "tilt-36ec-propiconazole": [
+      {
+        "cropPluginIds": [
+          "bush-bean-blue-lake-274",
+          "bush-bean-provider",
+          "bush-bean-roma-ii",
+          "bush-bean-royal-burgundy",
+          "pole-bean-kentucky-wonder",
+          "pole-beans-rattlesnake",
+          "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed",
+          "yardlong-bean-red-noodle"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 22",
+        "quote": "Beans, Dry and Succulent ... Dry and Succulent Beans: Cicer arietinum (chickpea, garbanzo bean); Lupinus spp. (including sweet lupine, white sweet lupine, white lupine, and grain lupine), Phaseolus spp. (including kidney bean, lima bean, mung bean, navy bean, pinto bean, snap bean, and wax bean); Vicia faba (broad bean, fava bean); Vigna spp. (including asparagus bean, blackeyed pea and cowpea) ... Do not apply within 7 days of harvest for succulent beans (7-day PHI).",
+        "note": "Snap and yardlong beans only. The label gives no day count for dry beans, so dry beans, lima beans and southern peas are left out and read the longest PHI on file."
+      },
+      {
+        "cropPluginIds": [
+          "blackberry-prime-ark-freedom",
+          "blackberry-triple-crown",
+          "raspberry-caroline-primocane",
+          "raspberry-heritage"
+        ],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF pages 23-24",
+        "quote": "Berry, Caneberry Subgroup 13-07A Blackberry Red and Black Raspberry ... Do not apply within 30 days of harvest (30-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "aronia-viking",
+          "blueberry-bluecrop",
+          "blueberry-duke-northern-highbush",
+          "blueberry-pink-lemonade",
+          "currant-black-titania",
+          "currant-red-jonkheer",
+          "currant-red-lake",
+          "elderberry-adams",
+          "elderberry-bob-gordon",
+          "gooseberry-hinnonmaki-red",
+          "gooseberry-invicta",
+          "honeyberry-haskap-aurora",
+          "jostaberry",
+          "saskatoon-northline",
+          "sea-buckthorn-russian"
+        ],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF pages 23-24",
+        "quote": "Berry, Bushberry Subgroup 13-07B Highbush Blueberry Black Currant Red Currant Elderberry Gooseberry ... Additional Bushberries: Aronia Berry, Buffalo Currant, Chilean Guava, European Barberry, Edible Honeysuckle, Huckleberry, Jostaberry, Juneberry (Saskatoon Berry), Salal, Sea Buckthorn ... Do not apply within 30 days of harvest (30-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "arugula-astro",
+          "arugula-rocket",
+          "broccoli-raab-rapini",
+          "bok-choy-white-stem",
+          "collards-georgia-southern",
+          "kale-lacinato",
+          "kale-red-russian",
+          "kale-winterbor-f1",
+          "baby-kale-blend",
+          "mizuna-purple",
+          "mustard-greens-southern-giant-curled"
+        ],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 25",
+        "quote": "Brassica, leafy greens, subgroup 4-16B, except watercress ... Brassica, leafy greens, subgroup 4-16B, except watercress: Arugula; broccoli raab; broccoli, Chinese; cabbage, abyssinian; cabbage, seakale; Chinese cabbage, bok choy; collards; cress, garden; cress, upland; hanover salad; kale; maca, leaves; mizuna; mustard greens; radish, leaves; rape greens; rocket, wild; shepherd's purse; turnip greens, and cultivars, varieties, and hybrids of these commodities ... Do not apply within 7 days of harvest (7-day PHI)"
+      },
+      {
+        "cropPluginIds": [
+          "onion-candy-sweet-f1",
+          "onion-long-day-patterson-f1",
+          "onion-red-burgundy",
+          "onion-storage-yellow-stuttgarter",
+          "onion-walla-walla",
+          "garlic-german-extra-hardy",
+          "garlic-inchelium-red-softneck",
+          "garlic-music-hardneck",
+          "garlic-spanish-roja-hardneck",
+          "shallot-french-red",
+          "elephant-garlic"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 26",
+        "quote": "Bulb Vegetables Bulb Onions Subgroup 3-07A Garlic Bulb Onions Bulb Shallot Bulb ... Additional Bulb Onions: Daylily, Fritillaria, Great-headed Garlic, Serpent Garlic, Lily, Chinese Onion, Pearl Onion, Potato Onion ... Do not apply within 14 days of harvest on bulb onion types (14-day PHI).",
+        "note": "Shallots are listed as bulbs and as fresh leaves; the bulb interval (14 days) is kept."
+      },
+      {
+        "cropPluginIds": [
+          "leek-american-flag",
+          "leek-bandit-overwinter",
+          "scallion-evergreen-bunching",
+          "scallion-nabechan",
+          "chives-common",
+          "perennial-onion-egyptian-walking",
+          "ramp-wild-leek"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 26",
+        "quote": "Green Onions Subgroup 3-07B Leek Fresh Onion Green Onion ... Additional Green Onions: Fresh Chive Leaves, Fresh Chinese Chive Leaves, Hosta Elegans, Fritillaria Leaves, Kurrat, Lady’s Leek, Wild Leek, Beltsville Bunching Onion, Macrostem Onion, Tree Tops Onion, Welsh Onion Tops ... Tilt may be applied the day of harvest (0-day PHI) for green onion types."
+      },
+      {
+        "cropPluginIds": [
+          "celery-tall-utah-52-70",
+          "rhubarb-victoria",
+          "fennel-bulb-perfection",
+          "fennel-florence-zefa-fino",
+          "swiss-chard-bright-lights"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 27",
+        "quote": "Leaf Petiole Vegetable Subgroup 22B Celery Rhubarb Florence fennel Swiss chard ... Do not apply within 14 days of harvest (14-day PHI)."
+      },
+      {
+        "cropFamily": "corn",
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 31",
+        "quote": "Corn Field Seed Popcorn Sweet Corn ... Do not apply within 30 days of harvest for forage, grain and stover (30-day PHI).",
+        "note": "Corn family: the field, seed and popcorn interval, the longest corn PHI on the label. Sweet corn is listed by plugin."
+      },
+      {
+        "cropPluginIds": [
+          "corn-bantam-sweet",
+          "corn-sweet-bodacious",
+          "sweet-corn-american-dream-f1-seed",
+          "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+          "sweet-corn-honey-select-f1",
+          "sweet-corn-mirai-f1",
+          "sweet-corn-silver-queen-f1",
+          "sweet-corn-sugar-buns-f1"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 31",
+        "quote": "Sweet Corn For Sweet Corn: ... Do not apply within 14 days of harvest for ears (14-day PHI). ... Do not apply within 14 days of harvest for forage (14-day PHI)."
+      },
+      {
+        "cropPluginIds": ["dill-mammoth"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 33",
+        "quote": "Dill ... Do not apply within 7 days of harvest (7-day PHI)."
+      },
+      {
+        "cropPluginIds": ["hazelnut-jefferson"],
+        "preHarvestIntervalDays": 60,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 34",
+        "quote": "Filberts (Hazelnuts) ... Do not apply within 60 days of harvest (60-day PHI)."
+      },
+      {
+        "cropPluginIds": ["mint-spearmint"],
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 36",
+        "quote": "Mint Peppermint Spearmint ... Do not apply within 7 days of harvest (7-day PHI)."
+      },
+      {
+        "cropPluginIds": ["parsley-italian-flat-leaf", "cilantro-santo"],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 37",
+        "quote": "Parsley, Fresh and Dried Leaves Cilantro (Coriander), ... Do not apply within 14 days of harvest (14-day PHI)."
+      },
+      {
+        "cropPluginIds": ["peanut-virginia-jumbo"],
+        "preHarvestIntervalDays": 21,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 38",
+        "quote": "Peanuts ... Do not apply within 14 days of harvest (14-day PHI) with low use rate (4 fl oz/A). ... Do not apply within 21 days of harvest (21-day PHI) if used high use rate (8 fl oz/A).",
+        "note": "The high-rate interval (21 days) is kept because the record does not carry the rate band."
+      },
+      {
+        "cropPluginIds": ["quinoa-cherry-vanilla"],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 42",
+        "quote": "Quinoa ... Do not apply within 30 days of harvest (30-day PHI)."
+      },
+      {
+        "cropPluginIds": ["flax-grain-omega"],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 43",
+        "quote": "Rapeseed Subgroup 20A ... Complete list of Rapeseed subgroup 20A: Borage, crambe, cuphea, echium, flax seed, ... Do not apply within 30 days of harvest (30-day PHI)."
+      },
+      {
+        "cropPluginIds": ["sorghum-grain-pioneer"],
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 45",
+        "quote": "Sorghum ... Do not apply within 30 days of harvest (30-day PHI) for forage. ... Do not apply within 21 days of harvest (21-day PHI) for grain and stover.",
+        "note": "Forage interval (30 days) kept over the 21-day grain interval: the record cannot tell grain from forage."
+      },
+      {
+        "cropFamily": "stone-fruit",
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 47",
+        "quote": "Stone Fruits Crop Group 12-12 Apricots Cherries, Sweet Cherries, Tart Peaches Plums ... Tilt may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": [
+          "strawberry-albion-day-neutral",
+          "strawberry-earliglow-june-bearing",
+          "strawberry-jewel"
+        ],
+        "preHarvestIntervalDays": 0,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 48",
+        "quote": "Strawberry and other Low Growing Berry ... Tilt may be applied the day of harvest (0-day PHI)."
+      },
+      {
+        "cropPluginIds": ["chestnut-dunstan", "walnut-carpathian-english"],
+        "preHarvestIntervalDays": 60,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 52",
+        "quote": "Tree Nuts Crop Group 14- ... chestnut; chinquapin; coconut; coquito nut; dika nut; ginkgo; Guiana chestnut; hazelnut (filbert); heartnut; ... nut; tropical almond; walnut, black; walnut, English; yellowhorn; cultivars, varieties, and/or hybrids of these. ... Do not apply within 60 days of harvest (60-day PHI) except for pecans (see specific directions)."
+      },
+      {
+        "cropPluginIds": [
+          "beet-chioggia",
+          "beet-detroit-dark-red",
+          "beet-golden-touchstone",
+          "burdock-takinogawa",
+          "carrot-chantenay-red-cored",
+          "carrot-cosmic-purple",
+          "carrot-danvers-126",
+          "carrot-imperator-58",
+          "carrot-nantes-half-long",
+          "carrot-rainbow-mix",
+          "carrot-scarlet-nantes-seed",
+          "celeriac-brilliant",
+          "parsnip-hollow-crown",
+          "radish-cherry-belle",
+          "radish-french-breakfast",
+          "radish-watermelon",
+          "daikon-radish-april-cross",
+          "turnip-hakurei",
+          "turnip-purple-top-white-globe"
+        ],
+        "preHarvestIntervalDays": 14,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 53",
+        "quote": "Vegetable, root, except sugar beet, subgroup 1B Carrots Radish, Radish, oriental Burdock, edible; celeriac; chervil, parsnip; rutabaga; skirret; turnip. Garden Beets ... Do not apply within 14 days of harvest (14-day PHI)."
+      },
+      {
+        "cropPluginIds": ["watercress-true"],
+        "preHarvestIntervalDays": 3,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00617-20211110.pdf",
+        "docDate": "2021-11-10",
+        "page": "PDF page 54",
+        "quote": "Watercress ... Do not apply within 3 days of harvest (3-day PHI)."
       }
     ]
   },

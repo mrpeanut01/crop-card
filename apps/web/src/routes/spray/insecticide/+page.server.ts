@@ -89,9 +89,18 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     return rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : null;
   };
 
+  const cropNames: Record<string, string> = {};
+  for (const b of allBlocks) {
+    for (const p of b.plantings) {
+      if (cropNames[p.cropPluginId]) continue;
+      cropNames[p.cropPluginId] =
+        registry.get(p.cropPluginId)?.plugin.displayName ?? p.cropPluginId;
+    }
+  }
   const taskContext = loadTaskContext(url.searchParams.get('task'));
   return {
     insecticides: insecticidePlugins,
+    cropNames,
     pasture: await loadSprayPastureContext(allBlocks, registry),
     organicBlocks: organicBlocksForNotice(
       allBlocks.map((b) => b.id),
@@ -114,6 +123,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       return {
         id: b.id,
         name: b.name,
+        acres: b.acres ?? null,
         cropPluginIds: Array.from(new Set(standingCropPluginIds(b.plantings, now))),
         lat: location.lat,
         lon: location.lon,

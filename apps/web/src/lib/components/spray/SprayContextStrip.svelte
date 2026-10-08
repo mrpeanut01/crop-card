@@ -34,6 +34,8 @@
     /** Reason copy on hover ("Why is this allowed?"). */
     reason?: string;
     tone: CompatibilityTone;
+    /** False when the label is translated chrome rather than safety text. */
+    englishOnly?: boolean;
   }
   export interface SprayContextBlock {
     id: string;
@@ -61,6 +63,8 @@
     onChangeSelection?: () => void;
     /** Advisory lines when animals live on the sprayed Areas (Phase 32C). Never blocks. */
     pastureNotice?: string[] | null;
+    /** What the targets are: weeds (herbicide), pests or diseases. */
+    targetKind?: 'weeds' | 'pests' | 'diseases';
   }
   const {
     blocks,
@@ -72,13 +76,21 @@
     compatibility,
     onAddBlock,
     onChangeSelection,
-    pastureNotice = null
+    pastureNotice = null,
+    targetKind = 'weeds'
   }: Props = $props();
 
   const tr = $derived(createT(page.data?.locale));
   const totalAc = $derived(blocks.reduce((sum, b) => sum + (b.acres ?? 0), 0));
   const primaryTargets = $derived(targets.filter((t) => t.pressure === 'heavy'));
   const otherTargets = $derived(targets.filter((t) => t.pressure !== 'heavy'));
+  const targetHeading = $derived(
+    targetKind === 'pests'
+      ? tr('sprayui.ctx.targetPests')
+      : targetKind === 'diseases'
+        ? tr('sprayui.ctx.targetDiseases')
+        : tr('sprayui.ctx.targetWeeds')
+  );
 </script>
 
 <Card padded={false}>
@@ -94,16 +106,16 @@
         <div class="cs-empty">{tr('sprayui.ctx.noBlock')}</div>
       {:else if blocks.length === 1}
         <div class="cs-line">
-          {blocks[0].label} · <span class="mono">{fmt.label(totalAc, 'area', { digits: 1 })}</span>
+          {blocks[0].label} · <span class="mono">{fmt.labelArea(totalAc)}</span>
         </div>
       {:else}
         <div class="cs-line strong">
-          <span class="mono">{fmt.label(totalAc, 'area', { digits: 1 })}</span>
+          <span class="mono">{fmt.labelArea(totalAc)}</span>
           {tr('sprayui.ctx.combined')}
         </div>
         <div class="cs-chips">
           {#each blocks as b (b.id)}
-            <span class="chip" title="{b.label} — {fmt.label(b.acres, 'area')}">
+            <span class="chip" title="{b.label} — {fmt.labelArea(b.acres)}">
               {#if b.color}
                 <span class="dot" style:background={b.color}></span>
               {/if}
@@ -146,7 +158,7 @@
     <div class="cs-cell">
       <div class="cs-k">
         <Compass size={12} strokeWidth={1.75} />
-        {tr('sprayui.ctx.targetWeeds')}{#if targets.length > 0}
+        {targetHeading}{#if targets.length > 0}
           · {targets.length}{/if}
       </div>
       {#if targets.length === 0}
@@ -188,7 +200,11 @@
         <AlertTriangle size={15} strokeWidth={1.75} />
       {/if}
       <span>
-        <strong lang="en" data-english-only="safety">{compatibility.label}.</strong>
+        {#if compatibility.englishOnly === false}
+          <strong>{compatibility.label}.</strong>
+        {:else}
+          <strong lang="en" data-english-only="safety">{compatibility.label}.</strong>
+        {/if}
         {#if compatibility.reason}
           <span class="why" title={compatibility.reason}>{tr('sprayui.ctx.why')}</span>
         {/if}

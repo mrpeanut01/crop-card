@@ -1,6 +1,12 @@
 <script lang="ts">
   import { noteHoldWrite } from '$lib/animals/recordClient';
   import { invalidateAll } from '$app/navigation';
+  import {
+    blockNameMap,
+    blockNameOf,
+    cropContextLabel,
+    cropNamesFor
+  } from '$lib/spray/contextLabels';
   import { untrack } from 'svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
@@ -298,15 +304,16 @@
       }))
   );
   const ctxBlocks = $derived<SprayContextBlock[]>(
-    selectedBlock ? [{ id: selectedBlock.id, label: selectedBlock.name, acres: 0 }] : []
+    selectedBlock
+      ? [{ id: selectedBlock.id, label: selectedBlock.name, acres: selectedBlock.acres ?? 0 }]
+      : []
   );
   const ctxCropLabel = $derived(
-    selectedBlock?.cropPluginIds.length
-      ? selectedBlock.cropPluginIds.length === 1
-        ? selectedBlock.cropPluginIds[0]
-        : tr('sprayui.ctx.crops', { count: selectedBlock.cropPluginIds.length })
-      : '—'
+    cropContextLabel(selectedBlock?.cropPluginIds ?? [], data.cropNames, data.locale, (count) =>
+      tr('sprayui.ctx.crops', { count })
+    )
   );
+  const blockNames = $derived(blockNameMap(data.blocks));
   const ctxCompatibility = $derived<CompatibilityState | undefined>(
     selectedPluginIds.length === 0
       ? undefined
@@ -319,10 +326,11 @@
         : {
             label:
               selectedFungicides.length === 1
-                ? `${selectedFungicides[0].displayName} compatible`
-                : `${selectedFungicides.length}-way tank-mix compatible`,
-            reason: 'Kernel verified FRAC pair-incompatibility table.',
-            tone: 'forest'
+                ? tr('sprayui.fun.compatOne', { name: selectedFungicides[0].displayName })
+                : tr('sprayui.fun.compatMix', { count: selectedFungicides.length }),
+            reason: tr('sprayui.fun.compatWhy'),
+            tone: 'forest',
+            englishOnly: false
           }
   );
 
@@ -392,6 +400,7 @@
       result = `Recorded — REI clear ${reiClear} · PHI clear ${phiClear}.`;
       if (Array.isArray(payload.stockWarnings)) warnings = payload.stockWarnings;
       taskOutcome = payload.taskClose ?? null;
+      await invalidateAll().catch(() => undefined);
     } catch (e) {
       // #316 — transient network failure while "online": fall back to the
       // offline queue instead of losing the record.
@@ -422,6 +431,7 @@
   <SprayContextStrip
     blocks={ctxBlocks}
     cropLabel={ctxCropLabel}
+    targetKind="diseases"
     compatibility={ctxCompatibility}
     pastureNotice={ctxPasture}
   />
@@ -443,8 +453,10 @@
   >
     <strong>Bees.</strong>
     {bloomRisk.risky.map((f) => `${f.displayName} (${pollinatorLabelText(f)})`).join(', ')}:
-    bee-toxic during bloom on {bloomRisk.blooming.join(', ')}. Wait for bloom to end, spray at dusk
-    after foragers have left, or rotate to a low-risk product.
+    bee-toxic during bloom on {cropNamesFor(bloomRisk.blooming, data.cropNames, data.locale).join(
+      ', '
+    )}. Wait for bloom to end, spray at dusk after foragers have left, or rotate to a low-risk
+    product.
   </div>
 {/if}
 
@@ -630,9 +642,11 @@
         <ul class="recent-list">
           {#each data.recentEvents as e (e.id)}
             <li>
-              <strong>{fmt.instant(e.occurredAt)}</strong> — {tr('sprayui.fun.block', {
-                block: e.blockId
-              })}
+              <strong>{fmt.instant(e.occurredAt)}</strong> — {blockNameOf(
+                blockNames,
+                e.blockId,
+                tr('sprayui.removedBlock')
+              )}
               · {e.products.map((p) => p.displayName).join(', ')}
               {#if e.preHarvestClearAt}
                 <span class="phi" lang="en" data-english-only="safety"

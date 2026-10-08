@@ -1,6 +1,12 @@
 <script lang="ts">
   import { noteHoldWrite } from '$lib/animals/recordClient';
   import { invalidateAll } from '$app/navigation';
+  import {
+    blockNameMap,
+    blockNameOf,
+    cropContextLabel,
+    cropNamesFor
+  } from '$lib/spray/contextLabels';
   import { untrack } from 'svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
@@ -274,15 +280,16 @@
       }))
   );
   const ctxBlocks = $derived<SprayContextBlock[]>(
-    selectedBlock ? [{ id: selectedBlock.id, label: selectedBlock.name, acres: 0 }] : []
+    selectedBlock
+      ? [{ id: selectedBlock.id, label: selectedBlock.name, acres: selectedBlock.acres ?? 0 }]
+      : []
   );
   const ctxCropLabel = $derived(
-    selectedBlock?.cropPluginIds.length
-      ? selectedBlock.cropPluginIds.length === 1
-        ? selectedBlock.cropPluginIds[0]
-        : tr('sprayui.ctx.crops', { count: selectedBlock.cropPluginIds.length })
-      : '—'
+    cropContextLabel(selectedBlock?.cropPluginIds ?? [], data.cropNames, data.locale, (count) =>
+      tr('sprayui.ctx.crops', { count })
+    )
   );
+  const blockNames = $derived(blockNameMap(data.blocks));
   const ctxCompatibility = $derived<CompatibilityState | undefined>(
     !selectedPluginId
       ? undefined
@@ -366,6 +373,7 @@
       await noteHoldWrite('insecticide', body);
       result = `Recorded — re-entry clear ${fmt.instant(respData.event.reEntryClearAt)}.`;
       taskOutcome = respData.taskClose ?? null;
+      await invalidateAll().catch(() => undefined);
     } catch (e) {
       // #316 — transient network failure while "online" (e.g. flaky
       // signal). Fall back to the offline queue rather than losing the
@@ -397,6 +405,7 @@
   <SprayContextStrip
     blocks={ctxBlocks}
     cropLabel={ctxCropLabel}
+    targetKind="pests"
     compatibility={ctxCompatibility}
     pastureNotice={ctxPasture}
   />
@@ -504,7 +513,9 @@
             <li>
               {fmt.instant(e.occurredAt, 'date')} —
               {e.products.map((p) => p.displayName).join(', ')}
-              {tr('sprayui.recent.onBlock', { block: e.blockId })}
+              {tr('sprayui.recent.onBlock', {
+                block: blockNameOf(blockNames, e.blockId, tr('sprayui.removedBlock'))
+              })}
               {#if e.scoutObservation}
                 {tr('sprayui.ins.triggeredBy', {
                   pest: e.scoutObservation.pest,
@@ -609,7 +620,11 @@
       nearby={nearbyPollinator}
       bind:bloomStatus
       bind:attestedNoForagers
-      bloomingCrops={selectedBlock?.bloomingCropPluginIds ?? []}
+      bloomingCrops={cropNamesFor(
+        selectedBlock?.bloomingCropPluginIds ?? [],
+        data.cropNames,
+        data.locale
+      )}
       stageMark={selectedBlock?.stageBloom
         ? {
             stage: t('en', `orchard.stage.${selectedBlock.stageBloom.stageId}` as MessageKey),

@@ -95,9 +95,18 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     return [...ids];
   };
 
+  const cropNames: Record<string, string> = {};
+  for (const b of blocks) {
+    for (const p of b.plantings) {
+      if (cropNames[p.cropPluginId]) continue;
+      cropNames[p.cropPluginId] =
+        registry.get(p.cropPluginId)?.plugin.displayName ?? p.cropPluginId;
+    }
+  }
   const taskContext = loadTaskContext(url.searchParams.get('task'));
   return {
     fungicides: fungicidePlugins,
+    cropNames,
     pasture: await loadSprayPastureContext(blocks, registry),
     organicBlocks: organicBlocksForNotice(
       blocks.map((b) => b.id),

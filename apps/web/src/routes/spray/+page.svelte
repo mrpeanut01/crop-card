@@ -31,6 +31,7 @@
   import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
   import { organicInputClass } from '$lib/organic/inputCompliance';
   import { createT } from '$lib/i18n';
+  import { joinSentences } from '$lib/spray/contextLabels';
   import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import type { MessageKey } from '$lib/i18n';
   import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
@@ -279,6 +280,14 @@
   const sprayer = $derived(data.sprayers.find((s) => s.id === selectedSprayerId));
   const selectedSprayer = $derived(sprayer);
   const selectedSprayerTank = $derived(sprayer?.tankGal ?? null);
+  const tankHint = $derived(
+    joinSentences(
+      tr('sprayui.tank.question'),
+      selectedSprayerTank
+        ? tr('sprayui.tank.holds', { name: selectedSprayer?.label ?? '', gal: selectedSprayerTank })
+        : null
+    )
+  );
   const tankChoices = $derived(
     [...new Set([...(selectedSprayerTank ? [selectedSprayerTank] : []), 10, 25, 50, 75, 100])].sort(
       (a, b) => a - b
@@ -889,7 +898,7 @@
             <span class="card-check" aria-hidden="true">{isSelected ? '☑' : '☐'}</span>
             <strong>{b.label}</strong>
           </span>
-          <small>{b.acres ? fmt.label(b.acres, 'area') : ''}</small>
+          <small>{b.acres ? fmt.labelArea(b.acres) : ''}</small>
           {#if b.preplant}
             <!-- Phase 21b follow-up — block has nothing in the ground;
                  spray is a pre-plant burndown. Crop-tox check skipped. -->
@@ -1053,11 +1062,7 @@
   <section class="step">
     <h2>{tr('sprayui.h.tank')}</h2>
     <p class="hint">
-      {tr('sprayui.tank.question')}{#if selectedSprayerTank}
-        {tr('sprayui.tank.holds', {
-          name: selectedSprayer?.label ?? '',
-          gal: selectedSprayerTank
-        })}{/if}
+      {tankHint}
     </p>
     <div class="quick-picks" role="radiogroup" aria-label={tr('sprayui.tank.aria')}>
       {#each tankChoices as size (size)}

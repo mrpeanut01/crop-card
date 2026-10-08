@@ -37,7 +37,7 @@ import { materializeCareTasks } from '$lib/server/carePlans';
 import { buildFarmSnapshot } from '$lib/server/cardSnapshot';
 import { loadSeasonMoney } from '$lib/finance/profit.server';
 import { projectAsGuard } from '$lib/server/holdGuard';
-import { addDaysYmd, demoSeason, utcDayMs, zonedMs } from '$lib/demo/time';
+import { addDaysYmd, demoSeason, utcDayMs, ymdOf, zonedMs } from '$lib/demo/time';
 
 const TENANT_TABLE_EXPORTS: string[] = JSON.parse(
   readFileSync(
@@ -250,6 +250,18 @@ describe.each(NOWS)('seedDemoFarm on %s', (ymd) => {
         for (const [id, hash] of Object.entries(e.pluginHashes)) {
           expect(hash).toBe(registry.get(id)?.hash);
         }
+      }
+      // Dormant orchard sprays carry no leaf observation (#632).
+      const treeCrops = new Set(
+        listCrops()
+          .filter((c) => /^(apple|peach)-/.test(c.cropPluginId))
+          .map((c) => c.id)
+      );
+      const treeSprays = listFungicideEvents().filter((e) => e.cropId && treeCrops.has(e.cropId));
+      expect(treeSprays.length).toBeGreaterThan(0);
+      for (const e of treeSprays) {
+        const month = Number(ymdOf(e.occurredAt).slice(5, 7));
+        if (month >= 11 || month <= 3) expect(e.diseaseObservation).toBeUndefined();
       }
       const season_ = loadSeasonView(registry, null, now);
       expect(season_.timeline).toBeDefined();

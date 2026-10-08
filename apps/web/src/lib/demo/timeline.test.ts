@@ -1,8 +1,14 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { DEMO_PRODUCTS } from './catalog';
-import { buildDemoTimeline, TASK_HORIZON_DAYS, type DemoTimeline } from './timeline';
-import { DAY_MS, addDaysYmd, demoSeason, utcDayMs, ymdOf, zonedMs } from './time';
+import { DEMO_PERENNIALS, DEMO_PRODUCTS, DEMO_SEEDS } from './catalog';
+import {
+  buildDemoTimeline,
+  seedReceiptAt,
+  treesBare,
+  TASK_HORIZON_DAYS,
+  type DemoTimeline
+} from './timeline';
+import { DAY_MS, addDaysYmd, demoSeason, utcDayMs, ymdFromUtcDay, ymdOf, zonedMs } from './time';
 
 /** Noon in Leesburg on the given day. */
 const at = (ymd: string, hour = 12) => zonedMs(ymd, hour);
@@ -195,5 +201,121 @@ describe('season shape', () => {
   it('in December there is a season close-out to do', () => {
     const t = by('2026-11-20');
     expect(t.tasks.some((x) => x.title === 'Close out the season')).toBe(true);
+  });
+});
+
+describe('perennial planting dates (#666)', () => {
+  const plantedOn = (t: DemoTimeline) =>
+    Object.fromEntries(
+      t.plantings
+        .filter((p) => p.mode === 'perennial')
+        .map((p) => [p.key, ymdFromUtcDay(p.plantingDate)])
+    );
+
+  it('stay put as the demo date moves forward from the same start', () => {
+    const anchor = at('2026-10-07');
+    const first = plantedOn(buildDemoTimeline(anchor, anchor));
+    expect(Object.keys(first)).toHaveLength(DEMO_PERENNIALS.length);
+    for (const later of [
+      '2026-10-20',
+      '2027-01-15',
+      '2027-04-25',
+      '2027-07-25',
+      '2027-09-20',
+      '2028-09-30'
+    ]) {
+      expect(plantedOn(buildDemoTimeline(at(later), anchor))).toEqual(first);
+    }
+  });
+
+  it('stay put within a season without an explicit anchor', () => {
+    const a = plantedOn(buildDemoTimeline(at('2027-04-25')));
+    expect(plantedOn(buildDemoTimeline(at('2027-07-25')))).toEqual(a);
+    expect(plantedOn(buildDemoTimeline(at('2027-09-20')))).toEqual(a);
+  });
+
+  it('are years back, in planting months, never in midwinter', () => {
+    for (const ymd of DATES) {
+      const t = buildDemoTimeline(at(ymd));
+      for (const [key, day] of Object.entries(plantedOn(t))) {
+        const month = Number(day.slice(5, 7));
+        expect([3, 9], key).toContain(month);
+        expect(Number(day.slice(0, 4))).toBeLessThanOrEqual(t.season.current - 3);
+      }
+    }
+  });
+});
+
+describe('dormant orchard sprays (#632)', () => {
+  it('marks every tree spray in November through March as dormant', () => {
+    for (const ymd of [...DATES, '2027-02-01', '2026-11-19', '2026-03-23']) {
+      const t = buildDemoTimeline(at(ymd));
+      const tree = t.sprays.filter((s) => s.plantingKey.endsWith('@perennial'));
+      for (const s of tree) expect(s.dormant, ymdOf(s.at)).toBe(treesBare(ymdOf(s.at)));
+      for (const s of t.sprays.filter((x) => !x.plantingKey.endsWith('@perennial')))
+        expect(s.dormant).toBeFalsy();
+    }
+  });
+
+  it('keeps the observation on a leaf-on tree spray', () => {
+    expect(treesBare('2026-05-06')).toBe(false);
+    expect(treesBare('2026-11-18')).toBe(true);
+    expect(treesBare('2027-03-06')).toBe(true);
+  });
+});
+
+describe('garden scout note (#652)', () => {
+  const scoutBody = (ymd: string) =>
+    buildDemoTimeline(at(ymd)).tasks.find((x) => x.key === 'routine:overdue')?.body;
+
+  it('names only what is growing in the garden', () => {
+    expect(scoutBody('2027-04-25')).toBe(
+      'Turn leaves on whatever is up in the beds; log anything at threshold on /scout.'
+    );
+    expect(scoutBody('2027-05-20')).toBe(
+      'Turn leaves on the tomatoes; log anything at threshold on /scout.'
+    );
+    expect(scoutBody('2027-07-15')).toBe(
+      'Turn leaves on the tomatoes and squash; log anything at threshold on /scout.'
+    );
+  });
+
+  it('never mentions tomatoes or squash before they are planted', () => {
+    for (let d = '2027-04-01'; d <= '2027-10-31'; d = addDaysYmd(d, 3)) {
+      const t = buildDemoTimeline(at(d));
+      const body = t.tasks.find((x) => x.key === 'routine:overdue')?.body ?? '';
+      const planted = (keys: string[]) =>
+        t.plantings.some(
+          (p) => keys.includes(p.templateKey) && p.status === 'active' && p.season === 2027
+        );
+      if (body.includes('tomatoes')) expect(planted(['cherokee', 'sungold']), d).toBe(true);
+      if (body.includes('squash')) expect(planted(['zucchini', 'butternut']), d).toBe(true);
+    }
+  });
+});
+
+describe('seed purchase dates (#663)', () => {
+  it('buys seed before the season’s first sowing, not three weeks before today', () => {
+    for (const ymd of ['2027-07-25', '2027-09-20', '2027-04-25', '2027-01-15', '2026-02-20']) {
+      const now = at(ymd);
+      const t = buildDemoTimeline(now);
+      for (const s of DEMO_SEEDS) {
+        const receipt = seedReceiptAt(t, s.key, [], now);
+        expect(receipt, s.key).toBeLessThanOrEqual(now - 21 * DAY_MS);
+        const sowings = t.plantings
+          .filter((p) => p.seed === s.key && p.season === t.season.current)
+          .map((p) => p.sownIndoorsAt ?? p.plantingDate);
+        for (const sow of sowings) expect(receipt, `${ymd} ${s.key}`).toBeLessThan(sow);
+      }
+    }
+  });
+
+  it('dates the midsummer tomato seed in late winter or spring, not July', () => {
+    const now = at('2027-07-25');
+    const t = buildDemoTimeline(now);
+    for (const key of ['cherokee', 'sungold', 'bell', 'lettuce', 'beans', 'carrots', 'juliet']) {
+      const day = ymdOf(seedReceiptAt(t, key, [], now));
+      expect(day < '2027-05-01', `${key} ${day}`).toBe(true);
+    }
   });
 });

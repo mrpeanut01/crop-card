@@ -173,7 +173,9 @@ export function createDemoFarm(
   });
   try {
     runShifted(offsetMs, () =>
-      runWithTenant(ownerId, () => seedDemoFarm({ ownerId, userId, now: now + offsetMs, locale }))
+      runWithTenant(ownerId, () =>
+        seedDemoFarm({ ownerId, userId, now: now + offsetMs, anchor: createdAt.getTime(), locale })
+      )
     );
   } catch (err) {
     purgeDemoOwner(ownerId);

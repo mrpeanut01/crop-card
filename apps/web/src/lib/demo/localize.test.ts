@@ -15,8 +15,8 @@ function timelineStrings(): Set<string> {
     if (Array.isArray(v)) v.forEach((x) => walk(x, key));
     else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) walk(x, k);
   };
-  for (const month of [0, 3, 5, 7, 9, 11]) {
-    walk(buildDemoTimeline(Date.UTC(2027, month, 12, 15)), '');
+  for (let day = 0; day < 366; day += 9) {
+    walk(buildDemoTimeline(Date.UTC(2027, 0, 5 + day, 15)), '');
   }
   return out;
 }

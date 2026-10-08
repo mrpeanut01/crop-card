@@ -54,6 +54,7 @@
   import { geojsonCentroid, metersSquaredToAcres, polygonAreaSqMeters } from '$lib/geo/area';
   import { SQFT_PER_ACRE } from '$lib/farm/sketch';
   import { areasNearPoint } from '$lib/farm/nearbyAreas';
+  import { visibleAreaLabels, type AreaLabelBox } from '$lib/farm/areaLabelLayout';
   import Modal from '$lib/components/ui/Modal.svelte';
   import {
     areaShape,
@@ -293,6 +294,9 @@
   const polygonToBlockId = new Map<number, string>();
   const polygonToFieldId = new Map<number, string>();
   const fieldLayersById = new Map<string, LGeoJSON>();
+  /** Areas whose name shows as a permanent label, re-checked on zoom/pan. */
+  let areaLabelLayers: Array<{ id: string; layer: LGeoJSON }> = [];
+  let areaLabelRelayoutQueued = false;
   const polygonToShadeId = new Map<number, string>();
 
   let pendingDraft = $state<DraftState | null>(null);
@@ -610,6 +614,10 @@
       map.on('zoomend moveend', scheduleLabelRelayout);
       scheduleLabelRelayout();
     }
+    if (!thumbnail) {
+      map.on('zoomend moveend', scheduleAreaLabelRelayout);
+      scheduleAreaLabelRelayout();
+    }
 
     if (thumbnail) return; // no controls or editing in thumbnail mode
 
@@ -817,6 +825,7 @@
     clearShapes('area');
     polygonToFieldId.clear();
     fieldLayersById.clear();
+    areaLabelLayers = [];
     for (const f of fields) {
       if (!f.geometryGeojson) continue;
       if (!areaVisible(f.kind)) continue;
@@ -845,6 +854,7 @@
       const id = (layer as unknown as { _leaflet_id: number })._leaflet_id;
       polygonToFieldId.set(id, f.id);
       fieldLayersById.set(f.id, layer as LGeoJSON);
+      if (labelsOn && !thumbnail) areaLabelLayers.push({ id: f.id, layer: layer as LGeoJSON });
       (layer as LGeoJSON).eachLayer((l) => {
         const poly = l as LPolygon & { pm: { enable: (o: object) => void } };
         if (canEdit) l.on('pm:edit', () => debouncedFieldSave(f.id, poly));
@@ -1144,8 +1154,48 @@
       if (live.length !== selection.length) selection = live;
       applySelectionStyles();
       if (showBlockLabels && declutterLabels) scheduleLabelRelayout();
+      if (!thumbnail) scheduleAreaLabelRelayout();
     });
   });
+
+  function scheduleAreaLabelRelayout() {
+    if (areaLabelRelayoutQueued) return;
+    areaLabelRelayoutQueued = true;
+    requestAnimationFrame(() => {
+      areaLabelRelayoutQueued = false;
+      relayoutAreaLabels();
+    });
+  }
+
+  function relayoutAreaLabels() {
+    if (!map) return;
+    const boxes: AreaLabelBox[] = [];
+    const els = new Map<string, HTMLElement>();
+    for (const { id, layer } of areaLabelLayers) {
+      const el = layer.getTooltip()?.getElement() as HTMLElement | undefined;
+      if (!el) continue;
+      const bounds = layer.getBounds();
+      if (!bounds.isValid()) continue;
+      const nw = map.latLngToContainerPoint(bounds.getNorthWest());
+      const se = map.latLngToContainerPoint(bounds.getSouthEast());
+      const r = el.getBoundingClientRect();
+      boxes.push({
+        id,
+        shapeW: Math.abs(se.x - nw.x),
+        shapeH: Math.abs(se.y - nw.y),
+        x: r.left,
+        y: r.top,
+        w: r.width,
+        h: r.height
+      });
+      els.set(id, el);
+    }
+    const show = visibleAreaLabels(boxes);
+    for (const [id, el] of els) {
+      el.style.visibility = show.has(id) ? '' : 'hidden';
+      el.dataset.labelHidden = show.has(id) ? 'false' : 'true';
+    }
+  }
 
   /** Coalesce relayout requests into one rAF tick so zoom/pan/data churn
    *  doesn't thrash layout. */

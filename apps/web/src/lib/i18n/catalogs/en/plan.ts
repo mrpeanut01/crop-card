@@ -150,6 +150,13 @@ export const enPlan = {
   'plan.farm.kicker': 'Plan · {year} season',
   'plan.farm.lede':
     "Put your fields, garden, greenhouse and barn on the map, then the blocks inside them. Outline them on the map, or type each one's width and length and CropCard sketches them as boxes. Blocks are what the planner fills with crops.",
+  'plan.farm.ledeSetUp':
+    'Your Areas and blocks are on the map and the season is planned. Tap an Area or block to edit it, or draw a new one.',
+  'plan.farm.mapBlocks.one': '{count} block on the map.',
+  'plan.farm.mapBlocks.other': '{count} blocks on the map.',
+  'plan.farm.openPlan': 'Open the plan →',
+  'plan.farm.pageTitleSetUp': 'Farm map · CropCard',
+  'plan.farm.titleSetUp': 'Your farm map',
   'plan.farm.loadingMap': 'Loading map…',
   'plan.farm.pageTitle': 'Draw your farm · CropCard',
   'plan.farm.progress': 'Setup progress',

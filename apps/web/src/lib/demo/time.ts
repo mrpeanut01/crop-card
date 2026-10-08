@@ -7,7 +7,9 @@
 import { suggestPlanningYear, type PlanningFrost } from '$lib/season/planningYear';
 
 export const DEMO_TIME_ZONE = 'America/New_York';
-export const DEMO_LAT_LON = { lat: 39.11, lon: -77.56 } as const;
+/** Open farmland in the Catoctin Creek valley between Waterford and
+ *  Taylorstown, north-west of Leesburg, so the drawn Areas sit on fields. */
+export const DEMO_LAT_LON = { lat: 39.229, lon: -77.606 } as const;
 
 /** Frost dates as a Leesburg grower would type them (`MM-DD`). */
 export const DEMO_FROST = {

@@ -2,7 +2,7 @@
   "pluginId": "entrust-sc",
   "type": "insecticide",
   "displayName": "Entrust SC (Corteva spinosad)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "epaRegistrationNumber": "62719-621",
   "defaultUnit": "fl-oz",
   "formulation": "SC",
@@ -30,6 +30,9 @@
   "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only","residualToxicityHours":3},
   "notes": "Spinosad. Same a.i. as Tracer/Success — different formulation. Apply at sunset to avoid bee toxicity.",
   "complianceFlags": {
+    "omriListed": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true,
     "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1",

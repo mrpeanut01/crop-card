@@ -1,7 +1,7 @@
 {
   "pluginId": "trichogramma-egg-parasitoid",
   "type": "insecticide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "count",
   "pluginSchemaVersion": "1.1",
   "displayName": "Trichogramma brassicae (egg parasitoid release)",
@@ -26,7 +26,6 @@
     "leafroller eggs"
   ],
   "complianceFlags": {
-    "omriListed": true,
     "nonGmoCompliant": true,
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true

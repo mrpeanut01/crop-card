@@ -2,7 +2,7 @@
   "pluginId": "surround-wp",
   "type": "insecticide",
   "displayName": "Surround WP Crop Protectant (kaolin clay)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "epaRegistrationNumber": "61842-18",
   "defaultUnit": "lb",
   "formulation": "WP",
@@ -28,6 +28,9 @@
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "notes": "Kaolin clay film barrier — physical pest deterrent. Re-apply after rain. Apple / pear orchard standard.",
   "complianceFlags": {
+    "omriListed": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true,
     "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1",

@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { organicInputClass } from '../organic/inputCompliance';
 import {
   LABEL_SOURCED_CLASSES,
   pesticideLabelSourceGaps,
@@ -123,6 +124,86 @@ describe('pesticide label sources (#640 #661 #716)', () => {
     expect(
       pesticideLabelSourceGaps([{ ...base, displayName: 'Thing (OMRI)', complianceFlags: {} }], {})
     ).toEqual([]);
+  });
+
+  describe('organic-allowed flags need an OMRI listing or a 7 CFR 205 quote (#779)', () => {
+    const omri = 'https://www.omri.org/omri-search?query=Thing';
+    const listing =
+      'Thing WP | Acme Inc. | acm-1234 | NOP | Allowed with Restrictions | expires 2027-03-01';
+    const cfr = {
+      basis: '7 CFR 205',
+      citation: '7 CFR 205.601(e)(5)',
+      sourceUrl: 'https://www.ecfr.gov/current/title-7/section-205.601',
+      quote: '(5) Elemental sulfur.'
+    };
+
+    it('refuses an allowed flag with no source', () => {
+      for (const k of ['omriListed', 'certifiedOrganicAllowed', 'transitioningAllowed']) {
+        expect(
+          pesticideLabelSourceGaps([{ ...base, complianceFlags: { [k]: true } }], {})
+        ).toHaveLength(1);
+      }
+      expect(
+        pesticideLabelSourceGaps([{ ...base, complianceFlags: { omriListed: false } }], {})
+      ).toEqual([]);
+    });
+
+    it('accepts a quoted OMRI NOP listing and refuses a search that found none', () => {
+      const p = { ...base, complianceFlags: { omriListed: true, certifiedOrganicAllowed: true } };
+      expect(
+        pesticideLabelSourceGaps([p], {
+          complianceFlags: { x: { omriListed: true, sourceUrl: omri, quote: listing } }
+        })
+      ).toEqual([]);
+      expect(
+        pesticideLabelSourceGaps([p], {
+          complianceFlags: { x: { omriListed: false, sourceUrl: omri, quote: 'no listing' } }
+        })
+      ).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([p], {
+          complianceFlags: {
+            x: { omriListed: true, sourceUrl: 'https://example.com/omri', quote: listing }
+          }
+        })
+      ).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([p], {
+          complianceFlags: {
+            x: { omriListed: true, sourceUrl: omri, quote: 'Thing is OMRI listed' }
+          }
+        })
+      ).toHaveLength(1);
+    });
+
+    it('accepts a 7 CFR 205 quote for allowed use but never for omriListed', () => {
+      const allowed = {
+        ...base,
+        complianceFlags: { certifiedOrganicAllowed: true, transitioningAllowed: true }
+      };
+      expect(pesticideLabelSourceGaps([allowed], { complianceFlags: { x: cfr } })).toEqual([]);
+      expect(
+        pesticideLabelSourceGaps([{ ...base, complianceFlags: { omriListed: true } }], {
+          complianceFlags: { x: cfr }
+        })
+      ).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([allowed], {
+          complianceFlags: { x: { ...cfr, sourceUrl: 'https://example.com/205' } }
+        })
+      ).toHaveLength(1);
+    });
+
+    it('the four OMRI-listed #716 products read as allowed, so they never start the land-transition clock', () => {
+      const byId = new Map(loadPesticides().map((p) => [p.pluginId, p]));
+      for (const id of ['entrust-sc', 'dipel-df', 'surround-wp', 'pyganic-1-4']) {
+        expect(organicInputClass(byId.get(id))).toBe('allowed');
+        expect(SOURCES.complianceFlags[id].omriListed).toBe(true);
+      }
+      for (const id of ['isomate-c-plus-pheromone', 'spear-lep', 'corn-gluten-meal-pre']) {
+        expect(organicInputClass(byId.get(id))).toBe('not-marked');
+      }
+    });
   });
 
   describe('herbicide default rates (#737 swarm 2026-10-07)', () => {

@@ -1,10 +1,10 @@
 {
   "pluginId": "nematode-steinernema-feltiae",
   "type": "insecticide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "count",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Steinernema feltiae (beneficial nematodes, OMRI)",
+  "displayName": "Steinernema feltiae (beneficial nematodes)",
   "activeIngredients": [
     {
       "name": "Steinernema feltiae infective juveniles",
@@ -27,7 +27,6 @@
     "shore fly larvae"
   ],
   "complianceFlags": {
-    "omriListed": true,
     "nonGmoCompliant": true,
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true

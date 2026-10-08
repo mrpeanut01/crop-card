@@ -124,8 +124,11 @@
     },
     "dipel-df": {
       "epaRegistrationNumber": "73049-39",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00039-20220602.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, DIPEL DF BIOLOGICAL ..."
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00039-20260901.pdf",
+      "docDate": "2026-09-01",
+      "page": 3,
+      "quote": "Active Ingredient: Bacillus thuringiensis subsp. kurstaki strain ABTS-351 fermentation solids, spores, and insecticidal toxins* ... 54.0%",
+      "note": "#705: newest PPLS label (accepted 2026-09-01), master label, Produced For Sumitomo Biorational Company LLC. The label names only the kurstaki strain ABTS-351, matching the plugin active ingredient and its name \"DiPel DF (Valent Bt kurstaki)\"; no aizawai. Earlier source: 073049-00039-20220602.pdf."
     },
     "dithane-rainshield": {
       "epaRegistrationNumber": "70506-654",
@@ -3778,6 +3781,7 @@
     }
   },
   "complianceFlags": {
+    "$comment": "#392 #716 #779 organic flags. A plugin may set omriListed, certifiedOrganicAllowed or transitioningAllowed to true only with an entry here: either an OMRI Products List listing ({ omriListed: true, sourceUrl on omri.org, quote \"<product> | <company> | <OMRI code> | NOP | <status> | expires <date>\" }) or, for a generic plugin that names no brand, a 7 CFR 205 basis ({ basis: \"7 CFR 205\", citation, sourceUrl on ecfr.gov, quote }), which never sets omriListed. A branded product that OMRI does not list carries none of the allowed flags, even when its active ingredient is on 7 CFR 205.601. omriListed: false entries record a search that found no listing. Checked by pesticideLabelSources.gate.test.ts.",
     "accent-q-nicosulfuron": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Accent%20Q",
@@ -3795,6 +3799,12 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=Actigard",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Actigard': 14 NOP results, none is Actigard/acibenzolar-S-methyl"
+    },
+    "actinovate-streptomyces": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Actinovate",
+      "docDate": "2026-10-08",
+      "quote": "Novozymes Actinovate® AG Biological Fungicide | Novozymes BioAg | nbl-5404 | NOP | Allowed with Restrictions | expires 2027-09-01"
     },
     "admiral-igr": {
       "omriListed": false,
@@ -3844,11 +3854,36 @@
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Authority MTZ' / 'Authority': no FMC Authority product among NOP results"
     },
+    "axxe-ammonium-nonanoate": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Axxe",
+      "docDate": "2026-10-08",
+      "quote": "AXXE® Broad Spectrum Herbicide | BioSafe Systems | bss-2930 | NOP | Allowed with Restrictions | expires 2027-03-01"
+    },
+    "aza-direct": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Aza-Direct",
+      "docDate": "2026-10-08",
+      "quote": "Aza-Direct Botanical Insecticide | Gowan Company, LLC | goc-9305 | NOP | Allowed with Restrictions | expires 2027-12-01"
+    },
+    "azaguard": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=AzaGuard",
+      "docDate": "2026-10-08",
+      "quote": "AzaGuard | BioSafe Systems | bss-1943 | NOP | Allowed with Restrictions | expires 2027-03-01",
+      "note": "bss-1943 is the crop pest control listing; bss-11996 is the livestock listing."
+    },
     "balan-benefin": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Balan",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Balan': no product titled Balan (NOP)"
+    },
+    "botanigard-es-beauveria": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=BotaniGard",
+      "docDate": "2026-10-08",
+      "quote": "BotaniGard® ES Emulsifiable Suspension Mycoinsecticide | Certis USA | ttc-19954 | NOP | Allowed with Restrictions | expires 2027-12-01"
     },
     "bravo-weather-stik": {
       "omriListed": false,
@@ -3886,11 +3921,24 @@
       "docDate": "2026-10-08",
       "quote": "OMRI search 'Caramba' (and the active ingredients): fuzzy matches only, no Caramba product listed"
     },
+    "cease-omri": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Cease",
+      "docDate": "2026-10-08",
+      "quote": "BioWorks CEASE Biological Fungicide | BioWorks, Inc. | bwk-1268 | NOP | Allowed with Restrictions | expires 2027-06-01"
+    },
     "cevya-mefentrifluconazole": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Cevya",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Cevya': no NOP product listing for this brand"
+    },
+    "champ-dp": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Champ",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Champ DP' and 'Champ' (NOP): Nufarm Champ WG (agt-1382) and ChampION++ (agt-5824) are listed, no Champ DP / Champ Dry Prill",
+      "note": "transitioningAllowed removed (#779)."
     },
     "chaparral-aminopyralid-metsulfuron": {
       "omriListed": false,
@@ -3916,11 +3964,31 @@
       "docDate": "2026-09-25",
       "quote": "OMRI search 'tebufenozide': 0 total; 'Confirm 2F': no Confirm/tebufenozide product among NOP results"
     },
+    "corn-gluten-meal-pre": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=corn%20gluten",
+      "docDate": "2026-10-08",
+      "quote": "OMRI lists branded corn gluten products (for example Sustane sus-10465), not a generic material; the plugin names no brand",
+      "note": "omriListed, certifiedOrganicAllowed and transitioningAllowed removed (#779). Corn gluten is not on 7 CFR 205.601 and no 7 CFR 205 quote names it."
+    },
+    "cuprofix-ultra-disperss": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Cuprofix",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Cuprofix' (NOP): 1 result, Cuprofix Flex Dry Flowable Fungicide/Bactericide (upi-16918), no Cuprofix Ultra 40 Disperss",
+      "note": "transitioningAllowed removed (#779)."
+    },
     "curzate-60df-cymoxanil": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Curzate",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Curzate': no NOP product listing for this brand"
+    },
+    "cyd-x-codling-moth-virus": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Cyd-X",
+      "docDate": "2026-10-08",
+      "quote": "CYD-X® Insecticidal Virus An Aqueous Suspension Biological Insecticide for Control of the Codling Moth | Certis USA | ttc-3084 | NOP | Allowed with Restrictions | expires 2027-12-01"
     },
     "deadline-mps-metaldehyde": {
       "omriListed": false,
@@ -3934,11 +4002,23 @@
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Dimethoate': 0 total"
     },
+    "dipel-df": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=DiPel",
+      "docDate": "2026-10-08",
+      "quote": "DiPel® DF Biological Insecticide Dry Flowable | Valent BioSciences® LLC | abb-9054 | NOP | Allowed with Restrictions | expires 2027-03-01"
+    },
     "dithane-rainshield": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Dithane",
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Dithane': no product titled Dithane (NOP ruling body)"
+    },
+    "double-nickel-55": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Double%20Nickel",
+      "docDate": "2026-10-08",
+      "quote": "Double Nickel 55 Biofungicide Water Dispersible Granular Biofungicide | Certis USA | ttc-2901 | NOP | Allowed with Restrictions | expires 2027-12-01"
     },
     "duracor-aminopyralid-florpyrauxifen": {
       "omriListed": false,
@@ -3957,6 +4037,13 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=Endura",
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Endura': no product titled Endura (NOP ruling body)"
+    },
+    "entrust-sc": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Entrust",
+      "docDate": "2026-10-08",
+      "quote": "Corteva Agriscience Entrust SC Naturalyte Insect Control Qalcova Active | Corteva Agriscience | caq-16149 | NOP | Allowed with Restrictions | expires 2027-09-01",
+      "note": "OMRI lists Entrust SC under Corteva (caq-16149) and under Dow Agrosciences (dow-2900, Entrust SC Naturalyte Insect Control); the plugin names Corteva."
     },
     "envidor-spirodiclofen": {
       "omriListed": false,
@@ -4012,6 +4099,12 @@
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Fulfill': no NOP listing for Fulfill, ADAMA/Makhteshim Agan"
     },
+    "grandevo-wdg": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Grandevo",
+      "docDate": "2026-10-08",
+      "quote": "GRANDEVO WDG Bioinsecticide | ProFarm Group | pfb-18592 | NOP | Allowed with Restrictions | expires 2027-06-01"
+    },
     "grazonnext-hl": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=GrazonNext",
@@ -4029,6 +4122,12 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=Headline",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Headline': 0 NOP results"
+    },
+    "howler-evo-pseudomonas": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Howler",
+      "docDate": "2026-10-08",
+      "quote": "Howler EVO fungicide | Certis USA | ttc-18042 | NOP | Allowed with Restrictions | expires 2027-12-01"
     },
     "indar-2f": {
       "omriListed": false,
@@ -4048,6 +4147,19 @@
       "docDate": "2026-09-25",
       "quote": "No Intrepid Edge / GF-3028 product among OMRI NOP results"
     },
+    "isomate-c-plus-pheromone": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Isomate",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Isomate' (NOP): 9 Pacific Biocontrol Isomate products (C TT, CM Flex, CM Mist, CM Mist Plus, CM/OFM Mist Plus, CM/OFM TT, M Rosso, OFM TT, VMB), no Isomate-C Plus",
+      "note": "omriListed, certifiedOrganicAllowed and transitioningAllowed removed (#779)."
+    },
+    "jms-stylet-oil-omri": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Stylet",
+      "docDate": "2026-10-08",
+      "quote": "JMS Flower Farms, Inc. Organic JMS Stylet-Oil® The Premiere White Mineral Oil* For Control Of Fungal Diseases, Aphid-Transmitted Plant Viruses And Phytophagous Insects And Mites. | JMS Flower Farms, Inc. | jms-9631 | NOP | Allowed with Restrictions | expires 2027-03-01"
+    },
     "k-phite-phosphonate": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=K-Phite",
@@ -4066,11 +4178,48 @@
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Kasumin': no product titled Kasumin (NOP ruling body)"
     },
+    "kocide-3000-o": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Kocide%203000-O",
+      "docDate": "2026-10-08",
+      "quote": "Kocide 3000-O Fungicide/Bactericide Dry Flowable | Certis USA | ttc-17486 | NOP | Allowed with Restrictions | expires 2027-12-01"
+    },
+    "kumulus-df": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Kumulus",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Kumulus' (NOP): 2 results, BASF Kumulus DF (asf-15133, BASF Agricultural Solutions Mexico) and BASF KUMULUS 80 WG (bbv-16410, BASF de Costa Rica); no US BASF Corporation listing for 51036-352",
+      "note": "transitioningAllowed removed (#779)."
+    },
+    "lifegard-bacillus-mycoides": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=LifeGard",
+      "docDate": "2026-10-08",
+      "quote": "LifeGard WG Biological Plant Activator | Certis USA | ttc-7169 | NOP | Allowed with Restrictions | expires 2027-12-01"
+    },
     "luna-tranquility": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Luna",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Luna': 99 NOP results, only Luna match is 'Penn Perlite Horticultural: Screened Luna Rock'"
+    },
+    "m-pede": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=M-Pede",
+      "docDate": "2026-10-08",
+      "quote": "M-Pede Insecticide/Miticide/Fungicide | Gowan Company, LLC | goc-2510 | NOP | Allowed with Restrictions | expires 2027-12-01"
+    },
+    "madex-hp-virus": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Madex",
+      "docDate": "2026-10-08",
+      "quote": "MADEX HP Insecticidal Virus | Andermatt USA Corporation | aua-3677 | NOP | Allowed with Restrictions | expires 2027-06-01"
+    },
+    "majestene-nematicide": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Majestene",
+      "docDate": "2026-10-08",
+      "quote": "Majestene Bionematicide | ProFarm Group | pfb-18555 | NOP | Allowed with Restrictions | expires 2027-06-01"
     },
     "manzate-pro-stick": {
       "omriListed": false,
@@ -4084,11 +4233,31 @@
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Merivon': no product titled Merivon (NOP ruling body)"
     },
+    "met52-ec-metarhizium": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Lalguard",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Lalguard' (NOP): 1 result, LALGUARD M52 GR Bioinsecticide (agb-19015); no LALGUARD M52 OD or Met52 EC",
+      "note": "transitioningAllowed removed (#779)."
+    },
     "method-aminocyclopyrachlor": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Method%20240SL",
       "docDate": "2026-09-25",
       "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "microthiol-disperss": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Microthiol",
+      "docDate": "2026-10-08",
+      "quote": "UPL Microthiol Disperss Micronized Wettable Sulfur Fungicide | UPL NA Inc. | upi-1508 | NOP | Allowed with Restrictions | expires 2027-06-01"
+    },
+    "milstop-potassium-bicarbonate": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=MilStop",
+      "docDate": "2026-10-08",
+      "quote": "BioWorks MilStop SP Foliar Fungicide | BioWorks, Inc. | bwk-7390 | NOP | Allowed with Restrictions | expires 2027-06-01",
+      "note": "MilStop SP Foliar Fungicide is one of the alternate brand names on the 68539-13 label (entries)."
     },
     "miravis-ace": {
       "omriListed": false,
@@ -4107,6 +4276,26 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=Mycoshield",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Mycoshield': 1 NOP result, 'Farmonic MycoShield Mycorrhizal Inoculant' (different product)"
+    },
+    "mycostop-streptomyces": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Mycostop",
+      "docDate": "2026-10-08",
+      "quote": "Mycostop® Biofungicide | Danstar Ferment AG/Lallemand Plant Care | agb-0516 | NOP | Allowed with Restrictions | expires 2027-09-01"
+    },
+    "mycotrol-eso": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Mycotrol",
+      "docDate": "2026-10-08",
+      "quote": "Mycotrol ESO Emulsifiable Suspension Mycoinsecticide | Certis USA | ttc-11156 | NOP | Allowed with Restrictions | expires 2027-12-01"
+    },
+    "nematode-steinernema-feltiae": {
+      "basis": "7 CFR 205",
+      "citation": "7 CFR 205.206(b)(1)",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.206",
+      "docDate": "2026-10-06",
+      "quote": "(b) Pest problems may be controlled through mechanical or physical methods including but not limited to: (1) Augmentation or introduction of predators or parasites of the pest species;",
+      "note": "Live biological control with no brand; allowed as a practice, not as a listed substance. omriListed removed. eCFR up to date as of 2026-10-06."
     },
     "oberon-spiromesifen": {
       "omriListed": false,
@@ -4132,11 +4321,29 @@
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Orondis': 2 NOP results, neither is Orondis"
     },
+    "oxidate-2-0": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=OxiDate",
+      "docDate": "2026-10-08",
+      "quote": "OxiDate 2.0 Broad Spectrum Bactericide/Fungicide | BioSafe Systems | bss-3213 | NOP | Allowed with Restrictions | expires 2027-03-01"
+    },
+    "pfr-97-isaria": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=PFR-97",
+      "docDate": "2026-10-08",
+      "quote": "PFR-97 20% WDG Microbial Insecticide | Certis USA | ttc-2838 | NOP | Allowed with Restrictions | expires 2027-12-01"
+    },
     "phostrol-phosphonate": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Phostrol",
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Phostrol': no product titled Phostrol (NOP ruling body)"
+    },
+    "phydura-clove-citric": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Phydura",
+      "docDate": "2026-10-08",
+      "quote": "SoilTech Phydura Herbicide Concentrate | Soil Technologies Corp. | stc-7700 | NOP | Allowed with Restrictions | expires 2027-06-01"
     },
     "portal-xlo": {
       "omriListed": false,
@@ -4174,6 +4381,18 @@
       "docDate": "2026-10-08",
       "quote": "OMRI search 'Prosaro' (and the active ingredients): fuzzy matches only, no Prosaro product listed"
     },
+    "pyganic-1-4": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=PyGanic",
+      "docDate": "2026-10-08",
+      "quote": "PyGanic Crop Protection EC 1.4 II | MGK | mgk-9643 | NOP | Allowed with Restrictions | expires 2027-12-01"
+    },
+    "pyganic-5-0": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=PyGanic",
+      "docDate": "2026-10-08",
+      "quote": "PyGanic Crop Protection EC 5.0 II | MGK | mgk-9644 | NOP | Allowed with Restrictions | expires 2027-12-01"
+    },
     "quadris-flowable": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Quadris",
@@ -4210,6 +4429,12 @@
       "docDate": "2026-09-25",
       "quote": "REGALIA Biofungicide | ProFarm Group | pfb-18571 | NOP | Allowed with Restrictions | expires 2027-06-01"
     },
+    "regalia-maxx-omri": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Regalia",
+      "docDate": "2026-10-08",
+      "quote": "Regalia® Maxx Biofungicide Concentrate | Marrone Bio Innovations | moi-1711 | NOP | Allowed with Restrictions | expires 2027-09-01"
+    },
     "resicore-rev": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Resicore",
@@ -4227,6 +4452,12 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=Ridomil%20Gold",
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Ridomil Gold': no product titled Ridomil Gold (NOP ruling body)"
+    },
+    "rootshield-wp-trichoderma": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=RootShield",
+      "docDate": "2026-10-08",
+      "quote": "BioWorks RootShield® WP Biological Fungicide | BioWorks, Inc. | bwk-1576 | NOP | Allowed with Restrictions | expires 2027-06-01"
     },
     "rovral-4f-iprodione": {
       "omriListed": false,
@@ -4258,11 +4489,50 @@
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Sharpen': no product titled Sharpen (NOP)"
     },
+    "sluggo-iron-phosphate": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Sluggo",
+      "docDate": "2026-10-08",
+      "quote": "Sluggo® Slug & Snail Bait | W Neudorff GmbH KG | neu-0583 | NOP | Allowed with Restrictions | expires 2027-03-01"
+    },
+    "spear-lep": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Spear",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Spear', 'Spear-Lep' and 'Vestaron' (NOP): no Spear or Vestaron product listed",
+      "note": "omriListed, certifiedOrganicAllowed and transitioningAllowed removed (#779)."
+    },
     "sphaerex": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Sphaerex",
       "docDate": "2026-10-08",
       "quote": "OMRI search 'Sphaerex' (and the active ingredients): fuzzy matches only, no Sphaerex product listed"
+    },
+    "stargus-bacillus-amyloliquefaciens": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Stargus",
+      "docDate": "2026-10-08",
+      "quote": "STARGUS Biofungicide | ProFarm Group | pfb-18593 | NOP | Allowed with Restrictions | expires 2027-06-01"
+    },
+    "sulfur-90w": {
+      "basis": "7 CFR 205",
+      "citation": "7 CFR 205.601(e)(5)",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.601",
+      "docDate": "2026-10-06",
+      "quote": "(e) As insecticides (including acaricides or mite control). ... (5) Elemental sulfur.",
+      "note": "Generic product with no brand, so no OMRI listing can apply; the National List allows the substance. omriListed removed. eCFR up to date as of 2026-10-06."
+    },
+    "suppress-ec": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Suppress",
+      "docDate": "2026-10-08",
+      "quote": "San Agrow SUPPRESS Herbicide EC | SAN Group Biotech USA, Inc. | wba-2473 | NOP | Allowed with Restrictions | expires 2026-12-01"
+    },
+    "surround-wp": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Surround",
+      "docDate": "2026-10-08",
+      "quote": "NovaSource Surround WP Agricultural Crop Protectant | Tessenderlo Kerley Inc. | tki-9178 | NOP | Allowed with Restrictions | expires 2027-03-01"
     },
     "switch-625wg": {
       "omriListed": false,
@@ -4294,6 +4564,20 @@
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Torac': no NOP listing for Torac SC, Nichino America"
     },
+    "trichogramma-egg-parasitoid": {
+      "basis": "7 CFR 205",
+      "citation": "7 CFR 205.206(b)(1)",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.206",
+      "docDate": "2026-10-06",
+      "quote": "(b) Pest problems may be controlled through mechanical or physical methods including but not limited to: (1) Augmentation or introduction of predators or parasites of the pest species;",
+      "note": "Live egg parasitoid with no brand; allowed as a practice, not as a listed substance. omriListed removed. eCFR up to date as of 2026-10-06."
+    },
+    "trilogy-neem": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Trilogy",
+      "docDate": "2026-10-08",
+      "quote": "Trilogy® Fungicide/Miticide/Insecticide | Certis USA | ttc-8073 | NOP | Allowed with Restrictions | expires 2027-12-01"
+    },
     "velista-penthiopyrad": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Velista",
@@ -4305,6 +4589,12 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=Velum",
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'fluopyram': 0 total"
+    },
+    "venerate-xc": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Venerate",
+      "docDate": "2026-10-08",
+      "quote": "VENERATE XC Bioinsecticide | ProFarm Group | pfb-18585 | NOP | Allowed with Restrictions | expires 2027-06-01"
     },
     "verdict-saflufenacil-dimethenamid": {
       "omriListed": false,
@@ -4324,11 +4614,23 @@
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Vydate': 0 total"
     },
+    "weed-zap-citronella": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Weed%20Zap",
+      "docDate": "2026-10-08",
+      "quote": "Weed Zap A Non-Selective Herbicide For Annual Grasses and Weeds | JH Biotech, Inc. | jhb-0157 | NOP | Allowed with Restrictions | expires 2027-09-01"
+    },
     "zampro-ametoctradin": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Zampro",
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Zampro': no product titled Zampro (NOP ruling body)"
+    },
+    "zerotol-2-0-sanitizer": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=ZeroTol",
+      "docDate": "2026-10-08",
+      "quote": "ZeroTol 2.0 | BioSafe Systems | bss-5846 | NOP | Allowed with Restrictions | expires 2027-03-01"
     },
     "zidua-pro": {
       "omriListed": false,

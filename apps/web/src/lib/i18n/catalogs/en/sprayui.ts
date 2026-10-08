@@ -142,6 +142,7 @@ export const enSprayui = {
   'sprayui.chemclass.als-imidazolinone': 'ALS inhibitor (imidazolinone)',
   'sprayui.chemclass.vlcfa-pyroxasulfone': 'VLCFA inhibitor (pyroxasulfone)',
   'sprayui.chemclass.clomazone': 'clomazone',
+  'sprayui.chemclass.thiocarbamate': 'thiocarbamate (EPTC)',
   'sprayui.chemclass.unclassified': 'class not on file',
   'sprayui.herb.contact': 'contact, no HRAC group',
   'sprayui.dp.sprayer': 'Sprayer',

@@ -592,6 +592,10 @@
       "reason": "Generic 2,4-D amine with no single registrant (ruling P571-3, issue #571): generic labels differ on grazing, haying, lactating dairy and pre-slaughter intervals, so no value ships and grazing reads unknown by design; the owner enters the number from the label they bought."
     },
     {
+      "pluginId": "eptam-eptc",
+      "reason": "Eptam 7E (#654) is labelled on alfalfa and clovers, but its grazing and harvest waits differ by crop ('Do not apply within 14 days of harvesting or grazing alfalfa' and, for established Ladino clover, 'Do not apply within 45 days of harvesting or grazing.', EPA PPLS 10163-283 stamped 2026-02-19, PDF p10), and grazingRestrictions holds one value per product. The label is also silent on lactating dairy and pre-slaughter removal. No value ships yet, so grazing reads unknown and holds until the owner enters the number from the label."
+    },
+    {
       "pluginId": "glyphosate-generic",
       "reason": "Generic glyphosate 41% with no single registrant (ruling P571-3, issue #571): generic labels differ on grazing, haying, lactating dairy and pre-slaughter intervals, so no value ships and grazing reads unknown by design; the owner enters the number from the label they bought."
     }

@@ -25,6 +25,7 @@ export const CHEMISTRY_CLASSES = [
   'als-imidazolinone',
   'vlcfa-pyroxasulfone',
   'clomazone',
+  'thiocarbamate',
   'unclassified'
 ] as const;
 
@@ -133,6 +134,11 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
     hracGroup: 13,
     killsFamilies: ['corn', 'broadleaf-companion', 'orchard', 'brassica', 'leafy-green', 'apiaceae', 'small-fruit', 'bramble', 'stone-fruit', 'forage', 'herb-culinary', 'forage-grass', 'perennial-vegetable'],
     notes: "Clomazone (Command 3ME) — HRAC 13 carotenoid biosynthesis inhibitor. Pumpkin / soybean / pepper / tomato tolerant; severe bleaching on broadleaves and corn."
+  },
+  thiocarbamate: {
+    hracGroup: 15,
+    killsFamilies: ['corn', 'cucurbit', 'legume', 'broadleaf-companion', 'orchard', 'cover-grass', 'cover-legume', 'solanaceae', 'brassica', 'allium', 'leafy-green', 'root', 'apiaceae', 'small-fruit', 'bramble', 'vine-fruit', 'stone-fruit', 'cereal-grain', 'herb-culinary', 'forage-grass', 'perennial-vegetable'],
+    notes: "EPTC (Eptam 7E), HRAC 15 thiocarbamate per its label. Soil-incorporated PRE. Labelled on alfalfa, birdsfoot trefoil and clovers (not white dutch clover), so legume forage is tolerant. Every other family is treated as lethal: the label covers only some crops in them (green and dry beans but not soybeans, lima beans or cowpeas; potatoes and California lay-by tomatoes but not peppers; sweet potatoes and sugar beets but not carrots), lists volunteer barley, oats and wheat as weeds, and warns that cabbage must not follow for 60 days."
   },
   unclassified: {
     hracGroup: null,

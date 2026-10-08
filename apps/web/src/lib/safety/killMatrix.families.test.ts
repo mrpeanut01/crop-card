@@ -42,19 +42,83 @@ describe('kill matrix — unclassified chemistry (#654)', () => {
     }
   });
 
-  it('Eptam and corn gluten meal are unclassified, so they stop at least everything their old stand-in classes stopped', () => {
-    const cases: Array<[string, ChemistryClass]> = [
-      ['herbicides/eptam-eptc.json', 'vlcfa-pyroxasulfone'],
-      ['herbicides/corn-gluten-meal-pre.json', 'microtubule-inhibitor']
-    ];
-    for (const [rel, old] of cases) {
-      const p = pluginJson(rel);
-      const classes = p.activeIngredients.map((a: { chemistryClass: string }) => a.chemistryClass);
-      expect(classes).toEqual(['unclassified']);
-      for (const f of CROP_FAMILIES) {
-        if (killsFamily(old, f)) expect(killsFamily('unclassified', f)).toBe(true);
-      }
+  it('corn gluten meal stays unclassified, so it stops at least everything its old stand-in class stopped', () => {
+    const p = pluginJson('herbicides/corn-gluten-meal-pre.json');
+    const classes = p.activeIngredients.map((a: { chemistryClass: string }) => a.chemistryClass);
+    expect(classes).toEqual(['unclassified']);
+    for (const f of CROP_FAMILIES) {
+      if (killsFamily('microtubule-inhibitor', f))
+        expect(killsFamily('unclassified', f)).toBe(true);
     }
+  });
+});
+
+describe('kill matrix — thiocarbamate from the Eptam label (#654)', () => {
+  it('is HRAC 15 and spares only legume forage, the family the Eptam label covers', () => {
+    expect(hracGroupOf('thiocarbamate')).toBe(15);
+    expect(killsFamily('thiocarbamate', 'forage')).toBe(false);
+    expect(CROP_FAMILIES.filter((f) => !killsFamily('thiocarbamate', f))).toEqual(['forage']);
+  });
+
+  it('property: every family other than legume forage is lethal', () => {
+    fc.assert(
+      fc.property(familyArb, (f) => {
+        expect(killsFamily('thiocarbamate', f)).toBe(f !== 'forage');
+      })
+    );
+  });
+
+  it('property: thiocarbamate stops everything its old stand-in class (pyroxasulfone) stopped except forage', () => {
+    fc.assert(
+      fc.property(familyArb, (f) => {
+        if (killsFamily('vlcfa-pyroxasulfone', f))
+          expect(killsFamily('thiocarbamate', f)).toBe(true);
+      })
+    );
+  });
+
+  it('Eptam uses thiocarbamate; it is refused on beans, potatoes, wheat and grass hay and allowed on alfalfa and red clover', () => {
+    const p = pluginJson('herbicides/eptam-eptc.json');
+    const classes = p.activeIngredients.map((a: { chemistryClass: string }) => a.chemistryClass);
+    expect(classes).toEqual(['thiocarbamate']);
+    const eptam: HerbicideProduct = {
+      pluginId: p.pluginId,
+      displayName: p.displayName,
+      activeIngredients: p.activeIngredients
+    };
+    for (const [id, fam] of [
+      ['soybean-asgrow-roundup-ready-2-xtend', 'legume'],
+      ['potato-kennebec', 'solanaceae'],
+      ['orchard-grass-potomac', 'forage-grass'],
+      ['crimson-clover-cover', 'cover-legume']
+    ] as const) {
+      expect(
+        checkCropCompatibility([eptam], { cropPluginId: id, cropFamily: fam }).map((v) => v.code),
+        id
+      ).toEqual(['CROP_INCOMPATIBLE']);
+    }
+    for (const id of ['alfalfa-vernema', 'alfalfa-hi-gest-660', 'clover-red-mammoth']) {
+      expect(checkCropCompatibility([eptam], { cropPluginId: id, cropFamily: 'forage' })).toEqual(
+        []
+      );
+    }
+  });
+
+  it('property: a mix with Eptam over any non-forage planting is refused', () => {
+    fc.assert(
+      fc.property(classArb, familyArb, (other, fam) => {
+        const mix: HerbicideProduct = {
+          pluginId: 'mix',
+          displayName: 'mix',
+          activeIngredients: [
+            { name: 'EPTC', chemistryClass: 'thiocarbamate' },
+            { name: other, chemistryClass: other }
+          ]
+        };
+        const v = checkCropCompatibility([mix], { cropPluginId: 'c', cropFamily: fam });
+        if (fam !== 'forage') expect(v.length).toBeGreaterThan(0);
+      })
+    );
   });
 });
 

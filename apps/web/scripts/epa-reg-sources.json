@@ -4314,5 +4314,23 @@
   },
   "rate": {
     "$comment": "#737 herbicide rate provenance (swarm 2026-10-07, 3-0). One entry per herbicide plugin marked rateProvenance \"label\": { ratePerAcre: { amount, unit }, sourceUrl, docDate, page, quote }, where the quote is the label's own rate sentence and states the amount. Every other shipped herbicide default rate carries rateProvenance \"fallback\" and is shown as \"Typical rate, not from the label. Check the label before mixing.\" Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read; notes elsewhere in this file that say a plugin rate is within a label range are summaries, not quotes."
+  },
+  "chemistryClass": {
+    "$comment": "#654 herbicide chemistry class provenance. One entry per herbicide plugin whose chemistryClass is set from its own label: { chemistryClass, hracGroup, sourceUrl, docDate, page, quote, crops?: { sourceUrl, docDate, page, quote } }, where the quote is the label's group sentence and states the group number, and crops quotes the label's crop list behind the kill-matrix row. Checked by pesticideLabelSources.gate.test.ts: a plugin using a class in LABEL_SOURCED_CLASSES needs an entry here.",
+    "eptam-eptc": {
+      "chemistryClass": "thiocarbamate",
+      "hracGroup": 15,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00283-20260219.pdf",
+      "docDate": "2026-02-19",
+      "page": 6,
+      "quote": "For resistance management, please note that Eptam 7E is a Group 15 herbicide.",
+      "crops": {
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00283-20260219.pdf",
+        "docDate": "2026-02-19",
+        "page": 10,
+        "quote": "ALFALFA, 2¼-4½ ALL REGIONS: ... BIRDSFOOT ... TREFOIL, ... CLOVERS, ... x Do not use on white dutch clover."
+      },
+      "note": "PDF pages of the EPA-stamped PPLS file (EPA letter dated February 19, 2026). The front panel also reads 'EPTC GROUP 15 HERBICIDE' (p3) and the active ingredient is 'EPTC: S-ethyl dipropylthiocarbamate' (p3). Legume forage is the only app family the label covers as a family. Other families stay lethal because the label leaves out or warns about crops in them: 'Do not use EPTAM 7E on Adzuki beans, cowpeas (black-eyed peas, black-eyed beans), soybeans, lima beans, Mung beans, Garbanzo beans or other flat-podded beans except Romano.' (p11), 'Do not plant cabbage for 60 days after application.' (p13), 'Volunteer grains* (Barley, Oats, Wheat)' among the weeds controlled (p5), tomatoes only as a Northern California lay-by (p15), and 'All flowering bulbs, salvia, phlox, snap-dragon and ornamental pepper are susceptible to injury from an application of EPTAM 7E.' (p15). The WSSA mechanism-of-action paper at wssa.net still files thiocarbamates as Group 8; the current Eptam label says Group 15, which is the group shown. Corn gluten meal stays unclassified: it is FIFRA 25(b) exempt, has no EPA label, and the WSSA paper assigns it no group."
+    }
   }
 }

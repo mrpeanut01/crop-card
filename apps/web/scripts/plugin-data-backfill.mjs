@@ -53,6 +53,7 @@ const chemistryToPurpose = (chemistryClass, anchor, offsetDaysMin) => {
     case 'photosystem-ii-triazine':
     case 'vlcfa-pyroxasulfone':
     case 'clomazone':
+    case 'thiocarbamate':
       return 'pre-emergent';
     default:
       return null;

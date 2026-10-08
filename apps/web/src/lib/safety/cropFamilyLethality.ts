@@ -360,6 +360,17 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
     notes:
       'Clomazone (Command 3ME) — HRAC 13 carotenoid biosynthesis inhibitor. Pumpkin / soybean / pepper / tomato tolerant; severe bleaching on broadleaves and corn.'
   },
+  // #654: Gowan Eptam 7E (EPA 10163-283) says "Eptam 7E is a Group 15
+  // herbicide". Of the app's families only legume forage (alfalfa, birdsfoot
+  // trefoil, clovers other than white dutch) is labelled as a family; every
+  // other family has crops the label leaves out or warns about, so it stays
+  // lethal. Quotes in epa-reg-sources.json `chemistryClass`.
+  thiocarbamate: {
+    hracGroup: 15,
+    killsFamilies: CROP_FAMILIES.filter((f) => f !== 'forage'),
+    notes:
+      'EPTC (Eptam 7E), HRAC 15 thiocarbamate per its label. Soil-incorporated PRE. Labelled on alfalfa, birdsfoot trefoil and clovers (not white dutch clover), so legume forage is tolerant. Every other family is treated as lethal: the label covers only some crops in them (green and dry beans but not soybeans, lima beans or cowpeas; potatoes and California lay-by tomatoes but not peppers; sweet potatoes and sugar beets but not carrots), lists volunteer barley, oats and wheat as weeds, and warns that cabbage must not follow for 60 days.'
+  },
   unclassified: {
     hracGroup: null,
     killsFamilies: [...CROP_FAMILIES],

@@ -21,6 +21,7 @@ export const EXPENSE_CATEGORIES = [
 
 export const INCOME_CATEGORIES = [
   'produce-sale',
+  'csa-share',
   'animal-product-sale',
   'animal-sale',
   'other'
@@ -42,6 +43,7 @@ export const LEDGER_CATEGORY_LABEL: Record<LedgerCategory, string> = {
   supplies: 'Supplies',
   other: 'Other',
   'produce-sale': 'Produce sale',
+  'csa-share': 'CSA shares',
   'animal-product-sale': 'Animal product sale',
   'animal-sale': 'Animal sale'
 };
@@ -66,6 +68,7 @@ const CATEGORY_KEY: Record<LedgerCategory, MessageKey> = {
   supplies: 'finance.cat.supplies',
   other: 'finance.cat.other',
   'produce-sale': 'finance.cat.produceSale',
+  'csa-share': 'finance.cat.csaShare',
   'animal-product-sale': 'finance.cat.animalProductSale',
   'animal-sale': 'finance.cat.animalSale'
 };

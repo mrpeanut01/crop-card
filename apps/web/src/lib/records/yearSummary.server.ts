@@ -173,6 +173,7 @@ export async function buildYearSummary(
     harvests: harvestEvents.map((h) => ({
       cropPluginId: h.cropPluginId,
       occurredAtMs: h.occurredAt,
+      moisturePct: h.moisturePct,
       quantity: h.quantity,
       lotNumber: h.lotNumber
     })),

@@ -13,6 +13,11 @@ import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { db } from './client';
 import { harvestEvents } from './schema';
 import { tenantValues, withTenant } from './tenant';
+import {
+  parseStoredDetails,
+  serializeDetails,
+  type HarvestDetails
+} from '$lib/harvest/detailsSchema';
 
 export const HARVEST_LOCK_WINDOW_MS = 48 * 60 * 60 * 1000;
 
@@ -27,6 +32,8 @@ export interface HarvestEventInput {
   moisturePct?: number;
   /** RULES_VERSION of the hay cut gate that cleared the cut (C-28). */
   rulesVersion?: string;
+  /** #662: the form's readings, never packed into the lot number. */
+  details?: HarvestDetails;
 }
 
 export interface HarvestEvent extends HarvestEventInput {
@@ -55,7 +62,8 @@ export function insertHarvestEvent(input: HarvestEventInput): HarvestEvent {
         quantity: input.quantity ?? null,
         lotNumber: input.lotNumber ?? null,
         moisturePct: input.moisturePct ?? null,
-        rulesVersion: input.rulesVersion ?? null
+        rulesVersion: input.rulesVersion ?? null,
+        detailsJson: serializeDetails(input.details)
       })
     )
     .returning()
@@ -101,6 +109,7 @@ export function listHarvestEvents(filters: ListFilters = {}): HarvestEvent[] {
 }
 
 function rowToEvent(row: typeof harvestEvents.$inferSelect): HarvestEvent {
+  const details = parseStoredDetails(row.detailsJson);
   return {
     id: row.id,
     blockId: row.blockId,
@@ -111,6 +120,7 @@ function rowToEvent(row: typeof harvestEvents.$inferSelect): HarvestEvent {
     lotNumber: row.lotNumber ?? undefined,
     moisturePct: row.moisturePct ?? undefined,
     ...(row.rulesVersion ? { rulesVersion: row.rulesVersion } : {}),
+    ...(details ? { details } : {}),
     lockedAt: row.lockedAt?.getTime()
   };
 }

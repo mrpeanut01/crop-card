@@ -1,3 +1,4 @@
+import { harvestDetailsSchema } from '$lib/harvest/detailsSchema';
 import { z } from 'zod';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
 
@@ -98,7 +99,9 @@ export const harvestRecordSchema = z.object({
   quantity: z.string().max(60).optional(),
   lotNumber: z.string().max(40).optional(),
   /** Stored moisture %, checked against the crop archetype's threshold. */
-  moisturePct: z.number().min(0).max(100).optional()
+  moisturePct: z.number().min(0).max(100).optional(),
+  /** #662: the harvest form's readings (pick number, grade, Brix, ...). */
+  details: harvestDetailsSchema.optional()
 });
 
 export const scoutRecordSchema = z.object({

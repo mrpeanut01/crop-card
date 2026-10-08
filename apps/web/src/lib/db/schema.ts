@@ -953,7 +953,11 @@ export const harvestEvents = tenantScoped(
        *  null means still-mutable. */
       lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
       /** Phase 25d v2-addendum — see sprayEvents.provenanceJson. */
-      provenanceJson: text('provenance_json')
+      provenanceJson: text('provenance_json'),
+      /** #662: the harvest form's archetype readings (pick number, grade,
+       *  Brix, cut height, ...) as `HarvestDetails` JSON, kept out of the
+       *  lot number, which stays the grower's own traceability code. */
+      detailsJson: text('details_json')
     },
     (table) => ({
       ownerOccurredIdx: index('harvest_events_owner_occurred_idx').on(

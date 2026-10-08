@@ -11,27 +11,49 @@ import type { FarmNames } from './profit.server';
 import type { EntryFormOptions, LinkOption } from './formTypes';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import { t } from '$lib/i18n';
+import { formatCalendarDate } from '$lib/prefs';
 
 export type { EntryFormOptions, LinkOption };
 
 const byLabel = (a: LinkOption, b: LinkOption) => a.label.localeCompare(b.label);
 
-export function entryFormOptions(names: FarmNames, locale?: string | null): EntryFormOptions {
-  const plantings = Object.keys(names.plantingPlugin).map((id) => {
+/** #734: "Crop, Variety · Bed · planted Mar 3, 2027", so split and
+ *  succession plantings of one variety read apart. Same name together,
+ *  newest planting first. */
+export function plantingOptions(names: FarmNames, locale?: string | null): LinkOption[] {
+  const rows = Object.keys(names.plantingPlugin).map((id) => {
     const pluginId = names.plantingPlugin[id];
     const crop = names.crop[pluginId];
     const variety = names.plantingLabel[id];
     const shown = cropDisplayName(pluginId, crop, locale);
-    return {
-      id,
-      label:
-        variety && variety !== crop
-          ? `${shown}, ${cropDisplayName(pluginId, variety, locale)}`
-          : shown
-    };
+    const base =
+      variety && variety !== crop
+        ? `${shown}, ${cropDisplayName(pluginId, variety, locale)}`
+        : shown;
+    const blockId = names.plantingBlock?.[id];
+    const bed = blockId ? names.bed[blockId] : undefined;
+    const date = names.plantingDate?.[id] ?? null;
+    const when =
+      date === null
+        ? t(locale, 'finance.form.notPlanted')
+        : t(locale, 'finance.form.planted', {
+            date: formatCalendarDate(date, 'date', {}, locale)
+          });
+    const label = [base, bed, names.plantingDate ? when : undefined].filter(Boolean).join(' · ');
+    return { id, label, base, date };
   });
+  rows.sort(
+    (a, b) =>
+      a.base.localeCompare(b.base) ||
+      (b.date ?? Number.POSITIVE_INFINITY) - (a.date ?? Number.POSITIVE_INFINITY) ||
+      a.label.localeCompare(b.label)
+  );
+  return rows.map(({ id, label }) => ({ id, label }));
+}
+
+export function entryFormOptions(names: FarmNames, locale?: string | null): EntryFormOptions {
   return {
-    plantings: plantings.sort(byLabel),
+    plantings: plantingOptions(names, locale),
     areas: Object.entries(names.area)
       .map(([id, label]) => ({ id, label }))
       .sort(byLabel),

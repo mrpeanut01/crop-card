@@ -1,3 +1,4 @@
+import type { HarvestDetails } from '$lib/harvest/detailsSchema';
 import type { HarvestMoistureGate, HayOperations, ZadoksStage } from '$lib/plugins/schemas';
 
 export interface RendererData {
@@ -14,6 +15,8 @@ export interface HarvestCommitInput {
    *  body carries it as a number so the harvest-moisture kernel gate is
    *  reachable from the form (a free-text lot-tag string is not). */
   moisturePct?: number;
+  /** #662: the form's readings, stored apart from the lot number. */
+  details?: HarvestDetails;
 }
 
 export interface RendererProps {
@@ -31,4 +34,6 @@ export interface RendererProps {
   error?: string | null;
   onCancel: () => void;
   rendererData?: RendererData;
+  /** #743: berry plantings on the vine archetype use the pick form. */
+  formVariant?: 'berry';
 }

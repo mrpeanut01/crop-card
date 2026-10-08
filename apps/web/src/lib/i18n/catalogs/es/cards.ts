@@ -365,6 +365,7 @@ export const esCards: Partial<Record<MessageKey, string>> = {
   'cards.record.notRecorded': 'No registrada',
   'cards.record.plantingCard': 'Tarjeta de siembra',
   'cards.record.provHarvest': 'Cosecha según se registró',
+  'cards.record.readings': 'Lecturas',
   'cards.record.scout': 'Monitoreo',
   'cards.record.scoutNote': 'Nota de monitoreo',
   'cards.record.provObservation': 'tu observación',

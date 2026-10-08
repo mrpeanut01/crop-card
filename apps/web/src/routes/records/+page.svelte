@@ -16,6 +16,7 @@
   import { KIND_TONE, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
   import { kindLabel } from '$lib/components/records/kindLabel';
   import { archetypeLabel } from '$lib/plugins/familyLabel';
+  import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { formatDueDay } from '$lib/prefs';
   import { localStamp } from '$lib/exports/localTime';
@@ -364,7 +365,10 @@
               {#each yearSummary.productAcreage.slice(0, 12) as p (p.productId)}
                 <tr>
                   <td>{p.displayName}</td>
-                  <td class="muted">{p.classes.join(', ') || '—'}</td>
+                  <td class="muted"
+                    >{p.classes.map((c) => chemistryClassLabel(c, data.locale)).join(', ') ||
+                      '—'}</td
+                  >
                   <td class="num mono">{p.applicationCount}</td>
                   <td class="num mono">{fmtAcres(p.acresTreated)}</td>
                 </tr>
@@ -390,7 +394,7 @@
             <tbody>
               {#each yearSummary.chemistryClassAcreage as c (c.className)}
                 <tr>
-                  <td>{c.className}</td>
+                  <td>{chemistryClassLabel(c.className, data.locale)}</td>
                   <td class="num mono">{c.applicationCount}</td>
                   <td class="num mono">{fmtAcres(c.acresTreated)}</td>
                 </tr>

@@ -1,0 +1,1 @@
+ALTER TABLE `harvest_events` ADD `performed_by_id` text;

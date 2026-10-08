@@ -167,7 +167,8 @@ export const GET: RequestHandler = async (event) => {
     ...sprays.map((e) => e.performedById),
     ...insecticides.map((e) => e.performedById),
     ...fungicides.map((e) => e.performedById),
-    ...hay.flatMap((h) => (h.cutting.performedById ? [h.cutting.performedById] : []))
+    ...hay.flatMap((h) => (h.cutting.performedById ? [h.cutting.performedById] : [])),
+    ...harvests.flatMap((h) => (h.performedById ? [h.performedById] : []))
   ];
   const applicators = applicatorMap(applicatorIds);
 
@@ -354,7 +355,7 @@ export const GET: RequestHandler = async (event) => {
     rows.push({
       date_iso: localDay(e.occurredAt, prefs),
       block_label: block?.blockLabel ?? block?.name ?? e.blockId,
-      applicator: '',
+      applicator: e.performedById ? applicatorLabel(e.performedById) : '',
       product_name: '',
       epa_reg_no: '',
       active_ingredients: '',

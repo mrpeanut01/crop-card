@@ -455,6 +455,7 @@ export function listUnifiedRecords(
           : '';
       const crop = cropName(e.cropPluginId, e.cropId);
       const shown = crop ?? e.cropPluginId;
+      if (e.performedById) performerIds.push(e.performedById);
       out.push({
         id: `harvest:${e.id}`,
         kind: 'harvest',
@@ -464,6 +465,7 @@ export function listUnifiedRecords(
         blockLabel: blockLabelById.get(e.blockId),
         cropPluginId: e.cropPluginId,
         cropLabel: crop,
+        performedById: e.performedById,
         detail: e.quantity
           ? `${shown} · ${e.quantity}${e.lotNumber ? ` · ${t(prefs.locale, 'recui.detail.lot', { lot: e.lotNumber })}` : ''}${moisture}`
           : `${shown}${moisture}`,

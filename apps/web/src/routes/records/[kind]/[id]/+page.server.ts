@@ -33,8 +33,11 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { toSprayProduct } from '$lib/server/cardSnapshot';
 import { prefsFor } from '$lib/db/userProfile';
-import { t, type MessageKey } from '$lib/i18n';
+import { createT, t, type MessageKey } from '$lib/i18n';
 import { cropDisplayName } from '$lib/i18n/cropName';
+import { harvestDetailLines } from '$lib/harvest/details';
+import { identityLabel } from '$lib/identity';
+import { formatCalendarDate, formatQuantity } from '$lib/prefs';
 import {
   deconDetail,
   fertilityDetail,
@@ -66,8 +69,12 @@ function performerEmail(userId: string | null | undefined): string | null {
   // Users is a global identity table; safe to query without a tenant
   // filter. The id was already produced by a tenant-scoped repo on the
   // way in, so the disclosure is only of an id the caller has access to.
-  const row = db.select({ email: users.email }).from(users).where(eq(users.id, userId)).get();
-  return row?.email ?? null;
+  const row = db
+    .select({ email: users.email, phone: users.phone })
+    .from(users)
+    .where(eq(users.id, userId))
+    .get();
+  return row ? identityLabel(row) : null;
 }
 
 export const load: PageServerLoad = async (event) => {
@@ -225,6 +232,7 @@ export const load: PageServerLoad = async (event) => {
     occurredAt = ev.occurredAt;
     lockedAt = ev.lockedAt;
     locked = isLocked(occurredAt, lockedAt, now);
+    performerLabel = performerEmail(ev.performedById);
     view = harvestDetail(
       {
         blockLabel: blockLabel(ev.blockId),
@@ -232,7 +240,13 @@ export const load: PageServerLoad = async (event) => {
         cropPluginId: ev.cropPluginId,
         quantity: ev.quantity,
         lotNumber: ev.lotNumber,
-        moisturePct: ev.moisturePct
+        moisturePct: ev.moisturePct,
+        detailLines: harvestDetailLines(
+          ev.details,
+          createT(prefs.locale),
+          (v, q) => formatQuantity(v, q, prefs),
+          (ymd) => formatCalendarDate(ymd, 'date', {}, prefs.locale)
+        )
       },
       prefs
     );

@@ -3,6 +3,7 @@ import { APP_VERSION } from '$lib/version';
 import { formatInstant, formatQuantity, unitLabel, zoneAbbrev, type Prefs } from '$lib/prefs';
 import { hayHarvestLine, type YearSummaryForViewer } from '$lib/records/yearSummary';
 import { animalSectionPdf } from '$lib/records/yearSummaryAnimalsPdf';
+import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
 import { CC_TABLE, PAGE, type PdfJobDoc } from '../pdfSpec';
 import { signatureFooter } from './parts';
 
@@ -47,7 +48,7 @@ export function yearSummaryDoc(i: YearSummaryDocInput): PdfJobDoc {
     ],
     ...summary.productAcreage.map((p) => [
       p.displayName,
-      p.classes.join(', ') || '—',
+      p.classes.map((c) => chemistryClassLabel(c)).join(', ') || '—',
       String(p.applicationCount),
       fmtArea(p.acresTreated, prefs)
     ])
@@ -60,7 +61,7 @@ export function yearSummaryDoc(i: YearSummaryDocInput): PdfJobDoc {
       { text: areaHeader, style: 'th' }
     ],
     ...summary.chemistryClassAcreage.map((c) => [
-      c.className,
+      chemistryClassLabel(c.className),
       String(c.applicationCount),
       fmtArea(c.acresTreated, prefs)
     ])

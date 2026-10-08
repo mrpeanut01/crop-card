@@ -361,6 +361,7 @@ export const enCards = {
   'cards.record.notRecorded': 'Not recorded',
   'cards.record.plantingCard': 'Planting card',
   'cards.record.provHarvest': 'Harvest as recorded',
+  'cards.record.readings': 'Readings',
   'cards.record.scout': 'Scout',
   'cards.record.scoutNote': 'Scout note',
   'cards.record.provObservation': 'your observation',

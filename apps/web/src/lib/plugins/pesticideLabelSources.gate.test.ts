@@ -5,6 +5,7 @@ import { organicInputClass } from '../organic/inputCompliance';
 import {
   LABEL_SOURCED_CLASSES,
   pesticideLabelSourceGaps,
+  statesAmount,
   type LabelSourcePlugin
 } from './pesticideLabelSources';
 import { hracGroupOf } from '$lib/safety/cropFamilyLethality';
@@ -307,6 +308,66 @@ describe('pesticide label sources (#640 #661 #716)', () => {
           rate: { x: { ratePerAcre: rate, sourceUrl: url, quote: 'Apply 32 fl oz per acre' } }
         })
       ).toHaveLength(1);
+    });
+
+    it('refuses a crop rate without a quote stating the amount and maximum', () => {
+      const p = {
+        ...base,
+        ratePerAcreByCrop: [{ cropPluginId: 'corn', amount: 0.5, maxAmount: 1, unit: 'pt' }]
+      };
+      const src = (quote: string) => ({
+        rateByCrop: {
+          x: [
+            { cropPluginId: 'corn', amount: 0.5, maxAmount: 1, unit: 'pt', sourceUrl: url, quote }
+          ]
+        }
+      });
+      expect(pesticideLabelSourceGaps([p], {})).toHaveLength(1);
+      expect(pesticideLabelSourceGaps([p], src('Apply 1 pint per acre'))).toHaveLength(1);
+      expect(pesticideLabelSourceGaps([p], src('Apply 2 pints or 11/2 pint'))).toHaveLength(1);
+      expect(pesticideLabelSourceGaps([p], src('Apply 1 pint, or ½ pint on sand'))).toEqual([]);
+      expect(pesticideLabelSourceGaps([p], src('Apply 1 pint, or 1/2 pint on sand'))).toEqual([]);
+      expect(
+        pesticideLabelSourceGaps([p], {
+          rateByCrop: {
+            x: [
+              {
+                cropPluginId: 'wheat',
+                amount: 0.5,
+                maxAmount: 1,
+                unit: 'pt',
+                sourceUrl: url,
+                quote: '1 or ½'
+              }
+            ]
+          }
+        })
+      ).toHaveLength(1);
+    });
+
+    it('refuses a stage limit that the quote does not contain', () => {
+      const p = {
+        ...base,
+        stageLimitByCrop: [{ cropPluginId: 'wheat', limit: 'Apply before jointing.' }]
+      };
+      const src = (quote: string) => ({
+        stageLimitByCrop: { x: [{ cropPluginId: 'wheat', sourceUrl: url, quote }] }
+      });
+      expect(pesticideLabelSourceGaps([p], {})).toHaveLength(1);
+      expect(pesticideLabelSourceGaps([p], src('Apply before tillering.'))).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([p], src('Use 2 oz.  Apply   before\njointing. Do not graze.'))
+      ).toEqual([]);
+    });
+
+    it('statesAmount reads decimals and label fractions', () => {
+      expect(statesAmount('1 ½ pints', 1.5)).toBe(true);
+      expect(statesAmount('1 1/2 pints', 1.5)).toBe(true);
+      expect(statesAmount('1.5 pints', 1.5)).toBe(true);
+      expect(statesAmount('½ pint', 0.5)).toBe(true);
+      expect(statesAmount('11/2 pint', 0.5)).toBe(false);
+      expect(statesAmount('3/4 pt', 0.75)).toBe(true);
+      expect(statesAmount('2 pints', 0.5)).toBe(false);
     });
 
     it('every shipped herbicide with a default rate marks where it comes from', () => {

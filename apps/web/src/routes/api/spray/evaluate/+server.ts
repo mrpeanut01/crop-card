@@ -28,6 +28,7 @@ import {
 } from '$lib/dilution/calculator';
 import { getStockItem, getStockItemByPluginId, type StockItem } from '$lib/db/stock';
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
+import { cropRateRows, withCropRate, type CropRateRow } from '$lib/plugins/cropRate';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
 import {
   buildTankMixSteps,
@@ -198,6 +199,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   let dilutions: DilutionLine[] | undefined;
   let noLabelRate: string[] | undefined;
   let tankMixOrder: TankMixStep[] | undefined;
+  // #737: label rates and stage limits by crop for the crops on this block.
+  const sprayedCropIds = [crops.primary, ...crops.coPlanted].map((c) => c.cropPluginId);
+  const cropLabel: Array<{ pluginId: string; rows: CropRateRow[] }> = fullProducts
+    .map((p) => ({
+      pluginId: p.pluginId,
+      rows: cropRateRows(p, (id) => registry.get(id)?.plugin.displayName ?? id).filter((r) =>
+        sprayedCropIds.includes(r.cropPluginId)
+      )
+    }))
+    .filter((x) => x.rows.length > 0);
   if (result.ok) {
     const tankSize = parsed.data.tankSizeGallons ?? 50;
     // Caller-supplied GPA wins; otherwise fall back to the sprayer's saved
@@ -206,8 +217,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // uncalibrated; coalesce to undefined so computeTankMixDilutions falls
     // back to the herbicide-plugin default rather than treating null as 0.
     const effectiveGpa = parsed.data.calibratedGpa ?? stored?.calibratedGpa ?? undefined;
-    dilutions = computeTankMixDilutions(fullProducts, tankSize, effectiveGpa);
-    noLabelRate = productsWithoutRate(fullProducts);
+    const ratedProducts = fullProducts.map((p) => withCropRate(p, sprayedCropIds));
+    dilutions = computeTankMixDilutions(ratedProducts, tankSize, effectiveGpa);
+    noLabelRate = productsWithoutRate(ratedProducts);
     tankMixOrder = buildTankMixSteps(fullProducts);
   }
 
@@ -215,6 +227,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     ...result,
     dilutions,
     noLabelRate,
+    cropLabel,
     tankMixOrder,
     ruleVersion: RULES_VERSION,
     pluginHashes,

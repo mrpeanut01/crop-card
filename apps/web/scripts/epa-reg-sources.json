@@ -8263,7 +8263,51 @@
     ]
   },
   "rate": {
-    "$comment": "#737 herbicide rate provenance (swarm 2026-10-07, 3-0). One entry per herbicide plugin marked rateProvenance \"label\": { ratePerAcre: { amount, unit }, sourceUrl, docDate, page, quote }, where the quote is the label's own rate sentence and states the amount. Every other shipped herbicide default rate carries rateProvenance \"fallback\" and is shown as \"Typical rate, not from the label. Check the label before mixing.\" Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read; notes elsewhere in this file that say a plugin rate is within a label range are summaries, not quotes."
+    "$comment": "#737 herbicide rate provenance (swarm 2026-10-07, 3-0). One entry per herbicide plugin marked rateProvenance \"label\": { ratePerAcre: { amount, unit }, sourceUrl, docDate, page, quote }, where the quote is the label's own rate sentence and states the amount. Every other shipped herbicide default rate carries rateProvenance \"fallback\" and is shown as \"Typical rate, not from the label. Check the label before mixing.\" Checked by pesticideLabelSources.gate.test.ts.; notes elsewhere in this file that say a plugin rate is within a label range are summaries, not quotes.",
+    "callisto": {
+      "ratePerAcre": {
+        "amount": 3,
+        "unit": "fl-oz"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20131122.pdf",
+      "docDate": "2013-11-22",
+      "page": 22,
+      "quote": "Apply Callisto at 3.0 fl. oz./A per application.",
+      "note": "Corn section, 'CALLISTO USED ALONE - POSTEMERGENCE', which covers field corn, seed corn, yellow popcorn and sweet corn. The plugin is POST only; PRE rates (6.0 to 7.7 fl oz/A by soil) are a different use. The label also says not to apply to white popcorn or ornamental (Indian) corn; Bloody Butcher is a dent corn. Checked 2026-10-08 (#737)."
+    },
+    "laudis": {
+      "ratePerAcre": {
+        "amount": 3,
+        "unit": "fl-oz"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00860-20180921.pdf",
+      "docDate": "2018-09-21",
+      "page": 13,
+      "quote": "Apply LAUDIS Herbicide at 3 fl oz/A per application.",
+      "note": "Corn section '(Field Corn, Popcorn, Seed Corn and Sweet Corn)'; one postemergence rate for every corn type. Checked 2026-10-08 (#737)."
+    },
+    "capreno-thiencarbazone-tembotrione": {
+      "ratePerAcre": {
+        "amount": 3,
+        "unit": "fl-oz"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01063-20260210.pdf",
+      "docDate": "2026-02-10",
+      "page": 11,
+      "quote": "Apply SC 547 Herbicide at 3 fl oz of product/A per application.",
+      "note": "POSTEMERGENCE USE section (field corn, silage corn, white, seed and sweet corn and popcorn). The 2026 stamped label for 264-1063 prints the product as 'SC 547 Herbicide'. PRE use is 3 to 6 fl oz/A, not this plugin's timing. Checked 2026-10-08 (#737)."
+    },
+    "engenia": {
+      "ratePerAcre": {
+        "amount": 12.8,
+        "unit": "fl-oz"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00507-20260206.pdf",
+      "docDate": "2026-02-06",
+      "page": 35,
+      "quote": "12.2: DT Soybean Product Rate Application Timing Pests Controlled Use Directions (fl ozs/A) 12.8 Preplant, at-planting, See Section 16.0 A maximum of two applications each of",
+      "note": "Section 12.2 Dicamba-Tolerant Soybean table: the Product Rate (fl ozs/A) column gives one rate, 12.8, for preplant through postemergence; the quote is the table header and row as the layout text runs them together. The DT cotton table (12.1) gives the same 12.8. Checked 2026-10-08 (#737)."
+    }
   },
   "chemistryClass": {
     "$comment": "#654 herbicide chemistry class provenance. One entry per herbicide plugin whose chemistryClass is set from its own label: { chemistryClass, hracGroup, sourceUrl, docDate, page, quote, crops?: { sourceUrl, docDate, page, quote } }, where the quote is the label's group sentence and states the group number, and crops quotes the label's crop list behind the kill-matrix row. Checked by pesticideLabelSources.gate.test.ts: a plugin using a class in LABEL_SOURCED_CLASSES needs an entry here.",
@@ -8407,5 +8451,86 @@
       },
       "note": "No row: Permit is labelled on corn, grain sorghum, proso millet and established pasture and forage grasses/hay, so halosulfuron keeps the class row."
     }
+  },
+  "rateByCrop": {
+    "$comment": "#737 herbicide label rates by crop. One list per plugin carrying ratePerAcreByCrop: [{ cropPluginId, amount, maxAmount?, unit, sourceUrl, docDate, page, quote }], where amount is the label's lowest rate for that crop (the mix rate), maxAmount its highest single-application rate when the label gives a range, and the quote states both (a printed fraction such as '½' counts). Checked by pesticideLabelSources.gate.test.ts.",
+    "banvel": [
+      {
+        "cropPluginId": "wheat-soft-red-winter",
+        "amount": 2,
+        "maxAmount": 4,
+        "unit": "fl-oz",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 19,
+        "quote": "Use DICAMBA DMA 4# AG at 2 to 4 fluid ounces per treated acre in wheat, fall seeded barley, and oats, and at 2 to 3 fluid ounces per treated acre in spring seeded barley.",
+        "note": "Small grains section, 'RATES AND TIMINGS'. Low end used as the mix rate; the label says to use the higher end for hard-to-control weeds or dense growth. Soft red winter wheat is fall seeded wheat."
+      },
+      {
+        "cropPluginId": "barley-grain-thoroughbred",
+        "amount": 2,
+        "maxAmount": 4,
+        "unit": "fl-oz",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 19,
+        "quote": "Use DICAMBA DMA 4# AG at 2 to 4 fluid ounces per treated acre in wheat, fall seeded barley, and oats, and at 2 to 3 fluid ounces per treated acre in spring seeded barley.",
+        "note": "Small grains section, 'RATES AND TIMINGS'. Low end used as the mix rate; the label says to use the higher end for hard-to-control weeds or dense growth. Thoroughbred is a winter (fall seeded) barley, so the fall seeded barley rate applies, not the 2 to 3 fl oz spring seeded rate."
+      },
+      {
+        "cropPluginId": "corn-feed-dent-pioneer",
+        "amount": 0.5,
+        "maxAmount": 1,
+        "unit": "pt",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 13,
+        "quote": "DICAMBA DMA 4# AG at 1 pint per treated acre may be applied during the period from corn emergence through the five leaf stage or 8 inches tall, whichever comes first. Reduce the rate to ½ pint per treated acre if corn is growing on coarse textured soils (sand, sandy loam, loamy sand).",
+        "note": "Field corn. The label's corn rate is 1 pint early postemergence on medium or fine soils, up to the five leaf stage or 8 inches, and ½ pint on coarse soils and from 8 to 36 inch corn (late postemergence, page 13). The mix uses ½ pint, the rate the label allows at every corn stage it lists. Text from the PPLS file's OCR layer; the OCR renders the printed '½' as '}2' or 'Y:.', and the quote gives '½' as printed on the page image (checked 2026-10-08). Label 66330-276 is the newest posted for 70506-461 (see entries.banvel)."
+      }
+    ]
+  },
+  "stageLimitByCrop": {
+    "$comment": "#737 herbicide growth-stage and seasonal limits by crop. One list per plugin carrying stageLimitByCrop: [{ cropPluginId, sourceUrl, docDate, page, quote }], where the quote contains the plugin's limit sentence word for word. Checked by pesticideLabelSources.gate.test.ts.",
+    "banvel": [
+      {
+        "cropPluginId": "wheat-soft-red-winter",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 19,
+        "quote": "DICAMBA DMA 4# AG herbicide MUST BE APPLIED TO FALL SEEDED WHEAT PRIOR TO THE JOINTING STAGE. APPLICATIONS TO SPRING SEEDED WHEAT MUST BE MADE BEFORE WHEAT REACHES THE 6 LEAF STAGE."
+      },
+      {
+        "cropPluginId": "barley-grain-thoroughbred",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 21,
+        "quote": "DICAMBA DMA 4# AG MUST BE APPLIED TO FALL SEEDED BARLEY PRIOR TO THE JOINTING STAGE."
+      },
+      {
+        "cropPluginId": "corn-feed-dent-pioneer",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 13,
+        "quote": "DICAMBA DMA 4# AG at 1 pint per treated acre may be applied during the period from corn emergence through the five leaf stage or 8 inches tall, whichever comes first. Reduce the rate to ½ pint per treated acre if corn is growing on coarse textured soils (sand, sandy loam, loamy sand).",
+        "note": "Text from the PPLS file's OCR layer; the OCR renders the printed '½' as '}2' or 'Y:.', and the quote gives '½' as printed on the page image (checked 2026-10-08). Label 66330-276 is the newest posted for 70506-461 (see entries.banvel)."
+      },
+      {
+        "cropPluginId": "corn-feed-dent-pioneer",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 13,
+        "quote": "Application of DICAMBA DMA 4# AG at ½ pint per treated acre may be made from 8 to 36 inch tall corn or 15 days before tassel emergence, whichever comes first.",
+        "note": "Text from the PPLS file's OCR layer; the OCR renders the printed '½' as '}2' or 'Y:.', and the quote gives '½' as printed on the page image (checked 2026-10-08). Label 66330-276 is the newest posted for 70506-461 (see entries.banvel)."
+      },
+      {
+        "cropPluginId": "corn-feed-dent-pioneer",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 12,
+        "quote": "Up to 2 applications of DICAMBA DMA 4# AG may be made during a growing season. DO NOT exceed a total of 1 ½ pints of DICAMBA DMA 4# AG per treated acre per crop year.",
+        "note": "Text from the PPLS file's OCR layer; the OCR renders the printed '½' as '}2' or 'Y:.', and the quote gives '½' as printed on the page image (checked 2026-10-08). Label 66330-276 is the newest posted for 70506-461 (see entries.banvel)."
+      }
+    ]
   }
 }

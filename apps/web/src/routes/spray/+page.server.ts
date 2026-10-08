@@ -112,6 +112,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         hracGroups,
         ratePerAcre: h.ratePerAcre,
         rateProvenance: herbicideRateProvenance(h),
+        hasCropRates: (h.ratePerAcreByCrop ?? []).length > 0,
         gpaCalibration: h.gpaCalibration,
         requiresAMS: h.requiresAMS ?? false,
         deconRequired: h.deconRequired ?? false,

@@ -17,6 +17,7 @@ import { sprayRecordSchema } from '$lib/records/apiSchemas';
 import { resolveSprayCrops, standingCropPluginIds } from '$lib/server/sprayCrops';
 import { appliedProductAmount, productsWithoutRate } from '$lib/dilution/calculator';
 import { herbicideRateProvenance } from '$lib/plugins/rateProvenance';
+import { withCropRate } from '$lib/plugins/cropRate';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
@@ -151,6 +152,10 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     standingCropPluginIds(getBlock(parsed.data.blockId)?.plantings ?? [], occurredAt),
     registry
   );
+  // #737: a label rate by crop replaces the default when every sprayed crop
+  // shares it.
+  const sprayedCropIds = [crops.primary, ...crops.coPlanted].map((c) => c.cropPluginId);
+  const ratedProducts = fullProducts.map((p) => withCropRate(p, sprayedCropIds));
 
   const ctx: SprayContext = {
     occurredAt,
@@ -227,7 +232,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         sprayerId: stored.id,
         performedById: performer.id,
         occurredAt,
-        products: fullProducts.map((p) => ({
+        products: ratedProducts.map((p) => ({
           pluginId: p.pluginId,
           chemistryClasses: Array.from(new Set(p.activeIngredients.map((ai) => ai.chemistryClass))),
           rate: p.ratePerAcre,
@@ -275,7 +280,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         // #737 — a product with no label rate on file gets no stock draw.
         const acres = getBlock(parsed.data.blockId)?.acres ?? null;
         const tankSizeGallons = parsed.data.tankSizeGallons;
-        const lines = fullProducts.flatMap((p) => {
+        const lines = ratedProducts.flatMap((p) => {
           const ratePerAcre = p.ratePerAcre;
           if (!ratePerAcre) return [];
           return [
@@ -288,7 +293,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
             }
           ];
         });
-        for (const id of productsWithoutRate(fullProducts)) {
+        for (const id of productsWithoutRate(ratedProducts)) {
           stockWarnings.push(
             `${id}: no label rate on file, so stock was not decremented; adjust it on /inventory`
           );

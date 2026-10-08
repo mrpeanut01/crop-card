@@ -20,7 +20,7 @@
   },
   "gpaCalibration": 30,
   "reEntryIntervalHours": 4,
-  "preHarvestIntervalDays": 0,
+  "preHarvestIntervalDays": 3,
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "55146-83",

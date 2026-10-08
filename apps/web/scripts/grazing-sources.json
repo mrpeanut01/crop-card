@@ -718,6 +718,30 @@
       "reason": "Issue #661: the Coragen label (EPA 279-9606, stamped 2020-10-27) lists grass forage, fodder and hay and nongrass animal feeds (alfalfa, clover) with 0 days to harvest, forage and straw of cereal grains with 1 day, and field corn with 14 days, but gives no separate grazing, haying or slaughter interval to read as grazingRestrictions. None ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
     },
     {
+      "pluginId": "endura-boscalid",
+      "reason": "Issue #661: the Endura label (EPA 7969-197, stamped 2022-11-08) lists alfalfa for forage and hay with a 14-day PHI and says there is no restriction on livestock grazing or feeding on alfalfa forage and hay, while treated pea commodities and peanut hay may not be fed to livestock and treated plants grown for seed may not be grazed. The grazing and feeding rules differ by crop, which grazingRestrictions (one value) cannot hold, so none ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "pristine",
+      "reason": "Issue #661: the Pristine label (EPA 7969-199, stamped 2022-11-30) lists alfalfa with a 14-day PHI and no livestock feeding restrictions, while peanut hay may not be fed or grazed and soybean forage and hay may not be fed for 14 and 21 days. The grazing and feeding rules differ by crop, which grazingRestrictions (one value) cannot hold, so none ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "ridomil-gold-sl",
+      "reason": "Issue #661: the Ridomil Gold SL label (EPA 100-1202, stamped 2023-06-21) says not to feed green forage or cut hay for 60 days after application to alfalfa, not to feed or cut hay for 90 days on clover, not to graze, feed green forage or cut hay for 60 days on grass forage, fodder and hay, and not to graze treated orchards. The intervals differ by crop, which grazingRestrictions (one value) cannot hold, so none ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "champ-dp",
+      "reason": "Issue #661: the Champ Dry Prill label (EPA 55146-57, stamped 2022-07-27) lists alfalfa under its general 0-day PHI and gives no grazing, haying or feeding interval. The label is silent, so no grazingRestrictions value ships and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "cuprofix-ultra-disperss",
+      "reason": "Issue #661: the Cuprofix Ultra 40 Disperss label (EPA 70506-201, stamped 2025-12-04) lists alfalfa with a 0-day PHI and gives no grazing, haying or feeding interval. The label is silent, so no grazingRestrictions value ships and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
+      "pluginId": "kocide-3000-o",
+      "reason": "Issue #661: the Kocide 3000-O label (EPA 91411-11-70051, Certis specimen label 2025-01-14) lists alfalfa under its general 0-day PHI and gives no grazing, haying or feeding interval. The label is silent, so no grazingRestrictions value ships and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
+    },
+    {
       "pluginId": "beleaf-50sg",
       "reason": "Issue #661: the Beleaf 50SG label (EPA 71512-10, stamped 2022-11-21) lists alfalfa and clover, and its grazing and feeding intervals differ by crop (alfalfa forage and hay 14 days, clover forage and hay 60 days and only west of the Rockies). grazingRestrictions holds one value for every crop, so none ships yet and grazing reads unknown; the by-crop PHIs are in preHarvestIntervalsByCrop."
     },

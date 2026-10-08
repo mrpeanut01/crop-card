@@ -74,6 +74,28 @@ function statesNumber(quote: unknown, n: number): boolean {
   return typeof quote === 'string' && new RegExp(`(^|[^0-9.])${n}([^0-9]|$)`).test(quote);
 }
 
+const WEEK_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+
+/** A PHI quote states its days as a number, as whole weeks ("three weeks
+ *  prior to harvest" for 21), or a 0-day PHI as the label's "day of harvest"
+ *  wording ("May be applied the day of harvest."). */
+export function statesPhiDays(quote: unknown, n: number): boolean {
+  if (statesNumber(quote, n)) return true;
+  if (typeof quote !== 'string') return false;
+  if (n > 0 && n % 7 === 0) {
+    const w = n / 7;
+    const forms = [String(w), ...(w <= WEEK_WORDS.length ? [WEEK_WORDS[w - 1]] : [])];
+    if (forms.some((f) => new RegExp(`(^|[^0-9a-z])${f}[ -]weeks?\\b`, 'i').test(quote)))
+      return true;
+  }
+  return (
+    n === 0 &&
+    /\b(the|up to(?: and including)?(?: the)?)(?: \.\.\.)? day(?: \.\.\.)? of(?: \.\.\.)? harvest\b/i.test(
+      quote
+    )
+  );
+}
+
 const FRACTIONS: Record<string, readonly string[]> = {
   '0.25': ['1/4', '¼'],
   '0.5': ['1/2', '½'],
@@ -138,8 +160,9 @@ export function pesticideLabelSourceGaps(
     const seen = new Set<string>();
     for (const row of p.preHarvestIntervalsByCrop ?? []) {
       const key = row.cropPluginId ?? row.cropFamily ?? '?';
-      if (seen.has(key)) gaps.push(`${p.pluginId}: PHI for ${key} is listed twice`);
-      seen.add(key);
+      const seenKey = `${row.cropPluginId ? 'crop' : 'family'}:${key}`;
+      if (seen.has(seenKey)) gaps.push(`${p.pluginId}: PHI for ${key} is listed twice`);
+      seen.add(seenKey);
       if (row.cropPluginId && cropPluginIds && !cropPluginIds.has(row.cropPluginId)) {
         gaps.push(`${p.pluginId}: PHI names ${row.cropPluginId}, which is not a crop plugin`);
       }
@@ -154,7 +177,7 @@ export function pesticideLabelSourceGaps(
       else if (
         match.preHarvestIntervalDays !== row.preHarvestIntervalDays ||
         !hasUrl(match) ||
-        !statesNumber(match.quote, row.preHarvestIntervalDays)
+        !statesPhiDays(match.quote, row.preHarvestIntervalDays)
       ) {
         gaps.push(
           `${p.pluginId}: phiByCrop source does not quote ${row.preHarvestIntervalDays} days for ${key}`

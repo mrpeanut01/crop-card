@@ -42,6 +42,7 @@ import type { Prefs } from '$lib/prefs';
 import { t, type MessageKey } from '$lib/i18n';
 import { buildFarmSnapshot, toCropPlugin, toSprayProduct } from './cardSnapshot';
 import { getRegistry } from './registry';
+import { herbicideReEntryClearAtFor } from './herbicideReEntry';
 import { lateLabel } from '$lib/records/lateLabel';
 import { hayDaysLate } from '$lib/records/hayExport.server';
 import { observationLine } from '$lib/records/metricLabel';
@@ -188,7 +189,7 @@ export async function buildRecordCards(
           provenance: ev.conditions.conditionsProvenance ?? 'default'
         },
         observation: null,
-        reEntryClearAt: null,
+        reEntryClearAt: herbicideReEntryClearAtFor(await getRegistry(), ev),
         preHarvestClearAt: null,
         rulesVersion: ev.rulesVersion,
         performerLabel: performer(ev.performedById),

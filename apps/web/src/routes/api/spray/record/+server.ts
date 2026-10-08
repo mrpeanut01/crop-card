@@ -20,6 +20,7 @@ import { herbicideRateProvenance } from '$lib/plugins/rateProvenance';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
+import { storedReEntryClearAt } from '$lib/spray/herbicideReEntry';
 import {
   decrementForUse,
   getStockItem,
@@ -242,7 +243,12 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         rulesVersion: RULES_VERSION,
         pluginHashes,
         customRateOverride: parsed.data.customRateOverride ?? false,
-        notes: parsed.data.notes
+        notes: parsed.data.notes,
+        reEntryClearAt:
+          storedReEntryClearAt(
+            occurredAt,
+            fullProducts.map((p) => p.reEntryIntervalHours)
+          ) ?? undefined
       });
 
       // Update sprayer chemistry history (most-aggressive class wins on the kernel's

@@ -51,7 +51,8 @@
  * ("IRAC 3A", "FRAC 3"). `total_amount_applied` is a bare number in the
  * appended `total_amount_unit`; a harvest's quantity text goes in the
  * appended `harvest_quantity`. `rei_hours` is the record's restricted-entry
- * interval, blank when not on file (herbicide plugins carry none).
+ * interval, blank when not on file (a herbicide row only when every product
+ * in the tank has a sourced REI, #640).
  *
  * #737 (swarm 2026-10-07): `rate_note` says when a herbicide row's rate was
  * a typical rate, not one quoted from the label; blank otherwise.
@@ -222,6 +223,7 @@ export const GET: RequestHandler = async (event) => {
     const commodity = cropCommodityFor(block, e.cropId);
     const wind = e.conditions.windMph;
     const temp = e.conditions.tempF;
+    const rei = reiCell(e, e.products);
     for (const p of e.products) {
       const total = totalAmountApplied(p.rate?.amount, acres);
       const plugin = registry.get(p.pluginId)?.plugin as
@@ -260,7 +262,7 @@ export const GET: RequestHandler = async (event) => {
         mode_of_action: modeOfActionLabels('herbicide', p.chemistryClasses).join(' / '),
         total_amount_unit: totalAmountUnit(p.rate, total),
         harvest_quantity: '',
-        rei_hours: '',
+        rei_hours: rei,
         rate_note:
           p.rate && recordedRateProvenance(p.rateProvenance) === 'fallback'
             ? FALLBACK_RATE_LINE

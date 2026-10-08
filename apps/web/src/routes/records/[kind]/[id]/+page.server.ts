@@ -33,6 +33,7 @@ import { RECORD_KINDS, LOCK_WINDOW_MS, type RecordKind } from '$lib/db/recordsUn
 import { requireUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
+import { herbicideReEntryClearAtFor } from '$lib/server/herbicideReEntry';
 import { toSprayProduct } from '$lib/server/cardSnapshot';
 import { prefsFor } from '$lib/db/userProfile';
 import { createT, t, type MessageKey } from '$lib/i18n';
@@ -151,6 +152,7 @@ export const load: PageServerLoad = async (event) => {
         conditions: ev.conditions,
         customRateOverride: ev.customRateOverride,
         notes: ev.notes,
+        reEntryClearAt: herbicideReEntryClearAtFor(registry, ev),
         rulesVersion: ev.rulesVersion,
         pluginHashes: ev.pluginHashes
       },

@@ -586,5 +586,6 @@ describe('issue body', () => {
     const text = renderSection('weekly', many, '', 'o/r');
     expect(text.length).toBeLessThanOrEqual(30_000);
     expect(text).toContain('did not fit');
+    expect(text).toContain('`p` a (5 reference(s))');
   });
 });

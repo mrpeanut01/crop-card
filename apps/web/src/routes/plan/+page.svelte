@@ -2246,7 +2246,8 @@
           ? Math.round((c.daysToMaturity.min + c.daysToMaturity.max) / 2)
           : undefined,
         cropFamily: c.cropFamily,
-        archetype: c.archetype
+        archetype: c.archetype,
+        perennial: c.perennial
       }
     ])
   )}
@@ -2326,7 +2327,8 @@
     dtmMaxDays: c.daysToMaturity?.max ?? null,
     seedStart: c.seedStart,
     treeSizeClasses: c.treeSizeClasses,
-    sowMethods: c.sowMethods
+    sowMethods: c.sowMethods,
+    perennial: c.perennial
   }))}
   seedStock={seedStockData.map((s) => ({
     stockItemId: s.stockItemId,

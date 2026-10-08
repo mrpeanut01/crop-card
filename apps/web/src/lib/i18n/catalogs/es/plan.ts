@@ -501,6 +501,7 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plan.wheat.openPlan': 'Abrir Plan',
   'plan.wheat.pageTitle': 'Plan de granos pequeños · CropCard',
   'plan.wheat.planted': 'sembrado {date}',
+  'plan.wheat.plannedFor': 'previsto para el {date}',
   'plan.wheat.recordFungicide': 'Registrar fungicida',
   'plan.wheat.recordHarvest': 'Registrar cosecha',
   'plan.wheat.switcher': 'Siembras de granos pequeños',
@@ -600,6 +601,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plantui.status.planned': 'planificada',
   'plantui.status.active': 'activa',
   'plantui.status.mature': 'madura',
+  'plantui.status.harvested': 'cosechada',
+  'plantui.status.ended': 'terminada',
   'plantui.source.aiPlan': 'Plan con IA',
   'plantui.source.companionAi': 'Asociación con IA',
   'plantui.source.carryForward': 'Traído del año pasado',
@@ -616,6 +619,8 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plantui.window.tight':
     'Muy justo: necesita unos {days} días antes de la primera helada de otoño ({date}).',
   'plantui.window.frostFree': 'Esta cama de cultivo no tiene límite por heladas.',
+  'plantui.window.perennial':
+    'Es perenne: sus años hasta la primera cosecha no se ajustan a esta temporada.',
   'plantui.role.anchor': 'Principal del grupo',
   'plantui.role.companion': 'Acompañante',
   'plantui.role.primary': 'Principal',
@@ -628,6 +633,7 @@ export const esPlan: Partial<Record<MessageKey, string>> = {
   'plantui.blockStatus.mature': 'maduro',
   'sched.hardenUnknownNote': 'No se conoce el tiempo de aclimatación para este cultivo.',
   'sched.notDatedNote': 'Las tareas de semillero se crean cuando la siembra tiene fecha.',
+  'sched.alreadyInGroundNote': 'Ya está en la tierra, así que no se crearon tareas de semillero.',
   'sched.sowTimingUnknown':
     'No se conoce cuándo empezar este cultivo bajo techo. Pon tú la fecha de siembra.',
   'sched.sowAfterTransplant':

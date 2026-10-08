@@ -22,7 +22,11 @@ import {
   type UnplacedCrop
 } from '$lib/garden/recipes';
 import type { GardenCrop } from '$lib/garden/types';
-import { deterministicPlantingWindow, type PlantingWindow } from '$lib/plan/plantingWindow';
+import {
+  deterministicPlantingWindow,
+  plantingWindowCropOf,
+  type PlantingWindow
+} from '$lib/plan/plantingWindow';
 import type { BedRecipePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { bedFrostIso, bedFrostMs } from '$lib/server/blockFrost.server';
 import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
@@ -203,14 +207,7 @@ function windowLookup(inputs: FillInputs): (id: string) => PlantingWindow | null
   return (id) => {
     const crop = inputs.crops[id];
     if (!crop) return null;
-    return deterministicPlantingWindow(
-      {
-        cropFamily: crop.cropFamily,
-        soilTempMinF: crop.plantingGuide?.soilTempMinF ?? null,
-        dtmMaxDays: crop.daysToMaturity?.max ?? null
-      },
-      frost
-    );
+    return deterministicPlantingWindow(plantingWindowCropOf(crop), frost);
   };
 }
 

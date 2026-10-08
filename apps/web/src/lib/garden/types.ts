@@ -87,6 +87,8 @@ export interface GardenCrop {
   displayName: string;
   cropFamily: string;
   archetype?: string;
+  /** #672: read by `isPerennialCrop`, when the plugin carries it. */
+  agronomy?: { lifecycle?: string };
   daysToMaturity?: { min: number; max: number };
   defaultRowSpacingInches?: number;
   /** #548: spacing and bearing age by tree size. */

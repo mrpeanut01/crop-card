@@ -39,6 +39,9 @@
     /** Show "ask the owner" in place of the edit controls. */
     askOwner?: boolean;
     onAddPlanting?: () => void;
+    /** #623: plantings that share time in the ground; defaults to "more
+     *  than one planting" when the caller does not say. */
+    polyculture?: boolean;
   }
   const {
     block,
@@ -50,13 +53,14 @@
     onRefineWithAi,
     onEditBlock,
     askOwner = false,
-    onAddPlanting
+    onAddPlanting,
+    polyculture
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
   const cropName = (p: { cropPluginId: string; varietyDisplayName: string }) =>
     cropDisplayName(p.cropPluginId, p.varietyDisplayName, page.data?.locale);
 
-  const isPoly = $derived(block.plantings.length > 1);
+  const isPoly = $derived(polyculture ?? block.plantings.length > 1);
   const geometryMissing = $derived(!block.geometryGeojson);
   const geometryNote = $derived(tr('planui.bh.geoNote'));
   const cropSummary = $derived.by(() => {
@@ -69,11 +73,12 @@
   });
   const kickerText = $derived.by(() => {
     const ac = block.acres !== undefined ? fmt.area(block.acres) : tr('planui.bh.noAcres');
-    const polyLabel = isPoly
-      ? tr('planui.bh.plantingsCount', { count: block.plantings.length })
-      : block.plantings.length === 1
-        ? tr('planui.bh.single')
-        : tr('planui.bh.empty');
+    const polyLabel =
+      block.plantings.length > 1
+        ? tr('planui.bh.plantingsCount', { count: block.plantings.length })
+        : block.plantings.length === 1
+          ? tr('planui.bh.single')
+          : tr('planui.bh.empty');
     return tr('planui.bh.kicker', { area: ac, label: polyLabel });
   });
 </script>

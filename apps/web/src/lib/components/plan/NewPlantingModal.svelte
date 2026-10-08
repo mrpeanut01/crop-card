@@ -61,6 +61,8 @@
     treeSizeClasses?: TreeSizeRow[];
     /** #555: methods with a sourced rate; the toggle shows for two. */
     sowMethods?: SavedSowMethod[];
+    /** #645: a tree, vine or other perennial. */
+    perennial?: boolean;
   };
 
   interface Props {
@@ -300,7 +302,8 @@
       {
         cropFamily: entry.cropFamily,
         soilTempMinF: entry.soilTempMinF,
-        dtmMaxDays: entry.dtmMaxDays
+        dtmMaxDays: entry.dtmMaxDays,
+        perennial: entry.perennial ?? false
       },
       frost,
       locale
@@ -627,6 +630,7 @@
             dated={!!plantingDate}
             inGroundOn={plantingDate}
             idPrefix="np"
+            perennial={pickedEntry?.perennial ?? false}
             bind:establishment
             bind:startIndoors
             bind:sowIndoorsOn

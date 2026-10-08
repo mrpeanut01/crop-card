@@ -489,6 +489,7 @@ export const enPlan = {
   'plan.wheat.openPlan': 'Open Plan',
   'plan.wheat.pageTitle': 'Small-grain plan · CropCard',
   'plan.wheat.planted': 'planted {date}',
+  'plan.wheat.plannedFor': 'planned for {date}',
   'plan.wheat.recordFungicide': 'Record fungicide',
   'plan.wheat.recordHarvest': 'Record harvest',
   'plan.wheat.switcher': 'Small-grain plantings',
@@ -586,6 +587,8 @@ export const enPlan = {
   'plantui.status.planned': 'planned',
   'plantui.status.active': 'active',
   'plantui.status.mature': 'mature',
+  'plantui.status.harvested': 'harvested',
+  'plantui.status.ended': 'ended',
   'plantui.source.aiPlan': 'AI plan',
   'plantui.source.companionAi': 'Companion AI',
   'plantui.source.carryForward': 'Carry-forward',
@@ -599,6 +602,8 @@ export const enPlan = {
   'plantui.window.tight':
     'Tight fit: needs about {days} days before the first fall frost ({date}).',
   'plantui.window.frostFree': 'No frost limit for this bed.',
+  'plantui.window.perennial':
+    'A perennial: its years to a first crop are not fitted into this season.',
   'plantui.role.anchor': 'Anchor',
   'plantui.role.companion': 'Companion',
   'plantui.role.primary': 'Primary',
@@ -611,6 +616,7 @@ export const enPlan = {
   'plantui.blockStatus.mature': 'mature',
   'sched.hardenUnknownNote': 'Hardening-off timing is not known for this crop.',
   'sched.notDatedNote': 'Seed-start tasks are made once the planting has a date.',
+  'sched.alreadyInGroundNote': 'Already in the ground, so no seed-start tasks were made.',
   'sched.sowTimingUnknown':
     'Indoor start timing is not known for this crop. Set the sow date yourself.',
   'sched.sowAfterTransplant':

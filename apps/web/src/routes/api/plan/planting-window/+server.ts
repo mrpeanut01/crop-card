@@ -13,7 +13,11 @@ import {
 } from '$lib/server/aiPlantingWindow';
 import { currentOwnerId } from '$lib/db/tenant';
 import { frostDatesIsoForYear, getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
-import { deterministicPlantingWindow, type FrostDatesIso } from '$lib/plan/plantingWindow';
+import {
+  deterministicPlantingWindow,
+  plantingWindowCropOf,
+  type FrostDatesIso
+} from '$lib/plan/plantingWindow';
 import { getBlock } from '$lib/db/blocks';
 import { loadEffectiveFrostByBlock, localDay } from '$lib/server/blockFrost.server';
 import { effectiveFrostSummary, type EffectiveFrost } from '$lib/climate/effectiveFrost';
@@ -61,11 +65,7 @@ export const POST: RequestHandler = async (event) => {
       ? { lastSpring: `${year}-01-01`, firstFall: `${year}-12-31`, frostFree: true }
       : { lastSpring: localDay(bed.lastSpringFrostMs), firstFall: localDay(bed.firstFallFrostMs) }
     : farmFrost;
-  const cropFacts = {
-    cropFamily: crop.cropFamily ?? null,
-    soilTempMinF: crop.plantingGuide?.soilTempMinF ?? null,
-    dtmMaxDays: crop.daysToMaturity?.max ?? null
-  };
+  const cropFacts = plantingWindowCropOf(crop);
   const baseline = deterministicPlantingWindow(cropFacts, frost);
   const input: PlantingWindowPromptInput = {
     cropPluginId,

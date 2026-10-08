@@ -156,7 +156,12 @@
         </p>
       {/if}
       <p class="lede">
-        {c.varietyDisplayName} · {tr('plan.wheat.planted', { date: fmtDate(c.plantingDate, true) })}
+        {c.varietyDisplayName} · {tr(
+          c.plantingDate !== null && c.plantingDate > data.nowMs
+            ? 'plan.wheat.plannedFor'
+            : 'plan.wheat.planted',
+          { date: fmtDate(c.plantingDate, true) }
+        )}
         {#if harvestStage}· {tr('plan.wheat.harvestTarget', {
             date: fmtDate(harvestStage.startMs, true),
             code: harvestStage.code
@@ -182,7 +187,7 @@
             aria-current={o.plantingId === c.plantingId ? 'page' : undefined}
           >
             <span class="sw-name">{o.displayName}</span>
-            <span class="sw-meta">{o.blockName} · {fmtDate(o.plantingDate)}</span>
+            <span class="sw-meta">{o.blockName} · {fmtDate(o.plantingDate, true)}</span>
           </a>
         {/each}
       </nav>

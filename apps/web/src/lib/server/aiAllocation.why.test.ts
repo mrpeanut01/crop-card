@@ -3,7 +3,12 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { PlanInput, SeedRequest } from '$lib/layout/engine';
 import { t } from '$lib/i18n';
-import { allocateDeterministic, buildCandidacyMatrix, threeSistersOnBlock } from './aiAllocation';
+import {
+  allocateDeterministic,
+  buildCandidacyMatrix,
+  splitLotParts,
+  threeSistersOnBlock
+} from './aiAllocation';
 
 function plugin(pluginId: string, cropFamily: string): CropPlugin {
   return {
@@ -117,5 +122,34 @@ describe('engine Why text (#690)', () => {
 
   it('has Spanish for the unknown sun line', () => {
     expect(t('es', 'wizard.engine.why.sunUnknown')).not.toBe(UNKNOWN);
+  });
+
+  it('gives a split lot one leftover sentence with lot totals, not one per part (#690)', () => {
+    const small = (id: string) => ({ ...block(id, 'full'), acres: 100 / 43_560 });
+    const plan = input([seed('b', 'bean', 50_000)], [small('A'), small('B'), small('C')]);
+    const result = allocateDeterministic(plan, 'no-api-key');
+    const lot = splitLotParts(result.assignments).get('b');
+    expect(lot?.parts).toBeGreaterThan(1);
+    const whys = result.assignments.map((a) => result.perRowRationale[`b:${a.blockId}`]);
+    const lead = t(undefined, 'wizard.engine.why.splitSurplus', {
+      parts: lot!.parts,
+      fit: lot!.placed.toLocaleString('en-US'),
+      avail: (50_000).toLocaleString('en-US'),
+      extra: (50_000 - lot!.placed).toLocaleString('en-US')
+    });
+    expect(whys.filter((w) => w.includes('left over'))).toHaveLength(1);
+    expect(whys[0]).toContain(lead);
+    expect(whys[0]).toContain('50,000');
+    for (const w of whys.slice(1)) expect(w).toContain(t(undefined, 'wizard.engine.why.splitPart'));
+  });
+
+  it('counts each lot only once it is on two or more blocks', () => {
+    const parts = splitLotParts([
+      { stockItemId: 'x', blockId: 'A', plants: 10 },
+      { stockItemId: 'y', blockId: 'A', plants: 5 },
+      { stockItemId: 'x', blockId: 'B', plants: 7 }
+    ]);
+    expect([...parts.keys()]).toEqual(['x']);
+    expect(parts.get('x')).toEqual({ parts: 2, placed: 17, firstBlockId: 'A' });
   });
 });

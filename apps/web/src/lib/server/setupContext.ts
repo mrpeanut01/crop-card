@@ -14,7 +14,13 @@ export function setupAreas(): SetupArea[] {
   }
   return listAreas()
     .filter((a) => isCropBearing(a.kind))
-    .map((a) => ({ id: a.id, name: a.name, kind: a.kind, blockCount: counts.get(a.id) ?? 0 }))
+    .map((a) => ({
+      id: a.id,
+      name: a.name,
+      kind: a.kind,
+      blockCount: counts.get(a.id) ?? 0,
+      ...(a.acres != null ? { acres: a.acres } : {})
+    }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 

@@ -9,6 +9,7 @@
   import { page } from '$app/state';
   import { pageCropName } from '$lib/i18n/pageCropName';
   import AreaSeedCell from './AreaSeedCell.svelte';
+  import { cropFamilyLabel } from '$lib/plugins/familyLabel';
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
@@ -304,7 +305,11 @@
           {@const famCount = w.familySelectedCount(g.items)}
           <tr class="family-row">
             <td colspan="5">
-              <span class="family-name">{g.family ?? tr('wizard.seeds.unclassified')}</span>
+              <span class="family-name"
+                >{g.family
+                  ? cropFamilyLabel(g.family, page.data?.locale)
+                  : tr('wizard.seeds.unclassified')}</span
+              >
               <span class="muted"
                 >{tr('wizard.seeds.famSelected', { n: famCount, total: g.items.length })}</span
               >
@@ -315,7 +320,9 @@
                   onclick={() => w.selectAllInFamily(g.items)}
                   disabled={famCount === g.items.length}
                   aria-label={tr('wizard.seeds.selectAllAria', {
-                    family: g.family ?? tr('wizard.seeds.unclassifiedLower')
+                    family: g.family
+                      ? cropFamilyLabel(g.family, page.data?.locale)
+                      : tr('wizard.seeds.unclassifiedLower')
                   })}>{tr('wizard.seeds.selectAll')}</button
                 >
                 {#if famCount > 0}
@@ -324,7 +331,9 @@
                     class="family-action-btn family-action-clear"
                     onclick={() => w.clearFamily(g.items)}
                     aria-label={tr('wizard.seeds.clearAria', {
-                      family: g.family ?? tr('wizard.seeds.unclassifiedLower')
+                      family: g.family
+                        ? cropFamilyLabel(g.family, page.data?.locale)
+                        : tr('wizard.seeds.unclassifiedLower')
                     })}>{tr('wizard.seeds.clear')}</button
                   >
                 {/if}
@@ -580,7 +589,6 @@
     color: var(--color-forest);
     font-weight: 700;
     font-size: 0.85rem;
-    text-transform: capitalize;
     padding: 0.35rem 0.75rem;
   }
   .family-row .family-name {

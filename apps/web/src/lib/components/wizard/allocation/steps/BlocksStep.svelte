@@ -8,14 +8,19 @@
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import { intlLocale } from '$lib/prefs';
+  import { numberToLocaleString } from '$lib/intlCache';
   import { blockHasSize, type BlockEntry } from '../types';
   import { defaultWizardArea, wizardBlockBody } from '$lib/setup/spot';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import type { SuggestedBed } from '$lib/plan/bedLayout';
   import {
-    DEFAULT_BED_WIDTH_FT,
-    DEFAULT_MAX_BED_LENGTH_FT,
-    type SuggestedBed
-  } from '$lib/plan/bedLayout';
+    bedAreas,
+    bedTargetArea,
+    bedsFit,
+    nextBedNames,
+    startingBedSize
+  } from '$lib/plan/wizardBeds';
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
@@ -80,8 +85,23 @@
       })
       .filter((s) => ((s.areaSqFt ?? 0) || (s.plants ?? 0)) > 0)
   );
-  let bedWidthFt = $state<number | null>(DEFAULT_BED_WIDTH_FT);
-  let maxBedLengthFt = $state<number | null>(DEFAULT_MAX_BED_LENGTH_FT);
+  // #693: beds only go in garden or greenhouse Areas, start from the
+  // owner's own beds there, and must fit the Area's free space.
+  const bedAreaList = $derived(bedAreas(areas));
+  let pickedBedAreaId = $state<string | null>(null);
+  const bedArea = $derived(bedTargetArea(areas, pickedBedAreaId, newArea));
+  const startSize = $derived(startingBedSize(blocks, bedArea?.id ?? null));
+  let bedWidthFt = $state<number | null>(null);
+  let maxBedLengthFt = $state<number | null>(null);
+  let sizedForAreaId = $state<string | null | undefined>(undefined);
+  $effect(() => {
+    const id = bedArea?.id ?? null;
+    if (id === sizedForAreaId) return;
+    sizedForAreaId = id;
+    bedWidthFt = startSize.widthFt;
+    maxBedLengthFt = startSize.maxLengthFt;
+    suggestion = null;
+  });
   let suggesting = $state(false);
   let suggestError = $state<string | null>(null);
   let suggestion = $state<{
@@ -93,9 +113,11 @@
   } | null>(null);
   let addingBeds = $state(false);
   let bedsAdded = $state<number | null>(null);
-  const designerArea = $derived(
-    newArea && (newArea.kind === 'garden' || newArea.kind === 'greenhouse') ? newArea : null
+  const newBedNames = $derived(
+    suggestion ? nextBedNames(blocks, bedArea?.id ?? null, suggestion.beds.length) : []
   );
+  const bedFit = $derived(suggestion && bedArea ? bedsFit(suggestion.beds, bedArea, blocks) : null);
+  const designerArea = $derived(bedArea);
 
   async function suggestBeds() {
     if (!bedWidthFt || !maxBedLengthFt) {
@@ -134,7 +156,8 @@
   }
 
   async function addSuggestedBeds() {
-    if (!suggestion) return;
+    if (!suggestion || !bedArea || bedFit?.fits === false) return;
+    const names = nextBedNames(blocks, bedArea.id, suggestion.beds.length);
     addingBeds = true;
     suggestError = null;
     const ids: string[] = [];
@@ -146,11 +169,11 @@
           body: JSON.stringify(
             wizardBlockBody(
               {
-                name: `Bed ${blocks.length + i + 1}`,
+                name: names[i],
                 widthFt: bed.widthFt,
                 lengthFt: bed.lengthFt
               },
-              newArea
+              bedArea
             )
           )
         });
@@ -237,7 +260,7 @@
       {@const checked = w.selectedBlockIds.has(b.id)}
       {@const acresText =
         b.widthFt && b.lengthFt
-          ? `${fmt.qty(b.widthFt, 'distance')} × ${fmt.qty(b.lengthFt, 'distance')}`
+          ? `${fmt.qty(b.widthFt, 'distance', { digits: 1 })} × ${fmt.qty(b.lengthFt, 'distance', { digits: 1 })}`
           : b.acres !== undefined
             ? fmt.area(b.acres, { digits: 2 })
             : null}
@@ -300,13 +323,28 @@
   {/if}
 {/if}
 
-{#if countedSeeds.length > 0 && w.props.onRefreshParent}
+{#if countedSeeds.length > 0 && w.props.onRefreshParent && bedArea}
   <section class="aw-beds" data-testid="bed-suggest" aria-labelledby="aw-beds-title">
     <h3 id="aw-beds-title">{tr('wizard.blocks.bedsTitle')}</h3>
     <p class="aw-intro">
       {tr('wizard.blocks.bedsIntro')}
     </p>
     <div class="aw-beds-fields">
+      {#if bedAreaList.length > 1}
+        <label class="aw-add-field">
+          <span>{tr('wizard.blocks.in')}</span>
+          <select
+            value={bedArea.id}
+            onchange={(e) => (pickedBedAreaId = (e.target as HTMLSelectElement).value)}
+            disabled={suggesting || addingBeds}
+            data-testid="bed-suggest-area"
+          >
+            {#each bedAreaList as a (a.id)}
+              <option value={a.id}>{a.name}</option>
+            {/each}
+          </select>
+        </label>
+      {/if}
       <label class="aw-add-field aw-add-acres">
         <span>{tr('wizard.blocks.bedWidth')}</span>
         <UnitInput quantity="distance" min={1} bind:value={bedWidthFt} disabled={suggesting} />
@@ -325,10 +363,11 @@
         {suggesting ? tr('wizard.blocks.working') : tr('wizard.blocks.suggest')}
       </button>
     </div>
-    <p class="muted aw-beds-default">
-      {tr('wizard.blocks.bedDefault', {
-        w: DEFAULT_BED_WIDTH_FT,
-        l: DEFAULT_MAX_BED_LENGTH_FT
+    <p class="muted aw-beds-default" data-testid="bed-suggest-start">
+      {tr(startSize.fromBeds ? 'wizard.blocks.bedFromYours' : 'wizard.blocks.bedDefault', {
+        w: fmt.qty(startSize.widthFt, 'distance', { digits: 1 }),
+        l: fmt.qty(startSize.maxLengthFt, 'distance', { digits: 1 }),
+        area: bedArea.name
       })}
     </p>
     {#if suggestion}
@@ -347,9 +386,9 @@
             <div class="aw-bed-head">
               <strong
                 >{tr('planui.beds.bedLine', {
-                  n: blocks.length + i + 1,
-                  width: fmt.qty(bed.widthFt, 'distance'),
-                  length: fmt.qty(bed.lengthFt, 'distance')
+                  name: newBedNames[i] ?? '',
+                  width: fmt.qty(bed.widthFt, 'distance', { digits: 1 }),
+                  length: fmt.qty(bed.lengthFt, 'distance', { digits: 1 })
                 })}</strong
               >
               <Provenance source={suggestion.provenance} compact />
@@ -364,7 +403,7 @@
                       })
                     : tr('wizard.blocks.cropRows', {
                         name: cropDisplayNameByEnglish(c.name, page.data?.locale),
-                        plants: c.plants,
+                        plants: numberToLocaleString(c.plants, intlLocale(page.data?.locale)),
                         count: c.rows
                       })
                 )
@@ -374,17 +413,30 @@
         {/each}
       </ul>
       {#if suggestion.note}<p class="muted">{suggestion.note}</p>{/if}
+      {#if bedFit?.fits === false}
+        <p class="aw-add-error" role="alert" data-testid="bed-suggest-overfull">
+          {tr('wizard.blocks.bedsOverfill', {
+            need: fmt.area(bedFit.needSqFt / SQFT_PER_ACRE, { digits: 2 }),
+            free: fmt.area((bedFit.freeSqFt ?? 0) / SQFT_PER_ACRE, { digits: 2 }),
+            area: bedArea.name
+          })}
+        </p>
+      {:else if bedFit?.fits === null}
+        <p class="muted" data-testid="bed-suggest-unsized-area">
+          {tr('wizard.blocks.bedsAreaUnsized', { area: bedArea.name })}
+        </p>
+      {/if}
       <div class="aw-beds-actions">
         <button
           type="button"
           class="btn-primary"
           onclick={addSuggestedBeds}
-          disabled={addingBeds}
+          disabled={addingBeds || bedFit?.fits === false}
           data-action="add-suggested-beds"
         >
           {addingBeds
             ? tr('wizard.blocks.adding')
-            : `${tr('wizard.blocks.addBeds', { count: suggestion.beds.length })}${newArea ? tr('wizard.blocks.toArea', { area: newArea.name }) : ''}`}
+            : `${tr('wizard.blocks.addBeds', { count: suggestion.beds.length })}${tr('wizard.blocks.toArea', { area: bedArea.name })}`}
         </button>
         <button type="button" class="btn-secondary" onclick={() => (suggestion = null)}>
           {tr('wizard.blocks.notNow')}
@@ -562,12 +614,10 @@
     font-size: 0.78rem;
     line-height: 1.4;
     white-space: nowrap;
-    text-transform: capitalize;
   }
   .aw-chip-prior {
     background: #f4efe2;
     color: #6b5a33;
-    text-transform: none;
     white-space: normal;
   }
   .aw-blocks-empty h3 {

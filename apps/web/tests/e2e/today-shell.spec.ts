@@ -19,7 +19,7 @@ test('today renders Almanac shell after sign-in', async ({ page }) => {
   await expect(deck.getByRole('heading', { name: "Today's work" })).toBeVisible();
   await expect(page.locator('details.legacy-detail')).toHaveCount(0);
   // Week is a calendar view next to the Day cards
-  await deck.getByRole('button', { name: 'Week' }).click();
+  await deck.getByRole('button', { name: 'Week', exact: true }).click();
   await expect(page).toHaveURL(/view=week/);
   await expect(page.getByTestId('calendar-week')).toBeVisible();
   // Season-at-a-glance

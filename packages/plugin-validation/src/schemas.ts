@@ -701,6 +701,49 @@ export const cropSprayWindowSchema = z
   });
 export type CropSprayWindow = z.infer<typeof cropSprayWindowSchema>;
 
+/** #720: lb per acre at planting, as an extension source recommends at
+ *  medium soil test levels. A nutrient the source does not name is left
+ *  out and plans as none. */
+const lbPerAcre = z.number().min(0).max(400);
+
+export const cropFertilitySchema = z
+  .object({
+    preplant: z
+      .object({
+        nLbPerAcre: lbPerAcre.optional(),
+        p2o5LbPerAcre: lbPerAcre.optional(),
+        k2oLbPerAcre: lbPerAcre.optional(),
+      })
+      .strict()
+      .refine(
+        (v) =>
+          v.nLbPerAcre !== undefined ||
+          v.p2o5LbPerAcre !== undefined ||
+          v.k2oLbPerAcre !== undefined,
+        { message: "preplant needs at least one nutrient" },
+      ),
+    /** Nitrogen topdressed at a growth stage of this crop's
+     *  `growthStageTable` (one entry per stage). */
+    topdressN: z
+      .array(
+        z
+          .object({
+            stageCode: z.string().min(1).max(16),
+            nLbPerAcre: z.number().positive().max(200),
+          })
+          .strict(),
+      )
+      .optional(),
+  })
+  .strict()
+  .refine(
+    (v) =>
+      new Set((v.topdressN ?? []).map((t) => t.stageCode)).size ===
+      (v.topdressN ?? []).length,
+    { message: "one topdressN entry per stage" },
+  );
+export type CropFertility = z.infer<typeof cropFertilitySchema>;
+
 /** Normalize common cropFamily aliases produced by AI ingest / external
  *  authoring tools to the canonical kernel keys. We only normalize
  *  unambiguous synonyms — `cover-crop` is intentionally NOT normalized
@@ -1010,6 +1053,10 @@ export const cropPluginSchema = pluginBase.extend({
    *  application tasks. Replaces the corn V2/V3 + V4/V6 and cucurbit
    *  Clethodim windows previously hardcoded in `calendar/engine.ts`. */
   sprayWindows: z.array(cropSprayWindowSchema).optional(),
+  /** #720: this crop's own fertility budget, used by the inputs planner in
+   *  place of its family default. Each number is quoted under
+   *  `fertility.<path>` in `apps/web/scripts/crop-data-sources.json`. */
+  fertility: cropFertilitySchema.optional(),
   // ─── Phase 25c.0 — discriminators for harvest renderers + pollinator gate ──
   /** Harvest archetype — drives `HarvestRouter` dispatch in Phase 25c
    *  (one of 11 renderers under `lib/components/harvest/renderers/`).

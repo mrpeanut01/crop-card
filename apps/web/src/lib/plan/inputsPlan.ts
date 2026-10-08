@@ -42,8 +42,9 @@
  * Fact Sheet FS-947 Soil Fertility for Vegetable Production). These are
  * conservative small-plot defaults, not production-row-crop targets.
  *
- * TODO (Phase 22): move yield + removal to optional cropPlugin fields
- * so plugin authors can override family defaults.
+ * A crop plugin's own `fertility` block (#720), quoted in
+ * `apps/web/scripts/crop-data-sources.json`, replaces its family default,
+ * and its `topdressN` entries plan stage-anchored N topdress.
  */
 
 import type { Block } from '$lib/db/blocks';
@@ -193,6 +194,38 @@ export const FAMILY_REMOVAL_DEFAULTS: Partial<Record<CropFamily, FamilyRemovalDe
     sidedressFallbackDays: 0
   }
 };
+
+/** The pre-plant N/P/K budget for a crop, lb/acre: its own sourced
+ *  `fertility.preplant` (#720) when it has one, else its family default. */
+interface FertilityBudget {
+  n: number;
+  p: number;
+  k: number;
+  label: string;
+  sourced: boolean;
+}
+
+export function fertilityBudgetFor(crop: CropPlugin): FertilityBudget | undefined {
+  const own = crop.fertility?.preplant;
+  if (own) {
+    return {
+      n: own.nLbPerAcre ?? 0,
+      p: own.p2o5LbPerAcre ?? 0,
+      k: own.k2oLbPerAcre ?? 0,
+      label: crop.displayName,
+      sourced: true
+    };
+  }
+  const d = FAMILY_REMOVAL_DEFAULTS[crop.cropFamily];
+  if (!d) return undefined;
+  return {
+    n: d.nRemovalLbPerAcre,
+    p: d.pRemovalLbPerAcre,
+    k: d.kRemovalLbPerAcre,
+    label: crop.cropFamily,
+    sourced: false
+  };
+}
 
 /** IPM scout cadence per family — emitted when pestStrategy === 'ipm' or
  *  'minimal'. Days are inter-visit gaps; the planner spreads visits
@@ -778,6 +811,7 @@ interface BedPlan {
     leadPlantingId: string;
     families: string[];
     removal: { n: number; p: number; k: number };
+    sourced: boolean;
   };
 }
 
@@ -805,18 +839,22 @@ function planBeds(input: InputsPlanInput): Map<string, BedPlan> {
       firstPlantingMs: first.planting.plantingDate!,
       plantingIds: sorted.map((x) => x.planting.id)
     };
-    const fed = sorted.filter((x) => FAMILY_REMOVAL_DEFAULTS[x.crop.cropFamily]);
+    const fed = sorted
+      .map((x) => ({ ...x, budget: fertilityBudgetFor(x.crop) }))
+      .filter((x) => x.budget);
     if (fed.length > 0) {
       const removal = { n: 0, p: 0, k: 0 };
       const families: string[] = [];
+      let sourced = false;
       for (const x of fed) {
-        const d = FAMILY_REMOVAL_DEFAULTS[x.crop.cropFamily]!;
-        removal.n = Math.max(removal.n, d.nRemovalLbPerAcre);
-        removal.p = Math.max(removal.p, d.pRemovalLbPerAcre);
-        removal.k = Math.max(removal.k, d.kRemovalLbPerAcre);
-        if (!families.includes(x.crop.cropFamily)) families.push(x.crop.cropFamily);
+        const d = x.budget!;
+        removal.n = Math.max(removal.n, d.n);
+        removal.p = Math.max(removal.p, d.p);
+        removal.k = Math.max(removal.k, d.k);
+        if (!families.includes(d.label)) families.push(d.label);
+        sourced ||= d.sourced;
       }
-      bed.fertility = { leadPlantingId: fed[0].planting.id, families, removal };
+      bed.fertility = { leadPlantingId: fed[0].planting.id, families, removal, sourced };
     }
     beds.set(blockId, bed);
   }
@@ -868,7 +906,7 @@ function warningKey(w: PlannerWarning, cropOf: (plantingId: string) => string): 
     case 'missing-spray-window-purpose':
       return `${w.kind}|${w.cropPluginId}|${w.windowTitle}`;
     case 'no-growth-stage-table':
-      return `${w.kind}|${w.cropPluginId}`;
+      return `${w.kind}|${w.cropPluginId}|${w.slot === 'sidedress-n' ? 'topdress' : 'spray'}`;
     case 'missing-anchor-date':
     case 'no-herbicide-timing':
       return `${w.kind}|${w.plantingId}`;
@@ -1006,9 +1044,9 @@ function planForPlanting(
 
   /* 2. Pre-plant fertility (synthesized) ─────────────────────────── */
 
-  const removal = FAMILY_REMOVAL_DEFAULTS[crop.cropFamily];
+  const removal = crop.fertility ? undefined : FAMILY_REMOVAL_DEFAULTS[crop.cropFamily];
   const bedFert = bed?.fertility;
-  if (!removal && !bedFert) {
+  if (!fertilityBudgetFor(crop) && !bedFert) {
     warnings.push({
       kind: 'missing-yield-goal',
       plantingId: planting.id,
@@ -1100,7 +1138,9 @@ function planForPlanting(
           `N ${Math.max(0, deficit.n).toFixed(0)} lb/ac, ` +
           `P₂O₅ ${Math.max(0, deficit.p).toFixed(0)} lb/ac, ` +
           `K₂O ${Math.max(0, deficit.k).toFixed(0)} lb/ac ` +
-          `(${bedFert.families.join(' / ')} removal at family default − soil credits − fertility credits` +
+          `(${bedFert.families.join(' / ')} ` +
+          (bedFert.sourced ? 'extension budget' : 'removal at family default') +
+          ` − soil credits − fertility credits` +
           (coverNCredit > 0
             ? ` − ${coverNCredit} lb-N/ac cover-crop credit (${seasonSetup.coverCropIntent})`
             : '') +
@@ -1170,6 +1210,68 @@ function planForPlanting(
       acres,
       ...choice,
       rationale: `Sidedress N (~40 lb-N/ac) at ${v6 ? `stage ${v6.code}` : `+${anchorDays}d`}; covers post-emergence demand peak for ${crop.cropFamily}.`
+    });
+  }
+
+  /* 3b. Sourced N topdress at growth stages (#720) ─────────────────── */
+
+  const topdress = crop.fertility?.topdressN ?? [];
+  if (plantingDateMs != null) {
+    topdress.forEach((t, i) => {
+      const stage = crop.growthStageTable?.stages.find((s) => s.code === t.stageCode);
+      if (!stage) {
+        warnings.push({
+          kind: 'no-growth-stage-table',
+          plantingId: planting.id,
+          cropPluginId: crop.pluginId,
+          slot: 'sidedress-n'
+        });
+        return;
+      }
+      const choice = chooseProduct(
+        rankCandidates(
+          fertilizerPreference(
+            productPlugins.fertilizers,
+            seasonSetup.philosophy,
+            'n',
+            seasonSetup.fertilityApproach,
+            held
+          )
+            .map((f) => ({
+              plugin: f,
+              rateAmount: f.analysis.n > 0 ? Math.ceil(t.nLbPerAcre / (f.analysis.n / 100)) : null,
+              rateUnit: 'lb'
+            }))
+            .filter(suppliesBudget),
+          acres,
+          stockLeft
+        ),
+        stockLeft
+      );
+      if (!choice.productPluginId) {
+        warnings.push({
+          kind: 'no-compliant-product',
+          plantingId: planting.id,
+          slot: 'sidedress-n',
+          reason: `No ${seasonSetup.philosophy}-compliant high-N fertilizer available for topdress.`
+        });
+      }
+      const startMs = plantingDateMs + stage.daysFromPlanting.min * DAY_MS;
+      const endMs = plantingDateMs + stage.daysFromPlanting.max * DAY_MS;
+      applications.push({
+        id: applicationId(planting.id, 'sidedress-n', i),
+        plantingId: planting.id,
+        blockId: planting.blockId,
+        cropPluginId: planting.cropPluginId,
+        slot: 'sidedress-n',
+        productCategory: 'fertilizer',
+        windowStartMs: startMs,
+        windowEndMs: endMs,
+        applicationDateMs: startMs,
+        acres,
+        ...choice,
+        rationale: `Topdress N (~${t.nLbPerAcre} lb-N/ac) at stage ${stage.code} (${stage.name}), as the extension source for ${crop.displayName} recommends.`
+      });
     });
   }
 

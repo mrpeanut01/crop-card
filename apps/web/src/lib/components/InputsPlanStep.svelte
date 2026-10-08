@@ -177,7 +177,10 @@
       case 'no-growth-stage-table':
         return {
           title: tr('inputs.warn.stage.title', { name: plantingName }),
-          body: tr('inputs.warn.stage.body', { plugin: w.cropPluginId })
+          body: tr(
+            w.slot === 'sidedress-n' ? 'inputs.warn.stage.topdressBody' : 'inputs.warn.stage.body',
+            { plugin: w.cropPluginId }
+          )
         };
     }
   }

@@ -918,6 +918,8 @@ export const enWizard = {
   'inputs.warn.stage.title': 'No growth-stage table for {name}',
   'inputs.warn.stage.body':
     'Crop plugin "{plugin}" times some spray windows by growth stage but has no growth-stage table, so those windows were not planned. Check the product label for timing on this crop.',
+  'inputs.warn.stage.topdressBody':
+    'Crop plugin "{plugin}" times a nitrogen topdress by growth stage but has no growth-stage table, so the topdress was not planned. Time it from your soil test and extension guide.',
   'inputs.warn.herb.title': 'No herbicide planned for some crops',
   'inputs.warn.herb.body':
     'The crop library has no herbicide timing for {names}, so no herbicide was planned for them. Check the label of the herbicide you use for its timing on each crop.',

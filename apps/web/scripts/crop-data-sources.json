@@ -37,6 +37,27 @@
       "date": "September 2017, revised September 2026",
       "quote": "Missouri G4652 Table 1. Pure stands, columns \"Type | Seeding rate (pounds of live seed per acre) | Seeding date (Spring, Fall, Dormant or frost seeding) | Depth\"; row \"Alfalfa Perennial, warm-season legume Drilled: 12 – 15 Broadcast: Up to 20 Up to mid-April Late August – late September 1/4 – 1/2 inch\"",
       "note": "Forage pure-stand rate; the plugin is a hay alfalfa, so it counts. The only source that ties an alfalfa rate to a method: VCE 424-100 15-25, Penn State 15-18, Kentucky AGR-18 and Utah 15-20 name no method (panel ruling 2026-10-05, #551, 2-1). Broadcast stays empty: 'Up to 20' is a ceiling, not a range. 'Live seed' is not 'pure live seed', so no seedBasis."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 3",
+      "date": "December 15, 2023",
+      "quote": "Alfalfa, Fertilizer: \"At seeding: zero N, 110-140 lbs P2O5, 110-140 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). Rates at seeding; annual topdressing is not planned."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 3",
+      "date": "December 15, 2023",
+      "quote": "Alfalfa, Fertilizer: \"At seeding: zero N, 110-140 lbs P2O5, 110-140 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). Rates at seeding; annual topdressing is not planned."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 3",
+      "date": "December 15, 2023",
+      "quote": "Alfalfa, Fertilizer: \"At seeding: zero N, 110-140 lbs P2O5, 110-140 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). Rates at seeding; annual topdressing is not planned."
     }
   },
   "apple-cortland": {
@@ -355,6 +376,27 @@
       "date": "December 15, 2023 (accessed 2026-10-08), printed page 11",
       "quote": "Fertilizer 20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O. Topdress with 80 lbs N in February or early March. These rates assume no carryover N from the previous crop.",
       "note": "#739. Thoroughbred is a winter feed barley. Stored as two parts: 20 lb N in the fall and 80 lb N topdressed in February or early March (100 total)."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 5",
+      "date": "December 15, 2023",
+      "quote": "Barley, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O. Topdress with 80 lbs N in February or early March.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 5",
+      "date": "December 15, 2023",
+      "quote": "Barley, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O. Topdress with 80 lbs N in February or early March.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 5",
+      "date": "December 15, 2023",
+      "quote": "Barley, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O. Topdress with 80 lbs N in February or early March.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
     }
   },
   "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed": {
@@ -1063,6 +1105,20 @@
       "date": "2007",
       "quote": "Rate. Recommended seeding rate for drilling and broadcasting a pure stand in lb./A, bu/A. and oz./100 sq. ft., assuming legal standards for germination percentage. Seeding rate will depend on the cover crop’s primary purpose and other factors.",
       "note": "Seed as bought (labelled seed of legal germination), not pure live seed: shown as bulk seed (panel ruling 2026-10-04). The crop pages are the same book and give bushel equivalents, a bulk weight."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 26",
+      "date": "December 15, 2023",
+      "quote": "Red Clover, Fertilizer: \"At seeding, 120-140 lbs P2O5 and 120-140 lbs K2O; for topdressing, 40-90 lbs P2O5 and 85-185 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The entry gives no N at seeding, so none is stored."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 26",
+      "date": "December 15, 2023",
+      "quote": "Red Clover, Fertilizer: \"At seeding, 120-140 lbs P2O5 and 120-140 lbs K2O; for topdressing, 40-90 lbs P2O5 and 85-185 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The entry gives no N at seeding, so none is stored."
     }
   },
   "collards-georgia-southern": {
@@ -1114,6 +1170,34 @@
       "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
       "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
       "note": "#739. Stored as one part, 125-150 lb N per acre, the grain figure. The handbook adds that N residual from previous crops or organic sources should be considered."
+    },
+    "sprayWindows.pre-emergent.chloroacetamide": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-30",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"For TR pigweed control, include a Group 15 herbicide for residual control (acetochlor, dimethenamid, S-metolachlor, or pyrox- asulfone) at planting.\"",
+      "note": "Corn Weed Management. The same chapter (p. 5-29) defines PRE: \"The herbicide is applied to the soil after the crop is planted but before emergence.\" Day 0 from planting."
+    },
+    "sprayWindows.pre-emergent.photosystem-ii-triazine": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-56",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"Atrazine 4L atrazine 5 EPP or PRE 1–2 qt 1–2\"; \"Preemergence (PRE) - The herbicide is applied to the soil after the crop is planted but before emergence.\"",
+      "note": "First sentence is the corn soil-applied herbicide table row (p. 5-56, table layout collapsed to single spaces); the PRE definition is on p. 5-29 of the same chapter. Day 0 from planting."
+    },
+    "sprayWindows.post-emergent.photosystem-ii-triazine": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-29",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"Weeds that germinate with the crop but are controlled in a timely fashion (four to five weeks after planting) will also not impact final yields. This POST herbicide approach relies on effective and timely postemergence weed control.\"; \"Apply before weeds are 1.5 inches tall and before corn reaches 12 inches in height.\"",
+      "note": "Timing sentence from Corn Weed Management, Integrated Weed Management (p. 5-29); the atrazine sentence is the Table 5.19 postemergence comment (p. 5-75). Four to five weeks is stored as 28 to 35 days after planting. At that age corn may already be past 12 inches, so the window says to check the height first."
+    },
+    "sprayWindows.post-emergent.hppd-inhibitor": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-29",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"Weeds that germinate with the crop but are controlled in a timely fashion (four to five weeks after planting) will also not impact final yields. This POST herbicide approach relies on effective and timely postemergence weed control.\"; \"Callisto can be applied postemergence at 3 fl oz/A to corn up to 30 inches tall (8-leaf stage).\"",
+      "note": "Timing sentence from p. 5-29; the Callisto sentence is the Table 5.19 postemergence comment (p. 5-76). Four to five weeks is stored as 28 to 35 days after planting."
     }
   },
   "corn-sweet-bodacious": {
@@ -4430,6 +4514,41 @@
       "date": "December 15, 2023 (accessed 2026-10-08), printed page 49",
       "quote": "Fertilizer 20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).",
       "note": "#739. Stored as two parts: 20 lb N in the fall and 40-80 lb N in late March (60-100 total). The 30-50 lb February topdress applies only if the stand is thin or shows N deficiency, so it is not counted."
+    },
+    "sprayWindows.post-emergent.sulfonylurea": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-219",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"Harmony SG 50DF thifensulfuron 2 (growth stages 1– 7) 0.45–0.9 oz 0.014–0.028\"; \"Two-leaf to before visible flag leaf\"; \"Harmony SG can be used on fall-seeded wheat, barley, triticale, and spring-seeded oats.\"; \"Do not apply within 45 days of harvest.\"",
+      "note": "Table 5.67, Comments on Herbicides for Small Grains (p. 5-219, table layout collapsed; growth stages are Feekes). The Harmony Extra SG comment on the same page adds \"Fall applications have been more consistent than spring applications for weed control in regional trials.\" Anchored at this plugin's Z20 (tillering begins), which falls inside two-leaf to before flag leaf."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
+      "date": "December 15, 2023",
+      "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
+      "note": "Lower end of the P2O5 and K2O range (#591 ruling Q1). 424-026 (Alley et al. 2009, p. 2) says to apply 15 to 30 lbs N/acre just before planting, which agrees with the 20."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
+      "date": "December 15, 2023",
+      "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
+      "note": "Lower end of the P2O5 and K2O range (#591 ruling Q1). 424-026 (Alley et al. 2009, p. 2) says to apply 15 to 30 lbs N/acre just before planting, which agrees with the 20."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
+      "date": "December 15, 2023",
+      "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
+      "note": "Lower end of the P2O5 and K2O range (#591 ruling Q1). 424-026 (Alley et al. 2009, p. 2) says to apply 15 to 30 lbs N/acre just before planting, which agrees with the 20."
+    },
+    "fertility.topdressN.Z30": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
+      "date": "December 15, 2023",
+      "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
+      "note": "Lower end of the late March range. Virginia Tech 424-026, Nitrogen Management for Winter Wheat (Alley et al. 2009, p. 3, https://vtechworks.lib.vt.edu/bitstream/handle/10919/56759/424-026.pdf?sequence=1) places late March at stem elongation: \"from the beginning of April (approximately GS 30)\". The February topdress depends on a GS 25 tiller count (fewer than 50 tillers per square foot, Virginia Tech SPES-431, https://aaec.vt.edu/content/dam/pubs_ext_vt_edu/spes/spes-431/SPES-431.pdf), so it is not planned."
     }
   },
   "white-clover-cover": {
@@ -4569,6 +4688,48 @@
       "date": "Nov. 1989 (accessed 2026-10-06)",
       "quote": "Alternative Field Crops Manual, Grain Sorghum (Milo): \"the recommended rate of seeding is 8- 10 pounds of seed in rows of 30-40 inches in width.\"; \"Grain yields in Minnesota studies were 10-15% higher in 10-inch rows than in 40-inch rows.\"",
       "note": "Recommended width 30-40 in; the same page reports narrow (10-inch) rows yielding more in Minnesota studies. VCE 424-100 'Sorghum, Grain' says only 'Plant for grain at 5-7 lbs in rows' (no width). Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "sprayWindows.pre-emergent.chloroacetamide": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-105",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"For TR pigweed control, include a Group 15 herbicide for residual control (acetochlor, dimethenamid, or metolachlor) at plant- ing.\"; \"Use sorghum seed treated with an approved seed safener for chloroacetamide herbicides (group 15).\"",
+      "note": "Sorghum Weed Management (p. 5-105); the seed safener sentence is the Dual II Magnum comment in the sorghum soil-applied table (p. 5-118). Day 0 from planting."
+    },
+    "sprayWindows.pre-emergent.photosystem-ii-triazine": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-116",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"Atrazine 4L atrazine 5 EPP, PPI, PRE 1–2 qt 1–2\"; \"Sorghum is not as tolerant to atrazine as corn.\"; \"Preemergence (PRE). The herbicide is applied to the soil after the crop is planted but before emergence.\"",
+      "note": "Sorghum soil-applied table row and comment (p. 5-116, table layout collapsed); the PRE definition is on p. 5-105. Day 0 from planting."
+    },
+    "sprayWindows.post-emergent.photosystem-ii-triazine": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-105",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"Weeds that germinate and emerge with the crop but are controlled in a timely fashion (four to five weeks after planting) will also not impact final yields. This POST herbicide approach relies on effective and timely postemergence weed control.\"; \"Apply before sorghum exceeds 12 inches; apply before weeds are 1.5 inches tall.\"",
+      "note": "Timing from Sorghum Weed Management, Integrated Weed Management (p. 5-105); the atrazine comment is the sorghum postemergence table (p. 5-125). Four to five weeks is stored as 28 to 35 days after planting."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 30",
+      "date": "December 15, 2023",
+      "quote": "Sorghum, Grain, Fertilizer: \"Apply approximately the same amount that would be applied to corn when grown under comparable conditions.\" Corn, Field Corn, Fertilizer: \"For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.\"",
+      "note": "Grain sorghum entry (p. 30) points to corn; corn values are p. 11. Lower end of each range (#591 ruling Q1)."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 30",
+      "date": "December 15, 2023",
+      "quote": "Sorghum, Grain, Fertilizer: \"Apply approximately the same amount that would be applied to corn when grown under comparable conditions.\" Corn, Field Corn, Fertilizer: \"For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.\"",
+      "note": "Grain sorghum entry (p. 30) points to corn; corn values are p. 11. Lower end of each range (#591 ruling Q1)."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 30",
+      "date": "December 15, 2023",
+      "quote": "Sorghum, Grain, Fertilizer: \"Apply approximately the same amount that would be applied to corn when grown under comparable conditions.\" Corn, Field Corn, Fertilizer: \"For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.\"",
+      "note": "Grain sorghum entry (p. 30) points to corn; corn values are p. 11. Lower end of each range (#591 ruling Q1)."
     }
   },
   "tillage-radish-driller": {
@@ -6348,6 +6509,27 @@
       "date": "December 15, 2023 (accessed 2026-10-08), printed page 34",
       "quote": "Fertilizer 20 lbs of N in fall, plus 40-80 lbs each of P2O5 and K2O. Topdress with 60 lbs N in February or early March.",
       "note": "#739. Aroostook is a winter grain rye. Stored as two parts: 20 lb N in the fall and 60 lb N topdressed in February or early March (80 total)."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 28",
+      "date": "December 15, 2023",
+      "quote": "Rye, Fertilizer: \"20 lbs of N in fall, plus 40-80 lbs each of P2O5 and K2O. Topdress with 60 lbs N in February or early March.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 28",
+      "date": "December 15, 2023",
+      "quote": "Rye, Fertilizer: \"20 lbs of N in fall, plus 40-80 lbs each of P2O5 and K2O. Topdress with 60 lbs N in February or early March.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 28",
+      "date": "December 15, 2023",
+      "quote": "Rye, Fertilizer: \"20 lbs of N in fall, plus 40-80 lbs each of P2O5 and K2O. Topdress with 60 lbs N in February or early March.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
     }
   },
   "wheat-hard-red-spring": {
@@ -6373,6 +6555,27 @@
       "date": "December 15, 2023 (accessed 2026-10-08), printed page 49",
       "quote": "Fertilizer 20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).",
       "note": "#739. VCE gives one wheat figure for winter wheat in Virginia (#591 ruling Q3: a named variety takes the crop-type figure). Stored as two parts: 20 lb N in the fall and 40-80 lb N in late March; the conditional 30-50 lb February topdress is not counted."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
+      "date": "December 15, 2023",
+      "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
+      "note": "The Wheat entry covers Triticum aestivum; a hard white winter wheat takes the crop-type figure (#591 ruling Q3). Lower end of the P2O5 and K2O range (#591 ruling Q1). 424-026 (Alley et al. 2009, p. 2) says to apply 15 to 30 lbs N/acre just before planting, which agrees with the 20."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
+      "date": "December 15, 2023",
+      "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
+      "note": "The Wheat entry covers Triticum aestivum; a hard white winter wheat takes the crop-type figure (#591 ruling Q3). Lower end of the P2O5 and K2O range (#591 ruling Q1). 424-026 (Alley et al. 2009, p. 2) says to apply 15 to 30 lbs N/acre just before planting, which agrees with the 20."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
+      "date": "December 15, 2023",
+      "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
+      "note": "The Wheat entry covers Triticum aestivum; a hard white winter wheat takes the crop-type figure (#591 ruling Q3). Lower end of the P2O5 and K2O range (#591 ruling Q1). 424-026 (Alley et al. 2009, p. 2) says to apply 15 to 30 lbs N/acre just before planting, which agrees with the 20."
     }
   },
   "foxtail-millet-japanese": {
@@ -6416,6 +6619,27 @@
       "date": "Publication date December 11, 2023 (Agronomy Handbook 2023) (accessed 2026-10-06)",
       "quote": "VCE 424-100 (SPES-299), Agronomy Handbook, Part I. Crop Descriptions, Alfalfa – Perennial (Medicago sativa): \"Method of planting 6-8 inch rows or solid-seeded.\"",
       "note": "Drill-row width for a drilled small grain/forage (the source says rows); 'or solid-seeded' is the alternative. Generic alfalfa entry; Hi-Gest 660 is a reduced-lignin alfalfa variety. Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 3",
+      "date": "December 15, 2023",
+      "quote": "Alfalfa, Fertilizer: \"At seeding: zero N, 110-140 lbs P2O5, 110-140 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). Rates at seeding; annual topdressing is not planned."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 3",
+      "date": "December 15, 2023",
+      "quote": "Alfalfa, Fertilizer: \"At seeding: zero N, 110-140 lbs P2O5, 110-140 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). Rates at seeding; annual topdressing is not planned."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 3",
+      "date": "December 15, 2023",
+      "quote": "Alfalfa, Fertilizer: \"At seeding: zero N, 110-140 lbs P2O5, 110-140 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). Rates at seeding; annual topdressing is not planned."
     }
   },
   "red-clover-medium-mammoth": {
@@ -6425,6 +6649,20 @@
       "date": "Publication date December 11, 2023 (Agronomy Handbook 2023) (accessed 2026-10-06)",
       "quote": "VCE 424-100 (SPES-299), Agronomy Handbook, Part I. Crop Descriptions, Red Clover – Perennial (Trifolium pratense): \"Plant in 6-8 inch rows or solid-seeded\"",
       "note": "Drill-row width for a drilled small grain/forage (the source says rows); 'or solid-seeded' is the alternative. Generic red clover entry; does not distinguish medium vs mammoth types. Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 26",
+      "date": "December 15, 2023",
+      "quote": "Red Clover, Fertilizer: \"At seeding, 120-140 lbs P2O5 and 120-140 lbs K2O; for topdressing, 40-90 lbs P2O5 and 85-185 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The entry gives no N at seeding, so none is stored."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 26",
+      "date": "December 15, 2023",
+      "quote": "Red Clover, Fertilizer: \"At seeding, 120-140 lbs P2O5 and 120-140 lbs K2O; for topdressing, 40-90 lbs P2O5 and 85-185 lbs K2O at medium soil test levels.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The entry gives no N at seeding, so none is stored."
     }
   },
   "field-pea-aragorn": {
@@ -6500,6 +6738,34 @@
       "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
       "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
       "note": "#739. Same VCE sentence as the generic corn plugin; Pioneer P1257AM is a field dent hybrid grown for grain."
+    },
+    "sprayWindows.pre-emergent.chloroacetamide": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-30",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"For TR pigweed control, include a Group 15 herbicide for residual control (acetochlor, dimethenamid, S-metolachlor, or pyrox- asulfone) at planting.\"",
+      "note": "Corn Weed Management. The same chapter (p. 5-29) defines PRE: \"The herbicide is applied to the soil after the crop is planted but before emergence.\" Day 0 from planting."
+    },
+    "sprayWindows.pre-emergent.photosystem-ii-triazine": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-56",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"Atrazine 4L atrazine 5 EPP or PRE 1–2 qt 1–2\"; \"Preemergence (PRE) - The herbicide is applied to the soil after the crop is planted but before emergence.\"",
+      "note": "First sentence is the corn soil-applied herbicide table row (p. 5-56, table layout collapsed to single spaces); the PRE definition is on p. 5-29 of the same chapter. Day 0 from planting."
+    },
+    "sprayWindows.post-emergent.photosystem-ii-triazine": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-29",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"Weeds that germinate with the crop but are controlled in a timely fashion (four to five weeks after planting) will also not impact final yields. This POST herbicide approach relies on effective and timely postemergence weed control.\"; \"Apply before weeds are 1.5 inches tall and before corn reaches 12 inches in height.\"",
+      "note": "Timing sentence from Corn Weed Management, Integrated Weed Management (p. 5-29); the atrazine sentence is the Table 5.19 postemergence comment (p. 5-75). Four to five weeks is stored as 28 to 35 days after planting. At that age corn may already be past 12 inches, so the window says to check the height first."
+    },
+    "sprayWindows.post-emergent.hppd-inhibitor": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-29",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"Weeds that germinate with the crop but are controlled in a timely fashion (four to five weeks after planting) will also not impact final yields. This POST herbicide approach relies on effective and timely postemergence weed control.\"; \"Callisto can be applied postemergence at 3 fl oz/A to corn up to 30 inches tall (8-leaf stage).\"",
+      "note": "Timing sentence from p. 5-29; the Callisto sentence is the Table 5.19 postemergence comment (p. 5-76). Four to five weeks is stored as 28 to 35 days after planting."
     }
   },
   "corn-bloody-butcher": {
@@ -7038,6 +7304,48 @@
       "date": "December 15, 2023 (accessed 2026-10-08), printed page 37",
       "quote": "Fertilizer Zero N, 40-60 lbs each of P2O5 and K2O",
       "note": "#739. Stored as one part of 0 lb N per acre."
+    },
+    "sprayWindows.pre-emergent.chloroacetamide": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-137",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"The foundation of soybean weed management is a residual soil-applied herbicide program followed by a timely postemergence herbicide. Make residual soil-applied herbicide applications as close to planting as possible and postemergence applications three to four weeks after planting, when weeds are 4 inches in height or less.\"; \"For triazine-resistant (TR) pigweed control, include a Group 14 (flumioxazin or sulfentrazone) or Group 15 herbicide (acetochlor, dimethenamid, metolachlor, or pyroxasulfone) at planting.\"",
+      "note": "Soybean Weed Management, Integrated Weed Management (p. 5-137); the Group 15 sentence is p. 5-139. Table 5.48 (p. 5-164) lists Dual II Magnum (S-metolachlor) for EPP, PPI or PRE in soybeans. Day 0 from planting."
+    },
+    "sprayWindows.post-emergent.ppo-inhibitor": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-137",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"The foundation of soybean weed management is a residual soil-applied herbicide program followed by a timely postemergence herbicide. Make residual soil-applied herbicide applications as close to planting as possible and postemergence applications three to four weeks after planting, when weeds are 4 inches in height or less.\"; \"Table 5.54 - Comments on Postemergence Herbicides for Soybean\"; \"Do not apply Reflex or Flexstar or other fomesafen containing products more than once every 2 years.\"",
+      "note": "Timing from p. 5-137; the fomesafen comment is in Table 5.54, which lists Reflex 2E or Flexstar 1.88E (fomesafen) for postemergence application, Comments on Postemergence Herbicides for Soybean (p. 5-189, table layout collapsed). Three to four weeks is stored as 21 to 28 days after planting."
+    },
+    "sprayWindows.post-emergent.accase-inhibitor": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-137",
+      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
+      "quote": "\"The foundation of soybean weed management is a residual soil-applied herbicide program followed by a timely postemergence herbicide. Make residual soil-applied herbicide applications as close to planting as possible and postemergence applications three to four weeks after planting, when weeds are 4 inches in height or less.\"; \"Table 5.54 - Comments on Postemergence Herbicides for Soybean\"; \"Clethodim is also available as Select Max, which contains a specialized adjuvant system, thus nonionic surfactant plus ammonium sulfate (AMS) is the standard adjuvant recommendation.\"",
+      "note": "Timing from p. 5-137; the clethodim comment is in Table 5.54, which lists Select Max (clethodim) for postemergence application (p. 5-189, table layout collapsed). Three to four weeks is stored as 21 to 28 days after planting."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 31",
+      "date": "December 15, 2023",
+      "quote": "Soybean, Fertilizer: \"Zero N, 40-60 lbs each of P2O5 and K2O\"",
+      "note": "Lower end of each range (#591 ruling Q1)."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 31",
+      "date": "December 15, 2023",
+      "quote": "Soybean, Fertilizer: \"Zero N, 40-60 lbs each of P2O5 and K2O\"",
+      "note": "Lower end of each range (#591 ruling Q1)."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 31",
+      "date": "December 15, 2023",
+      "quote": "Soybean, Fertilizer: \"Zero N, 40-60 lbs each of P2O5 and K2O\"",
+      "note": "Lower end of each range (#591 ruling Q1)."
     }
   }
 }

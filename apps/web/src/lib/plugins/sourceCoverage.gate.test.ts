@@ -13,11 +13,14 @@ import {
   checkPastureCoverage,
   checkSources,
   cropFactPaths,
+  fertilityQuoteGaps,
   forageHazardGaps,
   grazingFactPaths,
   missingWithdrawals,
   pestModelFactPaths,
   seasonalTaskNumberGaps,
+  sprayWindowQuoteGaps,
+  UNSOURCED_SPRAY_WINDOW_CROPS,
   seasonalTaskWordingProblems,
   stageTemplateWordingProblems,
   sourceEntrySchema,
@@ -197,6 +200,26 @@ describe('Phase 32A source coverage gate', () => {
 
   it('#587 / #591: no crop carries an unsourced or unread row spacing', () => {
     expect(rowSpacingGaps(library.crops(), cropSources)).toEqual([]);
+  });
+
+  it('#720: every spray window quote states its timing, from an extension page', () => {
+    const crops = library.crops();
+    expect(sprayWindowQuoteGaps(crops, cropSources)).toEqual([]);
+    const ids = new Set(crops.map((c) => c.pluginId));
+    const stale = [...UNSOURCED_SPRAY_WINDOW_CROPS].filter(
+      (id) => !ids.has(id) || !crops.find((c) => c.pluginId === id)?.sprayWindows?.length
+    );
+    expect(stale, 'take crops with no spray windows off the unsourced list').toEqual([]);
+    expect(
+      crops.filter((c) => c.sprayWindows?.length && !UNSOURCED_SPRAY_WINDOW_CROPS.has(c.pluginId))
+        .length
+    ).toBeGreaterThan(0);
+  });
+
+  it('#720: every crop fertility figure is quoted and every topdress stage exists', () => {
+    const crops = library.crops();
+    expect(fertilityQuoteGaps(crops, cropSources)).toEqual([]);
+    expect(crops.filter((c) => c.fertility).length).toBeGreaterThan(0);
   });
 
   it('every seeding rate quote states its range and seed basis', () => {

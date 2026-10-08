@@ -51,5 +51,41 @@
         "heavy-nitrogen"
       ]
     }
-  ]
+  ],
+  "sprayWindows": [
+    {
+      "chemistryClass": "chloroacetamide",
+      "anchor": "planting",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "PRE residual at planting (Group 15, safened seed only)",
+      "body": "Apply a Group 15 residual herbicide (acetochlor, dimethenamid or metolachlor) at planting, before the sorghum emerges. Use sorghum seed treated with an approved seed safener for Group 15 herbicides.",
+      "purpose": "pre-emergent"
+    },
+    {
+      "chemistryClass": "photosystem-ii-triazine",
+      "anchor": "planting",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "PRE atrazine at planting",
+      "body": "Atrazine goes on preemergence, after planting and before the sorghum emerges. Sorghum is not as tolerant to atrazine as corn; follow the atrazine use restrictions on the label.",
+      "purpose": "pre-emergent"
+    },
+    {
+      "chemistryClass": "photosystem-ii-triazine",
+      "anchor": "planting",
+      "offsetDaysMin": 28,
+      "offsetDaysMax": 35,
+      "title": "POST atrazine, four to five weeks after planting",
+      "body": "Control weeds that came up with the crop four to five weeks after planting. Apply atrazine before sorghum exceeds 12 inches and before weeds are 1.5 inches tall.",
+      "purpose": "post-emergent"
+    }
+  ],
+  "fertility": {
+    "preplant": {
+      "nLbPerAcre": 125,
+      "p2o5LbPerAcre": 40,
+      "k2oLbPerAcre": 40
+    }
+  }
 }

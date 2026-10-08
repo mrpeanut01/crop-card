@@ -21,12 +21,14 @@ import {
   checkPastureCoverage,
   checkSources,
   cropFactPaths,
+  fertilityQuoteGaps,
   grazingFactPaths,
   isPastureLabelled,
   missingWithdrawals,
   pestModelFactPaths,
   numbersIn,
   seasonalTaskNumberGaps,
+  sprayWindowQuoteGaps,
   seasonalTaskWordingProblems,
   stageTemplateWordingProblems,
   speciesFactPaths,
@@ -1108,5 +1110,74 @@ describe('#600 in-row spacing', () => {
       plantingGuide: { inRowSpacingIn: { min: 18, max: 48 } }
     });
     expect(rowSpacingGaps([vine], quote('Set plants 1.5 to 4 feet apart in the row'))).toEqual([]);
+  });
+});
+
+describe('#720 spray window and fertility quotes', () => {
+  const src = (quote: string, url = 'https://www.pubs.ext.vt.edu/x.pdf') => ({
+    url,
+    publisher: 'VCE',
+    date: '2026',
+    quote
+  });
+  const window = {
+    chemistryClass: 'photosystem-ii-triazine' as const,
+    anchor: 'planting' as const,
+    offsetDaysMin: 28,
+    offsetDaysMax: 35,
+    title: 'POST',
+    purpose: 'post-emergent' as const
+  };
+  const key = 'sprayWindows.post-emergent.photosystem-ii-triazine';
+
+  it('accepts weeks in words or digits and days', () => {
+    const crop = { pluginId: 'c', sprayWindows: [window] };
+    const gaps = (quote: string, url?: string) =>
+      sprayWindowQuoteGaps([crop], { c: { [key]: src(quote, url) } });
+    expect(gaps('four to five weeks after planting')).toEqual([]);
+    expect(gaps('4-5 weeks after planting')).toEqual([]);
+    expect(gaps('28 to 35 days after planting')).toEqual([]);
+    expect(gaps('three weeks after planting')).toHaveLength(2);
+    expect(gaps('four to five weeks', 'https://seeds.example.com/x')).toEqual([
+      `c: ${key} source is not an extension or government page`
+    ]);
+  });
+
+  it('a stage window needs its stage in the table', () => {
+    const crop = {
+      pluginId: 'c',
+      sprayWindows: [
+        {
+          ...window,
+          anchor: 'stage' as const,
+          stageCode: 'Z20',
+          offsetDaysMin: 0,
+          offsetDaysMax: 0
+        }
+      ]
+    };
+    expect(sprayWindowQuoteGaps([crop], { c: { [key]: src('two-leaf to flag leaf') } })).toEqual([
+      `c: ${key} stage Z20 is not in the growth stage table`
+    ]);
+  });
+
+  it('a window on a crop that predates the rule is not checked', () => {
+    const crop = { pluginId: 'pumpkin', sprayWindows: [window] };
+    expect(sprayWindowQuoteGaps([crop], {})).toEqual([]);
+  });
+
+  it('fertility figures must appear in the quote, and 0 N needs "zero N"', () => {
+    const crop = {
+      pluginId: 'c',
+      fertility: { preplant: { nLbPerAcre: 0, p2o5LbPerAcre: 40 } }
+    };
+    const q = (text: string) => ({
+      c: {
+        'fertility.preplant.nLbPerAcre': src(text),
+        'fertility.preplant.p2o5LbPerAcre': src(text)
+      }
+    });
+    expect(fertilityQuoteGaps([crop], q('Zero N, 40-60 lbs each of P2O5 and K2O'))).toEqual([]);
+    expect(fertilityQuoteGaps([crop], q('apply 45-60 lbs each of P2O5'))).toHaveLength(2);
   });
 });

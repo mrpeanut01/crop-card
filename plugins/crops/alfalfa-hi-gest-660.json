@@ -74,5 +74,12 @@
         "heavy-nitrogen"
       ]
     }
-  ]
+  ],
+  "fertility": {
+    "preplant": {
+      "nLbPerAcre": 0,
+      "p2o5LbPerAcre": 110,
+      "k2oLbPerAcre": 110
+    }
+  }
 }

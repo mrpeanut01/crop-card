@@ -50,5 +50,12 @@
       "min": 40,
       "max": 80
     }
-  ]
+  ],
+  "fertility": {
+    "preplant": {
+      "nLbPerAcre": 20,
+      "p2o5LbPerAcre": 40,
+      "k2oLbPerAcre": 40
+    }
+  }
 }

@@ -124,7 +124,7 @@ test.describe('persona usability fixes', () => {
     expect(invBox.x + invBox.width).toBeLessThanOrEqual(375);
     await page.keyboard.press('Escape');
 
-    const seg = page.getByTestId('today-deck').getByRole('button', { name: 'Week' });
+    const seg = page.getByTestId('today-deck').getByRole('button', { name: 'Week', exact: true });
     const segBox = await seg.boundingBox();
     expect(segBox?.height ?? 0).toBeGreaterThanOrEqual(48);
   });

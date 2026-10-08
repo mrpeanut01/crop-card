@@ -43,5 +43,41 @@
       "min": 0,
       "max": 0
     }
-  ]
+  ],
+  "sprayWindows": [
+    {
+      "chemistryClass": "chloroacetamide",
+      "anchor": "planting",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "PRE residual at planting (Group 15)",
+      "body": "Apply a residual soil-applied herbicide such as S-metolachlor as close to planting as possible.",
+      "purpose": "pre-emergent"
+    },
+    {
+      "chemistryClass": "ppo-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 21,
+      "offsetDaysMax": 28,
+      "title": "POST fomesafen, three to four weeks after planting",
+      "body": "Postemergence spray three to four weeks after planting, when weeds are 4 inches tall or less. Fomesafen (Reflex, Flexstar) goes on postemergence; do not apply it more than once every 2 years.",
+      "purpose": "post-emergent"
+    },
+    {
+      "chemistryClass": "accase-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 21,
+      "offsetDaysMax": 28,
+      "title": "POST clethodim for grasses, three to four weeks after planting",
+      "body": "Postemergence spray three to four weeks after planting, when weeds are 4 inches tall or less. Clethodim (Select Max) goes on postemergence for grass weeds.",
+      "purpose": "post-emergent"
+    }
+  ],
+  "fertility": {
+    "preplant": {
+      "nLbPerAcre": 0,
+      "p2o5LbPerAcre": 40,
+      "k2oLbPerAcre": 40
+    }
+  }
 }

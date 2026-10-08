@@ -376,8 +376,13 @@ export const enWizard = {
   'wizard.blocks.added.one': 'Added {count} bed and picked it for this plan.',
   'wizard.blocks.added.other': 'Added {count} beds and picked them for this plan.',
   'wizard.blocks.adding': 'Adding…',
-  'wizard.blocks.bedDefault':
-    'Start with {w} ft wide and up to {l} ft long, or type your own sizes.',
+  'wizard.blocks.bedDefault': 'Start with {w} wide and up to {l} long, or type your own sizes.',
+  'wizard.blocks.bedFromYours':
+    'Starting from your beds in {area}: {w} wide and up to {l} long. Type your own sizes to change it.',
+  'wizard.blocks.bedsOverfill':
+    'These beds need about {need}, but {area} has only about {free} free. Make the beds smaller, pick fewer seeds, or add them to another Area.',
+  'wizard.blocks.bedsAreaUnsized':
+    "{area} has no size yet, so the wizard can't check that these beds fit. Give it a size on the farm map.",
   'wizard.blocks.bedWidth': 'Bed width',
   'wizard.blocks.bedsIntro':
     "Get beds sized for the seed you picked, from each crop's spacing. Nothing is added until you say so.",
@@ -474,9 +479,9 @@ export const enWizard = {
   'wizard.prior.title': 'Last season ({year})',
   'wizard.review.cost': 'Cost: ${amount} ({model})',
   'wizard.review.didntFit.one':
-    "{name}: {count} plant didn't fit in the blocks you picked. Keep the seed for later, or go back and pick more space.",
+    "{name}: {n} plant didn't fit in the blocks you picked. Keep the seed for later, or go back and pick more space.",
   'wizard.review.didntFit.other':
-    "{name}: {count} plants didn't fit in the blocks you picked. Keep the seed for later, or go back and pick more space.",
+    "{name}: {n} plants didn't fit in the blocks you picked. Keep the seed for later, or go back and pick more space.",
   'wizard.review.engineRationale':
     'Deterministic engine plan — see the "Why" column for per-row reasoning.',
   'wizard.review.error': 'Error: {error}',
@@ -495,9 +500,12 @@ export const enWizard = {
     'Claude is unavailable right now, so the deterministic engine made this plan. Try again later for AI help.',
   'wizard.review.leftOver': 'Left over',
   'wizard.review.noGeometry.one':
-    '📐 Pollination check skipped for {count} block ({names}) — add field geometry on /fields to enable.',
+    '📐 Pollination check skipped for {count} block ({names}): it has no outline on the farm map.',
   'wizard.review.noGeometry.other':
-    '📐 Pollination check skipped for {count} blocks ({names}) — add field geometry on /fields to enable.',
+    '📐 Pollination check skipped for {count} blocks ({names}): they have no outline on the farm map.',
+  'wizard.review.noGeometryLink': 'Draw them on the farm map',
+  'wizard.review.namesMore.one': '{names} and {n} more',
+  'wizard.review.namesMore.other': '{names} and {n} more',
   'wizard.review.noRoom':
     '{name}: there was no room left in the blocks you picked. Keep the seed for later, or go back and pick more space.',
   'wizard.review.noteAi': 'Blocks AI-proposed within plugin-derived constraints · editable per row',
@@ -1047,7 +1055,7 @@ export const enWizard = {
   'wizard.beds.fallbackMsg': '{why}, so these beds are packed from the spacing on file.',
   'wizard.beds.noSpacing':
     '{list} had no spacing on file, so these beds use a {inches} in placeholder. Check your seed packet.',
-  'planui.beds.bedLine': 'Bed {n}: {width} × {length}',
+  'planui.beds.bedLine': '{name}: {width} × {length}',
   'wizard.split.chipBeds': 'Split across {n} beds',
   'wizard.split.chipBlocks': 'Split across {n} blocks',
   'wizard.split.keep': 'Keep in one bed',
@@ -1117,6 +1125,12 @@ export const enWizard = {
     'block holds about {fit} plants and you have seed for about {avail} — roughly {extra} plants worth of seed left over',
   'wizard.engine.why.surplusArea':
     'block has room for about {fit} sq ft and your seed covers about {avail} sq ft — roughly {extra} sq ft of seed left over',
+  'wizard.engine.why.splitSurplus':
+    'this seed lot is split across {parts} blocks, which hold about {fit} plants of the {avail} you have seed for — roughly {extra} plants worth of seed left over',
+  'wizard.engine.why.splitSurplusArea':
+    'this seed lot is split across {parts} blocks, which have room for about {fit} sq ft of the {avail} sq ft your seed covers — roughly {extra} sq ft of seed left over',
+  'wizard.engine.why.splitAll': 'this seed lot is split across {parts} blocks to use all of it',
+  'wizard.engine.why.splitPart': 'another part of the same seed lot',
   'wizard.engine.why.fill': 'the seed amount is not known, so it is sized to the space it gets',
   'wizard.engine.why.deficit': 'you only have enough seed for about {pct}% of this block',
   'wizard.engine.why.sunFull': 'sun is a good match',

@@ -371,12 +371,24 @@ test.describe('planning from inventory', () => {
   test('#475 the Blocks step suggests beds sized for the seed and adds them', async ({ page }) => {
     await provisionWizardTenant(page, {
       seasonSetup: true,
-      blocks: [{ name: 'Tiny bed', acres: 40 / 43_560 }],
+      blocks: [],
       seeds: [
         { displayName: BEAN, pluginId: 'bush-bean-provider', quantity: 400 },
         { displayName: BEET, pluginId: 'beet-detroit-dark-red', quantity: 300 }
       ]
     });
+    const garden = await page.request.post('/api/fields', {
+      data: { name: 'Kitchen Garden', kind: 'garden', widthFt: 60, lengthFt: 100 },
+      headers: { origin: origin(page) }
+    });
+    const { field } = (await garden.json()) as { field: { id: string } };
+    for (const name of ['Bed 1', 'Bed 2']) {
+      const res = await page.request.post('/api/blocks', {
+        data: { name, fieldId: field.id, kind: 'bed', widthFt: 2.5, lengthFt: 20 },
+        headers: { origin: origin(page) }
+      });
+      expect(res.ok()).toBe(true);
+    }
     await openWizardFromPlan(page);
     await seedRow(page, BEAN).getByRole('checkbox').check();
     await seedRow(page, BEET).getByRole('checkbox').check();
@@ -384,7 +396,9 @@ test.describe('planning from inventory', () => {
       .getByRole('button', { name: /^Next: blocks/ })
       .click();
     const beds = body(page).getByTestId('bed-suggest');
-    await expect(beds).toContainText('Start with 4 ft wide and up to 25 ft long');
+    await expect(beds.getByTestId('bed-suggest-start')).toContainText(
+      'Starting from your beds in Kitchen Garden: 2.5 ft wide and up to 20 ft long'
+    );
     const suggested = page.waitForResponse((r) => r.url().endsWith('/api/plan/beds/suggest'));
     await beds.getByRole('button', { name: 'Suggest beds' }).click();
     const json = (await (await suggested).json()) as {
@@ -393,20 +407,59 @@ test.describe('planning from inventory', () => {
     };
     expect(json.provenance).toBe('fallback');
     expect(json.beds.length).toBeGreaterThan(0);
-    for (const b of json.beds) expect(b.lengthFt).toBeLessThanOrEqual(25 + 1);
+    for (const b of json.beds) expect(b.lengthFt).toBeLessThanOrEqual(20 + 1);
     await expect(beds.locator('[data-provenance="fallback"]').first()).toBeVisible();
+    await expect(beds.locator('.aw-bed-head').first()).toContainText('Bed 3: 2.5 ft ×');
+    await expect(beds.getByTestId('bed-suggest-overfull')).toHaveCount(0);
     const add = beds.getByRole('button', { name: /^Add (this bed|these \d+ beds)/ });
     expect((await add.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(48);
     await add.click();
     await expect(beds.getByRole('status')).toContainText(
       `Added ${json.beds.length} ${json.beds.length === 1 ? 'bed' : 'beds'}`
     );
-    await expect(body(page).locator('.aw-blocklist li')).toHaveCount(json.beds.length + 1);
+    await expect(body(page).locator('.aw-blocklist li')).toHaveCount(json.beds.length + 2);
+    await expect(body(page).locator('.aw-blocklist li', { hasText: 'Bed 3' })).toContainText(
+      '2.5 ft ×'
+    );
     await expect(body(page).locator('.aw-blocklist li.checked')).toHaveCount(json.beds.length, {
       timeout: 10_000
     });
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollWidth).toBeLessThanOrEqual(await page.evaluate(() => window.innerWidth));
+  });
+
+  test('#693 no bed suggestions on a field farm; beds that overfill the Area cannot be added', async ({
+    page
+  }) => {
+    await provisionWizardTenant(page, {
+      seasonSetup: true,
+      blocks: [{ name: 'North field', acres: 5 }],
+      seeds: [{ displayName: BEAN, pluginId: 'bush-bean-provider', quantity: 4000 }]
+    });
+    await openWizardFromPlan(page);
+    await seedRow(page, BEAN).getByRole('checkbox').check();
+    await footer(page)
+      .getByRole('button', { name: /^Next: blocks/ })
+      .click();
+    await expect(body(page).locator('.aw-blocklist li')).toHaveCount(1);
+    await expect(body(page).getByTestId('bed-suggest')).toHaveCount(0);
+
+    await page.request.post('/api/fields', {
+      data: { name: 'Tiny Tunnel', kind: 'greenhouse', widthFt: 10, lengthFt: 10 },
+      headers: { origin: origin(page) }
+    });
+    await openWizardFromPlan(page);
+    await seedRow(page, BEAN).getByRole('checkbox').check();
+    await footer(page)
+      .getByRole('button', { name: /^Next: blocks/ })
+      .click();
+    const beds = body(page).getByTestId('bed-suggest');
+    await expect(beds.getByTestId('bed-suggest-start')).toContainText('4 ft wide');
+    await beds.getByRole('button', { name: 'Suggest beds' }).click();
+    await expect(beds.getByTestId('bed-suggest-overfull')).toContainText('Tiny Tunnel');
+    await expect(
+      beds.getByRole('button', { name: /^Add (this bed|these \d+ beds)/ })
+    ).toBeDisabled();
   });
 
   test('a block added in the wizard goes in the Area the owner picks', async ({ page }) => {

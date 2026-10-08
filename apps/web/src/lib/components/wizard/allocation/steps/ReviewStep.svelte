@@ -13,6 +13,9 @@
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
   import { areaText, seedAmountLine } from '$lib/plan/seedAmountText';
+  import { shortNameList } from '$lib/plan/nameList';
+  import { intlLocale } from '$lib/prefs';
+  import { numberToLocaleString } from '$lib/intlCache';
 
   const w = getWizardContext();
   const tr = $derived(createT(page.data?.locale));
@@ -147,11 +150,15 @@
     {/if}
   {/if}
   {#if (w.response.geometryMissingBlockIds ?? []).length > 0}
-    <div class="aw-banner info">
+    <div class="aw-banner info" data-testid="no-geometry">
       {tr('wizard.review.noGeometry', {
         count: w.response.geometryMissingBlockIds!.length,
-        names: w.response.geometryMissingBlockIds!.map((id) => w.blockNameFor(id)).join(', ')
+        names: shortNameList(
+          w.response.geometryMissingBlockIds!.map((id) => w.blockNameFor(id)),
+          page.data?.locale
+        )
       })}
+      <a href="/plan/farm">{tr('wizard.review.noGeometryLink')}</a>
     </div>
   {/if}
   <!-- #172 — provenance legend mirroring the Schedule step so every
@@ -233,7 +240,7 @@
                   title={tr('wizard.review.spacingFallback')}
                   ><Provenance source="fallback" compact /></span
                 >{/if}
-              {a.plants.toLocaleString()}
+              {numberToLocaleString(a.plants, intlLocale(page.data?.locale))}
             {/if}
           </td>
           <td class="cell-fit">
@@ -286,7 +293,8 @@
             {:else}
               {tr('wizard.review.didntFit', {
                 name: w.varietyDisplayFor(u.stockItemId),
-                count: u.quantityPlants
+                count: u.quantityPlants,
+                n: numberToLocaleString(u.quantityPlants, intlLocale(page.data?.locale))
               })}
             {/if}
             {@const report = leftoverByLot.get(u.stockItemId)}

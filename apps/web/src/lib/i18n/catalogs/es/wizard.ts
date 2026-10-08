@@ -394,7 +394,13 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.blocks.added.other': 'Se agregaron {count} camas y se eligieron para este plan.',
   'wizard.blocks.adding': 'Agregando…',
   'wizard.blocks.bedDefault':
-    'Empieza con {w} ft de ancho y hasta {l} ft de largo, o escribe tus propias medidas.',
+    'Empieza con {w} de ancho y hasta {l} de largo, o escribe tus propias medidas.',
+  'wizard.blocks.bedFromYours':
+    'Partimos de tus camas en {area}: {w} de ancho y hasta {l} de largo. Escribe tus propias medidas para cambiarlo.',
+  'wizard.blocks.bedsOverfill':
+    'Estas camas necesitan unos {need}, pero {area} solo tiene unos {free} libres. Haz las camas más pequeñas, elige menos semillas o agrégalas a otra área.',
+  'wizard.blocks.bedsAreaUnsized':
+    '{area} todavía no tiene tamaño, así que el asistente no puede comprobar que estas camas quepan. Dale un tamaño en el mapa de la granja.',
   'wizard.blocks.bedWidth': 'Ancho de la cama',
   'wizard.blocks.bedsIntro':
     'Obtén camas dimensionadas para la semilla que elegiste, según el espaciado de cada cultivo. No se agrega nada hasta que lo indiques.',
@@ -492,9 +498,9 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'wizard.prior.title': 'Temporada pasada ({year})',
   'wizard.review.cost': 'Costo: ${amount} ({model})',
   'wizard.review.didntFit.one':
-    '{name}: {count} planta no cupo en los bloques que elegiste. Guarda la semilla para después o vuelve y elige más espacio.',
+    '{name}: {n} planta no cupo en los bloques que elegiste. Guarda la semilla para después o vuelve y elige más espacio.',
   'wizard.review.didntFit.other':
-    '{name}: {count} plantas no cupieron en los bloques que elegiste. Guarda la semilla para después o vuelve y elige más espacio.',
+    '{name}: {n} plantas no cupieron en los bloques que elegiste. Guarda la semilla para después o vuelve y elige más espacio.',
   'wizard.review.engineRationale':
     'Plan del motor determinista: mira la columna "Por qué" para el razonamiento de cada fila.',
   'wizard.review.error': 'Error: {error}',
@@ -513,9 +519,12 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
     'Claude no está disponible ahora, así que el motor determinista hizo este plan. Vuelve a intentarlo más tarde para recibir ayuda de IA.',
   'wizard.review.leftOver': 'Sobrante',
   'wizard.review.noGeometry.one':
-    '📐 Se omitió la revisión de polinización en {count} bloque ({names}): agrega la geometría del campo en /fields para activarla.',
+    '📐 Se omitió la revisión de polinización en {count} bloque ({names}): no tiene contorno en el mapa de la granja.',
   'wizard.review.noGeometry.other':
-    '📐 Se omitió la revisión de polinización en {count} bloques ({names}): agrega la geometría del campo en /fields para activarla.',
+    '📐 Se omitió la revisión de polinización en {count} bloques ({names}): no tienen contorno en el mapa de la granja.',
+  'wizard.review.noGeometryLink': 'Dibújalos en el mapa de la granja',
+  'wizard.review.namesMore.one': '{names} y {n} más',
+  'wizard.review.namesMore.other': '{names} y {n} más',
   'wizard.review.noRoom':
     '{name}: no quedó espacio en los bloques que elegiste. Guarda la semilla para después o vuelve y elige más espacio.',
   'wizard.review.noteAi':
@@ -1083,7 +1092,7 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
     '{why}, así que estas camas de cultivo se calculan con el espaciado registrado.',
   'wizard.beds.noSpacing':
     '{list} no tiene espaciado registrado, así que estas camas usan un valor provisional de {inches} pulg. Revisa el sobre de semillas.',
-  'planui.beds.bedLine': 'Cama {n}: {width} × {length}',
+  'planui.beds.bedLine': '{name}: {width} × {length}',
   'wizard.split.chipBeds': 'Repartido en {n} camas',
   'wizard.split.chipBlocks': 'Repartido en {n} bloques',
   'wizard.split.keep': 'Mantener en una cama',
@@ -1155,6 +1164,13 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
     'el bloque admite unas {fit} plantas y tienes semilla para unas {avail}; sobra semilla para unas {extra} plantas',
   'wizard.engine.why.surplusArea':
     'el bloque tiene espacio para unos {fit} pies cuadrados y tu semilla cubre unos {avail} pies cuadrados; sobra semilla para unos {extra} pies cuadrados',
+  'wizard.engine.why.splitSurplus':
+    'este lote de semilla está repartido en {parts} bloques, en los que caben unas {fit} plantas de las {avail} para las que tienes semilla; sobra semilla para unas {extra} plantas',
+  'wizard.engine.why.splitSurplusArea':
+    'este lote de semilla está repartido en {parts} bloques, con espacio para unos {fit} pies cuadrados de los {avail} pies cuadrados que cubre tu semilla; sobra semilla para unos {extra} pies cuadrados',
+  'wizard.engine.why.splitAll':
+    'este lote de semilla está repartido en {parts} bloques para usarlo todo',
+  'wizard.engine.why.splitPart': 'otra parte del mismo lote de semilla',
   'wizard.engine.why.fill':
     'no se sabe la cantidad de semilla, así que se ajusta al espacio que recibe',
   'wizard.engine.why.deficit': 'solo tienes semilla para un {pct}% de este bloque',

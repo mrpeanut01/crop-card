@@ -15,6 +15,8 @@ export interface SetupArea {
   kind: AreaKind;
   /** Beds or blocks already inside this Area, when the loader counted them. */
   blockCount?: number;
+  /** The Area's own size, when known, so the wizard can check new beds fit. */
+  acres?: number;
 }
 
 export interface SetupBlock {

@@ -1,6 +1,11 @@
-import { formatCalendarDate } from '$lib/prefs';
+import { formatCalendarDate, intlLocale } from '$lib/prefs';
+import { numberToLocaleString } from '$lib/intlCache';
 import type { ProgressStage, SufficiencyResult } from './types';
 import { wlocale, wt } from './wt';
+
+function num(n: number): string {
+  return numberToLocaleString(n, intlLocale(wlocale()));
+}
 
 export function fmtDateMs(ms: number): string {
   return formatCalendarDate(ms, 'date', {}, wlocale());
@@ -86,19 +91,19 @@ export function sufficiencyChip(
       label: wt('wizard.suff.fills', { pct }),
       cls: 'chip-match',
       tooltip: wt('wizard.suff.fillsTip', {
-        available: s.plantsAvailable.toLocaleString(),
-        fit: s.plantsFit.toLocaleString()
+        available: num(s.plantsAvailable),
+        fit: num(s.plantsFit)
       })
     };
   }
   if (s.status === 'surplus') {
     return {
-      label: wt('wizard.suff.extra', { n: s.leftoverPlants.toLocaleString() }),
+      label: wt('wizard.suff.extra', { n: num(s.leftoverPlants) }),
       cls: 'chip-surplus',
       tooltip: wt('wizard.suff.extraTip', {
-        available: s.plantsAvailable.toLocaleString(),
-        fit: s.plantsFit.toLocaleString(),
-        n: s.leftoverPlants.toLocaleString()
+        available: num(s.plantsAvailable),
+        fit: num(s.plantsFit),
+        n: num(s.leftoverPlants)
       })
     };
   }
@@ -106,9 +111,9 @@ export function sufficiencyChip(
     label: wt('wizard.suff.deficit', { pct }),
     cls: 'chip-deficit',
     tooltip: wt('wizard.suff.deficitTip', {
-      available: s.plantsAvailable.toLocaleString(),
+      available: num(s.plantsAvailable),
       pct,
-      fit: s.plantsFit.toLocaleString()
+      fit: num(s.plantsFit)
     })
   };
 }

@@ -65,6 +65,8 @@ import {
 import { detectCompanionGroups } from '$lib/plan/companionOffsets';
 import { isAreaCrop } from '$lib/plan/spacingModel';
 import { t } from '$lib/i18n';
+import { intlLocale } from '$lib/prefs';
+import { numberToLocaleString } from '$lib/intlCache';
 import type { CompanionGroupMarker, PollinationConstraint } from '$lib/plan/types';
 
 const MAX_OUTPUT_TOKENS = 4000;
@@ -1501,15 +1503,20 @@ function engineFallback(
   const result = planLayout(input);
   const sufficiency = computeSufficiencyByPair(result.assignments, input);
   const perRowRationale: Record<string, string> = {};
+  const lots = splitLotParts(result.assignments);
   for (const a of result.assignments) {
     const row = matrix.find((r) => r.stockItemId === a.stockItemId && r.blockId === a.blockId);
     const seed = input.seeds.find((s) => s.stockItemId === a.stockItemId);
+    const lot = lots.get(a.stockItemId);
     perRowRationale[`${a.stockItemId}:${a.blockId}`] = row
       ? engineRationale(
           row,
           seed,
           locale,
-          threeSistersOnBlock(input, a.blockId, result.assignments)
+          threeSistersOnBlock(input, a.blockId, result.assignments),
+          lot
+            ? { parts: lot.parts, placed: lot.placed, first: lot.firstBlockId === a.blockId }
+            : undefined
         )
       : t(locale, 'wizard.engine.placed');
   }
@@ -1648,20 +1655,40 @@ function engineRationale(
   row: MatrixRow,
   seed?: Pick<SeedRequest, 'fillToCapacity' | 'byArea'>,
   locale?: string | null,
-  threeSistersHere = false
+  threeSistersHere = false,
+  split?: { parts: number; placed: number; first: boolean }
 ): string {
   const bits: string[] = [];
+  const num = (n: number) => numberToLocaleString(n, intlLocale(locale));
   if (seed?.fillToCapacity) {
     bits.push(t(locale, 'wizard.engine.why.fill'));
+  } else if (split && !split.first) {
+    bits.push(t(locale, 'wizard.engine.why.splitPart'));
+  } else if (split) {
+    const extra = row.plantsAvailable - split.placed;
+    bits.push(
+      extra > 0
+        ? t(
+            locale,
+            seed?.byArea ? 'wizard.engine.why.splitSurplusArea' : 'wizard.engine.why.splitSurplus',
+            {
+              parts: split.parts,
+              fit: num(split.placed),
+              avail: num(row.plantsAvailable),
+              extra: num(extra)
+            }
+          )
+        : t(locale, 'wizard.engine.why.splitAll', { parts: split.parts })
+    );
   } else if (row.sufficiency === 'match') {
     bits.push(t(locale, 'wizard.engine.why.match'));
   } else if (row.sufficiency === 'surplus') {
     const extra = row.plantsAvailable - row.plantsFit;
     bits.push(
       t(locale, seed?.byArea ? 'wizard.engine.why.surplusArea' : 'wizard.engine.why.surplus', {
-        fit: row.plantsFit.toLocaleString(),
-        avail: row.plantsAvailable.toLocaleString(),
-        extra: extra.toLocaleString()
+        fit: num(row.plantsFit),
+        avail: num(row.plantsAvailable),
+        extra: num(extra)
       })
     );
   } else if (row.sufficiency === 'deficit') {
@@ -1684,6 +1711,26 @@ function engineRationale(
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
+
+/** Lots the plan puts on more than one block: how many parts, the plants
+ *  (or sq ft) placed across all of them, and the block whose row carries
+ *  the lot's one leftover sentence. */
+export function splitLotParts(
+  assignments: ReadonlyArray<Pick<Assignment, 'stockItemId' | 'blockId' | 'plants'>>
+): Map<string, { parts: number; placed: number; firstBlockId: string }> {
+  const out = new Map<string, { parts: number; placed: number; firstBlockId: string }>();
+  for (const a of assignments) {
+    const cur = out.get(a.stockItemId);
+    if (cur) {
+      cur.parts += 1;
+      cur.placed += a.plants;
+    } else {
+      out.set(a.stockItemId, { parts: 1, placed: a.plants, firstBlockId: a.blockId });
+    }
+  }
+  for (const [id, v] of out) if (v.parts < 2) out.delete(id);
+  return out;
+}
 
 /** #690: corn, a legume and a cucurbit all on the block (its standing crops
  *  plus this plan), the same test the engine's three-sisters bonus uses. */

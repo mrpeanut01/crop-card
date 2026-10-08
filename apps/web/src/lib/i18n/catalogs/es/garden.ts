@@ -421,6 +421,10 @@ export const esGarden: Partial<Record<MessageKey, string>> = {
   'gardenlib.recipe.noRoom':
     'No hay espacio para {crop} el {date}. Esa parte de la cama se libera el {opens}.',
   'gardenlib.recipe.shares': '{crop} comparte espacio con {other} hasta el {date}.',
+  'gardenlib.recipe.tooNarrow':
+    '{crop} necesita una franja de unas {need} pulg de ancho; esta cama le da {have} pulg, así que se omitió.',
+  'gardenlib.recipe.outsideWindow':
+    '{crop} sembrado el {date} queda fuera de su época de siembra ({earliest} a {latest}), así que se omitió.',
   'gardenlib.recipe.noSuch': 'No hay ninguna receta de cama llamada {id}.',
   'gardenlib.recipe.keepOne': 'Conserva al menos una siembra para agregar.',
   'gardenlib.recipe.stale':

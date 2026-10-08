@@ -2396,7 +2396,13 @@ const paths = {
               type: ['string', 'null'],
               enum: ['no-key', 'over-cap', 'offline', 'rate-limit', 'timeout', null]
             },
-            message: { type: ['string', 'null'] }
+            message: { type: ['string', 'null'] },
+            notes: {
+              type: 'array',
+              items: { type: 'string' },
+              description:
+                "Fallback only: the recipe's warnings and the steps it left out, with the reason."
+            }
           }
         }),
         ...GARDEN_ERRORS

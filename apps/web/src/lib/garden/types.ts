@@ -306,6 +306,9 @@ export interface GardenDesign {
   /** Beds with no stored position, laid out by `freeSpot` and drawn dashed
    *  until their first move saves one. */
   unplacedBedIds?: string[];
+  /** Unplaced beds with no free spot left in the Area; maps leave them out
+   *  and list them by name (#756). */
+  noRoomBedIds?: string[];
   /** Read-only context shapes (trees, fences, buildings) from `shade_sources`
    *  attached to this Area. */
   landmarks?: DesignLandmark[];

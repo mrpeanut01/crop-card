@@ -404,6 +404,10 @@ export const enGarden = {
     '{crop} sown {date} would not be ready before the first fall frost on {frost}.',
   'gardenlib.recipe.noRoom': 'No room for {crop} on {date}. That part of the bed opens {opens}.',
   'gardenlib.recipe.shares': '{crop} shares space with {other} until {date}.',
+  'gardenlib.recipe.tooNarrow':
+    '{crop} needs a strip about {need} in wide; this bed gives it {have} in, so it was left out.',
+  'gardenlib.recipe.outsideWindow':
+    '{crop} sown {date} is outside its planting window ({earliest} to {latest}), so it was left out.',
   'gardenlib.recipe.noSuch': "There's no bed recipe called {id}.",
   'gardenlib.recipe.keepOne': 'Keep at least one planting to add.',
   'gardenlib.recipe.stale':

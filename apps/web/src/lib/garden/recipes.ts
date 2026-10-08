@@ -14,6 +14,7 @@ import type {
   Footprint,
   GardenCrop,
   OccupancyInterval,
+  PlantSpacing,
   ProposedPlanting,
   RecipeApplication
 } from './types';
@@ -30,6 +31,9 @@ export interface RecipeContext {
   seasonYear: number;
   /** Language for skipped reasons and warnings; English when unset. */
   locale?: string | null;
+  /** The crop's planting window (yyyy-mm-dd days) for these frost dates.
+   *  When set, a sowing dated outside it is left out (#657). */
+  plantingWindow?: (cropPluginId: string) => { earliest: string; latest: string } | null;
 }
 
 export type RecipeFit = { fits: true } | { fits: false; reason: string };
@@ -101,6 +105,30 @@ export function sectionFootprint(
   const [x_in, w_in] = span(section.x, section.w, bed.widthFt * 12);
   const [y_in, l_in] = span(section.y, section.l, bed.lengthFt * 12);
   return { x_in, y_in, w_in, l_in };
+}
+
+function isoDayOf(ms: number): string {
+  return new Date(dayOf(ms)).toISOString().slice(0, 10);
+}
+
+/** #656: a scaled section is too narrow when either side is below both the
+ *  section's size in the recipe's own bed and the crop's spacing, so a recipe
+ *  written for a wider bed never squeezes a crop into a strip it can't grow
+ *  in. Returns the inches needed and given on the short side, or null. */
+export function sectionTooNarrow(
+  scaled: Pick<Footprint, 'w_in' | 'l_in'>,
+  reference: Pick<Footprint, 'w_in' | 'l_in'>,
+  spacing: Pick<PlantSpacing, 'inRowIn' | 'rowIn'>
+): { need: number; have: number } | null {
+  const cropIn = Math.min(spacing.inRowIn, spacing.rowIn);
+  for (const [have, ref] of [
+    [scaled.w_in, reference.w_in],
+    [scaled.l_in, reference.l_in]
+  ] as const) {
+    const need = Math.min(ref, cropIn);
+    if (have + 1e-9 < need) return { need: Math.round(need), have: Math.round(have) };
+  }
+  return null;
 }
 
 function wholeBed(bed: Pick<BedLayout, 'widthFt' | 'lengthFt'>): Footprint {
@@ -213,9 +241,39 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
     const stepPlaced: Placed[] = [];
     for (let k = 0; k < count; k++) {
       const sliceL = section.l / count;
-      const footprint = sectionFootprint({ ...section, y: section.y + k * sliceL, l: sliceL }, bed);
+      const slice = { ...section, y: section.y + k * sliceL, l: sliceL };
+      const footprint = sectionFootprint(slice, bed);
       const plantingDateMs = addDays(baseMs, k * intervalDays);
       const key = k === 0 ? `s${stepIndex}` : `s${stepIndex}.${k}`;
+      const cropName =
+        k === 0
+          ? crop.displayName
+          : t(locale, 'gardenlib.recipe.cropSowing', { crop: crop.displayName, n: k + 1 });
+      const narrow =
+        spacing.mode === 'area'
+          ? null
+          : sectionTooNarrow(footprint, sectionFootprint(slice, recipe.bedSize), spacing);
+      if (narrow) {
+        skipped.push({
+          stepIndex,
+          reason: t(locale, 'gardenlib.recipe.tooNarrow', { crop: cropName, ...narrow })
+        });
+        continue;
+      }
+      const window = ctx.plantingWindow?.(crop.pluginId);
+      const sownIso = isoDayOf(plantingDateMs);
+      if (window && (sownIso < window.earliest || sownIso > window.latest)) {
+        skipped.push({
+          stepIndex,
+          reason: t(locale, 'gardenlib.recipe.outsideWindow', {
+            crop: cropName,
+            date: date(plantingDateMs),
+            earliest: date(Date.parse(`${window.earliest}T00:00:00Z`)),
+            latest: date(Date.parse(`${window.latest}T00:00:00Z`))
+          })
+        });
+        continue;
+      }
       const interval = plantingOccupancy(
         {
           cropId: key,
@@ -230,10 +288,6 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
         { firstFallFrostMs: ctx.firstFallFrostMs, lastSpringFrostMs: ctx.lastSpringFrostMs }
       );
       if (!interval) continue;
-      const cropName =
-        k === 0
-          ? crop.displayName
-          : t(locale, 'gardenlib.recipe.cropSowing', { crop: crop.displayName, n: k + 1 });
       if (interval.harvestStartMs > ctx.firstFallFrostMs) {
         skipped.push({
           stepIndex,
@@ -320,6 +374,9 @@ export interface DeterministicFillPlan {
   proposals: ProposedPlanting[];
   /** The recipe the plan came from, or null when it packed planned crops. */
   recipe: { pluginId: string; displayName: string } | null;
+  /** The recipe's own warnings and left-out steps, so the fallback says why
+   *  a step is missing or why a strip is shared (#656). */
+  notes: string[];
 }
 
 function sizeCloseness(recipe: BedRecipePlugin, bed: Pick<BedLayout, 'widthFt' | 'lengthFt'>) {
@@ -328,19 +385,34 @@ function sizeCloseness(recipe: BedRecipePlugin, bed: Pick<BedLayout, 'widthFt' |
   return Math.min(a, b) / Math.max(a, b);
 }
 
+/** How close the bed's length-to-width ratio is to the recipe's, 0 to 1. */
+function shapeCloseness(recipe: BedRecipePlugin, bed: Pick<BedLayout, 'widthFt' | 'lengthFt'>) {
+  const a = recipe.bedSize.lengthFt / recipe.bedSize.widthFt;
+  const b = bed.lengthFt / bed.widthFt;
+  return Math.min(a, b) / Math.max(a, b);
+}
+
 /** Recipe plans whose plantings start on or after `dateMs`, best first:
- *  most plantings kept, then the closest reference bed size. */
+ *  most plantings kept (steps too narrow for the bed or outside their
+ *  planting window are already left out), then the closest bed shape, then
+ *  the closest reference bed size. */
 function rankRecipes(
   recipes: readonly BedRecipePlugin[],
   ctx: RecipeContext,
   dayMs: number
-): Array<{ recipe: BedRecipePlugin; proposals: ProposedPlanting[] }> {
+): Array<{ recipe: BedRecipePlugin; proposals: ProposedPlanting[]; notes: string[] }> {
   const ffd = frostFreeDays(ctx.lastSpringFrostMs, ctx.firstFallFrostMs);
-  const ranked: Array<{ recipe: BedRecipePlugin; proposals: ProposedPlanting[]; score: number }> =
-    [];
+  const ranked: Array<{
+    recipe: BedRecipePlugin;
+    proposals: ProposedPlanting[];
+    notes: string[];
+    shape: number;
+    size: number;
+  }> = [];
   for (const recipe of recipes) {
     if (!recipeFits(recipe, ffd).fits) continue;
-    const kept = applyRecipe(recipe, ctx).plantings.filter((p) => p.plantingDateMs >= dayMs);
+    const app = applyRecipe(recipe, ctx);
+    const kept = app.plantings.filter((p) => p.plantingDateMs >= dayMs);
     if (kept.length === 0) continue;
     const keys = new Set(kept.map((p) => p.key));
     const proposals = kept.map((p) => ({
@@ -348,12 +420,25 @@ function rankRecipes(
       provenance: 'fallback' as const,
       followsKey: p.followsKey && keys.has(p.followsKey) ? p.followsKey : null
     }));
-    ranked.push({ recipe, proposals, score: sizeCloseness(recipe, ctx.bed) });
+    const notes = [
+      ...app.warnings,
+      ...app.skipped.map((s) =>
+        t(ctx.locale, 'garden.insp.stepLeftOut', { n: s.stepIndex + 1, reason: s.reason })
+      )
+    ];
+    ranked.push({
+      recipe,
+      proposals,
+      notes,
+      shape: shapeCloseness(recipe, ctx.bed),
+      size: sizeCloseness(recipe, ctx.bed)
+    });
   }
   return ranked.sort(
     (a, b) =>
       b.proposals.length - a.proposals.length ||
-      b.score - a.score ||
+      b.shape - a.shape ||
+      b.size - a.size ||
       a.recipe.pluginId.localeCompare(b.recipe.pluginId)
   );
 }
@@ -386,6 +471,9 @@ function packUnplaced(
       { firstFallFrostMs: ctx.firstFallFrostMs, lastSpringFrostMs: ctx.lastSpringFrostMs }
     );
     if (!timing || timing.harvestStartMs > ctx.firstFallFrostMs) return;
+    const window = ctx.plantingWindow?.(crop.pluginId);
+    const sownIso = isoDayOf(dayMs);
+    if (window && (sownIso < window.earliest || sownIso > window.latest)) return;
     // #555: a crop sown by area has no plant count; it gets an even share of
     // the bed's length (never less than the packed strip).
     const areaShareIn =
@@ -438,10 +526,11 @@ export function deterministicFillPlan(
   if (best) {
     return {
       proposals: best.proposals,
-      recipe: { pluginId: best.recipe.pluginId, displayName: best.recipe.displayName }
+      recipe: { pluginId: best.recipe.pluginId, displayName: best.recipe.displayName },
+      notes: best.notes
     };
   }
-  return { proposals: packUnplaced(unplaced, ctx, dayMs), recipe: null };
+  return { proposals: packUnplaced(unplaced, ctx, dayMs), recipe: null, notes: [] };
 }
 
 /** What "Fill this bed" returns without Claude: the best-fitting recipe's

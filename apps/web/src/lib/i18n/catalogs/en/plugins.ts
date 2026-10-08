@@ -5,6 +5,7 @@ export const enPlugins = {
   'cardsui.bed.label': 'Bed map, {width} by {length} feet.',
   'cardsui.bed.numbers': 'Numbers',
   'cardsui.bed.open': 'open',
+  'cardsui.bed.notPlaced': 'No room on the map for: {names}',
   'cardsui.bedMap': 'Garden bed map',
   'cardsui.cal.more': '+{count} more',
   'cardsui.cal.notOnCard': 'Not on this card',

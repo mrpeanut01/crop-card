@@ -329,3 +329,70 @@ describe('deterministicFill', () => {
     ).toEqual([]);
   });
 });
+
+describe('narrow beds and planting windows (#656, #657)', () => {
+  const sisters = recipe('three-sisters-4x8');
+  const narrow = ctx({
+    bed: { blockId: 'bed-1', widthFt: 2.5, lengthFt: 50 },
+    lastSpringFrostMs: utc(5, 7),
+    firstFallFrostMs: utc(10, 7)
+  });
+
+  it('keeps every Three sisters step on its own 4×8 bed', () => {
+    const app = applyRecipe(sisters, ctx({ lastSpringFrostMs: utc(5, 7) }));
+    expect(app.plantings.map((p) => p.cropPluginId)).toEqual([
+      'corn-bantam-sweet',
+      'pole-bean-kentucky-wonder',
+      'winter-squash-delicata',
+      'winter-squash-delicata'
+    ]);
+  });
+
+  it('leaves squash out of a 2.5 ft bed instead of a 6 in strip', () => {
+    const app = applyRecipe(sisters, narrow);
+    expect(app.plantings.some((p) => p.cropPluginId === 'winter-squash-delicata')).toBe(false);
+    const reasons = app.skipped.filter((s) => s.stepIndex >= 2).map((s) => s.reason);
+    expect(reasons).toHaveLength(2);
+    expect(reasons[0]).toMatch(/needs a strip about \d+ in wide; this bed gives it 6 in/);
+    for (const p of app.plantings) {
+      expect(p.footprint.w_in).toBeGreaterThanOrEqual(
+        Math.min(12, p.spacing.inRowIn, p.spacing.rowIn)
+      );
+    }
+  });
+
+  it('carries the recipe warnings and left-out steps into the fallback plan', () => {
+    const plan = deterministicFillPlan([sisters], [], narrow, utc(3, 1));
+    expect(plan.recipe?.pluginId).toBe('three-sisters-4x8');
+    expect(plan.notes.some((n) => n.startsWith('Written for a 4×8 ft bed'))).toBe(true);
+    expect(plan.notes.some((n) => /^Step 3 left out: Winter Squash/.test(n))).toBe(true);
+  });
+
+  it('only proposes sowings inside the crop planting window', () => {
+    const window = (id: string) =>
+      id === 'winter-squash-delicata' ? { earliest: '2027-05-21', latest: '2027-06-15' } : null;
+    const wide = ctx({
+      lastSpringFrostMs: utc(5, 7),
+      firstFallFrostMs: utc(10, 7),
+      plantingWindow: window
+    });
+    const plan = deterministicFillPlan([sisters], [], wide, utc(3, 1));
+    expect(plan.proposals.some((p) => p.cropPluginId === 'winter-squash-delicata')).toBe(false);
+    expect(plan.notes.some((n) => /outside its planting window/.test(n))).toBe(true);
+  });
+
+  it('skips a packed crop when the date is outside its window', () => {
+    const late = ctx({
+      lastSpringFrostMs: utc(5, 20),
+      firstFallFrostMs: utc(8, 10),
+      plantingWindow: () => ({ earliest: '2027-04-01', latest: '2027-05-01' })
+    });
+    const plan = deterministicFillPlan(
+      [],
+      [{ cropPluginId: 'lettuce-buttercrunch', varietyDisplayName: 'Buttercrunch', plants: 8 }],
+      late,
+      utc(5, 25)
+    );
+    expect(plan.proposals).toEqual([]);
+  });
+});

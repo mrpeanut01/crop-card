@@ -220,6 +220,48 @@ describe('BedInspector', () => {
   });
 });
 
+describe('DesignerCanvas narrow beds (#625)', () => {
+  it('keeps planting labels off the sideways bed name in a narrow bed', () => {
+    const narrow = {
+      id: 'bed6',
+      name: 'Bed 6 with a long name',
+      kind: 'bed' as const,
+      widthFt: 2.5,
+      lengthFt: 24,
+      xFt: 14,
+      yFt: 2,
+      rotationDeg: 0,
+      bedStyle: 'raised' as const
+    };
+    const { d } = state({
+      design: kitchenGarden({
+        blocks: [narrow],
+        plantings: [
+          plantingRow({
+            id: 'top',
+            blockId: 'bed6',
+            footprint: { x_in: 0, y_in: 0, w_in: 30, l_in: 24 }
+          }),
+          plantingRow({
+            id: 'bottom',
+            blockId: 'bed6',
+            footprint: { x_in: 0, y_in: 264, w_in: 30, l_in: 24 }
+          })
+        ]
+      })
+    });
+    d.setDate(Date.UTC(2026, 6, 15));
+    const { getAllByTestId } = mount(DesignerCanvas, d, {});
+    const byId = new Map(
+      getAllByTestId('footprint').map((el) => [el.getAttribute('data-crop-id'), el])
+    );
+    expect(byId.get('bottom')!.querySelector('[data-testid="footprint-label"]')).toBeNull();
+    expect(byId.get('bottom')!.querySelector('.glyph')).toBeNull();
+    expect(byId.get('top')!.querySelector('[data-testid="footprint-label"]')).not.toBeNull();
+    expect(byId.get('bottom')!.getAttribute('aria-label')).toMatch(/Tomato|tomato/);
+  });
+});
+
 describe('TimeScrubber', () => {
   const range = {
     startMs: Date.UTC(2026, 0, 1),
@@ -243,6 +285,7 @@ describe('TimeScrubber', () => {
     });
     const slider = getByRole('slider');
     expect(slider).toHaveAttribute('aria-valuetext', 'May 1');
+    expect(slider.closest('.scrubber')!.querySelector('label')!.textContent).toMatch(/^On \S/);
     await fireEvent.keyDown(slider, { key: 'PageDown' });
     expect(value).toBe(Date.UTC(2026, 6, 1));
   });

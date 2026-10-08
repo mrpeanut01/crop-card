@@ -223,6 +223,27 @@ describe('garden bed map', () => {
     expect(beds.find((b) => b.name === 'Bed 1')!.crops).toEqual([]);
   });
 
+  it('lists beds with no room left by name instead of drawing them over each other (#756)', () => {
+    const snap = sampleSnapshot();
+    const bed1 = snap.blocks.find((b) => b.id === 'b_bed1')!;
+    for (let i = 0; i < 40; i++) {
+      snap.blocks.push({ ...bed1, id: `b_extra${i}`, name: `Bed ${10 + i}`, layout: null });
+    }
+    const map = buildAreaCard(snap, 'f_garden')!.bedMap!;
+    expect(map.notPlaced?.length).toBeGreaterThan(0);
+    const drawn = new Set(map.beds.map((b) => b.name));
+    for (const name of map.notPlaced!) expect(drawn.has(name)).toBe(false);
+    const extras = map.beds.filter((b) => /^Bed \d\d$/.test(b.name));
+    for (let i = 0; i < extras.length; i++) {
+      for (let j = i + 1; j < extras.length; j++) {
+        const a = extras[i];
+        const b = extras[j];
+        const overlap = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.l && b.y < a.y + a.l;
+        expect(overlap).toBe(false);
+      }
+    }
+  });
+
   it('draws each planting in its bed with a family icon, packing ones with no spot (#481)', () => {
     const card = buildAreaCard(sampleSnapshot(), 'f_garden')!;
     const bed3 = card.bedMap!.beds.find((b) => b.name === 'Bed 3')!;

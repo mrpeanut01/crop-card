@@ -7,6 +7,7 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
   'cardsui.bed.label': 'Mapa de camas, {width} por {length} pies.',
   'cardsui.bed.numbers': 'Números',
   'cardsui.bed.open': 'libre',
+  'cardsui.bed.notPlaced': 'Sin espacio en el mapa para: {names}',
   'cardsui.bedMap': 'Mapa de camas de cultivo',
   'cardsui.cal.more': '+{count} más',
   'cardsui.cal.notOnCard': 'No está en esta tarjeta',

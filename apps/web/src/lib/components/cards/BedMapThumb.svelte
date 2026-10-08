@@ -31,6 +31,9 @@
         .join('. ') +
       (marks.legend.length
         ? `. ${tr('cardsui.bed.numbers')}: ${marks.legend.map((r) => `${r.n}, ${r.text}`).join('; ')}.`
+        : '') +
+      (map.notPlaced?.length
+        ? ` ${tr('cardsui.bed.notPlaced', { names: map.notPlaced.join(', ') })}.`
         : '')
   );
 </script>
@@ -150,6 +153,11 @@
       <text x={map.widthFt - font} y={font} font-size={font} font-weight="700">N ↑</text>
     {/if}
   </svg>
+  {#if map.notPlaced?.length}
+    <p class="notplaced" data-testid="bedmap-not-placed">
+      {tr('cardsui.bed.notPlaced', { names: map.notPlaced.join(', ') })}
+    </p>
+  {/if}
   {#if marks.legend.length || glyphsUsed.length}
     <div class="legend" data-testid="bedmap-legend">
       {#if marks.legend.length}
@@ -228,6 +236,11 @@
     stroke-width: 0.18;
     fill: #000;
     font-weight: 600;
+  }
+  .notplaced {
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-ink, #000);
   }
   .legend {
     font-size: 12px;

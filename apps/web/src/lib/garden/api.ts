@@ -210,6 +210,8 @@ export interface FillResponse {
   fallbackReason: 'no-key' | 'over-cap' | 'offline' | 'rate-limit' | 'timeout' | null;
   /** Plain line for the banner, e.g. why Claude was skipped. */
   message: string | null;
+  /** The fallback recipe's warnings and left-out steps (#656). */
+  notes?: string[];
   /** Set when the farm's AI allowance stopped the call, for the upgrade nudge. */
   aiLimit?: AiLimit | null;
 }

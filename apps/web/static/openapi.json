@@ -13025,6 +13025,13 @@
                         "string",
                         "null"
                       ]
+                    },
+                    "notes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Fallback only: the recipe's warnings and the steps it left out, with the reason."
                     }
                   }
                 }

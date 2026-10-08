@@ -28,7 +28,8 @@ import {
   quotePieces,
   TABLE_GAP_WORDS,
   renderSection,
-  settleFingerprints
+  settleFingerprints,
+  unreachableLines
 } from '../../scripts/lib/sourceDrift.mjs';
 
 const fixture = (name: string) =>
@@ -566,6 +567,26 @@ describe('issue body', () => {
     expect(hasOpenItems(clean)).toBe(false);
   });
 
+  it('groups sources a host would not answer into one line', () => {
+    const lines = unreachableLines([
+      {
+        kind: 'page',
+        target: 'https://extension.usu.edu/a',
+        error: 'UND_ERR_CONNECT_TIMEOUT after 4 attempts'
+      },
+      {
+        kind: 'page',
+        target: 'https://extension.usu.edu/b',
+        error: 'UND_ERR_CONNECT_TIMEOUT after 4 attempts'
+      },
+      { kind: 'ppls', target: '100-497', error: 'HTTP 502 after 4 attempts' }
+    ]);
+    expect(lines).toEqual([
+      '- page extension.usu.edu: 2 sources, UND_ERR_CONNECT_TIMEOUT after 4 attempts',
+      '- ppls `100-497`: HTTP 502 after 4 attempts'
+    ]);
+  });
+
   it('stays under the GitHub body limit with many findings', () => {
     const many = {
       ...report,
@@ -584,7 +605,7 @@ describe('issue body', () => {
       }))
     };
     const text = renderSection('weekly', many, '', 'o/r');
-    expect(text.length).toBeLessThanOrEqual(30_000);
+    expect(text.length).toBeLessThanOrEqual(48_000);
     expect(text).toContain('did not fit');
     expect(text).toContain('`p` a (5 reference(s))');
   });

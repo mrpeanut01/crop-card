@@ -1,0 +1,49 @@
+{
+  "pluginId": "prosaro-421-sc",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No listing on the OMRI Products List (searched 2026-10-08: 'Prosaro' and 'prothioconazole'; no Prosaro product). Conventional DMI premix; label makes no organic statement."},
+  "formulation": "SC",
+  "defaultUnit": "fl-oz",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Prosaro 421 SC (prothioconazole + tebuconazole)",
+  "applicationTiming": "BLOOM",
+  "activeIngredients": [
+    { "name": "prothioconazole", "fracCode": "3" },
+    { "name": "tebuconazole", "fracCode": "3" }
+  ],
+  "ratePerAcre": { "amount": 6.5, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 49,
+  "preHarvestIntervalsByCrop": [
+    { "cropPluginId": "wheat-soft-red-winter", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "wheat-hard-red-spring", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "wheat-hard-white-winter", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "barley-grain-thoroughbred", "preHarvestIntervalDays": 30 },
+    { "cropPluginId": "barley-hulless-streaker", "preHarvestIntervalDays": 30 }
+  ],
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
+  "epaRegistrationNumber": "264-862",
+  "targetDiseases": [
+    "Fusarium head blight",
+    "powdery mildew",
+    "rust",
+    "Septoria leaf and glume blotch",
+    "Stagonospora blotch",
+    "tan spot",
+    "net blotch",
+    "scald",
+    "spot blotch"
+  ],
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "wheat-soft-red-winter",
+      "wheat-hard-red-spring",
+      "wheat-hard-white-winter",
+      "barley-grain-thoroughbred",
+      "barley-hulless-streaker"
+    ]
+  },
+  "notes": "Bayer FRAC 3 + 3 DMI premix (EPA label 2025-03-24). Wheat and barley: 6.5 to 8.2 fl oz per acre, at most 8.2 fl oz per acre per crop year, 30 day PHI. For head blight, spray wheat at early flower (Feekes 10.51) and barley at full head emergence (Feekes 10.5); barley head blight is suppression only. Not labelled for oats, rye or triticale. The 49 day top-level PHI is the longest on the label (sweet corn fodder), used for any crop not listed by crop."
+}

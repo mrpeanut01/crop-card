@@ -1166,6 +1166,38 @@
       "matchedTitle": "DICAMBA DMA 4# AG (alternate brand BANVEL HERBICIDE)",
       "docDate": "2009-09-11",
       "note": "Number set in #501 per the 2026-09-30 owner ruling; provenance added 2026-10-03 (#530). PPLS cswu/ppls/70506-461: Active, UPL NA, altbrandnames 'DICAMBA 4#' and 'BANVEL HERBICIDE', transferred from 66330-276 (Arysta) on 2021-05-26 and earlier from 51036-289 (BASF). No label filed under 70506-461 yet; the quoted file is the last 66330-276 label."
+    },
+    "prosaro-421-sc": {
+      "epaRegistrationNumber": "264-862",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00862-20250324.pdf",
+      "docDate": "2025-03-24",
+      "page": 1,
+      "quote": "Product Name: PROSARO 421 SC FUNGICIDE EPA Registration Number: 264-862",
+      "note": "Newest EPA-stamped label found for this registration on 2026-10-08. The PPLS index page (ordspub.epa.gov) returned 502/503 all day, so the label list was taken from the www3.epa.gov PPLS PDF names a web search returned. REI: 'Do not enter or allow worker entry into treated areas during the REI of 12 hours.' (p5). Default rate 6.5 fl oz is the low end of the wheat and barley range '6.5 - 8.2 fl oz per acre' (p10, p13). Top-level PHI 49 is the longest on the label: 'For sweet corn, do not apply within 7 days before harvest of ears or forage and 49 days before the harvest of fodder.' (p11)."
+    },
+    "caramba-metconazole": {
+      "epaRegistrationNumber": "7969-246",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00246-20130613.pdf",
+      "docDate": "2013-06-13",
+      "page": 1,
+      "quote": "Subject: Caramba Fungicide EPA Registration No. 7969-246",
+      "note": "Newest EPA-stamped label found for this registration on 2026-10-08. The PPLS index page (ordspub.epa.gov) returned 502/503 all day, so the label list was taken from the www3.epa.gov PPLS PDF names a web search returned. A 2019-08-23 stamped label (NVA 2019-04-267-0156) exists in distributor copies but has no www3.epa.gov PDF that could be reached; values were taken from the 2013 label and should be rechecked when PPLS is back. Scanned label, text from OCR. REI: 'during the restricted-entry interval (REI) of 12 hours' (p4). Default rate 13.5 fl oz is the low end of the head scab range 'Suppression Only 13.5 to 17 Head scab' (p10). PHI: Table 1 (p9) gives 30 days for 'Barley, Oats, Rye, Triticale and Wheat', cotton and soybeans and 14 days for sugar beets and sugarcane; corn is 20 days or less (p12). 30 is the longest, so one value."
+    },
+    "miravis-ace": {
+      "epaRegistrationNumber": "100-1645",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+      "docDate": "2020-10-02",
+      "page": 1,
+      "quote": "Product Name: Miravis Ace EPA Registration Number: 100-1645",
+      "note": "Newest EPA-stamped label found for this registration on 2026-10-08. The PPLS index page (ordspub.epa.gov) returned 502/503 all day, so the label list was taken from the www3.epa.gov PPLS PDF names a web search returned. REI: 'Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours.' (p9). Default rate 10.0 fl oz is the low end of the head blight range 'Fusarium head blight 10.0 -13.7*' (p26). Top-level PHI 30 is the longest on the label (bushberry, canola, corn, quinoa, sorghum; p40 use summary). Not the same registration as miravis-pydiflumetofen (100-1601)."
+    },
+    "sphaerex": {
+      "epaRegistrationNumber": "7969-473",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00473-20220225.pdf",
+      "docDate": "2022-02-25",
+      "page": 1,
+      "quote": "Product Name: Sphaerex Fungicide EPA Registration Number: 7969-473",
+      "note": "Newest EPA-stamped label found for this registration on 2026-10-08. The PPLS index page (ordspub.epa.gov) returned 502/503 all day, so the label list was taken from the www3.epa.gov PPLS PDF names a web search returned. REI: 'DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours.' (p5). Rate: 'Head scab (head blight) 7.3 Fusarium spp.' (p9); 'DO NOT apply more than 7.3 fl ozs (0.054 lb metconazole plus 0.089 lb prothioconazole) per application per acre.' (p10). PHI: Table 1 'Minimum Time from Application to Harvest (PHI) (days)' 30 (p9); the label covers only wheat, barley, oats, rye and triticale, so one value."
     }
   },
   "rainfast": {
@@ -2648,6 +2680,50 @@
       "page": 26,
       "quote": "This product is highly toxic to bees and other beneficial insects exposed to direct contact on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds while bees are actively visiting the treatment area.",
       "note": "Same Environmental Hazards text on p5. The \"while bees are actively visiting\" statement maps to dusk-to-dawn-only. The label also says: \"Do not apply this product or allow it to drift to crops where beneficials are part of an Integrated Pest Management strategy.\""
+    },
+    "prosaro-421-sc": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00862-20250324.pdf",
+      "docDate": "2025-03-24",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS This product is toxic to mammals, fish, aquatic invertebrates, and freshwater/estuarines/marine aquatic plants. Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark. Runoff may be hazardous to aquatic organisms in neighboring areas. Do not contaminate water when disposing of equipment washwater or rinsate.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. No legacy pollinatorRisk hint is set, since none is sourced; the small-grain crop plugins are not bee-attractive."
+    },
+    "caramba-metconazole": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00246-20130613.pdf",
+      "docDate": "2013-06-13",
+      "page": 3,
+      "quote": "This pesticide is toxic to birds, mammals, fish and aquatic invertebrates. Drift or runoff may be hazardous to aquatic organisms in water adjacent to treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. No legacy pollinatorRisk hint is set, since none is sourced; the small-grain crop plugins are not bee-attractive."
+    },
+    "miravis-ace": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+      "docDate": "2020-10-02",
+      "page": 7,
+      "quote": "2.3 Environmental Hazards Propiconazole is toxic to fish and shrimp. Pydiflumetofen is toxic to fish, aquatic invertebrates, and oysters and shrimp. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated area.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. No legacy pollinatorRisk hint is set, since none is sourced; the small-grain crop plugins are not bee-attractive."
+    },
+    "sphaerex": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00473-20220225.pdf",
+      "docDate": "2022-02-25",
+      "page": 4,
+      "quote": "This pesticide is toxic to birds, mammals, fish, and aquatic invertebrates. Drift or runoff may be hazardous to aquatic organisms in water adjacent to treated areas.",
+      "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. No legacy pollinatorRisk hint is set, since none is sourced; the small-grain crop plugins are not bee-attractive."
     }
   },
   "formulation": {
@@ -3468,6 +3544,21 @@
       "page": 1,
       "quote": "Resicore® REV herbicide is a (ZC) formulation which is a mixed formulation of CS and SC and is a stable aqueous suspension of microcapsules and solid fine particles, each of which contains one or more active ingredients.",
       "note": "Corteva (registrant) 'Resicore REV Mixing and Handling Guide', footer '©2025 Corteva 020567-3 (02/25)', linked from Corteva's US Resicore REV product page; p2 mixing order also lists 'Resicore® REV herbicide (ZC)'. Label 62719-756 (2022, 2025), the 09/24 tech bulletin and SDS 800080102101 say only 'encapsulated' or 'liquid'. Same class of source as duracor (Corteva US product-page PDF). PPLS formulation field is empty. Panel ruling 2026-10-05 (#553), 3-0."
+    },
+    "prosaro-421-sc": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00862-20250324.pdf",
+      "docDate": "2025-03-24",
+      "page": 3,
+      "quote": "PROTHIOCONAZOLE GROUP 3 FUNGICIDE PROSARO® 421 SC Fungicide ABN: PROVOST® SILVER",
+      "note": "Code 'SC' printed in the EPA-stamped brand name, as for flint-extra ('Gem 500 SC') and ranman ('RANMAN 400SC'). Label body gives no formulation words."
+    },
+    "miravis-ace": {
+      "formulation": "SE",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+      "docDate": "2020-10-02",
+      "page": 3,
+      "quote": "Miravis® Ace is a suspoemulsion (SE) formulation and contains 1.254 lb of active ingredient pydiflumetofen and 1.047 lb ai active ingredient propiconazole per gallon."
     }
   },
   "dataCorrections": {
@@ -3618,6 +3709,14 @@
       "quote": "17-0-0 plus 8.8% Ca CAN-17 ... Derived from: Calcium Nitrate and Ammonium Nitrate. Density: 12.6 pounds per gallon at 68° F.",
       "note": "CAN-17 is a liquid solution: Yara label (YaraLiva_CAN-17_17-0-0_bulk_0125_v002) gives density 12.6 lb/gal; Nutrien label (https://products.nutrien.com/docs/1281, F3320 11/8/22) reads 'CAN 17 Calcium Ammonium Nitrate Solution ... Density 12.7 lb/gal at 68°F, (Specific Gravity 1.5)'. So the plugin's form 'liquid' is CORRECT; keep it. 'gal' matches the other 9 liquid fertilizer plugins. Granular CAN is a different grade (27% N)."
     },
+    "caramba-metconazole": {
+      "defaultUnit": "fl-oz",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00246-20130613.pdf",
+      "docDate": "2013-06-13",
+      "page": 10,
+      "quote": "Suppression Only 13.5 to 17 Head scab",
+      "note": "Table 2 rate column header '(fl ozs/A)' (p10); liquid product measured by volume."
+    },
     "chaparral-aminopyralid-metsulfuron": {
       "defaultUnit": "oz",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
@@ -3642,12 +3741,33 @@
       "quote": "400 dispensers per acre (2.88 fl oz or 72.91 g a.i. per application).",
       "note": "Label rate is a dispenser count (min 200, typically 400 per acre). Schema ratePerAcre.unit cannot be 'count', so the 400 'oz' rate needs a schema-level decision (see contradictions)."
     },
+    "miravis-ace": {
+      "defaultUnit": "fl-oz",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+      "docDate": "2020-10-02",
+      "page": 26,
+      "quote": "Rate Target Disease (fl oz/A) Application Timing Use Directions Fusarium head blight 10.0 -13.7*"
+    },
     "nematode-steinernema-feltiae": {
       "defaultUnit": "count",
       "sourceUrl": "https://www.koppertus.com/entonem/",
       "docDate": "2026-09-25",
       "quote": "50 million - 1 sachet of 50 million in a box ... 500 million - 2 sachets of 250 million in a box ... Soil application: 250,000 to 500,000 nematodes per m²",
       "note": "Producer product page (Koppert Entonem, S. feltiae), not an EPA label; macro-organisms have none. Product is sold and dosed by count of nematodes, not weight. See contradictions: the plugin rate '1 lb' is wrong, and the insecticide ratePerAcre.unit enum (oz|fl-oz|lb|pt|qt) cannot express count."
+    },
+    "prosaro-421-sc": {
+      "defaultUnit": "fl-oz",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00862-20250324.pdf",
+      "docDate": "2025-03-24",
+      "page": 13,
+      "quote": "Wheat Fusarium Head Blight 6.5 - 8.2 fl oz per acre"
+    },
+    "sphaerex": {
+      "defaultUnit": "fl-oz",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00473-20220225.pdf",
+      "docDate": "2022-02-25",
+      "page": 10,
+      "quote": "DO NOT apply more than 7.3 fl ozs (0.054 lb metconazole plus 0.089 lb prothioconazole) per application per acre."
     },
     "trichogramma-egg-parasitoid": {
       "defaultUnit": "count",
@@ -3759,6 +3879,12 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=Captan%2080%20WDG",
       "docDate": "2026-09-25",
       "quote": "OMRI results for 'Captan 80 WDG': no product titled Captan 80 WDG (NOP ruling body)"
+    },
+    "caramba-metconazole": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Caramba",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Caramba' (and the active ingredients): fuzzy matches only, no Caramba product listed"
     },
     "cevya-mefentrifluconazole": {
       "omriListed": false,
@@ -3964,6 +4090,12 @@
       "docDate": "2026-09-25",
       "quote": "OMRI search returned no NOP listing for this product or active ingredient"
     },
+    "miravis-ace": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Miravis+Ace",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Miravis Ace' (and the active ingredients): fuzzy matches only, no Miravis Ace product listed"
+    },
     "miravis-pydiflumetofen": {
       "omriListed": false,
       "sourceUrl": "https://www.omri.org/omri-search?query=Miravis",
@@ -4035,6 +4167,12 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=ProPhyt",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'ProPhyt': 36 NOP results, none is ProPhyt/Helena ProPhyt"
+    },
+    "prosaro-421-sc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Prosaro",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Prosaro' (and the active ingredients): fuzzy matches only, no Prosaro product listed"
     },
     "quadris-flowable": {
       "omriListed": false,
@@ -4119,6 +4257,12 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=Sharpen",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Sharpen': no product titled Sharpen (NOP)"
+    },
+    "sphaerex": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Sphaerex",
+      "docDate": "2026-10-08",
+      "quote": "OMRI search 'Sphaerex' (and the active ingredients): fuzzy matches only, no Sphaerex product listed"
     },
     "switch-625wg": {
       "omriListed": false,
@@ -4310,7 +4454,114 @@
     "$comment": "#640 — label restricted-entry interval for herbicide plugins. One entry per plugin carrying reEntryIntervalHours: { reEntryIntervalHours, sourceUrl, docDate, page, quote }, where the quote is the label's own REI sentence and states the number of hours. Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read (the EPA PPLS host was unreachable from the 2026-10-07 build environment)."
   },
   "phiByCrop": {
-    "$comment": "#661 — label pre-harvest intervals by crop. One list per plugin carrying preHarvestIntervalsByCrop: [{ cropPluginId | cropFamily, preHarvestIntervalDays, sourceUrl, docDate, page, quote }], where the quote names the crop and states the number of days. Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read."
+    "$comment": "#661 — label pre-harvest intervals by crop. One list per plugin carrying preHarvestIntervalsByCrop: [{ cropPluginId | cropFamily, preHarvestIntervalDays, sourceUrl, docDate, page, quote }], where the quote names the crop and states the number of days. Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read.",
+    "miravis-ace": [
+      {
+        "cropPluginId": "wheat-soft-red-winter",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+        "docDate": "2020-10-02",
+        "page": 40,
+        "quote": "Cereal Grains (forage/hay): barley, wheat, oats 13.7 14 7 days 13.7",
+        "note": "Use summary table row (p40); section 7.5 (p27) reads '6) Pre-harvest Interval (PHI): a. Forage and Hay: 7 days b. Grain: DO NOT apply Miravis Ace after Feekes 10.5.4 (kernel watery ripe).' The grain rule is a growth-stage cutoff with no day count, so 7 days is the only cereal day count on the label. Rye and triticale are not in the summary row and stay on the 30 day top-level value."
+      },
+      {
+        "cropPluginId": "wheat-hard-red-spring",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+        "docDate": "2020-10-02",
+        "page": 40,
+        "quote": "Cereal Grains (forage/hay): barley, wheat, oats 13.7 14 7 days 13.7",
+        "note": "Use summary table row (p40); section 7.5 (p27) reads '6) Pre-harvest Interval (PHI): a. Forage and Hay: 7 days b. Grain: DO NOT apply Miravis Ace after Feekes 10.5.4 (kernel watery ripe).' The grain rule is a growth-stage cutoff with no day count, so 7 days is the only cereal day count on the label. Rye and triticale are not in the summary row and stay on the 30 day top-level value."
+      },
+      {
+        "cropPluginId": "wheat-hard-white-winter",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+        "docDate": "2020-10-02",
+        "page": 40,
+        "quote": "Cereal Grains (forage/hay): barley, wheat, oats 13.7 14 7 days 13.7",
+        "note": "Use summary table row (p40); section 7.5 (p27) reads '6) Pre-harvest Interval (PHI): a. Forage and Hay: 7 days b. Grain: DO NOT apply Miravis Ace after Feekes 10.5.4 (kernel watery ripe).' The grain rule is a growth-stage cutoff with no day count, so 7 days is the only cereal day count on the label. Rye and triticale are not in the summary row and stay on the 30 day top-level value."
+      },
+      {
+        "cropPluginId": "barley-grain-thoroughbred",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+        "docDate": "2020-10-02",
+        "page": 40,
+        "quote": "Cereal Grains (forage/hay): barley, wheat, oats 13.7 14 7 days 13.7",
+        "note": "Use summary table row (p40); section 7.5 (p27) reads '6) Pre-harvest Interval (PHI): a. Forage and Hay: 7 days b. Grain: DO NOT apply Miravis Ace after Feekes 10.5.4 (kernel watery ripe).' The grain rule is a growth-stage cutoff with no day count, so 7 days is the only cereal day count on the label. Rye and triticale are not in the summary row and stay on the 30 day top-level value."
+      },
+      {
+        "cropPluginId": "barley-hulless-streaker",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+        "docDate": "2020-10-02",
+        "page": 40,
+        "quote": "Cereal Grains (forage/hay): barley, wheat, oats 13.7 14 7 days 13.7",
+        "note": "Use summary table row (p40); section 7.5 (p27) reads '6) Pre-harvest Interval (PHI): a. Forage and Hay: 7 days b. Grain: DO NOT apply Miravis Ace after Feekes 10.5.4 (kernel watery ripe).' The grain rule is a growth-stage cutoff with no day count, so 7 days is the only cereal day count on the label. Rye and triticale are not in the summary row and stay on the 30 day top-level value."
+      },
+      {
+        "cropPluginId": "oats-grain-jerry",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+        "docDate": "2020-10-02",
+        "page": 40,
+        "quote": "Cereal Grains (forage/hay): barley, wheat, oats 13.7 14 7 days 13.7",
+        "note": "Use summary table row (p40); section 7.5 (p27) reads '6) Pre-harvest Interval (PHI): a. Forage and Hay: 7 days b. Grain: DO NOT apply Miravis Ace after Feekes 10.5.4 (kernel watery ripe).' The grain rule is a growth-stage cutoff with no day count, so 7 days is the only cereal day count on the label. Rye and triticale are not in the summary row and stay on the 30 day top-level value."
+      },
+      {
+        "cropPluginId": "oats-hulless-streaker",
+        "preHarvestIntervalDays": 7,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
+        "docDate": "2020-10-02",
+        "page": 40,
+        "quote": "Cereal Grains (forage/hay): barley, wheat, oats 13.7 14 7 days 13.7",
+        "note": "Use summary table row (p40); section 7.5 (p27) reads '6) Pre-harvest Interval (PHI): a. Forage and Hay: 7 days b. Grain: DO NOT apply Miravis Ace after Feekes 10.5.4 (kernel watery ripe).' The grain rule is a growth-stage cutoff with no day count, so 7 days is the only cereal day count on the label. Rye and triticale are not in the summary row and stay on the 30 day top-level value."
+      }
+    ],
+    "prosaro-421-sc": [
+      {
+        "cropPluginId": "wheat-soft-red-winter",
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00862-20250324.pdf",
+        "docDate": "2025-03-24",
+        "page": 13,
+        "quote": "Wheat Fusarium Head Blight 6.5 - 8.2 fl oz per acre ... Restrictions: Do not apply more than 8.2 fl oz of PROSARO 421 SC FUNGICIDE applied per acre per crop year. Do not apply within 30 days of harvest."
+      },
+      {
+        "cropPluginId": "wheat-hard-red-spring",
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00862-20250324.pdf",
+        "docDate": "2025-03-24",
+        "page": 13,
+        "quote": "Wheat Fusarium Head Blight 6.5 - 8.2 fl oz per acre ... Restrictions: Do not apply more than 8.2 fl oz of PROSARO 421 SC FUNGICIDE applied per acre per crop year. Do not apply within 30 days of harvest."
+      },
+      {
+        "cropPluginId": "wheat-hard-white-winter",
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00862-20250324.pdf",
+        "docDate": "2025-03-24",
+        "page": 13,
+        "quote": "Wheat Fusarium Head Blight 6.5 - 8.2 fl oz per acre ... Restrictions: Do not apply more than 8.2 fl oz of PROSARO 421 SC FUNGICIDE applied per acre per crop year. Do not apply within 30 days of harvest."
+      },
+      {
+        "cropPluginId": "barley-grain-thoroughbred",
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00862-20250324.pdf",
+        "docDate": "2025-03-24",
+        "page": 10,
+        "quote": "Barley Fusarium Head Blight (Suppression) ... Restrictions: Do not apply more than 8.2 fl oz of Prosaro 421 SC Fungicide per acre per crop year. Do not apply within 30 days of harvest."
+      },
+      {
+        "cropPluginId": "barley-hulless-streaker",
+        "preHarvestIntervalDays": 30,
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00862-20250324.pdf",
+        "docDate": "2025-03-24",
+        "page": 10,
+        "quote": "Barley Fusarium Head Blight (Suppression) ... Restrictions: Do not apply more than 8.2 fl oz of Prosaro 421 SC Fungicide per acre per crop year. Do not apply within 30 days of harvest."
+      }
+    ]
   },
   "rate": {
     "$comment": "#737 herbicide rate provenance (swarm 2026-10-07, 3-0). One entry per herbicide plugin marked rateProvenance \"label\": { ratePerAcre: { amount, unit }, sourceUrl, docDate, page, quote }, where the quote is the label's own rate sentence and states the amount. Every other shipped herbicide default rate carries rateProvenance \"fallback\" and is shown as \"Typical rate, not from the label. Check the label before mixing.\" Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read; notes elsewhere in this file that say a plugin rate is within a label range are summaries, not quotes."

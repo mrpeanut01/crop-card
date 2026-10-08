@@ -24,10 +24,10 @@ export function blockNameOf(
  *  no name for is shown as is. */
 export function cropNamesFor(
   pluginIds: readonly string[],
-  englishNames: Readonly<Record<string, string>>,
+  englishNames: Readonly<Record<string, string>> | null | undefined,
   locale: string | null | undefined
 ): string[] {
-  return pluginIds.map((id) => cropDisplayName(id, englishNames[id] ?? id, locale));
+  return pluginIds.map((id) => cropDisplayName(id, englishNames?.[id] ?? id, locale));
 }
 
 /** Sentences as one line with a space between each, skipping empty ones. */
@@ -41,7 +41,7 @@ export function joinSentences(...parts: ReadonlyArray<string | null | undefined>
 /** The context strip's crop line: one crop by name, several as a count. */
 export function cropContextLabel(
   pluginIds: readonly string[],
-  englishNames: Readonly<Record<string, string>>,
+  englishNames: Readonly<Record<string, string>> | null | undefined,
   locale: string | null | undefined,
   countLabel: (count: number) => string
 ): string {

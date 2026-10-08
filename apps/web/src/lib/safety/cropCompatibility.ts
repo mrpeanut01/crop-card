@@ -20,9 +20,14 @@
  * instead of one per (product, crop). The detail carries `crops[]` so the
  * UI can render a single STOP card listing every affected crop.
  * Pre/post-emergent awareness is half 2 and not in this pass.
+ *
+ * #768: an active ingredient listed in `ingredientLethality.ts` adds the
+ * families its label shows it harms to its class's row. The violation is
+ * still reported under that ingredient's chemistry class.
  */
 
 import { killsFamily, type CropFamily } from './cropFamilyLethality';
+import { ingredientKillsFamily } from './ingredientLethality';
 import type {
   ChemistryClass,
   CropIncompatibilityCrop,
@@ -53,8 +58,13 @@ export function checkCropCompatibility(
       if (!crop.cropFamily) continue;
       if (traitOverrideActive(product, crop)) continue;
 
-      const killing = uniqueClasses(product).filter((cls) =>
-        killsFamily(cls, crop.cropFamily as CropFamily)
+      const family = crop.cropFamily as CropFamily;
+      const killing = uniqueClasses(product).filter(
+        (cls) =>
+          killsFamily(cls, family) ||
+          product.activeIngredients.some(
+            (ai) => ai.chemistryClass === cls && ingredientKillsFamily(ai.name, family)
+          )
       );
       for (const cls of killing) {
         const list = grouped.get(cls) ?? [];

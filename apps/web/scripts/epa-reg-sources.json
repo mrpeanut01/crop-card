@@ -4583,5 +4583,130 @@
       },
       "note": "PDF pages of the EPA-stamped PPLS file (EPA letter dated February 19, 2026). The front panel also reads 'EPTC GROUP 15 HERBICIDE' (p3) and the active ingredient is 'EPTC: S-ethyl dipropylthiocarbamate' (p3). Legume forage is the only app family the label covers as a family. Other families stay lethal because the label leaves out or warns about crops in them: 'Do not use EPTAM 7E on Adzuki beans, cowpeas (black-eyed peas, black-eyed beans), soybeans, lima beans, Mung beans, Garbanzo beans or other flat-podded beans except Romano.' (p11), 'Do not plant cabbage for 60 days after application.' (p13), 'Volunteer grains* (Barley, Oats, Wheat)' among the weeds controlled (p5), tomatoes only as a Northern California lay-by (p15), and 'All flowering bulbs, salvia, phlox, snap-dragon and ornamental pepper are susceptible to injury from an application of EPTAM 7E.' (p15). The WSSA mechanism-of-action paper at wssa.net still files thiocarbamates as Group 8; the current Eptam label says Group 15, which is the group shown. Corn gluten meal stays unclassified: it is FIFRA 25(b) exempt, has no EPA label, and the WSSA paper assigns it no group."
     }
+  },
+  "ingredientLethality": {
+    "$comment": "#768 per-active-ingredient lethality in apps/web/src/lib/safety/ingredientLethality.ts. One entry per ingredient key: { killsFamilies, sources: [{ pluginId, sourceUrl, docDate, page, quote }], labelledFamilies?, note }. killsFamilies are only added to the ingredient's chemistry-class row, never removed. A grass family is added when a label carrying the ingredient shows it controls, injures or must not be followed by a crop of that family and no label carrying it is registered on a crop of that family. Pages are PDF pages of the EPA-stamped PPLS file. Checked by ingredientLethality.test.ts.",
+    "nicosulfuron": {
+      "killsFamilies": ["cereal-grain", "cover-grass", "forage-grass"],
+      "sources": [
+        {
+          "pluginId": "accent-q-nicosulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00773-20241107.pdf",
+          "docDate": "2024-11-07",
+          "page": 3,
+          "quote": "For use on Field Corn grown for grain, seed or silage, Popcorn, and Sweet Corn."
+        },
+        {
+          "pluginId": "accent-q-nicosulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00773-20241107.pdf",
+          "docDate": "2024-11-07",
+          "page": 18,
+          "quote": "When applied as directed, Accent Q will control the following weeds: ... Ryegrass (Italian, perennial)† 6” ... Timothy 6” Volunteer cereals (barley, oats, rye, triticale, wheat) 6”**"
+        }
+      ],
+      "note": "Corn is labelled, so it stays as the sulfonylurea class has it. Timothy is a forage-grass crop, barley, oats, rye, triticale and wheat are cereal-grain crops, and cereal rye and oats are cover-grass crops."
+    },
+    "thiencarbazone": {
+      "killsFamilies": ["cereal-grain", "cover-grass", "forage-grass"],
+      "sources": [
+        {
+          "pluginId": "capreno-thiencarbazone-tembotrione",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01063-20260210.pdf",
+          "docDate": "2026-02-10",
+          "page": 16,
+          "quote": "SC 547 Herbicide effectively controls the following grass weeds when applied at 3 fl oz/A. ... Millet, wild proso Panicum miliaceum 6 C 6 C C ... Shattercane/ Sorghum bicolor 12 C 12 C C ... Wild Oat Avena fatua 6 C 6 C C"
+        },
+        {
+          "pluginId": "capreno-thiencarbazone-tembotrione",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01063-20260210.pdf",
+          "docDate": "2026-02-10",
+          "page": 7,
+          "quote": "0 Months2 Field corn (yellow dent) None 4 Months2 Wheat, triticale None 10 Months2 Barley, Soybean, Cotton, White corn3, Sweet corn3, Popcorn3, Sorghum3 4, Spring Oats3,5"
+        }
+      ],
+      "note": "The PPLS label for 264-1063 is printed under the name SC 547 Herbicide; it is the Capreno registration. The grass control in the table is for the product, which also contains tembotrione; the more protective reading puts it on thiencarbazone too. Grain sorghum, sudangrass and sorghum-sudangrass are Sorghum bicolor, the species of shattercane; proso millet is a cereal-grain crop and Japanese millet a cover-grass crop. Field corn is labelled, so corn stays as the class has it."
+    },
+    "metsulfuron": {
+      "killsFamilies": ["corn", "cereal-grain", "cover-grass"],
+      "labelledFamilies": ["forage-grass"],
+      "sources": [
+        {
+          "pluginId": "chaparral-aminopyralid-metsulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+          "docDate": "2024-09-27",
+          "page": 18,
+          "quote": "x Crop Rotation: Do not rotate to any crop from rangeland, permanent pasture, or CRP acres within one year following treatment. Cereals and corn can be planted one year after treatment."
+        },
+        {
+          "pluginId": "chaparral-aminopyralid-metsulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+          "docDate": "2024-09-27",
+          "page": 20,
+          "quote": "Under certain conditions, Chaparral could remain in the soil for 34 months or more injuring wheat and barley."
+        },
+        {
+          "pluginId": "chaparral-aminopyralid-metsulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+          "docDate": "2024-09-27",
+          "page": 16,
+          "quote": "x Do not overseed ryegrass for 4 months after treatment."
+        }
+      ],
+      "labelledUse": {
+        "pluginId": "chaparral-aminopyralid-metsulfuron",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+        "docDate": "2024-09-27",
+        "page": 22,
+        "quote": "Chaparral may be applied to established native grasses such as wheatgrasses, bluestems, and grama, and to other established pasture grasses such as bermudagrass, bluegrass, orchardgrass, bromegrass, and tall fescue"
+      },
+      "note": "Forage-grass is not added: Chaparral is labelled on established pasture grasses (swarm 2026-10-07, 3-0, kept the class row non-lethal to forage-grass so this use works). The same label also says 'x Do not use on Timothy hay or other cool-season grasses grown for hay.' (p16); the kill matrix works by family and cannot tell a timothy or orchardgrass hay field from a pasture, so that restriction is not enforced by the kernel."
+    },
+    "chlorimuron": {
+      "killsFamilies": ["corn", "cereal-grain", "cover-grass", "forage-grass"],
+      "sources": [
+        {
+          "pluginId": "classic-chlorimuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00681-20200924.pdf",
+          "docDate": "2020-09-24",
+          "page": 24,
+          "quote": "Rotational Intervals (Months) Following the Use of CLASSIC®* Crop Interval 1 Interval 2 Interval 3 Interval 4 Soybeans Anytime Anytime Anytime Anytime ... Cereal grains Pasture grasses (including Fescue 3 3 3 4 and ryegrass) ... Field Corn** 9 9 8*** 10**** Sweet Corn + 9 18§ 18§ 18 Popcorn 10 Sorghum 15 9 9 12"
+        }
+      ],
+      "note": "Classic is labelled on soybeans and peanuts; no grass crop is labelled, and every grass crop in the rotation table must wait 3 months or more."
+    },
+    "thifensulfuron": {
+      "killsFamilies": ["forage-grass"],
+      "labelledFamilies": ["corn", "cereal-grain", "cover-grass"],
+      "sources": [
+        {
+          "pluginId": "harmony-sg-thifensulfuron",
+          "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+          "docDate": "2020-04-17",
+          "page": 7,
+          "quote": "Carefully observe all sprayer cleanup instructions both prior to and after using this product, as spray tank residue may damage crops other than wheat, barley, oats, triticale, corn or soybeans."
+        }
+      ],
+      "labelledUse": {
+        "pluginId": "harmony-sg-thifensulfuron",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+        "docDate": "2020-04-17",
+        "page": 4,
+        "quote": "HARMONY® SG is for use on soybeans, corn, cereals, pre- plant burndown, post-harvest burndown, and fallow in"
+      },
+      "note": "Corn and cereal-grain are labelled (wheat, barley, oats, triticale, field corn), and oats is also a cover-grass crop, so those families stay as the class has them. The label carries no pasture or hay use. The cereal-grain family also holds rye, sorghum and millets, which the label does not name; the kill matrix works by family, so a block of those is not stopped."
+    },
+    "halosulfuron": {
+      "killsFamilies": [],
+      "labelledFamilies": ["corn", "cereal-grain", "forage-grass"],
+      "sources": [],
+      "labelledUse": {
+        "pluginId": "permit",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00002-20250911.pdf",
+        "docDate": "2025-09-11",
+        "page": 12,
+        "quote": "Postemergence Broadcast – Apply PERMIT as a broadcast application to established Pasture, ... Rangeland, CRP & Forage Grasses/Hay."
+      },
+      "note": "No row: Permit is labelled on corn, grain sorghum, proso millet and established pasture and forage grasses/hay, so halosulfuron keeps the class row."
+    }
   }
 }

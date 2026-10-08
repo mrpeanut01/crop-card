@@ -15,6 +15,7 @@
   import type { SetupPlantingResult, SetupSprayerResult } from '$lib/setup/types';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import { killsFamily, type CropFamily } from '$lib/safety/cropFamilyLethality';
+  import { ingredientKillsFamily } from '$lib/safety/ingredientLethality';
   import { CHEMISTRY_CLASSES, type ChemistryClass } from '$lib/safety/types';
   import { herbicideRatePreview } from '$lib/dilution/ratePreview';
   import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
@@ -258,6 +259,11 @@
       if (!cls || !(CHEMISTRY_CLASSES as readonly string[]).includes(cls)) continue;
       for (const f of pickedFamilies) {
         if (killsFamily(cls as ChemistryClass, f as CropFamily)) out.add(f);
+      }
+    }
+    for (const name of h.activeNames) {
+      for (const f of pickedFamilies) {
+        if (ingredientKillsFamily(name, f as CropFamily)) out.add(f);
       }
     }
     return [...out].sort();

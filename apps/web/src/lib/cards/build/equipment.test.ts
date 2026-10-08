@@ -18,7 +18,7 @@ describe('buildEquipmentCard', () => {
     expect(fact(card, 'Calibrated')).toBe('Apr 2');
     expect(fact(card, 'Tank')).toBe('50 gal');
     expect(fact(card, 'Last decon')).toBe('None on record');
-    expect(fact(card, 'Last load')).toBe('sulfonylurea, decon due');
+    expect(fact(card, 'Last load')).toBe('Sulfonylurea (HRAC 2), decon due');
     expect(card.next).toEqual({ label: 'Run decon', href: '/spray/decon?sprayer=eq_boom' });
   });
 

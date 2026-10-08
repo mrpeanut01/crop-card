@@ -48,8 +48,7 @@
       <div class="item">
         <div class="title">{s.title}</div>
         <div class="meta">
-          {#if s.crop}{s.crop} ·
-          {/if}<span class="mono">{s.window}</span>
+          {#if s.crop}{`${s.crop} · `}{/if}<span class="mono">{s.window}</span>
         </div>
         {#if s.typical}<TypicalTimingNote />{/if}
         {#if onSchedule}

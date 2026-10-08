@@ -72,4 +72,11 @@ describe('TodayHero skip', () => {
     expect(screen.getByText(/Pick Week or Month below/)).toBeInTheDocument();
     expect(screen.queryByText(/week below shows/)).toBeNull();
   });
+
+  it('never says all caught up while animal care is on the list (#683)', () => {
+    render(TodayHero, { action: null, aiEnabled: false, careDue: 1 });
+    expect(screen.getByText('An animal care job is on the list.')).toBeInTheDocument();
+    expect(screen.queryByText('All caught up.')).toBeNull();
+    expect(screen.queryByText(/Nothing's overdue/)).toBeNull();
+  });
 });

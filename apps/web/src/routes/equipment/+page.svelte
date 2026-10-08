@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import { equipmentTypeDescription, equipmentTypeLabel } from '$lib/equipment/typeLabel';
   import { untrack } from 'svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
@@ -311,7 +312,9 @@
             <dt>{tr('equip.lastLoad')}</dt>
             <dd>
               {#if e.state.lastChemistryClass}
-                <span class="warn">{e.state.lastChemistryClass}</span>
+                <span class="warn"
+                  >{chemistryClassLabel(e.state.lastChemistryClass, data.locale)}</span
+                >
                 <a class="link" href="/spray/decon?sprayer={encodeURIComponent(e.id)}"
                   >{tr('equip.deconLink')}</a
                 >

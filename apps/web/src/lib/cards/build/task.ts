@@ -1,4 +1,4 @@
-import { formatDueDay, formatInstant } from '$lib/prefs';
+import { dueYmd, formatDueDay, formatInstant, withYearIfOther, ymdInZone } from '$lib/prefs';
 import { labelForTaskCategory, type TaskCategory } from '$lib/plan/taskCategory';
 import {
   TASK_STATUS_TONE,
@@ -69,7 +69,13 @@ const KIND_KICKER = {
 
 function whenText(task: TaskCardInput, status: TaskStatus, opts: ResolvedOptions): string {
   const { tr } = opts;
-  const day = formatDueDay(task.scheduledFor, opts.prefs, 'month-day', { weekday: 'short' });
+  const tz = opts.prefs.timeZone;
+  const day = formatDueDay(
+    task.scheduledFor,
+    opts.prefs,
+    'month-day',
+    withYearIfOther(dueYmd(task.scheduledFor, tz), ymdInZone(opts.now, tz), { weekday: 'short' })
+  );
   switch (status) {
     case 'late':
       return tr('cards.task.wasDue', { day });

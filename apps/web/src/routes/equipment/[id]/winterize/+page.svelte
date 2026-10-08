@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import { goto, invalidateAll } from '$app/navigation';
   import { createT, type MessageKey } from '$lib/i18n';
   import { equipmentTypeLabel } from '$lib/equipment/typeLabel';
@@ -148,7 +149,7 @@
   </p>
   {#if data.sprayer?.lastChemistryClass}
     <p class="warn" lang="en" data-english-only="safety">
-      Last carried: <strong>{data.sprayer.lastChemistryClass}</strong>
+      Last carried: <strong>{chemistryClassLabel(data.sprayer.lastChemistryClass)}</strong>
       {#if protocol.strict}<span class="strict-pill">strict SOP</span>{/if}
     </p>
   {:else}

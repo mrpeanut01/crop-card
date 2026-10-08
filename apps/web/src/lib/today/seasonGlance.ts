@@ -11,6 +11,7 @@
 
 import type { CalendarEvent } from '$lib/calendar/engine';
 import { zonedYearStartMs } from '$lib/exports/dateRange';
+import { t } from '$lib/i18n';
 
 export interface SeasonGlance {
   activePlantings: number;
@@ -51,4 +52,30 @@ export function deriveSeasonGlance(inputs: DeriveSeasonGlanceInputs): SeasonGlan
     spraysYTD: inputs.spraysYTD,
     daysToNextHarvest
   };
+}
+
+/** #628: the three tiles as [number, label], with each label singular or
+ *  plural for its own count. */
+export function glanceCells(
+  glance: SeasonGlance,
+  locale?: string | null
+): Array<{ id: string; value: string; label: string }> {
+  const next = glance.daysToNextHarvest;
+  return [
+    {
+      id: 'active',
+      value: String(glance.activePlantings),
+      label: t(locale, 'today.glance.active', { count: glance.activePlantings })
+    },
+    {
+      id: 'sprays',
+      value: String(glance.spraysYTD),
+      label: t(locale, 'today.glance.sprays', { count: glance.spraysYTD })
+    },
+    {
+      id: 'nextHarvest',
+      value: next === null ? '—' : String(next),
+      label: t(locale, 'today.glance.nextHarvest', next === null ? undefined : { count: next })
+    }
+  ];
 }

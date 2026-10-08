@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { deriveWinterizeAlerts, startOfSeason, type SprayerWinterizeInput } from './winterizeAlert';
+import {
+  deriveWinterizeAlerts,
+  endOfSpringWindow,
+  startOfSeason,
+  type SprayerWinterizeInput
+} from './winterizeAlert';
 
-const NOW = new Date('2026-07-04T12:00:00Z').getTime();
+const NOW = new Date('2026-04-15T12:00:00Z').getTime();
 const SEASON_START = startOfSeason(NOW, 'America/New_York');
 const LAST_SEASON = new Date('2025-08-01T00:00:00Z').getTime();
-const THIS_SEASON = new Date('2026-05-01T00:00:00Z').getTime();
+const THIS_SEASON = new Date('2026-03-01T00:00:00Z').getTime();
 
 function sprayer(over: Partial<SprayerWinterizeInput> = {}): SprayerWinterizeInput {
   return {
@@ -52,9 +57,17 @@ describe('deriveWinterizeAlerts (UC-45 spring reminder)', () => {
     expect(out).toHaveLength(0);
   });
 
-  it('activity via decon or calibration also triggers the reminder', () => {
+  it('activity via decon also triggers the reminder', () => {
     expect(deriveWinterizeAlerts([sprayer({ lastDeconAt: THIS_SEASON })], NOW)).toHaveLength(1);
-    expect(deriveWinterizeAlerts([sprayer({ calibrationDate: THIS_SEASON })], NOW)).toHaveLength(1);
+  });
+
+  it('recalibrating this season clears it (#651)', () => {
+    expect(
+      deriveWinterizeAlerts(
+        [sprayer({ lastSprayedAt: THIS_SEASON, calibrationDate: THIS_SEASON })],
+        NOW
+      )
+    ).toHaveLength(0);
   });
 
   it('surfaces uncalibrated flag when calibration is missing', () => {
@@ -92,5 +105,42 @@ describe('deriveWinterizeAlerts (UC-45 spring reminder)', () => {
     });
     expect(deriveWinterizeAlerts([s], now, undefined, 'America/New_York')).toHaveLength(1);
     expect(deriveWinterizeAlerts([s], now, undefined, 'UTC')).toHaveLength(0);
+  });
+});
+
+describe('deriveWinterizeAlerts with prior-season last use (#651)', () => {
+  const LAST_OCT = Date.parse('2025-10-10T12:00:00Z');
+  const LAST_NOV = Date.parse('2025-11-15T12:00:00Z');
+  const LAST_AUG = Date.parse('2025-08-01T12:00:00Z');
+
+  it('does not flag a sprayer winterized last fall after its last use', () => {
+    const s = sprayer({ lastSprayedAt: THIS_SEASON, winterizedAt: LAST_NOV });
+    expect(deriveWinterizeAlerts([s], NOW, new Map([['s1', LAST_NOV]]))).toHaveLength(0);
+    expect(deriveWinterizeAlerts([s], NOW, new Map([['s1', LAST_OCT]]))).toHaveLength(0);
+  });
+
+  it('flags a sprayer used again after it was winterized', () => {
+    const s = sprayer({ lastSprayedAt: THIS_SEASON, winterizedAt: LAST_AUG });
+    const out = deriveWinterizeAlerts([s], NOW, new Map([['s1', LAST_OCT]]));
+    expect(out).toHaveLength(1);
+    expect(out[0].neverWinterized).toBe(false);
+  });
+
+  it('flags a used sprayer that was never winterized', () => {
+    const s = sprayer({ lastSprayedAt: THIS_SEASON });
+    const out = deriveWinterizeAlerts([s], NOW, new Map([['s1', LAST_OCT]]));
+    expect(out.map((a) => a.neverWinterized)).toEqual([true]);
+  });
+
+  it('is a spring reminder only: gone from July 1 on the farm calendar', () => {
+    const s = sprayer({ lastSprayedAt: THIS_SEASON });
+    const used = new Map([['s1', LAST_OCT]]);
+    const july1 = endOfSpringWindow(startOfSeason(NOW, 'America/New_York'), 'America/New_York');
+    expect(july1).toBe(Date.parse('2026-07-01T04:00:00Z'));
+    expect(deriveWinterizeAlerts([s], july1 - 1, used, 'America/New_York')).toHaveLength(1);
+    expect(deriveWinterizeAlerts([s], july1, used, 'America/New_York')).toHaveLength(0);
+    expect(
+      deriveWinterizeAlerts([s], Date.parse('2026-10-07T12:00:00Z'), used, 'America/New_York')
+    ).toHaveLength(0);
   });
 });

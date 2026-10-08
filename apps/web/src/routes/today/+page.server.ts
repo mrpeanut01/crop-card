@@ -35,7 +35,7 @@ import { loadTodayWeather } from '$lib/server/todayWeather';
 import { derivePriorityAction } from '$lib/today/priorityAction';
 import { deriveSeasonGlance, startOfYear } from '$lib/today/seasonGlance';
 import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
-import { equipmentIdsActiveBefore, listEquipment } from '$lib/db/equipment';
+import { equipmentLastActiveBefore, listEquipment } from '$lib/db/equipment';
 import { prefsFor, farmTimeZone } from '$lib/db/userProfile';
 import { hasOtherAssignableMember } from '$lib/db/users';
 import { intlLocale, todayYmd, ymdInZone } from '$lib/prefs';
@@ -48,6 +48,7 @@ import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { getSetting } from '$lib/db/settings';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { coveredLogAlerts, healthPlugins } from '$lib/server/animalRecords';
+import { withOlderOverdue } from '$lib/today/olderOverdue';
 import { materializeCareTasks } from '$lib/server/carePlans';
 import { loadTodayAdvice } from '$lib/server/todayAdvice.server';
 import type { TodayAdviceCard } from '$lib/today/advice';
@@ -144,6 +145,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const careForm = await careCloseFormData(animalCare);
   const notCare = (t: { category?: string }) => t.category !== 'animal-care';
 
+  // Every open task due by the end of the hero's horizon, however late
+  // (#742): the hero and the Day deck read older overdue work from here.
+  const openTasks = listTasks({ toMs: now + 14 * DAY_MS, status: 'open' }).filter(notCare);
+
   let deckTasks: ReturnType<typeof listTasks> = [];
   let calendar: {
     view: 'week' | 'month';
@@ -156,14 +161,19 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   let season: ReturnType<typeof loadSeasonView> | null = null;
 
   if (view === 'day') {
-    deckTasks = listTasks({
-      fromMs: dayStart - OVERDUE_LOOKBACK_DAYS * DAY_MS,
-      toMs: dayStart + DAY_DECK_HORIZON_DAYS * DAY_MS
-    }).filter((t) => {
-      if (!notCare(t)) return false;
-      const closedAt = t.completedAt ?? t.abortedAt;
-      return closedAt === undefined || ymdInZone(closedAt, prefs.timeZone) === today;
-    });
+    const deckFrom = dayStart - OVERDUE_LOOKBACK_DAYS * DAY_MS;
+    deckTasks = withOlderOverdue(
+      listTasks({
+        fromMs: deckFrom,
+        toMs: dayStart + DAY_DECK_HORIZON_DAYS * DAY_MS
+      }).filter((t) => {
+        if (!notCare(t)) return false;
+        const closedAt = t.completedAt ?? t.abortedAt;
+        return closedAt === undefined || ymdInZone(closedAt, prefs.timeZone) === today;
+      }),
+      openTasks,
+      deckFrom
+    );
   } else if (view === 'week' || view === 'month') {
     const rawAt = url.searchParams.get('at');
     const anchor = isYmd(rawAt) ? rawAt : today;
@@ -211,15 +221,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   // Phase 25e (#97) — priorityAction + weather + seasonGlance.
   const blockNameById = new Map(blocks.map((b) => [b.id, b.name]));
-  // Re-fetch the broader open-primary list (last 30d → +14d) so the
-  // hero card never shows null just because the user is on the "season"
-  // tab where the window starts later.
-  const allOpenPrimaries = listTasks({
-    fromMs: now - 30 * DAY_MS,
-    toMs: now + 14 * DAY_MS,
-    status: 'open',
-    kind: 'primary'
-  }).filter(notCare);
+  // Open primaries of any age (#742), so the hero never reads "nothing's
+  // overdue" while a task is past due, whatever view is open.
+  const allOpenPrimaries = openTasks.filter((t) => t.kind === 'primary');
   const priorityAction = derivePriorityAction({
     openPrimaries: allOpenPrimaries,
     derivedEvents: allEvents,
@@ -262,7 +266,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const winterizeAlerts = deriveWinterizeAlerts(
     sprayers,
     now,
-    equipmentIdsActiveBefore(startOfSeason(now, farmZone)),
+    equipmentLastActiveBefore(startOfSeason(now, farmZone)),
     farmZone
   );
 

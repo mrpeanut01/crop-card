@@ -198,4 +198,15 @@ describe('derivePriorityAction', () => {
     expect(result?.ctaLabel).toBe('Mark done');
     expect(result?.markDone).toBe(true);
   });
+
+  it('shows the year on a due day from an earlier year (#747)', () => {
+    const result = derivePriorityAction({
+      openPrimaries: [task({ scheduledFor: Date.UTC(2025, 9, 8) })],
+      derivedEvents: [],
+      blockNameById: blocks,
+      now: NOW
+    });
+    expect(result?.scope).toContainEqual(['Scheduled', 'Wed, Oct 8, 2025']);
+    expect(result?.overdueDays).toBe(228);
+  });
 });

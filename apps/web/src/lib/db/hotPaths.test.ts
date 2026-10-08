@@ -20,7 +20,7 @@ import {
 import { dbChangeMarker, requestMemo } from './requestMemo';
 import { countPlantings, createBlock, currentPlantingsCutoff, listBlocks } from './blocks';
 import { listCrops } from './crops';
-import { equipmentIdsActiveBefore } from './equipment';
+import { equipmentIdsActiveBefore, equipmentLastActiveBefore } from './equipment';
 import { countTasks, listTasks } from './tasks';
 import { plantingsInYear } from '$lib/plan/seasonStart';
 
@@ -224,6 +224,14 @@ describe('equipmentIdsActiveBefore', () => {
                 .map((r) => r.id)
             );
             expect(equipmentIdsActiveBefore(before)).toEqual(expected);
+            const lastBefore = new Map<string, number>();
+            for (const r of db
+              .select({ id: equipmentLog.equipmentId, at: equipmentLog.occurredAt })
+              .from(equipmentLog)
+              .where(withTenant(equipmentLog, lt(equipmentLog.occurredAt, new Date(before))))
+              .all())
+              lastBefore.set(r.id, Math.max(lastBefore.get(r.id) ?? 0, r.at.getTime()));
+            expect(equipmentLastActiveBefore(before)).toEqual(lastBefore);
           });
         }
       ),

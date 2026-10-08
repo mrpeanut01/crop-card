@@ -120,7 +120,7 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.empty.none': 'No hay nada en la lista para hoy.',
   'today.empty.nothingDue': 'Nada vence hoy. Semana y Mes muestran lo que viene.',
   'today.empty.nothingPlanted':
-    'Agrega un área en la página Plan y siembra algo, y las tareas que necesite aparecerán aquí.',
+    'Planea un cultivo en la página Plan y aquí aparecerán los trabajos que necesita.',
   'today.empty.planCrop': 'Planear un cultivo',
   'today.empty.suggestionsBelow': 'Las sugerencias de tu calendario de cultivos están abajo.',
   'today.err.needsSignal':
@@ -154,9 +154,12 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.forecast.whereBlock': 'tu primer bloque en el mapa',
   'today.forecast.whereFarm': 'la ubicación de tu granja',
   'today.forecast.wind': 'Viento {speed}',
-  'today.glance.active': 'siembras activas',
-  'today.glance.nextHarvest': 'días para la próxima cosecha',
-  'today.glance.sprays': 'aplicaciones en el año',
+  'today.glance.active.one': 'siembra activa',
+  'today.glance.active.other': 'siembras activas',
+  'today.glance.nextHarvest.one': 'día para la próxima cosecha',
+  'today.glance.nextHarvest.other': 'días para la próxima cosecha',
+  'today.glance.sprays.one': 'aplicación en el año',
+  'today.glance.sprays.other': 'aplicaciones en el año',
   'today.glance.title': 'La temporada de un vistazo',
   'today.greeting.afternoon': 'Buenas tardes.',
   'today.greeting.evening': 'Buenas noches.',
@@ -172,6 +175,10 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.gs.show': 'Mostrar',
   'today.gs.showLess': 'Mostrar menos',
   'today.hero.askClaude': 'Pregunta a Claude · "¿Por qué esto? ¿Cómo se ve terminada?"',
+  'today.hero.careDue.one': 'Hay un cuidado de animales en la lista.',
+  'today.hero.careDue.other': 'Hay {count} cuidados de animales en la lista.',
+  'today.hero.careDueBody':
+    'Míralos en Cuidado de animales, más abajo. No hay otro trabajo atrasado ni que hacer en las próximas 24 horas.',
   'today.hero.caughtUp': 'Todo al día.',
   'today.hero.caughtUpBody':
     'Nada está atrasado y no hay nada que hacer en las próximas 24 horas. Elige Semana o Mes abajo para ver lo que viene.',
@@ -255,11 +262,11 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.skip.why': '¿Por qué la omites?',
   'today.stock.expiring.one': '{count} lote vence en 30 días:',
   'today.stock.expiring.other': '{count} lotes vencen en 30 días:',
-  'today.stock.expiryLine.one': '{balance} {unit}, queda {count} día',
-  'today.stock.expiryLine.other': '{balance} {unit}, quedan {count} días',
+  'today.stock.expiryLine.one': '{balance}, queda {count} día',
+  'today.stock.expiryLine.other': '{balance}, quedan {count} días',
   'today.stock.low.one': '{count} artículo con pocas existencias:',
   'today.stock.low.other': '{count} artículos con pocas existencias:',
-  'today.stock.lowLine': '{onHand} {unit} en existencia (reordenar en {threshold} {unit})',
+  'today.stock.lowLine': '{onHand} en existencia (reordenar en {threshold})',
   'today.subtitle.firstThen': 'Una cosa para hacer primero, y luego {count} más en la lista.',
   'today.subtitle.none': 'No hay nada programado para hoy.',
   'today.subtitle.noneDay':
@@ -472,9 +479,9 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.winter.aria': 'Recordatorio de preparación para el invierno',
   'today.winter.heading': 'Revisión de invierno',
   'today.winter.body.one':
-    'Se usó una aspersora esta temporada pero no se preparó para el invierno después de la anterior. Recalibra (UC-10) y prepárala para el invierno antes de guardarla.',
+    'Una aspersora salió del almacenamiento sin prepararse para el invierno después de su último uso. Revisa que pasó el invierno limpia y recalíbrala (UC-10) antes de la próxima aplicación.',
   'today.winter.body.other':
-    'Se usaron aspersoras esta temporada pero no se prepararon para el invierno después de la anterior. Recalíbralas (UC-10) y prepáralas para el invierno antes de guardarlas.',
+    'Unas aspersoras salieron del almacenamiento sin prepararse para el invierno después de su último uso. Revisa que pasaron el invierno limpias y recalíbralas (UC-10) antes de la próxima aplicación.',
   'today.winter.uncalibrated': 'Sin calibrar',
   'today.winter.never': 'Nunca preparada para el invierno',
   'today.empty.planSpray': 'Planear una aplicación',

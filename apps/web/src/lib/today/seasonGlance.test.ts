@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deriveSeasonGlance, startOfYear } from './seasonGlance';
+import { deriveSeasonGlance, glanceCells, startOfYear } from './seasonGlance';
 import type { CalendarEvent } from '$lib/calendar/engine';
 
 const NOW = new Date('2026-05-24T15:00:00Z').getTime();
@@ -113,5 +113,31 @@ describe('startOfYear', () => {
     expect(startOfYear(Date.parse('2027-01-01T03:00:00Z'), 'Asia/Tokyo')).toBe(
       Date.parse('2026-12-31T15:00:00Z')
     );
+  });
+});
+
+describe('glanceCells (#628)', () => {
+  it('reads singular for a count of 1 and plural otherwise', () => {
+    const one = glanceCells({ activePlantings: 1, spraysYTD: 1, daysToNextHarvest: 1 });
+    expect(one.map((c) => `${c.value} ${c.label}`)).toEqual([
+      '1 active planting',
+      '1 spray YTD',
+      '1 day to next harvest'
+    ]);
+    const many = glanceCells({ activePlantings: 0, spraysYTD: 4, daysToNextHarvest: null });
+    expect(many.map((c) => `${c.value} ${c.label}`)).toEqual([
+      '0 active plantings',
+      '4 sprays YTD',
+      '— days to next harvest'
+    ]);
+  });
+
+  it('follows Spanish plurals', () => {
+    const es = glanceCells({ activePlantings: 1, spraysYTD: 2, daysToNextHarvest: 1 }, 'es');
+    expect(es.map((c) => c.label)).toEqual([
+      'siembra activa',
+      'aplicaciones en el año',
+      'día para la próxima cosecha'
+    ]);
   });
 });

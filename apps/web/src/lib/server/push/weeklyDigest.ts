@@ -38,8 +38,6 @@ import { recipientLocales } from '$lib/server/recipientLocale';
 import { localeField } from '$lib/server/messageLocale';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-/** Open tasks older than this are not "overdue" in a summary any more. */
-export const DIGEST_OVERDUE_LOOKBACK_DAYS = 30;
 /** Slack around the farm-local week for time zones far from UTC. */
 const EDGE_MS = 2 * DAY_MS;
 
@@ -191,7 +189,7 @@ export function loadDigestSource(input: {
   const weekStartMs = Date.parse(`${monday}T00:00:00Z`);
   const lastWeekMs = weekStartMs - 7 * DAY_MS;
   const tasks = listDigestTasks({
-    openFromMs: weekStartMs - DIGEST_OVERDUE_LOOKBACK_DAYS * DAY_MS,
+    openFromMs: 0,
     openToMs: weekStartMs + 7 * DAY_MS + EDGE_MS,
     closedFromMs: lastWeekMs - EDGE_MS,
     closedToMs: weekStartMs + EDGE_MS

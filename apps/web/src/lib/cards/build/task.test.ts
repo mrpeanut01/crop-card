@@ -55,6 +55,19 @@ describe('buildTaskCard', () => {
     expect(buildTaskCard(later, { asOf: now }, { now, prefs }).facts[0].value).toBe('Tue, Jun 9');
   });
 
+  it('a date from another year carries its year (#747)', () => {
+    const yearLate = { ...base, scheduledFor: Date.parse('2025-10-08') };
+    expect(buildTaskCard(yearLate, { asOf: now }, { now, prefs }).facts[0].value).toBe(
+      'Was due Wed, Oct 8, 2025'
+    );
+    const es = buildTaskCard(yearLate, { asOf: now }, { now, prefs, locale: 'es' }).facts[0].value;
+    expect(es).toMatch(/2025/);
+    const nextYear = { ...base, scheduledFor: Date.parse('2027-01-05') };
+    expect(buildTaskCard(nextYear, { asOf: now }, { now, prefs }).facts[0].value).toBe(
+      'Tue, Jan 5, 2027'
+    );
+  });
+
   it('a skipped job keeps its reason as a manual fact', () => {
     const card = buildTaskCard(
       { ...base, abortedAt: now - 3_600_000, abortReason: '  rain all week ' },

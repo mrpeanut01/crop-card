@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import { equipmentTypeLabel } from '$lib/equipment/typeLabel';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
@@ -244,7 +245,7 @@
       <dt>{tr('equip.d.lastChemistry')}</dt>
       <dd>
         {#if eq.state.lastChemistryClass}
-          <span class="warn">{eq.state.lastChemistryClass}</span>
+          <span class="warn">{chemistryClassLabel(eq.state.lastChemistryClass, data.locale)}</span>
           <small>{tr('equip.d.at', { time: fmtTs(eq.state.lastUsedAt) })}</small>
         {:else}
           <span class="ok">{tr('equip.clean')}</span>

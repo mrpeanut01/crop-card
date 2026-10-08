@@ -12,7 +12,7 @@ import { DEFAULT_PREFS } from '$lib/prefs';
 import { identityName } from '$lib/identity';
 import { expiringSoon, lowStockItems } from '$lib/db/stock';
 import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
-import { equipmentIdsActiveBefore } from '$lib/db/equipment';
+import { equipmentLastActiveBefore } from '$lib/db/equipment';
 import { buildNavAlerts, type NavAlert } from '$lib/today/navAlerts';
 import { PLANS } from '$lib/billing/plans';
 import { resolvePlan } from '$lib/server/billing/plans';
@@ -56,7 +56,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
           winterize: deriveWinterizeAlerts(
             sprayers,
             Date.now(),
-            equipmentIdsActiveBefore(startOfSeason(Date.now(), farmTimeZone())),
+            equipmentLastActiveBefore(startOfSeason(Date.now(), farmTimeZone())),
             farmTimeZone()
           ),
           lowStock: lowStockItems(),

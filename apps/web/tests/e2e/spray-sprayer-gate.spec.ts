@@ -59,7 +59,7 @@ test.describe('spray pages pick a sprayer (#736)', () => {
     const section = page.getByTestId('sprayer-section');
     const pick = section.locator(`[data-sprayer-id="${sprayerId}"]`);
     await expect(pick).toHaveAttribute('aria-pressed', 'true');
-    await expect(pick).toContainText('synthetic-auxin');
+    await expect(pick).toContainText('Synthetic auxin (HRAC 4)');
     await page.getByRole('button', { name: 'Record fungicide application' }).click();
     await expect(page.getByRole('link', { name: 'Open decon wizard →' })).toHaveAttribute(
       'href',

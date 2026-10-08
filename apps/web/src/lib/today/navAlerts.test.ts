@@ -36,4 +36,18 @@ describe('buildNavAlerts', () => {
     expect(out).toHaveLength(1);
     expect(out[0].label).toBe('Copper lot expires in 3 days');
   });
+
+  it('names the last load in words, not its code (#619)', () => {
+    const out = buildNavAlerts({
+      ...EMPTY,
+      dirtySprayers: [
+        { id: 'a', label: 'Rig', lastChemistryClass: 'fungicide-load' },
+        { id: 'b', label: 'Boom', lastChemistryClass: 'synthetic-auxin' }
+      ]
+    });
+    expect(out.map((a) => a.label)).toEqual([
+      'Rig needs decon (fungicide)',
+      'Boom needs decon (Synthetic auxin (HRAC 4))'
+    ]);
+  });
 });

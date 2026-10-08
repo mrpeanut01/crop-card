@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
+  import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import { fmt } from '$lib/prefsState.svelte';
 
   interface SprayerOption {
@@ -61,7 +62,9 @@
         >
         {#if s.lastChemistryClass}
           <small class="warn"
-            >{tr('sprayui.sprayer.lastLoad', { class: s.lastChemistryClass })}</small
+            >{tr('sprayui.sprayer.lastLoad', {
+              class: chemistryClassLabel(s.lastChemistryClass, page.data?.locale)
+            })}</small
           >
         {:else}
           <small class="ok">{tr('sprayui.sprayer.clean')}</small>

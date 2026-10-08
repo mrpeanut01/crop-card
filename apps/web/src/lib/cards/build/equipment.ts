@@ -1,5 +1,6 @@
 import { needsDecon as stateNeedsDecon } from '$lib/equipment/decon';
 import { formatInstant } from '$lib/prefs';
+import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
 import {
   cardHref,
   cardKey,
@@ -89,8 +90,8 @@ function sprayerFacts(e: SnapshotEquipment, opts: ResolvedOptions): CardFact[] {
     facts.push({
       label: tr('cards.eq.lastLoad'),
       value: needsDecon(e)
-        ? tr('cards.eq.deconDue', { chemistry: s.lastChemistryClass })
-        : s.lastChemistryClass,
+        ? tr('cards.eq.deconDue', { chemistry: chemistryClassLabel(s.lastChemistryClass, opts.prefs.locale) })
+        : chemistryClassLabel(s.lastChemistryClass, opts.prefs.locale),
       provenance: 'data'
     });
   }

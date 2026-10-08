@@ -284,9 +284,21 @@ export function appendEquipmentLog(input: {
   };
 }
 
+const lastActiveBeforeExpr = () =>
+  db
+    .select({ last: sql<number | null>`max(${equipmentLog.occurredAt})` })
+    .from(equipmentLog)
+    .where(
+      withTenantPrepared(
+        equipmentLog,
+        eq(equipmentLog.equipmentId, equipment.id),
+        lt(equipmentLog.occurredAt, sql.placeholder('beforeMs'))
+      )
+    );
+
 const activeBeforeStmt = preparedOnce(() =>
   db
-    .select({ id: equipment.id })
+    .select({ id: equipment.id, lastBefore: sql<number | null>`(${lastActiveBeforeExpr()})` })
     .from(equipment)
     .where(
       withTenantPrepared(
@@ -308,17 +320,22 @@ const activeBeforeStmt = preparedOnce(() =>
     .prepare()
 );
 
-/** Ids of this Owner's equipment with any log entry before `beforeMs`,
- *  i.e. gear that was already in use in an earlier season. One index probe
- *  per piece of equipment (not a scan of the whole log), shared by the
- *  root layout and /today within a request. */
-export function equipmentIdsActiveBefore(beforeMs: number): Set<string> {
-  const ids = requestMemo(`equipment.activeBefore:${beforeMs}`, () =>
+/** This Owner's equipment with any log entry before `beforeMs` (gear that
+ *  was already in use in an earlier season), each with its latest log time
+ *  before `beforeMs`. One index probe per piece of equipment (not a scan of
+ *  the whole log), shared by the root layout and /today within a request. */
+export function equipmentLastActiveBefore(beforeMs: number): Map<string, number> {
+  const rows = requestMemo(`equipment.activeBefore:${beforeMs}`, () =>
     activeBeforeStmt()
       .all(tenantParams({ beforeMs }))
-      .map((r) => r.id)
+      .map((r) => [r.id, Number(r.lastBefore ?? 0)] as const)
   );
-  return new Set(ids);
+  return new Map(rows);
+}
+
+/** Ids of this Owner's equipment with any log entry before `beforeMs`. */
+export function equipmentIdsActiveBefore(beforeMs: number): Set<string> {
+  return new Set(equipmentLastActiveBefore(beforeMs).keys());
 }
 
 export function listEquipmentLog(

@@ -17,7 +17,7 @@
 import type { CalendarEvent } from '$lib/calendar/engine';
 import type { Task } from '$lib/db/tasks';
 import { DEFAULT_TIME_ZONE } from '$lib/profile';
-import { dueYmd, formatDueDay, ymdInZone } from '$lib/prefs';
+import { dueYmd, formatDueDay, withYearIfOther, ymdInZone } from '$lib/prefs';
 import { t } from '$lib/i18n';
 import { taskDisplayBody, taskDisplayTitle } from '$lib/tasks/title';
 
@@ -151,7 +151,12 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
     if (top.equipmentId) scope.push([t(locale, 'today.pa.scope.equipment'), top.equipmentId]);
     scope.push([
       t(locale, 'today.pa.scope.scheduled'),
-      formatDueDay(top.scheduledFor, prefs, 'month-day', { weekday: 'short' })
+      formatDueDay(
+        top.scheduledFor,
+        prefs,
+        'month-day',
+        withYearIfOther(dueYmd(top.scheduledFor, timeZone), today, { weekday: 'short' })
+      )
     ]);
     return {
       kind: 'task',

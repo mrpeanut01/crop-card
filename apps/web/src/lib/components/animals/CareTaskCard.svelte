@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { HealthStockOption } from '$lib/animals/healthStock';
   import { fmt } from '$lib/prefsState.svelte';
+  import { withYearIfOther } from '$lib/prefs';
   import './animalForms.css';
   import HealthForm from './HealthForm.svelte';
   import TimeChipRow from '$lib/components/tasks/TimeChipRow.svelte';
@@ -63,7 +64,7 @@
   );
 
   function dueText(item: CareItemView): string {
-    const day = fmt.day(item.scheduledOn, 'month-day');
+    const day = fmt.day(item.scheduledOn, 'month-day', withYearIfOther(item.scheduledOn, todayYmd));
     if (item.status === 'late') return tr('animals.care.wasDue', { day });
     if (item.status === 'due') return tr('animals.care.dueToday');
     return tr('animals.care.due', { day });

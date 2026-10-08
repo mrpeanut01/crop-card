@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { chemistryClassLabel } from '$lib/records/chemistryClassLabel';
   import { onDestroy, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
@@ -191,7 +192,8 @@
   </select>
   {#if sprayer?.lastChemistryClass}
     <p class="warn">
-      {tr('sprayui.dc.lastCarried')} <strong>{sprayer.lastChemistryClass}</strong>
+      {tr('sprayui.dc.lastCarried')}
+      <strong>{chemistryClassLabel(sprayer.lastChemistryClass, data.locale)}</strong>
       {tr('sprayui.dc.at')}
       {sprayer.lastSprayedAt ? fmt.instant(sprayer.lastSprayedAt) : tr('sprayui.dc.unknown')}
     </p>

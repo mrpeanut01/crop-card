@@ -2,6 +2,11 @@ import { t, type MessageKey } from '$lib/i18n';
 import { hracGroupOf } from '$lib/safety/cropFamilyLethality';
 import { CHEMISTRY_CLASSES, type ChemistryClass } from '$lib/safety/types';
 
+const LOAD_KEY: Record<string, MessageKey> = {
+  'insecticide-load': 'records.chem.insecticideLoad',
+  'fungicide-load': 'records.chem.fungicideLoad'
+};
+
 const KEY: Record<ChemistryClass, MessageKey> = {
   'synthetic-auxin': 'records.chem.syntheticAuxin',
   chloroacetamide: 'records.chem.chloroacetamide',
@@ -29,6 +34,8 @@ function isChemistryClass(code: string): code is ChemistryClass {
  *  Anything else (IRAC/FRAC labels) is returned as given. English without
  *  a locale, which is what the PDF uses. */
 export function chemistryClassLabel(code: string, locale?: string | null): string {
+  const load = LOAD_KEY[code];
+  if (load) return t(locale, load);
   if (!isChemistryClass(code)) return code;
   const name = t(locale, KEY[code]);
   const group = hracGroupOf(code);

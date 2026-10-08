@@ -1085,6 +1085,8 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'records.chem.imidazolinone': 'Inhibidor de ALS (imidazolinona)',
   'records.chem.pyroxasulfone': 'Inhibidor de VLCFA (piroxasulfona)',
   'records.chem.clomazone': 'Clomazona',
+  'records.chem.insecticideLoad': 'insecticida',
+  'records.chem.fungicideLoad': 'fungicida',
   'records.chem.unclassified': 'Sin clasificar',
   'fert.soil.ph': 'pH {v}',
   'fert.soil.om': 'MO {v}%',

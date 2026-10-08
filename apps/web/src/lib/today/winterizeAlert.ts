@@ -2,15 +2,14 @@
  * UC-45 next-spring winterization reminder (informational — assists, never
  * gates; not a kernel rule).
  *
- * Raises a /today warning card when a sprayer has current-season activity
- * (a spray / decon / calibration touch this year) but was never winterized
- * after the *prior* season — i.e. `winterizedAt` is unset, or predates the
- * start of the current season. The intent: nudge the operator to recalibrate
- * (UC-10) and confirm the tank overwintered clean before the first spring
- * spray, without blocking anything.
+ * Raises a spring /today card when a sprayer came out of storage (activity
+ * this year) without being winterized after its last use of the prior
+ * season. The intent: nudge the operator to check the tank overwintered
+ * clean and recalibrate (UC-10) before spraying, without blocking anything.
+ * Recalibrating this season clears it, and it is gone by July.
  */
 
-import { zonedYearStartMs } from '$lib/exports/dateRange';
+import { zonedDayStartMs, zonedYearStartMs } from '$lib/exports/dateRange';
 import { DEFAULT_PREFS } from '$lib/prefs';
 
 export interface SprayerWinterizeInput {
@@ -42,34 +41,50 @@ function lastActivity(s: SprayerWinterizeInput): number {
   return Math.max(s.lastSprayedAt ?? 0, s.lastDeconAt ?? 0, s.calibrationDate ?? 0);
 }
 
+const DAY_MS = 86_400_000;
+
+/** Epoch-ms of Jul 1 on the farm's calendar in the season `seasonStart`
+ *  opens: the spring reminder is gone by then. */
+export function endOfSpringWindow(seasonStart: number, timeZone: string): number {
+  const year = new Date(seasonStart + DAY_MS).getUTCFullYear();
+  return zonedDayStartMs(year, 7, 1, timeZone);
+}
+
 /**
- * Derive per-sprayer winterization reminders. A sprayer flags when it has
- * activity in the current season but its `winterizedAt` is unset or older
- * than the season start (so it was not winterized after the prior season).
+ * Derive per-sprayer spring winterization reminders (#651). A sprayer flags
+ * when, in the spring window (Jan 1 to Jun 30 on the farm calendar):
+ *   - it was used before this season and has activity this season,
+ *   - it has not been recalibrated this season, and
+ *   - it was not winterized after its last use of the prior season.
+ * `usedBeforeSeason` maps each sprayer used before this season to its
+ * latest log time before the season (`equipmentLastActiveBefore`); a plain
+ * set only says which ones were used, so then a winterization counts only
+ * when it is from this season.
  */
 export function deriveWinterizeAlerts(
   sprayers: SprayerWinterizeInput[],
   nowMs: number = Date.now(),
-  /** Sprayers known to have been used before this season. When given, a
-   *  sprayer new this season (nothing to winterize yet) is left out. */
-  usedBeforeSeason?: ReadonlySet<string>,
+  usedBeforeSeason?: ReadonlySet<string> | ReadonlyMap<string, number>,
   /** The farm's zone (`farmTimeZone()`), so the season starts on its Jan 1. */
   timeZone: string = DEFAULT_PREFS.timeZone
 ): WinterizeAlert[] {
   const seasonStart = startOfSeason(nowMs, timeZone);
+  if (nowMs >= endOfSpringWindow(seasonStart, timeZone)) return [];
   const alerts: WinterizeAlert[] = [];
   for (const s of sprayers) {
     const touchedThisSeason = lastActivity(s) >= seasonStart;
     if (!touchedThisSeason) continue;
     if (usedBeforeSeason && !usedBeforeSeason.has(s.id)) continue;
-    const winterizedThisSeasonOrLater = (s.winterizedAt ?? 0) >= seasonStart;
-    // If the sprayer was winterized within this season it is fine — the
-    // reminder is only for tanks that came out of storage un-winterized.
-    if (winterizedThisSeasonOrLater) continue;
+    if ((s.calibrationDate ?? 0) >= seasonStart) continue;
+    const priorLastUse = usedBeforeSeason instanceof Map ? usedBeforeSeason.get(s.id) : undefined;
+    const w = s.winterizedAt;
+    const winterizedAfterPriorUse =
+      w != null && (w >= seasonStart || (priorLastUse !== undefined && w >= priorLastUse));
+    if (winterizedAfterPriorUse) continue;
     alerts.push({
       sprayerId: s.id,
       label: s.label,
-      neverWinterized: s.winterizedAt == null,
+      neverWinterized: w == null,
       uncalibrated: s.calibratedGpa == null
     });
   }

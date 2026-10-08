@@ -186,3 +186,55 @@ describe('bales from a hay cutting', () => {
     expect(calls[1].body).toMatchObject({ receivedQuantity: 12, sourceHayCuttingId: 'cut-1' });
   });
 });
+
+describe('approval number typed without NADA or ANADA (#697)', () => {
+  const library = [
+    {
+      id: 'safe-guard-suspension',
+      name: 'Safe-Guard Suspension 10% (fenbendazole)',
+      approval: { kind: 'NADA' as const, number: '128-620' }
+    }
+  ];
+
+  it('says the word is missing and moves to the field', async () => {
+    const { container } = render(A_InventoryEditForm, { type: 'animal-health', library });
+    await type(container, '#displayName', 'Safe-Guard');
+    await type(container, '#nada', '128-620');
+    await fireEvent.submit(container.querySelector('form')!);
+    const field = container.querySelector('#nada')!.closest('.inv-field')!;
+    expect(field).toHaveClass('has-error');
+    expect(field.textContent).toContain('Add NADA or ANADA before the number');
+    await vi.waitFor(() => expect(document.activeElement).toBe(container.querySelector('#nada')));
+    expect(calls).toHaveLength(0);
+  });
+
+  it('takes the kind from the linked library product when the numbers match', async () => {
+    const { container, getByTestId } = render(A_InventoryEditForm, {
+      type: 'animal-health',
+      library,
+      prefill: {
+        source: 'plugin',
+        displayName: 'Safe-Guard',
+        suggestedHealthPlugin: {
+          pluginId: 'safe-guard-suspension',
+          displayName: 'Safe-Guard Suspension 10% (fenbendazole)'
+        }
+      }
+    });
+    await fireEvent.click(getByTestId('suggested-link').querySelector('button')!);
+    await type(container, '#nada', '128-620');
+    await fireEvent.submit(container.querySelector('form')!);
+    await vi.waitFor(() => expect(calls.length).toBeGreaterThan(0));
+    expect(JSON.parse(String(calls[0].body.metadataJson)).animalHealth.nada).toEqual({
+      kind: 'NADA',
+      number: '128-620',
+      provenance: 'manual'
+    });
+  });
+
+  it('shows the NADA hint from the catalog', () => {
+    const { container } = render(A_InventoryEditForm, { type: 'animal-health', library });
+    const hint = container.querySelector('#nada')!.closest('.inv-field')!.textContent;
+    expect(hint).toContain('NADA 141-061');
+  });
+});

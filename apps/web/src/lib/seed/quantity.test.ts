@@ -179,3 +179,13 @@ describe('seedsToPlants — fallback flag', () => {
     expect(r?.fellBackToFamilyDefault).toBe(false);
   });
 });
+
+describe('plants in seed stock (#719)', () => {
+  it('counts one plant per plant, with no germination discount', () => {
+    expect(seedsToPlants({ unit: 'plants', quantity: 40, plugin: undefined })).toEqual({
+      rawSeeds: 40,
+      plants: 40,
+      fellBackToFamilyDefault: false
+    });
+  });
+});

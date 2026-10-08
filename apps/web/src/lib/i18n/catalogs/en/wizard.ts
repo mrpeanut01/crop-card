@@ -991,6 +991,8 @@ export const enWizard = {
   'wizard.qty.seeds.other': 'seeds',
   'wizard.qty.packets.one': 'packet',
   'wizard.qty.packets.other': 'packets',
+  'wizard.qty.plants.one': 'plant',
+  'wizard.qty.plants.other': 'plants',
   'wizard.qty.status.existing': 'on hand',
   'wizard.qty.status.ordered': 'ordered',
   'wizard.qty.status.planned': 'planned',

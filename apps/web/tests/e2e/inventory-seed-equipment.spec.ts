@@ -39,7 +39,7 @@ test.describe('seed inventory', () => {
 
     const unit = page.locator('#defaultUnit');
     await expect(unit).toHaveValue('seeds');
-    await expect(unit.locator('option')).toHaveText(['Seeds', 'oz', 'lb', 'g']);
+    await expect(unit.locator('option')).toHaveText(['Seeds', 'Plants', 'oz', 'lb', 'g']);
 
     await page.locator('#quantity').fill('250');
     await page.locator('#lotNumber').fill('CP-1');

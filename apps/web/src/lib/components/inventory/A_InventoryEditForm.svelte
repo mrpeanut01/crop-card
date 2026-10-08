@@ -24,7 +24,7 @@
   import { goto } from '$app/navigation';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import InvSection from './InvSection.svelte';
   import StaleEditChoice from '$lib/components/records/StaleEditChoice.svelte';
   import { isEditConflictBody, type EditConflictBody } from '$lib/edits/conflict';
@@ -40,8 +40,8 @@
     type LibraryOption
   } from '$lib/plugins/libraryMatch';
   import {
-    ALL_STOCK_UNITS,
     SEED_UNITS,
+    inputStockUnits,
     formatStockQuantity,
     stockUnitLabel,
     type StockUnit
@@ -54,7 +54,8 @@
     animalHealthMeta,
     feedMeta,
     formatNada,
-    normalizeNada,
+    isBareNadaNumber,
+    nadaFromInput,
     withMetaSection
   } from '$lib/stock/animalStock';
   import type { StockCategory } from '$lib/db/stock';
@@ -168,6 +169,9 @@
   let nadaText = $state(initialNada.text);
   const nadaSource = $derived<'ai' | 'manual'>(
     nadaText === initialNada.text && initialNada.source === 'ai' ? 'ai' : 'manual'
+  );
+  const linkedApproval = $derived(
+    isMed ? (library.find((o) => o.id === pluginId)?.approval ?? null) : null
   );
   const suggestedLink = $derived(
     !isEdit && isMed && !pluginId ? (prefill?.suggestedHealthPlugin ?? null) : null
@@ -330,7 +334,7 @@
         ? [...FEED_UNITS]
         : isMed
           ? [...ANIMAL_HEALTH_UNITS]
-          : ALL_STOCK_UNITS.filter((u) => u !== 'seeds' && u !== 'bag');
+          : inputStockUnits(type === 'fertility' ? 'fertility' : 'pesticide');
     const current = existing?.defaultUnit;
     if (current && !base.includes(current)) {
       if (isSeed && current === 'count') base.splice(0, 1, 'count');
@@ -396,8 +400,10 @@
         fieldErrors.quantity = tr('inv.form.err.hayQuantity');
       }
     }
-    if (isMed && nadaText.trim() && !normalizeNada(nadaText)) {
-      fieldErrors.nada = tr('inv.form.err.nada');
+    if (isMed && nadaText.trim() && !nadaFromInput(nadaText, linkedApproval)) {
+      fieldErrors.nada = isBareNadaNumber(nadaText)
+        ? tr('inv.form.err.nadaPrefix')
+        : tr('inv.form.err.nada');
     }
     if (reorderThreshold != null && reorderThreshold < 0) {
       fieldErrors.reorderThreshold = tr('inv.form.err.reorder');
@@ -405,12 +411,28 @@
     return Object.keys(fieldErrors).length === 0;
   }
 
+  let formEl = $state<HTMLFormElement | null>(null);
+
+  /** Takes the farmer to the first field that stopped the save (#697). */
+  async function focusFirstError(): Promise<void> {
+    await tick();
+    const field = formEl?.querySelector<HTMLElement>(
+      '.has-error input, .has-error select, .has-error textarea'
+    );
+    if (!field) return;
+    field.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+    field.focus({ preventScroll: true });
+  }
+
   // ─── Submit ────────────────────────────────────────────────────────────
   async function handleSubmit(e?: SubmitEvent): Promise<void> {
     e?.preventDefault();
     error = null;
     qtyConflict = null;
-    if (!validate()) return;
+    if (!validate()) {
+      await focusFirstError();
+      return;
+    }
     submitting = true;
     try {
       if (type === 'crop') {
@@ -457,7 +479,7 @@
       });
     }
     if (isMed) {
-      const nada = normalizeNada(nadaText);
+      const nada = nadaFromInput(nadaText, linkedApproval);
       return withMetaSection(existing?.metadataJson, 'animalHealth', {
         nada: nada ? { ...nada, provenance: nadaSource } : undefined,
         pluginLink: pluginId.trim() ? 'manual' : undefined
@@ -583,7 +605,7 @@
   </div>
 {/if}
 
-<form onsubmit={handleSubmit} class="form-body">
+<form onsubmit={handleSubmit} class="form-body" bind:this={formEl}>
   {#if hayCutting && linksHayCutting}
     <p class="hay-source" role="note" data-testid="hay-source">
       {tr('inv.form.haySource', { cutting: hayCutting.label })}
@@ -703,7 +725,7 @@
         id="nada"
         label={tr('inv.form.nadaLabel')}
         error={fieldErrors.nada}
-        hint="On the label, e.g. NADA 141-061. Withdrawal times are never read from a scan; you enter them from the label or your vet when you record a treatment."
+        hint={tr('inv.form.hint.nada')}
       >
         <div class="with-prov">
           <input id="nada" type="text" bind:value={nadaText} maxlength="30" />
@@ -752,7 +774,7 @@
             hint={isSeed
               ? tr('inv.form.hint.seed')
               : isMed
-                ? 'Only link the exact product on the label. Its withdrawal times apply to every treatment from this bottle.'
+                ? tr('inv.form.hint.medLink')
                 : tr('inv.form.hint.product')}
             error={fieldErrors.pluginId}
           >
@@ -797,7 +819,9 @@
           ? expectedNote
             ? tr('inv.form.hint.onHandShed')
             : tr('inv.form.hint.onHandAdjust')
-          : tr('inv.form.hint.firstLot')}
+          : isSeed
+            ? tr('inv.form.hint.firstLot')
+            : tr('inv.form.hint.firstLotOther')}
       >
         <input
           id="quantity"
@@ -819,7 +843,11 @@
         <InvField id="lotNumber" label={tr('inv.form.lotNumber')} hint={tr('inv.form.lotHint')}>
           <input id="lotNumber" type="text" bind:value={lotNumber} maxlength="80" />
         </InvField>
-        <InvField id="initialStatus" label={tr('inv.lots.status')} hint={tr('inv.form.statusHint')}>
+        <InvField
+          id="initialStatus"
+          label={tr('inv.lots.status')}
+          hint={isSeed ? tr('inv.form.statusHint') : tr('inv.form.statusHintOther')}
+        >
           <select id="initialStatus" bind:value={initialStatus}>
             <option value="existing">{qtyStatusLabel(tr, 'existing')}</option>
             <option value="ordered">{qtyStatusLabel(tr, 'ordered')}</option>

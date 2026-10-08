@@ -124,7 +124,7 @@
     }
     // Stock modes: pesticide / fertility / seed
     const stock = rows as Array<StockRow & { kind: 'stock' }>;
-    const onHand = stock.reduce((sum, s) => sum + s.onHand, 0);
+    const withStock = stock.filter((s) => s.onHand > 0).length;
     const reorderSoon = stock.filter((s) => s.isLow).length;
     const sixtyDays = Date.now() + 60 * 24 * 60 * 60 * 1000;
     const expiring60 = stock.filter(
@@ -132,7 +132,7 @@
     ).length;
     return [
       { label: tr('inv.list.kpi.activeSkus'), value: stock.length },
-      { label: tr('inv.list.kpi.onHandSum'), value: onHand.toFixed(1) },
+      { label: tr('inv.list.kpi.withStock'), value: withStock },
       { label: tr('inv.list.kpi.reorderSoon'), value: reorderSoon },
       { label: tr('inv.list.kpi.expiring60'), value: expiring60 }
     ];

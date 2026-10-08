@@ -331,9 +331,10 @@ describe('A_InventoryEditForm — seed quantity and crop category (#472, #473)',
   it('offers Seeds first plus weights, and no pesticide units', () => {
     const { container } = render(A_InventoryEditForm, { type: 'seed', library });
     const select = container.querySelector('#defaultUnit') as HTMLSelectElement;
-    expect([...select.options].map((o) => o.value)).toEqual(['seeds', 'oz', 'lb', 'g']);
+    expect([...select.options].map((o) => o.value)).toEqual(['seeds', 'plants', 'oz', 'lb', 'g']);
     expect([...select.options].map((o) => o.textContent?.trim())).toEqual([
       'Seeds',
+      'Plants',
       'oz',
       'lb',
       'g'
@@ -565,5 +566,32 @@ describe('A_InventoryEditForm — seed quantity and crop category (#472, #473)',
     await fireEvent.submit(container.querySelector('form')!);
     await new Promise((r) => setTimeout(r, 0));
     expect(calls()).toHaveLength(1);
+  });
+});
+
+describe('quantity hints by type (#660)', () => {
+  it('keeps the planner sentence for seed only', () => {
+    const seed = render(A_InventoryEditForm, { type: 'seed', library: [] });
+    expect(seed.container.textContent).toContain('the planner sizes it to the bed');
+    seed.unmount();
+    for (const type of ['pesticide', 'fertility', 'animal-health'] as const) {
+      const r = render(A_InventoryEditForm, { type, library: [] });
+      expect(r.container.textContent).not.toContain('planner sizes it to the bed');
+      expect(r.container.textContent).not.toContain('help the planner lay out beds');
+      expect(r.container.textContent).toContain('you can add it later');
+      r.unmount();
+    }
+  });
+
+  it('offers cubic yards for fertility stock but not for pesticides (#687)', () => {
+    const fert = render(A_InventoryEditForm, { type: 'fertility', library: [] });
+    const units = (c: HTMLElement) =>
+      [...(c.querySelector('#defaultUnit') as HTMLSelectElement).options].map((o) => o.value);
+    expect(units(fert.container)).toEqual(expect.arrayContaining(['yd3', 'ft3']));
+    fert.unmount();
+    const pest = render(A_InventoryEditForm, { type: 'pesticide', library: [] });
+    expect(units(pest.container)).not.toContain('yd3');
+    expect(units(pest.container)).not.toContain('bale');
+    pest.unmount();
   });
 });

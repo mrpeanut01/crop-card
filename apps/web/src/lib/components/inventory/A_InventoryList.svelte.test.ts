@@ -246,3 +246,51 @@ describe('A_InventoryList — Phase 27B', () => {
     expect(r.getByRole('group', { name: /Stock vs catalog/ })).toBeInTheDocument();
   });
 });
+
+describe('stock KPI strip (#641)', () => {
+  it('counts items with stock on hand instead of adding quantities in different units', () => {
+    const { container } = render(A_InventoryList, {
+      type: 'pesticide',
+      mode: 'stock',
+      counts,
+      rows: [
+        {
+          kind: 'stock',
+          id: 'a',
+          displayName: 'Aatrex 4L',
+          category: 'herbicide',
+          onHand: 10,
+          defaultUnit: 'gal',
+          lotCount: 1,
+          isLow: false
+        },
+        {
+          kind: 'stock',
+          id: 'b',
+          displayName: 'Kocide',
+          category: 'fungicide',
+          onHand: 20,
+          defaultUnit: 'lb',
+          lotCount: 1,
+          isLow: false
+        },
+        {
+          kind: 'stock',
+          id: 'c',
+          displayName: 'Empty',
+          category: 'herbicide',
+          onHand: 0,
+          defaultUnit: 'fl-oz',
+          lotCount: 0,
+          isLow: true
+        }
+      ] as never
+    });
+    const cards = [...container.querySelectorAll('.kpi-card')].map((c) => ({
+      value: c.querySelector('.kpi-value')?.textContent?.trim(),
+      label: c.querySelector('.kpi-label')?.textContent?.trim()
+    }));
+    expect(cards).toContainEqual({ value: '2', label: 'With stock on hand' });
+    expect(cards.some((c) => c.value === '30.0' || c.label?.includes('Σ'))).toBe(false);
+  });
+});

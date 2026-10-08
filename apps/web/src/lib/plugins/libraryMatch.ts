@@ -9,6 +9,8 @@
 export interface LibraryOption {
   id: string;
   name: string;
+  /** A medicine's NADA or ANADA number, for an approval typed without its word. */
+  approval?: { kind: 'NADA' | 'ANADA'; number: string };
 }
 
 export interface LibraryMatch extends LibraryOption {

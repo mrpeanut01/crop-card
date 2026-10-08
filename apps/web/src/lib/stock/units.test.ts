@@ -6,6 +6,7 @@ import {
   formatStockQuantity,
   perAcreRateUnit,
   fromHundredths,
+  inputStockUnits,
   isLabelUnitCategory,
   isSeedCountUnit,
   SEED_UNITS,
@@ -144,7 +145,7 @@ describe('seed quantities (#473)', () => {
     expect(stockUnitLabel('seeds', 'seed')).toBe('Seeds');
     expect(stockUnitLabel('count', 'herbicide')).toBe('Count');
     expect(stockUnitLabel('fl-oz')).toBe('fl oz');
-    expect(SEED_UNITS).toEqual(['seeds', 'oz', 'lb', 'g']);
+    expect(SEED_UNITS).toEqual(['seeds', 'plants', 'oz', 'lb', 'g']);
     expect(isSeedCountUnit('count', 'seed')).toBe(true);
     expect(isSeedCountUnit('oz', 'seed')).toBe(false);
   });
@@ -161,5 +162,53 @@ describe('Spanish unit words', () => {
     expect(stockUnitLabel('bag-50lb', null, 'es')).toBe('Bolsa de 50 lb');
     expect(stockUnitLabel('count', 'seed', 'es')).toBe('Semillas');
     expect(stockUnitLabel('lb', null, 'es')).toBe('lb');
+  });
+});
+
+describe('plants for seed stock (#719)', () => {
+  it('counts plants one to one with the planting form plants unit, never with seeds or weight', () => {
+    expect(convert(12, 'count', 'plants')).toBe(12);
+    expect(convert(12, 'plants', 'count')).toBe(12);
+    expect(convert(12, 'plants', 'seeds')).toBeNull();
+    expect(convert(12, 'plants', 'lb')).toBeNull();
+  });
+
+  it('reads as plants in English and Spanish', () => {
+    expect(formatStockQuantity(4000, 'plants', DEFAULT_PREFS, { category: 'seed' })).toBe(
+      '4,000 plants'
+    );
+    expect(formatStockQuantity(1, 'plants', DEFAULT_PREFS, { category: 'seed' })).toBe('1 plant');
+    expect(formatStockQuantity(3, 'plants', { ...DEFAULT_PREFS, locale: 'es' })).toBe('3 plantas');
+    expect(stockUnitLabel('plants', 'seed')).toBe('Plants');
+    expect(stockUnitLabel('plants', 'seed', 'es')).toBe('Plantas');
+  });
+});
+
+describe('bulk volume (#687)', () => {
+  it('converts cubic yards and feet by definition, and never to a weight', () => {
+    expect(convert(1, 'yd3', 'ft3')).toBe(27);
+    expect(convert(54, 'ft3', 'yd3')).toBe(2);
+    expect(convert(1, 'yd3', 'lb')).toBeNull();
+    expect(convert(1, 'yd3', 'gal')).toBeNull();
+    expect(toStorage(2, 'yd3', 'lb')).toBeNull();
+  });
+
+  it('shows the symbol, and cubic metres for metric users', () => {
+    expect(formatStockQuantity(3, 'yd3', DEFAULT_PREFS)).toBe('3.0 yd³');
+    expect(formatStockQuantity(1, 'yd3', { ...DEFAULT_PREFS, units: 'metric' })).toBe('0.76 m³');
+    expect(stockUnitLabel('yd3')).toBe('yd³ (cubic yard)');
+    expect(stockUnitLabel('ft3', null, 'es')).toBe('ft³ (pie cúbico)');
+  });
+
+  it('is offered for fertility stock but not pesticides, and neither offers seed or feed units', () => {
+    const fert = inputStockUnits('fertility');
+    const pest = inputStockUnits('pesticide');
+    expect(fert).toEqual(expect.arrayContaining(['yd3', 'ft3', 'lb', 'gal']));
+    expect(pest).not.toContain('yd3');
+    expect(pest).not.toContain('ft3');
+    for (const u of ['seeds', 'plants', 'bag', 'bale'] as const) {
+      expect(fert).not.toContain(u);
+      expect(pest).not.toContain(u);
+    }
   });
 });

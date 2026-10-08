@@ -64,7 +64,7 @@
     if (unit === 'oz') return { coarse: 1, fine: 0.5 };
     if (unit === 'g') return { coarse: 50, fine: 10 };
     if (unit === 'seeds') return { coarse: 100, fine: 10 };
-    if (unit === 'count') return { coarse: 10, fine: 1 };
+    if (unit === 'count' || unit === 'plants') return { coarse: 10, fine: 1 };
     if (unit === 'packets') return { coarse: 1, fine: 1 };
     return { coarse: 1, fine: 0.25 };
   }

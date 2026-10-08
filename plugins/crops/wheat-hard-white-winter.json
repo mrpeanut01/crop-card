@@ -2,7 +2,7 @@
   "pluginId": "wheat-hard-white-winter",
   "type": "crop",
   "displayName": "Wheat Hard White Winter (Snowmass)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "cereal-grain",
   "preHarvestIntervalDays": 14,
@@ -39,6 +39,16 @@
         "drought",
         "heavy-nitrogen"
       ]
+    }
+  ],
+  "nitrogenNeedLbPerAcre": [
+    {
+      "min": 20,
+      "max": 20
+    },
+    {
+      "min": 40,
+      "max": 80
     }
   ]
 }

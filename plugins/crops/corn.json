@@ -2,7 +2,7 @@
   "pluginId": "corn",
   "type": "crop",
   "displayName": "Corn (Field)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "corn",
   "daysToMaturity": {
     "min": 100,
@@ -64,5 +64,11 @@
         "max": 15
       }
     }
-  }
+  },
+  "nitrogenNeedLbPerAcre": [
+    {
+      "min": 125,
+      "max": 150
+    }
+  ]
 }

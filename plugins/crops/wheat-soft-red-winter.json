@@ -2,7 +2,7 @@
   "pluginId": "wheat-soft-red-winter",
   "type": "crop",
   "displayName": "Wheat — Soft Red Winter",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "cropFamily": "cereal-grain",
   "daysToMaturity": {
     "min": 240,
@@ -150,6 +150,16 @@
         "drought",
         "heavy-nitrogen"
       ]
+    }
+  ],
+  "nitrogenNeedLbPerAcre": [
+    {
+      "min": 20,
+      "max": 20
+    },
+    {
+      "min": 40,
+      "max": 80
     }
   ]
 }

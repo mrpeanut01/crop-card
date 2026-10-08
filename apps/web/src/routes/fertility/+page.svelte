@@ -154,6 +154,8 @@
       ? tr('fert.notKnown')
       : fmt.qty(v, 'weightPerArea', { digits: 0, bare: true });
   const perAc = (v: number) => fmt.qty(v, 'weightPerArea', { digits: 1, bare: true });
+  const needRange = (min: number, max: number) =>
+    min === max ? perAc(min) : `${perAc(min)}–${perAc(max)}`;
   const budgetCell = (v: number, unknown: number) =>
     unknown === 0
       ? perAc(v)
@@ -361,8 +363,22 @@
           <td>{budgetCell(data.budget.totalPLbPerAcre, data.budget.pUnknownApplications)}</td>
           <td>{budgetCell(data.budget.totalKLbPerAcre, data.budget.kUnknownApplications)}</td>
         </tr>
+        {#each data.nitrogenNeeds as need (need.cropPluginId)}
+          <tr class="need" data-testid="fertility-n-need">
+            <th scope="row">{tr('fert.nNeedRow', { crop: need.cropName })}</th>
+            <td>
+              {needRange(need.minLbPerAcre, need.maxLbPerAcre)}
+              <Provenance source="data" detail={tr('fert.nNeedSource')} compact />
+            </td>
+            <td>{tr('fert.nNeedNone')}</td>
+            <td>{tr('fert.nNeedNone')}</td>
+          </tr>
+        {/each}
       </tbody>
     </table>
+    {#if data.nitrogenNeeds.length > 0}
+      <p class="hint" data-testid="fertility-n-need-hint">{tr('fert.nNeedHint')}</p>
+    {/if}
     {#if data.budget.nUnknownApplications + data.budget.pUnknownApplications + data.budget.kUnknownApplications > 0}
       <p class="hint" data-testid="fertility-budget-unknown">{tr('fert.budgetUnknown')}</p>
     {/if}

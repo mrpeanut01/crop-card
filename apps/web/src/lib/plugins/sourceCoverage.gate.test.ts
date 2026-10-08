@@ -24,6 +24,7 @@ import {
   seedingRateQuoteGaps,
   rowSpacingGaps,
   treeSizeClassQuoteGaps,
+  nitrogenNeedQuoteGaps,
   harvestSeasonQuoteGaps,
   speciesFactPaths,
   type ForageSourceEntry,
@@ -186,6 +187,12 @@ describe('Phase 32A source coverage gate', () => {
     const crops = library.crops();
     expect(harvestSeasonQuoteGaps(crops, cropSources)).toEqual([]);
     expect(crops.filter((c) => c.harvestSeason).length).toBeGreaterThan(0);
+  });
+
+  it('#739: every crop N need quote states each part', () => {
+    const crops = library.crops();
+    expect(nitrogenNeedQuoteGaps(crops, cropSources)).toEqual([]);
+    expect(crops.filter((c) => c.nitrogenNeedLbPerAcre).length).toBeGreaterThan(0);
   });
 
   it('#587 / #591: no crop carries an unsourced or unread row spacing', () => {

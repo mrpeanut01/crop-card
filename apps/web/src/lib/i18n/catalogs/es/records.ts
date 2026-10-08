@@ -77,6 +77,11 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'fert.npkNoAnalysis':
     'El análisis de la etiqueta es {analysis}, pero los nutrientes solo se pueden calcular con una dosis en peso.',
   'fert.notKnown': 'no se sabe',
+  'fert.nNeedRow': 'N necesario, {crop}',
+  'fert.nNeedNone': '—',
+  'fert.nNeedSource': 'cifra de extensión',
+  'fert.nNeedHint':
+    'El N necesario es el N de fertilizante que una publicación de extensión da para este cultivo, antes de los créditos del estiércol o del cultivo anterior. Compárelo con el Total disponible.',
   'fert.atLeast': 'al menos {value}',
   'fert.budgetUnknown':
     'Algunas aplicaciones de este año no tienen N, P₂O₅ o K₂O conocidos, así que esos totales son al menos las cifras que se muestran.',

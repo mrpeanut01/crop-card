@@ -158,6 +158,7 @@ export function cropFactPaths(c: CropPlugin): string[] {
     for (const id of entry.speciesIds) paths.push(`animalToxicity.${id}`);
   }
   for (const row of c.treeSizeClasses ?? []) paths.push(`treeSizeClasses.${row.sizeClass}`);
+  if (c.nitrogenNeedLbPerAcre) paths.push('nitrogenNeedLbPerAcre');
   if (c.harvestSeason) paths.push('harvestSeason');
   for (const [, key] of rowSpacingFields(c)) if (!paths.includes(key)) paths.push(key);
   if (guide.inRowSpacingIn !== undefined) paths.push('inRowSpacingIn');
@@ -404,6 +405,47 @@ export function harvestSeasonQuoteGaps(
       ).test(quote);
     if (!endShort && !statesMonthDay(quote, end.month, end.day)) {
       gaps.push(`${c.pluginId}: harvestSeason quote does not state the end date`);
+    }
+  }
+  return gaps;
+}
+
+/** #739: a crop's N need quote comes from an extension or government page,
+ *  names N and states every part ("125-150 lbs N", "20 lbs of N", "40-80
+ *  lbs"; a part of 0 as "zero N"). Returns "pluginId: problem" lines. */
+export function nitrogenNeedQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'nitrogenNeedLbPerAcre'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    const parts = c.nitrogenNeedLbPerAcre;
+    if (!parts) continue;
+    const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.nitrogenNeedLbPerAcre);
+    if (!entry.success) continue;
+    const quote = entry.data.quote;
+    if (!isAllowedSpacingSource(entry.data.url)) {
+      gaps.push(
+        `${c.pluginId}: nitrogenNeedLbPerAcre source is not an extension or government page`
+      );
+    }
+    if (!/\bN\b/.test(quote)) {
+      gaps.push(`${c.pluginId}: nitrogenNeedLbPerAcre quote does not name N`);
+    }
+    for (const { min, max } of parts) {
+      const stated =
+        max === 0
+          ? /\b(zero|no) N\b/i.test(quote)
+          : new RegExp(
+              `(^|[^\\d.,])${
+                min === max
+                  ? numberPattern(min)
+                  : `${numberPattern(min)}\\s*(?:-|–|—|to)\\s*${numberPattern(max)}`
+              }\\s*lbs?\\b`
+            ).test(quote);
+      if (!stated) {
+        gaps.push(`${c.pluginId}: nitrogenNeedLbPerAcre quote does not state ${min}-${max} lbs`);
+      }
     }
   }
   return gaps;

@@ -348,6 +348,13 @@
       "date": "December 15, 2023",
       "quote": "Rate of seeding 120 lbs/A (hulled) or approximately 30 seeds/sq ft (18 seeds/drill foot in 7-inch rows) Method of planting Planting with a grain drill is best, but broadcast disk-in to a depth of 1-1 1/2 inches can be successful.",
       "note": "Hulled barley; Thoroughbred is hulled. Counted as a drilled rate (panel ruling 2026-10-05, #551, 2-1): restated per drill foot and the method row names the grain drill first. Missouri G4652's drilled 80-110 is a forage pure-stand rate and does not count for a grain plugin. No seed basis stated."
+    },
+    "nitrogenNeedLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Barley",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 11",
+      "quote": "Fertilizer 20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O. Topdress with 80 lbs N in February or early March. These rates assume no carryover N from the previous crop.",
+      "note": "#739. Thoroughbred is a winter feed barley. Stored as two parts: 20 lb N in the fall and 80 lb N topdressed in February or early March (100 total)."
     }
   },
   "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed": {
@@ -1100,6 +1107,13 @@
       "date": "Updated: September 3, 2024 (accessed 2026-10-06)",
       "quote": "UMD Extension, Optimizing Corn Silage: Planting Decisions, Row Spacing: \"Row spacing refers to how much distance is in between each row of corn in the field. The standard practice is to plant with a row spacing of 30 inches.\"; \"Use of 15 and 20 inch rows are now being seen.\"",
       "note": "Standard 30 in; UMD notes 15- and 20-inch rows also in use, and NC State organic guide says 20 in has worked; these narrower options are alternatives rather than a contradiction of the 30-inch standard. VCE 424-100 'Corn, Field Corn' gives no row width. The page is framed around silage corn but the row-spacing statement is for corn generally. Lower end of the between-row figure (#591 ruling Q1). Also read: https://content.ces.ncsu.edu/north-carolina-organic-commodities-production-guide/chapter-3-crop-production-management-corn (as narrow as 20 in (organic, with cultivator changes), not counted)."
+    },
+    "nitrogenNeedLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn, Field Corn",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
+      "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
+      "note": "#739. Stored as one part, 125-150 lb N per acre, the grain figure. The handbook adds that N residual from previous crops or organic sources should be considered."
     }
   },
   "corn-sweet-bodacious": {
@@ -4409,6 +4423,13 @@
       "date": "2007",
       "quote": "Drill 60 to 120 lb./A (1 to 2 bushels) into a firm seedbed at a 1/2- to 11/2-inch depth",
       "note": "Seed depth, sourced panel ruling 2026-10-05, #551; the source-coverage gate does not check this field. The web text prints '11/2' for 1 1/2 (Chart 3B's wheat row: 1/2–1 1/2). Was 1-1.5 (unsourced); PA NRCS 340 winter wheat 1.0-1.5 overlaps. VCE 424-100 gives no depth."
+    },
+    "nitrogenNeedLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Wheat",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 49",
+      "quote": "Fertilizer 20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).",
+      "note": "#739. Stored as two parts: 20 lb N in the fall and 40-80 lb N in late March (60-100 total). The 30-50 lb February topdress applies only if the stand is thin or shows N deficiency, so it is not counted."
     }
   },
   "white-clover-cover": {
@@ -6320,6 +6341,13 @@
       "date": "Publication date December 11, 2023 (Agronomy Handbook 2023) (accessed 2026-10-06)",
       "quote": "VCE 424-100 (SPES-299), Agronomy Handbook, Part I. Crop Descriptions, Rye – Annual (Secale cereale): \"Plant in 6-8 inch rows or solid-seeded.\"",
       "note": "Drill-row width for a drilled small grain/forage (the source says rows); 'or solid-seeded' is the alternative. Generic rye entry; Aroostook is a cereal rye variety. Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "nitrogenNeedLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Rye",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 34",
+      "quote": "Fertilizer 20 lbs of N in fall, plus 40-80 lbs each of P2O5 and K2O. Topdress with 60 lbs N in February or early March.",
+      "note": "#739. Aroostook is a winter grain rye. Stored as two parts: 20 lb N in the fall and 60 lb N topdressed in February or early March (80 total)."
     }
   },
   "wheat-hard-red-spring": {
@@ -6338,6 +6366,13 @@
       "date": "Publication date December 11, 2023 (Agronomy Handbook 2023) (accessed 2026-10-06)",
       "quote": "VCE 424-100 (SPES-299), Agronomy Handbook, Part I. Crop Descriptions, Wheat – Annual (Triticum aestivum): \"Plant 120-150 lbs per acre (36 seeds per sq ft or 20 seeds per drill foot in 7-inch\"; \"rows). Plant in 6-8 inch rows or solid-seeded.\"",
       "note": "Drill-row width for a drilled small grain/forage (the source says rows); 'or solid-seeded' is the alternative. Generic wheat entry; Snowmass is a hard white winter wheat. Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "nitrogenNeedLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Wheat",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 49",
+      "quote": "Fertilizer 20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).",
+      "note": "#739. VCE gives one wheat figure for winter wheat in Virginia (#591 ruling Q3: a named variety takes the crop-type figure). Stored as two parts: 20 lb N in the fall and 40-80 lb N in late March; the conditional 30-50 lb February topdress is not counted."
     }
   },
   "foxtail-millet-japanese": {
@@ -6458,6 +6493,13 @@
       "date": "December 15, 2023",
       "quote": "Rate of planting On soils with high production potential where good production practices are followed, plant 25,000 to 33,000 kernels per acre. If planted on droughty soils, the rate of planting should be decreased by 10%-15%.",
       "note": "Same VCE Agronomy Handbook sentence as the generic corn plugin; VCE's Corn section is field corn and Pioneer P1257AM is a field dent hybrid, so the crop-type figure applies (#591 ruling Q3; #689). Shown as a card note; planning math is unchanged (#576)."
+    },
+    "nitrogenNeedLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn, Field Corn",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
+      "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
+      "note": "#739. Same VCE sentence as the generic corn plugin; Pioneer P1257AM is a field dent hybrid grown for grain."
     }
   },
   "corn-bloody-butcher": {
@@ -6989,6 +7031,13 @@
       "date": "Publication date: July 31, 2025 (accessed 2026-10-08)",
       "quote": "In planting situations earlier than mid-May, soybean seeding rates of 120,000 to 150,000 seeds/acre generally maximized yield, while with later planting dates (past mid-June), seeding rates of 165,000 to 175,000 seeds/acre were needed to maximize yield.",
       "note": "#689. Seeds per acre for a full-season planting before mid-May, the usual Virginia planting for a group 3.5 bean (VCE 424-100 Soybean: two weeks after corn planting time, prior to June 10). Double-crop or late plantings need more seed (165,000 to 175,000 past mid-June, same sentence), which the plugin cannot express, so the full-season figure is stored. VCE 424-100 (2023) Part I Soybean was read and gives no seeding rate; the Virginia Tech soybean blog posts that gave one are no longer online, so no Virginia figure was counted."
+    },
+    "nitrogenNeedLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Soybean",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 37",
+      "quote": "Fertilizer Zero N, 40-60 lbs each of P2O5 and K2O",
+      "note": "#739. Stored as one part of 0 lb N per acre."
     }
   }
 }

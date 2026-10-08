@@ -45,7 +45,8 @@ test.describe('Monday summary', () => {
     await expect(card).toContainText('Tasks this week');
     await expect(card).toContainText('Safety alerts are not in this summary.');
     await expect(card).not.toContainText('$');
-    await expect(card).not.toContainText('Old overdue pruning');
+    // #742 / F4-5: every open overdue task is listed, however old.
+    await expect(card).toContainText('Old overdue pruning');
     const print = page.getByTestId('digest-print');
     const box = await print.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(48);

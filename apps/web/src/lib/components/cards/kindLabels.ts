@@ -11,6 +11,7 @@ export const CARD_KIND_LABEL_KEYS = {
   stock: 'cardsui.kind.stock',
   task: 'cardsui.kind.task',
   scout: 'cardsui.kind.scout',
+  harvest: 'cardsui.kind.harvest',
   soilTest: 'cardsui.kind.soilTest',
   animal: 'cardsui.kind.animal',
   flock: 'cardsui.kind.flock',

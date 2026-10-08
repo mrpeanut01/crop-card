@@ -1,7 +1,7 @@
 /**
  * Phase 30G: the Card a /records row expands into. Reads go through the
  * tenant-scoped repos only, so a row id from another Owner finds nothing.
- * Spray-kind and scout records get a read-only record card; harvest, hay,
+ * Spray-kind, scout and harvest records get a read-only record card; hay,
  * fertility and planting records show their Planting Card; decon shows the
  * sprayer's Equipment Card.
  */
@@ -9,6 +9,7 @@
 import { and, eq } from 'drizzle-orm';
 import { buildEquipmentCard, buildPlantingCard } from '$lib/cards/build';
 import {
+  buildHarvestRecordCard,
   buildIrrigationRecordCard,
   buildScoutRecordCard,
   buildSprayRecordCard,
@@ -42,6 +43,8 @@ import { buildFarmSnapshot, toCropPlugin, toSprayProduct } from './cardSnapshot'
 import { getRegistry } from './registry';
 import { lateLabel } from '$lib/records/lateLabel';
 import { hayDaysLate } from '$lib/records/hayExport.server';
+import { observationLine } from '$lib/records/metricLabel';
+import { cropDisplayName } from '$lib/i18n/cropName';
 
 /** G2-06: the hay record card's "Saved N days after its date" line. */
 export function hayLateNotice(
@@ -193,11 +196,24 @@ export async function buildRecordCards(
     const ev = kind === 'insecticide' ? getInsecticideEvent(rowId) : getFungicideEvent(rowId);
     if (!ev) return null;
     const sprayer = ev.sprayerId ? listSprayers().find((s) => s.id === ev.sprayerId) : undefined;
+    const loc = opts.prefs.locale;
     const seen =
       'scoutObservation' in ev && ev.scoutObservation
-        ? `${ev.scoutObservation.pest} · ${ev.scoutObservation.metric} = ${ev.scoutObservation.value}`
+        ? observationLine(
+            ev.scoutObservation.pest,
+            ev.scoutObservation.metric,
+            ev.scoutObservation.value,
+            null,
+            loc
+          )
         : 'diseaseObservation' in ev && ev.diseaseObservation
-          ? `${ev.diseaseObservation.disease} · ${ev.diseaseObservation.metric} = ${ev.diseaseObservation.value}`
+          ? observationLine(
+              ev.diseaseObservation.disease,
+              ev.diseaseObservation.metric,
+              ev.diseaseObservation.value,
+              null,
+              loc
+            )
           : null;
     const card = buildSprayRecordCard(
       {
@@ -252,9 +268,26 @@ export async function buildRecordCards(
     if (!ev) return null;
     const plantingId = ev.cropId ?? plantingIdForRecord(ev.blockId, ev.cropPluginId, ev.occurredAt);
     const went = listDispositionsForHarvests([ev.id]).get(ev.id) ?? [];
-    const cards = await plantingCard(plantingId, kind, rowId, ctx);
+    const planting = plantingId ? listPlantingsForCardsByIds([plantingId])[0] : undefined;
+    const english = planting
+      ? planting.varietyDisplayName
+      : ((await getRegistry()).get(ev.cropPluginId)?.plugin.displayName ?? ev.cropPluginId);
+    const card = buildHarvestRecordCard(
+      {
+        rowId,
+        occurredAt: ev.occurredAt,
+        blockLabel: blockLabels().get(ev.blockId) ?? null,
+        cropLabel: cropDisplayName(ev.cropPluginId, english, ctx.prefs.locale),
+        quantity: ev.quantity ?? null,
+        lotNumber: ev.lotNumber ?? null,
+        moisturePct: ev.moisturePct ?? null,
+        plantingId: planting ? planting.id : null,
+        locked: isLocked(ev.occurredAt, ev.lockedAt, now)
+      },
+      cardOpts
+    );
     return {
-      cards: went.length ? cards.map((card) => withWhereItWent(card, went, ctx.prefs)) : cards,
+      cards: [went.length ? withWhereItWent(card, went, ctx.prefs) : card],
       origin
     };
   }

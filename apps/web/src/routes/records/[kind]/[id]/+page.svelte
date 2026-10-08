@@ -12,7 +12,6 @@
   } from '$lib/records/pollinatorAttestation';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { localStamp } from '$lib/exports/localTime';
-  import type { Quantity } from '$lib/prefs';
   import { kindLabel } from '$lib/components/records/kindLabel';
 
   let { data } = $props();
@@ -21,43 +20,6 @@
 
   function fmtTimestamp(ms: number): string {
     return localStamp(ms, currentPrefs());
-  }
-
-  const QTY_KEYS: Record<string, Quantity> = {
-    nLbPerAcre: 'weightPerArea',
-    pLbPerAcre: 'weightPerArea',
-    kLbPerAcre: 'weightPerArea'
-  };
-  const INSTANT_KEYS = new Set(['reEntryClearAt', 'preHarvestClearAt']);
-  const KEY_LABEL = $derived<Record<string, string>>({
-    nLbPerAcre: tr('records.detail.nDelivered'),
-    pLbPerAcre: tr('records.detail.pDelivered'),
-    kLbPerAcre: tr('records.detail.kDelivered'),
-    reEntryClearAt: 'Re-entry clear',
-    preHarvestClearAt: 'Pre-harvest clear'
-  });
-
-  function fmtConditions(c: Record<string, unknown>): string {
-    const parts: string[] = [];
-    if (typeof c.windMph === 'number')
-      parts.push(tr('records.detail.wind', { value: fmt.qty(c.windMph, 'speed') }));
-    if (typeof c.tempF === 'number') parts.push(fmt.qty(c.tempF, 'temperature'));
-    if (typeof c.rainForecastMmNext24h === 'number')
-      parts.push(
-        tr('records.detail.rainNext', {
-          value: fmt.qty(c.rainForecastMmNext24h / 25.4, 'precip')
-        })
-      );
-    if (c.conditionsProvenance === 'default') parts.push(tr('records.detail.defaultReadings'));
-    return parts.join(' · ');
-  }
-
-  function fmtField(k: string, v: unknown): string {
-    if (typeof v === 'number' && QTY_KEYS[k]) return fmt.qty(v, QTY_KEYS[k]);
-    if (typeof v === 'number' && INSTANT_KEYS.has(k)) return fmt.instant(v);
-    if (k === 'conditions' && typeof v === 'object' && v !== null && 'windMph' in v)
-      return fmtConditions(v as Record<string, unknown>);
-    return fmtVal(v);
   }
 
   /**
@@ -76,18 +38,6 @@
     if (kind === 'hay') return '/hay';
     if (kind === 'planting') return '/plan';
     return null;
-  }
-
-  function entries(obj: Record<string, unknown> | null) {
-    if (!obj) return [];
-    return Object.entries(obj).filter(([, v]) => v !== undefined && v !== null);
-  }
-
-  function fmtVal(v: unknown): string {
-    if (v == null) return '—';
-    if (typeof v === 'number' && v > 1_000_000_000_000) return fmt.instant(v);
-    if (typeof v === 'object') return JSON.stringify(v, null, 2);
-    return String(v);
   }
 </script>
 
@@ -151,10 +101,6 @@
       <div class="card-value">{data.performerLabel}</div>
     </div>
   {/if}
-  <div class="card-row">
-    <div class="card-label">{tr('records.detail.rowId')}</div>
-    <div class="card-value mono">{data.rowId}</div>
-  </div>
 </section>
 
 {#if data.pollinator}
@@ -198,19 +144,39 @@
 <section class="card">
   <h2 class="card-title">{tr('records.detail.detail')}</h2>
   <dl class="kv">
-    {#each entries(data.detail) as [k, v] (k)}
-      {@const shown = fmtField(k, v)}
-      <dt>{KEY_LABEL[k] ?? k}</dt>
+    {#each data.rows as row, i (i)}
+      <dt>{row.label}</dt>
       <dd>
-        {#if shown.includes('\n')}
-          <pre class="mono">{shown}</pre>
+        {#if row.englishOnly}
+          <span lang="en" data-english-only="safety">{row.value}</span>
+        {:else if row.block}
+          <span class="wrap">{row.value}</span>
         {:else}
-          <span class="mono">{shown}</span>
+          {row.value}
         {/if}
       </dd>
     {/each}
   </dl>
 </section>
+
+<details class="card technical" data-testid="record-technical">
+  <summary class="card-title">{tr('records.field.technical')}</summary>
+  <p class="card-note">{tr('records.field.technicalHint')}</p>
+  <dl class="kv">
+    <dt>{tr('records.detail.rowId')}</dt>
+    <dd><span class="mono">{data.rowId}</span></dd>
+    {#each data.technical as row, i (i)}
+      <dt>{row.label}</dt>
+      <dd>
+        {#if row.block}
+          <pre class="mono">{row.value}</pre>
+        {:else}
+          <span class="mono">{row.value}</span>
+        {/if}
+      </dd>
+    {/each}
+  </dl>
+</details>
 
 <style>
   .head {
@@ -367,6 +333,19 @@
     border-radius: 4px;
     font-size: 11.5px;
     overflow-x: auto;
+  }
+  .wrap {
+    white-space: pre-wrap;
+  }
+  .technical summary {
+    cursor: pointer;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+  }
+  .kv dd {
+    overflow-wrap: anywhere;
   }
   .mono {
     font-family: var(--font-mono, ui-monospace, monospace);

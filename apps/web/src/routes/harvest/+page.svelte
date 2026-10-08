@@ -28,6 +28,8 @@
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
+  const harvestCropName = (id: string) =>
+    cropDisplayName(id, data.harvestCropNames[id] ?? id, data.locale);
   // Kept from the first load: the reload after a save no longer finds the
   // task open, and the saved line still has to show.
   const taskCtx = untrack(() => data.taskContext);
@@ -574,7 +576,7 @@
         {#each inCuring as h (h.id)}
           <li class="curing-item phase-{h.curing!.phase}">
             <header>
-              <strong>{h.cropPluginId}</strong>
+              <strong>{harvestCropName(h.cropPluginId)}</strong>
               {#if h.lotNumber}<span class="lot"
                   >{tr('harvestui.curing.lot', { lot: h.lotNumber })}</span
                 >{/if}
@@ -645,7 +647,7 @@
               <td data-label={tr('harvestui.th.block')}
                 >{h.blockName ?? tr('harvestui.deletedBlock')}</td
               >
-              <td data-label={tr('harvestui.th.variety')}><code>{h.cropPluginId}</code></td>
+              <td data-label={tr('harvestui.th.variety')}>{harvestCropName(h.cropPluginId)}</td>
               <td data-label={tr('harvestui.th.quantity')}>{h.quantity ?? '—'}</td>
               <td data-label={tr('harvestui.th.lot')}>{h.lotNumber ?? '—'}</td>
               <td data-label={tr('harvestui.th.curing')}>
@@ -1159,11 +1161,5 @@
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
-  }
-  code {
-    background: #f5f5f5;
-    padding: 0.05rem 0.3rem;
-    border-radius: 3px;
-    font-size: 0.8rem;
   }
 </style>

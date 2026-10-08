@@ -126,7 +126,7 @@ export async function buildYearSummary(
       occurredAtMs: e.occurredAt,
       products: e.products.map((p) => ({
         productId: p.pluginId,
-        displayName: p.pluginId,
+        displayName: registry.get(p.pluginId)?.plugin.displayName ?? p.pluginId,
         classes: p.chemistryClasses ?? []
       }))
     });

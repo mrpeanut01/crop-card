@@ -82,10 +82,37 @@ describe('/records/[kind]/[id]', () => {
     const { ownerId, cuttingId } = seed();
     const data = (await runWithTenantAsync(ownerId, async () =>
       DETAIL(event(ownerId, `/records/hay/${cuttingId}`, { kind: 'hay', id: cuttingId }))
-    )) as unknown as { detail: Record<string, unknown>; occurredAt: number };
-    expect(data.detail.blockLabel).toBe('Hay block');
-    expect(data.detail.cuttingNumber).toBe(1);
+    )) as unknown as {
+      rows: Array<{ label: string; value: string }>;
+      technical: Array<{ label: string; value: string }>;
+      occurredAt: number;
+    };
+    const row = (label: string) => data.rows.find((r) => r.label === label)?.value;
+    expect(row('Block')).toBe('Hay block');
+    expect(row('Cutting')).toBe('1');
+    expect(row('Crop')).not.toBe('alfalfa-vernema');
+    expect(data.technical).toContainEqual({ label: 'Crop id', value: 'alfalfa-vernema' });
     expect(data.occurredAt).toBeGreaterThan(0);
+  });
+
+  it('a spray record reads as labelled fields, ids folded away (#725)', async () => {
+    const { ownerId, sprayIds } = seed();
+    const id = sprayIds.Boom;
+    const data = (await runWithTenantAsync(ownerId, async () =>
+      DETAIL(event(ownerId, `/records/spray/${id}`, { kind: 'spray', id }))
+    )) as unknown as {
+      rows: Array<{ label: string; value: string }>;
+      technical: Array<{ label: string; value: string }>;
+    };
+    const labels = data.rows.map((r) => r.label);
+    expect(labels).toEqual(expect.arrayContaining(['Block', 'Area treated', 'Sprayer']));
+    for (const r of data.rows) {
+      expect(r.label).not.toMatch(/^[a-z]+[A-Z]/);
+      expect(r.value).not.toMatch(/[{[]/);
+    }
+    expect(data.rows.find((r) => r.label === 'Sprayer')?.value).toBe('Boom');
+    expect(data.technical).toContainEqual({ label: 'Rules version', value: 'rv-test' });
+    expect(data.technical).toContainEqual({ label: 'Product id', value: '24d' });
   });
 
   it('answers 404 for a hay id that is not on file', async () => {

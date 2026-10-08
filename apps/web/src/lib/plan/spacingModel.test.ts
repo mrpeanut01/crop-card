@@ -307,6 +307,20 @@ describe('seeding purpose and sown-by markers (#576)', () => {
     expect(seedAmountLine(sorghum, null, 1200, 'us').text).toMatch(/, rate for smothering weeds$/);
   });
 
+  it('plans field corn and soybeans by area from their sourced populations (#689)', () => {
+    const soy = spacingModel(byId('soybean-asgrow-roundup-ready-2-xtend'));
+    expect(soy).toMatchObject({ kind: 'area' });
+    expect(areaForSeed(soy, null, 1_500_000, 'seeds')).toEqual({
+      sqft: 10 * 43_560,
+      provenance: 'data'
+    });
+    expect(
+      resolveSpacing(byId('soybean-asgrow-roundup-ready-2-xtend') as never, 'square').mode
+    ).toBe('area');
+    const corn = spacingModel(byId('corn-feed-dent-pioneer'));
+    expect(areaForSeed(corn, null, 330_000, 'seeds')?.sqft).toBe(10 * 43_560);
+  });
+
   it('plans a sown-by crop with no agreed rate by area, amount not known', () => {
     for (const id of ['oats-cover-spring', 'daikon-radish-cover', 'tillage-radish-driller']) {
       const model = spacingModel(byId(id));

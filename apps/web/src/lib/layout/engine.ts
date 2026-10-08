@@ -131,12 +131,15 @@ export const SCORE_WEIGHTS = {
   threeSistersBonus: 30
 } as const;
 
-/** #797 — how far a protected block ranks behind open ground. Equal to the
- *  capacity-fit weight, so a tunnel's extra room alone never outranks an
- *  open block that suits the crop. Only ever used to rank candidates, never
+/** #797 — how far a protected block ranks behind open ground. It covers
+ *  every score term that a bigger block can win on size alone (capacity
+ *  fit, the split penalty and the narrow-bed penalty), so a tunnel's extra
+ *  room never outranks an open block that suits the crop, and equal ranks
+ *  go to open ground (`openFirst`). Only ever used to rank candidates, never
  *  against a score floor, so protected space is still used when open ground
  *  is full or ruled out. */
-export const PROTECTED_SPACE_NUDGE = SCORE_WEIGHTS.capacityFit;
+export const PROTECTED_SPACE_NUDGE =
+  SCORE_WEIGHTS.capacityFit - SCORE_WEIGHTS.fragmentationPenalty - SCORE_WEIGHTS.narrowBlockPenalty;
 
 export function isProtectedBlock(input: Pick<PlanInput, 'protectedBlockIds'>, blockId: string) {
   return (input.protectedBlockIds ?? []).includes(blockId);
@@ -144,6 +147,12 @@ export function isProtectedBlock(input: Pick<PlanInput, 'protectedBlockIds'>, bl
 
 function rankScore(input: PlanInput, blockId: string, score: number): number {
   return isProtectedBlock(input, blockId) ? score - PROTECTED_SPACE_NUDGE : score;
+}
+
+/** Negative when `a` is open ground and `b` is protected, so equal ranks
+ *  never fall through to a room tie-break that favours the bigger tunnel. */
+function openFirst(input: PlanInput, a: string, b: string): number {
+  return Number(isProtectedBlock(input, a)) - Number(isProtectedBlock(input, b));
 }
 
 /** Score floor for the first (tight) pass. Seeds that can't clear this on
@@ -431,7 +440,12 @@ function bestBlock(
     const score = scoreBlock(seed, plugin, block, needed, fit, state, input);
     if (score < floor) continue;
     const rank = rankScore(input, block.id, score);
-    if (!best || rank > best.rank || (rank === best.rank && block.id < best.blockId)) {
+    const tie = best && rank === best.rank ? openFirst(input, block.id, best.blockId) : 0;
+    if (
+      !best ||
+      rank > best.rank ||
+      (rank === best.rank && (tie < 0 || (tie === 0 && block.id < best.blockId)))
+    ) {
       best = { blockId: block.id, score, fit, rank };
     }
   }
@@ -479,16 +493,19 @@ function laterPartBlock(
       adjacent,
       rank: rankScore(input, block.id, score)
     };
-    if (!best || laterBetter(cand, best)) best = cand;
+    if (!best || laterBetter(input, cand, best)) best = cand;
   }
   return best && { blockId: best.blockId, score: best.score, fit: best.fit };
 }
 
 function laterBetter(
+  input: PlanInput,
   a: Candidate & { adjacent: boolean; rank: number },
   b: Candidate & { adjacent: boolean; rank: number }
 ): boolean {
   if (a.rank !== b.rank) return a.rank > b.rank;
+  const open = openFirst(input, a.blockId, b.blockId);
+  if (open !== 0) return open < 0;
   if (a.adjacent !== b.adjacent) return a.adjacent;
   if (a.fit !== b.fit) return a.fit > b.fit;
   return a.blockId < b.blockId;
@@ -754,6 +771,7 @@ function packSharedBeds(
     ranked.sort(
       (x, y) =>
         y.rank - x.rank ||
+        openFirst(input, x.bed.id, y.bed.id) ||
         (x.adjacent === y.adjacent ? 0 : x.adjacent ? -1 : 1) ||
         y.room - x.room ||
         (x.bed.id < y.bed.id ? -1 : 1)

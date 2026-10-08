@@ -2,6 +2,7 @@
   import { isUpdatingResponse, retryAfterSeconds, updatingQueuedNotice } from '$lib/updating';
   import { createT } from '$lib/i18n';
   import { cropDisplayName } from '$lib/i18n/cropName';
+  import { cropFamilyLabel } from '$lib/plugins/familyLabel';
   import { onMount, tick, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import type { PlantingHarvestStatus } from './+page.server';
@@ -311,11 +312,11 @@
   <h1 class="serif">{tr('harvestui.h1')}</h1>
   <p class="stat-line">
     <strong>{readyPlantings.length}</strong>
-    {tr('harvestui.readyToday')}
+    {tr('harvestui.readyToday', { count: readyPlantings.length })}
     <strong>{upcomingPlantings.length}</strong>
-    {tr('harvestui.upcomingWindows')}
+    {tr('harvestui.upcomingWindows', { count: upcomingPlantings.length })}
     <strong>{eventsYtd.length}</strong>
-    {tr('harvestui.eventsYtd')}
+    {tr('harvestui.eventsYtd', { count: eventsYtd.length })}
   </p>
   <div class="page-actions">
     <button class="ghost" type="button" onclick={exportYtdCsv} disabled={eventsYtd.length === 0}>
@@ -402,7 +403,7 @@
     <div class="panel-head">
       <h2>
         {tr('harvestui.plantings')}
-        <span class="panel-count">{tr('harvestui.nReady', { n: readyPlantings.length })}</span>
+        <span class="panel-count">{tr('harvestui.nReady', { count: readyPlantings.length })}</span>
       </h2>
       {#if data.setup.canEdit}
         <button type="button" class="add-more" onclick={() => (plantingSheetOpen = true)}>
@@ -422,7 +423,7 @@
             <strong>{cropDisplayName(p.cropPluginId, p.varietyDisplayName, data.locale)}</strong>
             <span class="block">{p.blockName}</span>
             {#if p.cropFamily}
-              <span class="family">{p.cropFamily}</span>
+              <span class="family">{cropFamilyLabel(p.cropFamily, data.locale)}</span>
             {/if}
             {#if p.alreadyHarvested}
               <span class="badge harvested">{tr('harvestui.badge.harvested')}</span>

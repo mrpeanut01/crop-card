@@ -14,6 +14,7 @@
     type CarePlanKind,
     type CarePlanView as PlanView,
     carePlanTitleIn,
+    carePlanTitleToStore,
     careNoteIn
   } from '$lib/animals/carePlans';
 
@@ -72,7 +73,7 @@
   function reset(plan?: PlanView) {
     error = null;
     kind = plan?.kind ?? 'vaccination';
-    title = plan?.title ?? '';
+    title = plan ? carePlanTitleIn(plan, page.data?.locale) : '';
     repeats = plan ? plan.onceOn === null : true;
     everyDays = plan?.intervalDays ?? null;
     lastOn = '';
@@ -103,8 +104,13 @@
     }
   }
 
-  function formBody(forEdit: boolean) {
-    const out: Record<string, unknown> = { kind, title: title.trim(), leadDays };
+  function formBody(plan?: PlanView) {
+    const forEdit = plan !== undefined;
+    const out: Record<string, unknown> = {
+      kind,
+      title: carePlanTitleToStore(title, plan, page.data?.locale),
+      leadDays
+    };
     if (repeats) {
       out.intervalDays = everyDays && everyDays > 0 ? Math.round(everyDays) : null;
       if (forEdit) out.onceOn = null;
@@ -134,8 +140,8 @@
       return;
     }
     void (plan
-      ? send(`${base}/${plan.id}`, 'PATCH', formBody(true), tr('animals.care.planSaved'))
-      : send(base, 'POST', formBody(false), tr('animals.care.planAdded')));
+      ? send(`${base}/${plan.id}`, 'PATCH', formBody(plan), tr('animals.care.planSaved'))
+      : send(base, 'POST', formBody(), tr('animals.care.planAdded')));
   }
 
   function whenText(p: PlanView): string {

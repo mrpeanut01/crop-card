@@ -278,6 +278,16 @@ export const enToday = {
   'today.sum.planned.other': '{count} planned',
   'today.sum.skipped.one': '{count} skipped',
   'today.sum.skipped.other': '{count} skipped',
+  'today.decon.aria': 'Sprayer cleanout',
+  'today.decon.title': 'Sprayer cleanout due',
+  'today.decon.body.one':
+    'A sprayer still holds the last load. Run the cleanout before the next spray.',
+  'today.decon.body.other':
+    'Sprayers still hold the last load. Run the cleanout before the next spray.',
+  'today.decon.lastLoad': 'last load:',
+  'today.decon.run': 'Run the cleanout',
+  'today.decon.see': 'See the cleanout steps',
+  'today.decon.allEquipment': 'All equipment',
   'today.title': 'Today',
   'today.tray.log': 'Log the tray',
   'today.tray.notNow': 'Not now',

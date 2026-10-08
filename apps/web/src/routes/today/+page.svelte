@@ -742,28 +742,28 @@
 {#if data.deconAlerts.length > 0}
   <section
     class="card decon-alert"
-    aria-label="Sprayer cleanout"
+    aria-label={tr('today.decon.aria')}
     data-testid="today-decon-alert"
-    lang="en"
-    data-english-only="safety"
   >
-    <h2>Sprayer cleanout due</h2>
-    <p>
-      {data.deconAlerts.length === 1 ? 'A sprayer still holds' : 'Sprayers still hold'} the last load.
-      Run the cleanout before the next spray.
-    </p>
+    <h2>{tr('today.decon.title')}</h2>
+    <p>{tr('today.decon.body', { count: data.deconAlerts.length })}</p>
     <ul>
       {#each data.deconAlerts as s (s.id)}
         <li>
           <strong>{s.label}</strong>
-          <span class="pill">last load: {chemistryClassLabel(s.lastChemistryClass ?? '')}</span>
+          <span class="pill"
+            >{tr('today.decon.lastLoad')}
+            <span lang="en" data-english-only="safety"
+              >{chemistryClassLabel(s.lastChemistryClass ?? '')}</span
+            ></span
+          >
           <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}"
-            >{data.user?.role === 'owner' ? 'Run the cleanout' : 'See the cleanout steps'}</a
+            >{data.user?.role === 'owner' ? tr('today.decon.run') : tr('today.decon.see')}</a
           >
         </li>
       {/each}
     </ul>
-    <a class="alert-link" href="/equipment">All equipment</a>
+    <a class="alert-link" href="/equipment">{tr('today.decon.allEquipment')}</a>
   </section>
 {/if}
 

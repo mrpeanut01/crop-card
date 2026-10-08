@@ -17,6 +17,7 @@ import type { HealthStockOption } from '$lib/animals/healthStock';
 import type { Task } from '$lib/db/tasks';
 import {
   careCardTitle,
+  carePlanTitleIn,
   careItemStatus,
   isHoldBearingCare,
   isSurfaced,
@@ -63,7 +64,7 @@ export function careCards(
         subjectId: meta.subjectId,
         subjectName: subject.name,
         planId: plan.id,
-        planTitle: plan.title,
+        planTitle: carePlanTitleIn(plan, opts.locale),
         dueOn: meta.dueOn,
         scheduledOn,
         careKind: meta.careKind,

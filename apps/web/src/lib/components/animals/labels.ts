@@ -96,6 +96,14 @@ export function unitLabel(tr: Translator, unit: string): string {
   return tr(`animals.unit.${unit}` as MessageKey);
 }
 
+const QTY_UNITS = ['eggs', 'dozen', 'gal', 'qt', 'l', 'lb', 'kg'] as const;
+
+/** "18 eggs" / "18 huevos": a logged amount with its unit, in the reader's language. */
+export function quantityLabel(tr: Translator, quantity: number, unit: string): string {
+  if (!(QTY_UNITS as readonly string[]).includes(unit)) return `${quantity} ${unit}`;
+  return tr(`animals.qty.${unit as (typeof QTY_UNITS)[number]}`, { count: quantity });
+}
+
 const CODE_KEYS: Record<string, MessageKey> = {
   SPECIES_MISMATCH: 'animals.err.SPECIES_MISMATCH',
   NOT_A_HOUSING_AREA: 'animals.err.NOT_A_HOUSING_AREA',

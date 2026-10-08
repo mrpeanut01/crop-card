@@ -830,7 +830,7 @@
   }
 </script>
 
-<SprayPageHeader chemistry="herbicide" />
+<SprayPageHeader chemistry="herbicide" activeREI={data.activeREI} blockNames={data.reiBlockNames} />
 
 <!-- Phase 25b (#85) — Almanac stepper + context strip. 1:1 with the
      header in ASprayScreen at docs/design/almanac/direction-almanac-rest.jsx

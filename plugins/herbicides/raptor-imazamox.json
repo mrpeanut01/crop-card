@@ -23,6 +23,7 @@
   "requiresAMS": true,
   "deconRequired": true,
   "epaRegistrationNumber": "241-379",
+  "reEntryIntervalHours": 4,
   "notes": "BASF POST imidazolinone (Group 2 ALS). Standard tool for alfalfa, soybean, dry bean, peas, Clearfield wheat/sunflower.",
   "grazingRestrictions": {
     "grazeDays": 0,

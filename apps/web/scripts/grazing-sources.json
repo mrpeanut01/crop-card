@@ -580,6 +580,96 @@
         "quote": "Do not use plant material treated with this product for mulch or compost.",
         "note": "Also on the front panel: 'DO NOT USE PLANT MATERIAL TREATED WITH METHOD® 240SL HERBICIDE FOR MULCH OR COMPOST'."
       }
+    },
+    "aatrex-4l": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00497-20240708.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2024-07-08",
+        "quote": "Note for all applications to corn: Do not graze or feed forage from treated areas for 60 days following application, or illegal residues may result.",
+        "note": "PDF page 24. Corn: 60 days (sweet corn 45). Sorghum and sorghum-sudan hybrids (page 27): 'Note: Do not graze or feed forage from treated areas for 60 days following a preemergence application or 45 days following a postemergence application, or illegal residues may result.' The longest, 60, is recorded. The label's chemical fallow and wheat-sorghum-fallow uses add 'Do not graze treated areas within 6 months after application' and 'do not graze or feed forage from treated area to livestock'; those are fallow uses, not corn or sorghum, which are the plugin's crops."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00497-20240708.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2024-07-08",
+        "quote": "Note for all applications to corn: Do not graze or feed forage from treated areas for 60 days following application, or illegal residues may result.",
+        "note": "PDF page 24. The label's only forage-harvest statement is 'do not ... feed forage from treated areas', 60 days for corn and for preemergence sorghum (page 27), so 60 is recorded for cutting forage or hay."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00497-20240708.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2024-07-08",
+        "quote": "Note for all applications to corn: Do not graze or feed forage from treated areas for 60 days following application, or illegal residues may result.",
+        "note": "PDF page 24. The label names no separate interval for lactating dairy animals and its 60-day statement has no dairy exception, so the same 60 days."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00497-20240708.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2024-07-08",
+        "quote": "Note for all applications to corn: Do not graze or feed forage from treated areas for 60 days following application, or illegal residues may result.",
+        "note": "PDF page 24. Label states no interval; recorded 0 per owner ruling 2026-09-30. No sentence on the label names slaughter or meat animals; the grazing and forage statement is the closest."
+      }
+    },
+    "acuron": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20211110.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2021-11-10",
+        "quote": "Grazing Restriction: To avoid possible illegal residues, do not graze or feed forage from treated areas for 45 days following application.",
+        "note": "PDF page 11."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20211110.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2021-11-10",
+        "quote": "Do not harvest forage within 60 days after application.",
+        "note": "PDF page 11. Forage harvest interval, from the same use restrictions list."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20211110.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2021-11-10",
+        "quote": "Grazing Restriction: To avoid possible illegal residues, do not graze or feed forage from treated areas for 45 days following application.",
+        "note": "PDF page 11. The label names no separate interval for lactating dairy animals and its 45-day grazing restriction has no dairy exception, so the same 45 days."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20211110.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2021-11-10",
+        "quote": "Grazing Restriction: To avoid possible illegal residues, do not graze or feed forage from treated areas for 45 days following application.",
+        "note": "PDF page 11. Label states no interval; recorded 0 per owner ruling 2026-09-30. No sentence on the label names slaughter or meat animals; the grazing and forage statement is the closest."
+      }
+    },
+    "lumax-ez": {
+      "grazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20221214.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2022-12-14",
+        "quote": "Do not graze or feed forage from treated areas for 45 days following application.",
+        "note": "PDF page 32. Corn use restrictions. The label also says 'Do not use Lumax EZ Herbicide in the production of forage sorghum, sweet sorghum (sorgo), sudangrass, sorghum-sudangrass hybrids, or dual purpose sorghum.' (page 33)."
+      },
+      "hayDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20221214.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2022-12-14",
+        "quote": "Do not harvest forage, grain, or stover within 60 days after application.",
+        "note": "PDF page 32. Field corn forage, grain or stover: 60 days; sweet corn forage: 45 days ('Do not harvest sweet corn forage within 45 days after application.'). The longer 60 is recorded."
+      },
+      "lactatingDairyGrazeDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20221214.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2022-12-14",
+        "quote": "Do not graze or feed forage from treated areas for 45 days following application.",
+        "note": "PDF page 32. The label names no separate interval for lactating dairy animals and its 45-day statement has no dairy exception, so the same 45 days."
+      },
+      "meatAnimalRemovalBeforeSlaughterDays": {
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20221214.pdf",
+        "publisher": "Syngenta Crop Protection (EPA PPLS stamped label)",
+        "date": "2022-12-14",
+        "quote": "Do not graze or feed forage from treated areas for 45 days following application.",
+        "note": "PDF page 32. Label states no interval; recorded 0 per owner ruling 2026-09-30. No sentence on the label names slaughter or meat animals; the grazing and forage statement is the closest."
+      }
     }
   },
   "pastureAllowlist": [

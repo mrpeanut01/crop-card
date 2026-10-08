@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Banvel Herbicide (UPL dicamba DMA 4 lb/gal)",
   "epaRegistrationNumber": "70506-461",
+  "reEntryIntervalHours": 24,
   "version": "1.0.1",
   "defaultUnit": "fl-oz",
   "formulation": "SL",

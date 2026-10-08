@@ -23,5 +23,6 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "279-3241",
+  "reEntryIntervalHours": 12,
   "notes": "FMC Group 14 PPO contact burndown. Tank-mix partner with glyphosate, 2,4-D, or dicamba."
 }

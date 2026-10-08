@@ -4,6 +4,7 @@
   "displayName": "Stinger (Corteva clopyralid)",
   "version": "1.0.1",
   "epaRegistrationNumber": "62719-73",
+  "reEntryIntervalHours": 12,
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
   "activeIngredients": [

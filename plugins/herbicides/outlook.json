@@ -5,6 +5,7 @@
   "version": "1.0.1",
   "formulation": "EC",
   "epaRegistrationNumber": "7969-156",
+  "reEntryIntervalHours": 12,
   "defaultUnit": "fl-oz",
   "applicationTiming": "PRE",
   "activeIngredients": [

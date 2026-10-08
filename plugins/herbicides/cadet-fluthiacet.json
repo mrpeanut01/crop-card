@@ -23,5 +23,6 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "279-3338",
+  "reEntryIntervalHours": 12,
   "notes": "Valent POST Group 14 PPO inhibitor for corn and soybean. Strong on velvetleaf, lambsquarters, waterhemp."
 }

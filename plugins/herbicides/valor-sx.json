@@ -5,6 +5,7 @@
   "version": "1.0.1",
   "formulation": "WDG",
   "epaRegistrationNumber": "59639-99",
+  "reEntryIntervalHours": 12,
   "defaultUnit": "oz",
   "applicationTiming": "PRE",
   "activeIngredients": [

@@ -22,6 +22,7 @@
   "requiresAMS": true,
   "deconRequired": true,
   "epaRegistrationNumber": "352-773",
+  "reEntryIntervalHours": 4,
   "defaultUnit": "oz",
   "notes": "Corteva field corn POST grass and broadleaf product. ALS-inhibitor sulfonylurea. Add AMS and methylated seed oil per label. Apply to corn V1 through V6."
 }

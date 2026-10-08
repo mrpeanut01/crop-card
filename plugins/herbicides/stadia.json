@@ -4,6 +4,7 @@
   "displayName": "Stadia (Atticus halosulfuron-methyl 75% WDG)",
   "version": "1.0.1",
   "epaRegistrationNumber": "91234-31",
+  "reEntryIntervalHours": 12,
   "defaultUnit": "oz",
   "formulation": "WDG",
   "activeIngredients": [

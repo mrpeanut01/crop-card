@@ -23,5 +23,6 @@
   "requiresAMS": true,
   "deconRequired": false,
   "epaRegistrationNumber": "7969-278",
+  "reEntryIntervalHours": 12,
   "notes": "BASF Group 14 PPO-inhibitor burndown for corn, soybean, wheat. Strong on glyphosate-resistant marestail and pigweed."
 }

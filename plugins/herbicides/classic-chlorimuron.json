@@ -22,6 +22,7 @@
   "requiresAMS": false,
   "deconRequired": true,
   "epaRegistrationNumber": "5481-681",
+  "reEntryIntervalHours": 12,
   "defaultUnit": "oz",
   "notes": "Corteva POST soybean broadleaf herbicide. Group 2 ALS inhibitor. Strong rotation restrictions for sensitive crops."
 }

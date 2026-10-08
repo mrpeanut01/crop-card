@@ -26,6 +26,7 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "51517-9",
+  "reEntryIntervalHours": 24,
   "complianceFlags": {
     "omriListed": true,
     "nonGmoCompliant": true,

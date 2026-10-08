@@ -37,5 +37,6 @@
   "requiresAMS": false,
   "deconRequired": true,
   "epaRegistrationNumber": "62719-739",
+  "reEntryIntervalHours": 48,
   "notes": "Corteva Group 4 premix with Rinskor (florpyrauxifen) for pasture and rangeland. Same aminopyralid carryover concerns as GrazonNext."
 }

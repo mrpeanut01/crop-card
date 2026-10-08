@@ -23,5 +23,6 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "10163-283",
+  "reEntryIntervalHours": 12,
   "notes": "Gowan Group 15 thiocarbamate VLCFA inhibitor. Incorporate within 30 min to avoid volatility loss. Strong on yellow nutsedge. chemistryClass is thiocarbamate (#654): the label says Group 15, and the safety kernel treats it as lethal to every crop family except legume forage (alfalfa, birdsfoot trefoil, clovers), the one family the label covers."
 }

@@ -5,6 +5,7 @@
   "version": "1.0.1",
   "formulation": "SL",
   "epaRegistrationNumber": "81927-9",
+  "reEntryIntervalHours": 4,
   "defaultUnit": "fl-oz",
   "applicationTiming": "BURNDOWN",
   "activeIngredients": [

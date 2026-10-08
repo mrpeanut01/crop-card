@@ -4451,7 +4451,424 @@
     }
   },
   "rei": {
-    "$comment": "#640 — label restricted-entry interval for herbicide plugins. One entry per plugin carrying reEntryIntervalHours: { reEntryIntervalHours, sourceUrl, docDate, page, quote }, where the quote is the label's own REI sentence and states the number of hours. Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read (the EPA PPLS host was unreachable from the 2026-10-07 build environment)."
+    "$comment": "#640 — label restricted-entry interval for herbicide plugins. One entry per plugin carrying reEntryIntervalHours: { reEntryIntervalHours, sourceUrl, docDate, page, quote }, where the quote is the label's own REI sentence and states the number of hours. Checked by pesticideLabelSources.gate.test.ts. Filled 2026-10-08 from the newest stamped PPLS label with an Agricultural Use Requirements box. Where a label gives more than one REI, the longer one is recorded unless it is for a use the plugin does not cover; the note says which. Crossbow (62719-260) states no REI hours (only 'until sprays have dried') and Method 240SL (101563-177) is non-crop with no WPS box, so neither carries one.",
+    "aatrex-4l": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00497-20240708.pdf",
+      "docDate": "2024-07-08",
+      "page": 8,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "accent-q-nicosulfuron": {
+      "reEntryIntervalHours": 4,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00773-20241107.pdf",
+      "docDate": "2024-11-07",
+      "page": 10,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted entry interval (REI) of 4 hours."
+    },
+    "acuron": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20211110.pdf",
+      "docDate": "2021-11-10",
+      "page": 9,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 24 hours."
+    },
+    "aim-ec-carfentrazone": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03241-20240228.pdf",
+      "docDate": "2024-02-28",
+      "page": 6,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "anthem-maxx": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20260512.pdf",
+      "docDate": "2026-05-12",
+      "page": 6,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "authority-mtz-sulfentrazone": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03340-20230713.pdf",
+      "docDate": "2023-07-13",
+      "page": 4,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "axxe-ammonium-nonanoate": {
+      "reEntryIntervalHours": 4,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00023-20210205.pdf",
+      "docDate": "2021-02-05",
+      "page": 6,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 4 hours."
+    },
+    "balan-benefin": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/034704-00746-20251105.pdf",
+      "docDate": "2025-11-05",
+      "page": 5,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "banvel": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "docDate": "2009-09-11",
+      "page": 6,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted entry interval (REI) of 24 hours."
+    },
+    "beyond": {
+      "reEntryIntervalHours": 4,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00441-20221011.pdf",
+      "docDate": "2022-10-11",
+      "page": 5,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 4 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "cadet-fluthiacet": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03338-20260213.pdf",
+      "docDate": "2026-02-13",
+      "page": 8,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "callisto": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20260409.pdf",
+      "docDate": "2026-04-09",
+      "page": 7,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "caparol-prometryn": {
+      "reEntryIntervalHours": 48,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00620-20230131.pdf",
+      "docDate": "2023-01-31",
+      "page": 9,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours for all crops, except carrots, celeriac, celery, and fennel. The REI for these crops is 48 hours (2 days).",
+      "note": "The label's REI is 12 hours for all crops except carrots, celeriac, celery and fennel, which are 48 hours. The plugin names no crop, so the longer 48 hours is recorded."
+    },
+    "capreno-thiencarbazone-tembotrione": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01063-20260210.pdf",
+      "docDate": "2026-02-10",
+      "page": 6,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "chaparral-aminopyralid-metsulfuron": {
+      "reEntryIntervalHours": 48,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+      "docDate": "2024-09-27",
+      "page": 12,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 48 hours."
+    },
+    "classic-chlorimuron": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00681-20200924.pdf",
+      "docDate": "2020-09-24",
+      "page": 6,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "cobra": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00034-20260113.pdf",
+      "docDate": "2026-01-13",
+      "page": 5,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the REI of 12 hours."
+    },
+    "command-3me": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03158-20260707.pdf",
+      "docDate": "2026-07-07",
+      "page": 4,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the Restricted Entry Interval (REI) of 12 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "dual-ii-magnum": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00818-20240521.pdf",
+      "docDate": "2024-05-21",
+      "page": 11,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 24 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "duracor-aminopyralid-florpyrauxifen": {
+      "reEntryIntervalHours": 48,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+      "docDate": "2019-11-26",
+      "page": 10,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 48 hours."
+    },
+    "engenia": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00507-20260206.pdf",
+      "docDate": "2026-02-06",
+      "page": 21,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 24 hours."
+    },
+    "eptam-eptc": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00283-20260219.pdf",
+      "docDate": "2026-02-19",
+      "page": 6,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours.",
+      "note": "General REI. The grass-seed-crop directions add 'Do not enter or allow worker entry during the restricted-entry interval of 2 days.', a use this library does not model."
+    },
+    "et-herbicide-pyraflufen": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00007-20260903.pdf",
+      "docDate": "2026-09-03",
+      "page": 5,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "fierce-flumioxazin-pyroxasulfone": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00193-20210915.pdf",
+      "docDate": "2021-09-15",
+      "page": 8,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "glyphosate-4-plus": {
+      "reEntryIntervalHours": 4,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+      "docDate": "2020-02-24",
+      "page": 4,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 4 hours."
+    },
+    "gramoxone-sl-3": {
+      "reEntryIntervalHours": 48,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01652-20220824.pdf",
+      "docDate": "2022-08-24",
+      "page": 16,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 48 hours.",
+      "note": "General REI for all applications except cotton desiccation. Cotton desiccation is 7 days ('For cotton desiccation applications: Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 7 days.'), which is not a use this library models."
+    },
+    "grazonnext-hl": {
+      "reEntryIntervalHours": 48,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+      "docDate": "2017-03-13",
+      "page": 12,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 48 hours."
+    },
+    "halex-gt": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01282-20250115.pdf",
+      "docDate": "2025-01-15",
+      "page": 7,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 24 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "harmony-sg-thifensulfuron": {
+      "reEntryIntervalHours": 4,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+      "docDate": "2020-04-17",
+      "page": 5,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 4 hours."
+    },
+    "laudis": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00860-20180921.pdf",
+      "docDate": "2018-09-21",
+      "page": 4,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "liberty-280-sl": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00448-20260826.pdf",
+      "docDate": "2026-08-26",
+      "page": 5,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours."
+    },
+    "liberty-ultra": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00500-20251030.pdf",
+      "docDate": "2025-10-30",
+      "page": 7,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours."
+    },
+    "lumax-ez": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20221214.pdf",
+      "docDate": "2022-12-14",
+      "page": 11,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 24 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "me-too-lachlor-ii": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/019713-00549-20230104.pdf",
+      "docDate": "2023-01-04",
+      "page": 6,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 24 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "outlook": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00156-20191129.pdf",
+      "docDate": "2019-11-29",
+      "page": 6,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours."
+    },
+    "permit": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00002-20250911.pdf",
+      "docDate": "2025-09-11",
+      "page": 4,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "poast-plus": {
+      "reEntryIntervalHours": 48,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00088-20140211.pdf",
+      "docDate": "2014-02-11",
+      "page": 30,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 48 hours.",
+      "note": "The label's main Agricultural Use Requirements box says 12 hours (page 5); the Rezult G alternate-brand section of the same label (dry beans, dry peas, mint and soybean) says 48 hours. The plugin covers soybean, so the longer 48 hours is recorded."
+    },
+    "princep-4l": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00526-20221222.pdf",
+      "docDate": "2022-12-22",
+      "page": 9,
+      "quote": "For all other crops and use patterns, do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours.",
+      "note": "General REI for all crops except Christmas trees, which are 48 hours ('For Christmas trees, do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 48 hours.'). The plugin's crops are apple and grape."
+    },
+    "prowl-h2o": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00418-20240925.pdf",
+      "docDate": "2024-09-25",
+      "page": 6,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 24 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "pursuit": {
+      "reEntryIntervalHours": 4,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00310-20150929.pdf",
+      "docDate": "2015-09-29",
+      "page": 5,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 4 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "raptor-imazamox": {
+      "reEntryIntervalHours": 4,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00379-20210430.pdf",
+      "docDate": "2021-04-30",
+      "page": 5,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 4 hours."
+    },
+    "reflex": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00993-20240325.pdf",
+      "docDate": "2024-03-25",
+      "page": 8,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours."
+    },
+    "resicore-rev": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20250404.pdf",
+      "docDate": "2025-04-04",
+      "page": 10,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 24 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "roundup-powermax-3": {
+      "reEntryIntervalHours": 4,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00659-20241213.pdf",
+      "docDate": "2024-12-13",
+      "page": 10,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 4 hours."
+    },
+    "sandea": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00018-20250911.pdf",
+      "docDate": "2025-09-11",
+      "page": 4,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "sencor-metribuzin": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00738-20140218.pdf",
+      "docDate": "2014-02-18",
+      "page": 3,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "sharpen-saflufenacil": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00278-20240910.pdf",
+      "docDate": "2024-09-10",
+      "page": 5,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours."
+    },
+    "spartan-charge": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03337-20250804.pdf",
+      "docDate": "2025-08-04",
+      "page": 5,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "stadia": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/091234-00031-20240516.pdf",
+      "docDate": "2024-05-16",
+      "page": 6,
+      "quote": "Do not enter or allow worker entry into treated areas during this restricted entry interval (REI) of 12 hours."
+    },
+    "stinger": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+      "docDate": "2019-03-11",
+      "page": 11,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "suppress-ec": {
+      "reEntryIntervalHours": 24,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/051517-00009-20260724.pdf",
+      "docDate": "2026-07-24",
+      "page": 6,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 24 hours."
+    },
+    "touchdown-hitech": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01182-20150318.pdf",
+      "docDate": "2015-03-18",
+      "page": 11,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours."
+    },
+    "valor-sx": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00099-20260917.pdf",
+      "docDate": "2026-09-17",
+      "page": 5,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours."
+    },
+    "verdict-saflufenacil-dimethenamid": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00279-20180504.pdf",
+      "docDate": "2018-05-04",
+      "page": 6,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours."
+    },
+    "warrant": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00591-20200618.pdf",
+      "docDate": "2020-06-18",
+      "page": 7,
+      "quote": "Do not enter or allow worker entry into treated areas during the restricted entry interval (REI) of 12 hours.",
+      "note": "Label also allows early entry without contact when the product is soil-injected or soil-incorporated (Worker Protection Standard exception); the general REI is recorded."
+    },
+    "zidua-pro": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00365-20171228.pdf",
+      "docDate": "2017-12-28",
+      "page": 6,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours."
+    },
+    "zidua-sc": {
+      "reEntryIntervalHours": 12,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00374-20250318.pdf",
+      "docDate": "2025-03-18",
+      "page": 4,
+      "quote": "DO NOT enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours."
+    }
   },
   "phiByCrop": {
     "$comment": "#661 — label pre-harvest intervals by crop. One list per plugin carrying preHarvestIntervalsByCrop: [{ cropPluginId | cropFamily, preHarvestIntervalDays, sourceUrl, docDate, page, quote }], where the quote names the crop and states the number of days. Checked by pesticideLabelSources.gate.test.ts. Empty until a primary label is read.",

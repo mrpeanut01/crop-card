@@ -9,6 +9,9 @@
  *   same crop or family whose quote states the days;
  * - a display name that says OMRI may not sit beside flags that mark the
  *   product not allowed for organic use;
+ * - `omriListed`, `certifiedOrganicAllowed` or `transitioningAllowed` set to
+ *   true needs a `complianceFlags` entry that quotes an OMRI Products List
+ *   NOP listing, or (never for `omriListed`) a 7 CFR 205 quote (#779);
  * - a herbicide default `ratePerAcre` ships only as `rateProvenance:
  *   'label'` with a `rate` entry whose quote states the amount, or as an
  *   explicit `rateProvenance: 'fallback'` (swarm 2026-10-07, #737);
@@ -31,7 +34,11 @@ export interface LabelSourcePlugin {
     cropFamily?: string;
     preHarvestIntervalDays: number;
   }>;
-  complianceFlags?: { omriListed?: boolean; certifiedOrganicAllowed?: boolean };
+  complianceFlags?: {
+    omriListed?: boolean;
+    certifiedOrganicAllowed?: boolean;
+    transitioningAllowed?: boolean;
+  };
   activeIngredients?: ReadonlyArray<{ chemistryClass?: string }>;
 }
 
@@ -45,6 +52,7 @@ export interface LabelSources {
   phiByCrop?: Record<string, unknown>;
   rate?: Record<string, unknown>;
   chemistryClass?: Record<string, unknown>;
+  complianceFlags?: Record<string, unknown>;
 }
 
 function statesNumber(quote: unknown, n: number): boolean {
@@ -99,6 +107,7 @@ export function pesticideLabelSourceGaps(
     ) {
       gaps.push(`${p.pluginId}: the name says OMRI but the flags mark it not allowed`);
     }
+    gaps.push(...organicFlagGaps(p, sources));
   }
   return gaps;
 }
@@ -149,4 +158,51 @@ function classGaps(p: LabelSourcePlugin, sources: LabelSources): string[] {
     }
   }
   return gaps;
+}
+
+const ALLOWED_ORGANIC_FLAGS = [
+  'omriListed',
+  'certifiedOrganicAllowed',
+  'transitioningAllowed'
+] as const;
+
+interface OrganicSource extends QuotedSource {
+  omriListed?: unknown;
+  basis?: unknown;
+  citation?: unknown;
+}
+
+function isOmriListing(s: OrganicSource): boolean {
+  return (
+    s.omriListed === true &&
+    typeof s.sourceUrl === 'string' &&
+    s.sourceUrl.startsWith('https://www.omri.org/') &&
+    typeof s.quote === 'string' &&
+    /\| [a-z]{3}-\d{3,6} \| NOP \| Allowed( with Restrictions)? \|/.test(s.quote)
+  );
+}
+
+function isCfr205(s: OrganicSource): boolean {
+  return (
+    s.basis === '7 CFR 205' &&
+    typeof s.citation === 'string' &&
+    /^7 CFR 205\.\d+/.test(s.citation) &&
+    typeof s.sourceUrl === 'string' &&
+    s.sourceUrl.startsWith('https://www.ecfr.gov/') &&
+    typeof s.quote === 'string' &&
+    s.quote.trim().length > 0
+  );
+}
+
+function organicFlagGaps(p: LabelSourcePlugin, sources: LabelSources): string[] {
+  const set = ALLOWED_ORGANIC_FLAGS.filter((k) => p.complianceFlags?.[k] === true);
+  if (set.length === 0) return [];
+  const s = sources.complianceFlags?.[p.pluginId] as OrganicSource | undefined;
+  if (s && isOmriListing(s)) return [];
+  if (s && isCfr205(s)) {
+    return p.complianceFlags?.omriListed === true
+      ? [`${p.pluginId}: omriListed needs an OMRI listing, not a 7 CFR 205 quote`]
+      : [];
+  }
+  return [`${p.pluginId}: ${set.join(', ')} true with no OMRI listing or 7 CFR 205 quote`];
 }

@@ -2,7 +2,7 @@
   "pluginId": "dipel-df",
   "type": "insecticide",
   "displayName": "DiPel DF (Valent Bt kurstaki)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "epaRegistrationNumber": "73049-39",
   "defaultUnit": "lb",
   "formulation": "DF",
@@ -29,6 +29,9 @@
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "notes": "Bt IRAC 11A. Caterpillar-only — no broadleaf insect activity. Eat-to-kill, slow but selective.",
   "complianceFlags": {
+    "omriListed": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true,
     "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1",

@@ -158,6 +158,7 @@ export function cropFactPaths(c: CropPlugin): string[] {
     for (const id of entry.speciesIds) paths.push(`animalToxicity.${id}`);
   }
   for (const row of c.treeSizeClasses ?? []) paths.push(`treeSizeClasses.${row.sizeClass}`);
+  if (c.harvestSeason) paths.push('harvestSeason');
   for (const [, key] of rowSpacingFields(c)) if (!paths.includes(key)) paths.push(key);
   if (guide.inRowSpacingIn !== undefined) paths.push('inRowSpacingIn');
   return paths;
@@ -348,6 +349,61 @@ export function treeSizeClassQuoteGaps(
       if (!new RegExp(`(^|[^\\d])${years}([^\\d]|$)`).test(entry.data.quote)) {
         gaps.push(`${c.pluginId}: ${key} quote does not state ${min}-${max} years`);
       }
+    }
+  }
+  return gaps;
+}
+
+const MONTH_WORDS = [
+  'Jan(?:\\.|uary)?',
+  'Feb(?:\\.|ruary)?',
+  'Mar(?:\\.|ch)?',
+  'Apr(?:\\.|il)?',
+  'May',
+  'June?\\.?',
+  'July?\\.?',
+  'Aug(?:\\.|ust)?',
+  'Sep(?:t)?(?:\\.|tember)?',
+  'Oct(?:\\.|ober)?',
+  'Nov(?:\\.|ember)?',
+  'Dec(?:\\.|ember)?'
+] as const;
+
+/** True when `quote` names the date as "<month> <day>" ("July 25",
+ *  "Aug. 3", "Sept. 15"). */
+export function statesMonthDay(quote: string, month: number, day: number): boolean {
+  return new RegExp(`\\b${MONTH_WORDS[month - 1]}\\s+${day}(?!\\d)`, 'i').test(quote);
+}
+
+/** #686: a harvest season's quote comes from an extension or government
+ *  page and states both dates; an end in the same month may give the day
+ *  alone ("Aug. 25 to 31"). Returns "pluginId: problem" lines. */
+export function harvestSeasonQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'harvestSeason'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    const season = c.harvestSeason;
+    if (!season) continue;
+    const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.harvestSeason);
+    if (!entry.success) continue;
+    const quote = entry.data.quote;
+    if (!isAllowedSpacingSource(entry.data.url)) {
+      gaps.push(`${c.pluginId}: harvestSeason source is not an extension or government page`);
+    }
+    const { start, end } = season;
+    if (!statesMonthDay(quote, start.month, start.day)) {
+      gaps.push(`${c.pluginId}: harvestSeason quote does not state the start date`);
+    }
+    const endShort =
+      end.month === start.month &&
+      new RegExp(
+        `\\b${MONTH_WORDS[start.month - 1]}\\s+${start.day}\\s*(?:-|–|—|to)\\s*${end.day}(?!\\d)`,
+        'i'
+      ).test(quote);
+    if (!endShort && !statesMonthDay(quote, end.month, end.day)) {
+      gaps.push(`${c.pluginId}: harvestSeason quote does not state the end date`);
     }
   }
   return gaps;

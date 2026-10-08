@@ -12,7 +12,12 @@
  * without a referenceDtmDays are taken at face value.
  */
 
-import type { GrowthStage, GrowthStageTable, HarvestTarget } from '$lib/plugins/schemas';
+import type {
+  GrowthStage,
+  GrowthStageTable,
+  HarvestSeason,
+  HarvestTarget
+} from '$lib/plugins/schemas';
 import type { PerennialStageTemplate } from '$lib/plugins/growthStageTemplates';
 
 export interface ProjectedStage {
@@ -152,6 +157,20 @@ export function projectPerennialHarvestTargets(
       endMs: target.endMs
     }
   ];
+}
+
+/** #686: a sourced harvest season (month and day) as one window starting in
+ *  `year`, local midnight to the end of the last day. An end before the start
+ *  runs into the next year. */
+export function projectHarvestSeason(
+  season: HarvestSeason,
+  year: number
+): { startMs: number; endMs: number } {
+  const { start, end } = season;
+  const wraps = end.month < start.month || (end.month === start.month && end.day < start.day);
+  const startMs = new Date(year, start.month - 1, start.day).getTime();
+  const endMs = new Date(wraps ? year + 1 : year, end.month - 1, end.day + 1).getTime() - 1;
+  return { startMs, endMs };
 }
 
 function dayOfYearToMs(year: number, dayOfYear: number): number {

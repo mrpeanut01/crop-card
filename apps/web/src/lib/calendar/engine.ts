@@ -24,6 +24,7 @@ import {
 import {
   projectPerennialStages,
   projectPerennialHarvestTargets,
+  projectHarvestSeason,
   type ProjectedStage
 } from './stageProjection';
 import { projectCropStages } from './cropStages';
@@ -491,10 +492,25 @@ export function eventsForPlanting(
   // Perennial calendar projection — stage-window events anchored on dayOfYear,
   // rendered for the same year-window as orchard/seasonal tasks.
   const perennialTemplate = resolvePerennialTemplate(crop);
-  const perennialHarvestTargets: { startMs: number; endMs: number; label: string }[] = [];
+  const perennialHarvestTargets: {
+    startMs: number;
+    endMs: number;
+    label: string;
+    sourced?: boolean;
+  }[] = [];
+  const bearingFrom = plant + (crop.daysToMaturity?.min ?? 0) * DAY_MS;
+  // #686: a sourced harvest season replaces the template's typical harvest
+  // stage (and gives stone fruit, which has no template, a window).
+  const harvestSeason = agronomy.isPerennial ? crop.harvestSeason : undefined;
+  if (harvestSeason) {
+    for (const year of orchardSeasonYears(plant, ctx.now)) {
+      const w = projectHarvestSeason(harvestSeason, year);
+      if (w.endMs < bearingFrom) continue;
+      perennialHarvestTargets.push({ ...w, label: 'Harvest', sourced: true });
+    }
+  }
   if (perennialTemplate) {
     const years = orchardSeasonYears(plant, ctx.now);
-    const bearingFrom = plant + (crop.daysToMaturity?.min ?? 0) * DAY_MS;
     for (const year of years) {
       const projP = projectPerennialStages(perennialTemplate, year);
       for (const s of projP) {
@@ -518,7 +534,7 @@ export function eventsForPlanting(
           }
         });
       }
-      const ph = projectPerennialHarvestTargets(perennialTemplate, projP);
+      const ph = harvestSeason ? [] : projectPerennialHarvestTargets(perennialTemplate, projP);
       for (const t of ph) {
         if (t.endMs < bearingFrom) continue;
         perennialHarvestTargets.push({ startMs: t.startMs, endMs: t.endMs, label: t.label });
@@ -583,7 +599,9 @@ export function eventsForPlanting(
         endMs: t.endMs,
         title: `Harvest window: ${planting.varietyDisplayName}`,
         body: 'Use crop-specific readiness indicators before harvest.',
-        detail: { label: t.label, system: 'perennial-calendar', typicalTiming: true }
+        detail: t.sourced
+          ? { label: t.label, system: 'perennial-calendar', sourced: true }
+          : { label: t.label, system: 'perennial-calendar', typicalTiming: true }
       });
     }
   } else if (!noHarvestCover && !agronomy.isPerennial) {

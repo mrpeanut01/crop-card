@@ -2294,6 +2294,13 @@
       "date": "2020-09-21 (accessed 2026-10-06)",
       "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Peach | 20 | 4 | 3-4 | 15-20\"; \"The table below shows the minimum desirable distances between fruit trees in home orchards.\"",
       "note": "Feet converted to inches. Minimum distance; VCE says trees \"can be set farther apart if space allows\". Replaces an unsourced range below VCE's minimum (#587 ruling R3, 2-1). Penn State Extension, Home Orchards Table 5.1 (https://extension.psu.edu/home-orchards-table-5-1-stone-fruit-spacing-and-probable-yield), \"Suggested Spacing (ft)\", gives \"Peach and Nectarine | 14 x 22\"; it names no axis, so it is not counted (#587 ruling R2)."
+    },
+    "harvestSeason": {
+      "url": "https://vtechworks.lib.vt.edu/handle/10919/55302",
+      "publisher": "Virginia Cooperative Extension, Peach and Nectarine Varieties for Virginia (publication 422-762), Richard P. Marini",
+      "date": "2009 (accessed 2026-10-08), PDF page 6",
+      "quote": "Elberta – An open-pollinated seedling of ‘Chinese Cling’, introduced in 1889 by Samuel Rumph, Marshallville, GA. The tree has non-showy blossoms. Harvest season is Aug. 25 to Aug. 31.",
+      "note": "#686. Stored as the yearly window August 25 to August 31, the Blacksburg dates as printed (see the peach-redhaven harvestSeason note for the publication's regional caveat: 7 to 10 days earlier in the Piedmont)."
     }
   },
   "peach-redhaven": {
@@ -2331,6 +2338,13 @@
       "date": "2026-09-29 (accessed via search excerpt; page shows no publication date)",
       "quote": "ASPCA, Peach (Prunus persica): \"Toxicity: Toxic to Dogs, Toxic to Cats, Toxic to Horses\" \"Toxic Principles: Cyanogenic glycosides found in some species\" \"Clinical Signs: Stems, leaves, seeds contain cyanide, particularly toxic in the process of wilting: brick red mucous membranes, dilated pupils, difficulty breathing, panting, shock\"",
       "note": "Quote taken from a search-engine excerpt of the page on 2026-09-29; the page itself could not be opened from the build environment. Label research Task 11 must check it word for word."
+    },
+    "harvestSeason": {
+      "url": "https://vtechworks.lib.vt.edu/handle/10919/55302",
+      "publisher": "Virginia Cooperative Extension, Peach and Nectarine Varieties for Virginia (publication 422-762), Richard P. Marini",
+      "date": "2009 (accessed 2026-10-08), PDF page 4",
+      "quote": "Redhaven – A hybrid of ‘Halehaven’ x ‘Kalhaven’, introduced in 1940 by the Michigan Agricultural Experiment Station. The tree has non-showy blossoms. This is a semi-freestone peach and about 70% of the fruit surface is red over a yellow background. Harvest begins July 25 to Aug. 3.",
+      "note": "#686. Stored as the yearly window July 25 to August 3. The same publication (PDF page 1) says: \"Ripening dates are for Blacksburg, which is located at about 2,000 feet above sea level in the New River Valley of the Allegheny Mountains. Ripening dates would probably be similar for the northern end of the Shenandoah Valley, but harvest will usually be 7 to 10 days earlier in the Piedmont, and 10 to 14 days earlier in the southeastern part of the state.\" The Blacksburg dates are stored as printed; the calendar does not shift them by region. Kentucky ID HO-6 puts Redhaven in the second and third weeks of July at Princeton, KY (different state, not counted)."
     }
   },
   "pepper-jalapeno": {

@@ -24,6 +24,7 @@ import {
   seedingRateQuoteGaps,
   rowSpacingGaps,
   treeSizeClassQuoteGaps,
+  harvestSeasonQuoteGaps,
   speciesFactPaths,
   type ForageSourceEntry,
   type PastureAllowlistEntry,
@@ -179,6 +180,12 @@ describe('Phase 32A source coverage gate', () => {
     const crops = library.crops();
     expect(treeSizeClassQuoteGaps(crops, cropSources)).toEqual([]);
     expect(crops.filter((c) => c.treeSizeClasses).length).toBeGreaterThan(0);
+  });
+
+  it('#686: every harvest season quote states both dates', () => {
+    const crops = library.crops();
+    expect(harvestSeasonQuoteGaps(crops, cropSources)).toEqual([]);
+    expect(crops.filter((c) => c.harvestSeason).length).toBeGreaterThan(0);
   });
 
   it('#587 / #591: no crop carries an unsourced or unread row spacing', () => {

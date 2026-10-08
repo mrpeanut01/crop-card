@@ -71,6 +71,8 @@ export interface AdvisoryCut {
 export interface AdvisoryNitrogen {
   blockId: string;
   occurredAt: number;
+  /** False when the N was left blank: it still counts as nitrogen. */
+  amountKnown?: boolean;
 }
 export interface AdvisoryTest {
   id: string;
@@ -257,7 +259,10 @@ function itemFor(
       onFile.push({
         trigger: 'heavy-nitrogen',
         atMs: n.occurredAt,
-        text: `Nitrogen was applied${blockName ? ` to ${blockName}` : ''} on ${forageDate(n.occurredAt, tz)}.`
+        text:
+          n.amountKnown === false
+            ? `Fertilizer was applied${blockName ? ` to ${blockName}` : ''} on ${forageDate(n.occurredAt, tz)}. How much nitrogen it had is not known.`
+            : `Nitrogen was applied${blockName ? ` to ${blockName}` : ''} on ${forageDate(n.occurredAt, tz)}.`
       });
     }
   }

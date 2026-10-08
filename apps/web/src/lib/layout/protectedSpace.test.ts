@@ -155,6 +155,17 @@ describe('#797 protected space preference', () => {
     expect(plantsOn(fill.assignments, TUNNEL)).toBeGreaterThan(0);
   });
 
+  it('splits over two small open beds before using one tunnel bed that holds it all', () => {
+    const blocks = [
+      bed('b0', 'garden', 3, 8),
+      bed('b1', 'garden', 3, 8),
+      bed('b2', 'tunnel', 3, 12)
+    ];
+    const r = planLayout(planInput([seed('s', delicata.pluginId, 4)], blocks));
+    expect(plantsOn(r.assignments, ['b0', 'b1'])).toBe(4);
+    expect(plantsOn(r.assignments, ['b2'])).toBe(0);
+  });
+
   it('ranks an open field block ahead of a protected one on the field model too', () => {
     const blocks = [fieldBlock('a-tunnel', 'tunnel', 0.25), fieldBlock('b-open', 'north', 0.25)];
     const r = planLayout(planInput([seed('d', delicata.pluginId, 20)], blocks, { beds: false }));

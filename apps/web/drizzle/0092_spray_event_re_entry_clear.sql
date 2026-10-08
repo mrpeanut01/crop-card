@@ -1,0 +1,1 @@
+ALTER TABLE `spray_events` ADD `re_entry_clear_at` integer;

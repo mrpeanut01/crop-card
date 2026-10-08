@@ -25,7 +25,8 @@ const m = vi.hoisted(() => ({
   decrementForUse: vi.fn(() => ({ notes: [] as string[] })),
   getStockItemByPluginId: vi.fn((): unknown => undefined),
   completeTask: vi.fn(),
-  getTask: vi.fn()
+  getTask: vi.fn(),
+  reiHours: undefined as number | undefined
 }));
 
 vi.mock('$lib/server/auth', () => ({ currentUser: () => ({ id: 'u1', role: 'owner' }) }));
@@ -42,7 +43,8 @@ vi.mock('$lib/server/registry', () => ({
               displayName: 'Weed Gone',
               activeIngredients: [{ name: 'x', chemistryClass: 'glyphosate' }],
               labelClaims: [],
-              ratePerAcre: { amount: 32, unit: 'fl-oz' }
+              ratePerAcre: { amount: 32, unit: 'fl-oz' },
+              ...(m.reiHours !== undefined ? { reEntryIntervalHours: m.reiHours } : {})
             }
           }
         : undefined,
@@ -116,6 +118,7 @@ function probe() {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  m.reiHours = undefined;
   m.insertSprayEvent.mockReturnValue({ id: 'evt-1' });
   m.decrementForUse.mockReturnValue({ notes: [] });
   m.getTask.mockReturnValue({ id: 'task-1', title: 'Spray', blockId: 'blk-1' });
@@ -183,5 +186,25 @@ describe('Start closes the task (TC-04, TC-06, TC-07)', () => {
     const res = await post();
     expect((await res.json()).taskClose.status).toBe('mismatch');
     expect(m.completeTask).not.toHaveBeenCalled();
+  });
+});
+
+describe('herbicide re-entry clear time (#640)', () => {
+  it('stores the clear time when the herbicide has an REI on file', async () => {
+    m.reiHours = 12;
+    const res = await post();
+    expect(res.status).toBe(200);
+    const input = m.insertSprayEvent.mock.calls[0][0] as {
+      occurredAt: number;
+      reEntryClearAt?: number;
+    };
+    expect(input.reEntryClearAt).toBe(input.occurredAt + 12 * 3_600_000);
+  });
+
+  it('stores none when the herbicide has no REI on file', async () => {
+    const res = await post();
+    expect(res.status).toBe(200);
+    const input = m.insertSprayEvent.mock.calls[0][0] as { reEntryClearAt?: number };
+    expect(input.reEntryClearAt).toBeUndefined();
   });
 });

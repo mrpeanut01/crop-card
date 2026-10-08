@@ -912,7 +912,11 @@ export const sprayEvents = tenantScoped(
       /** C-35: the hold parameters (label intervals) read when this was
        *  recorded. A later data change can only lengthen the hold: the
        *  kernels take the longer of this snapshot and the current data. */
-      holdParamsJson: text('hold_params_json')
+      holdParamsJson: text('hold_params_json'),
+      /** #640: when the tank's re-entry interval ends, set only when every
+       *  herbicide in it had a sourced `reEntryIntervalHours` at save time.
+       *  Null on older rows and when any product had none on file. */
+      reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' })
     },
     (table) => ({
       ownerOccurredIdx: index('spray_events_owner_occurred_idx').on(

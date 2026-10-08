@@ -76,6 +76,31 @@ describe('SprayPageHeader', () => {
     expect(screen.getByText(/re-entry clear Sep 25, 2026, 10:30 PM/)).toBeInTheDocument();
   });
 
+  it('lists an active herbicide re-entry interval (#640)', () => {
+    render(SprayPageHeader, {
+      chemistry: 'herbicide',
+      activeREI: [
+        { id: 'h-1', blockId: 'b1', reEntryClearAt: Date.now() + 3_600_000, complete: true }
+      ],
+      blockNames: { b1: 'North field' }
+    });
+    expect(screen.getByText(/Active herbicide re-entry intervals/)).toBeInTheDocument();
+    expect(screen.getByText(/North field — re-entry clear/)).toBeInTheDocument();
+    expect(screen.queryByText(/no earlier than/)).not.toBeInTheDocument();
+  });
+
+  it('says a partly known tank clears no earlier than its known REI (#640)', () => {
+    render(SprayPageHeader, {
+      chemistry: 'herbicide',
+      activeREI: [
+        { id: 'h-1', blockId: 'b1', reEntryClearAt: Date.now() + 3_600_000, complete: false }
+      ],
+      blockNames: { b1: 'North field' }
+    });
+    expect(screen.getByText(/re-entry clear no earlier than/)).toBeInTheDocument();
+    expect(screen.getByText(/has no REI on file\. Check the label\./)).toBeInTheDocument();
+  });
+
   it('omits activeREI banner when none active', () => {
     render(SprayPageHeader, { chemistry: 'herbicide' });
     expect(screen.queryByText(/Active.*re-entry intervals/)).not.toBeInTheDocument();

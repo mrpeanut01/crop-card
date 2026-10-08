@@ -30,6 +30,8 @@
     id: string;
     blockId: string;
     reEntryClearAt?: number | null;
+    /** #640: false when another product in the tank has no REI on file. */
+    complete?: boolean;
   }
 
   interface Props {
@@ -81,9 +83,15 @@
       <ul class="rei-list">
         {#each activeREI as e (e.id)}
           <li>
-            {blockNameOf(blockNames, e.blockId, 'Removed block')} — re-entry clear {fmt.instant(
-              e.reEntryClearAt ?? 0
-            )}
+            {#if e.complete === false}
+              {blockNameOf(blockNames, e.blockId, 'Removed block')} — re-entry clear no earlier than {fmt.instant(
+                e.reEntryClearAt ?? 0
+              )}; another product in the tank has no REI on file. Check the label.
+            {:else}
+              {blockNameOf(blockNames, e.blockId, 'Removed block')} — re-entry clear {fmt.instant(
+                e.reEntryClearAt ?? 0
+              )}
+            {/if}
           </li>
         {/each}
       </ul>

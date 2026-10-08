@@ -4,6 +4,8 @@ import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { loadSprayPastureContext } from '$lib/server/pastureAnimals';
 import { getRegistry } from '$lib/server/registry';
+import { activeHerbicideReEntryRestrictions } from '$lib/server/herbicideReEntry';
+import { blockNameMap } from '$lib/spray/contextLabels';
 import { listSprayers } from '$lib/server/sprayers';
 import { canSetUp, setupAreas, setupBlocks, setupSprayerTemplates } from '$lib/server/setupContext';
 import { organicBlocksForNotice } from '$lib/server/organicNotice';
@@ -210,6 +212,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       fromScout,
       taskId
     },
-    taskContext
+    taskContext,
+    activeREI: activeHerbicideReEntryRestrictions(registry, now),
+    reiBlockNames: blockNameMap(dbBlocks)
   };
 };

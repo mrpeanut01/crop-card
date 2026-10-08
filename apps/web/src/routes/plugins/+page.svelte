@@ -340,6 +340,8 @@
   }
 </script>
 
+<svelte:head><title>{tr('core.docTitle', { title: tr('plugins.list.h1') })}</title></svelte:head>
+
 <h1>{tr('plugins.list.h1')}</h1>
 <p class="lede">
   {tr('plugins.list.ledeA')}<code>plugins/</code>{tr('plugins.list.ledeB')}

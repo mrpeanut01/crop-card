@@ -848,8 +848,9 @@ export const enSettings = {
     'Printed at the top of your Farm Map Card, so anyone on the farm can call for help.',
   'settings.farm.seeCard': 'See the Farm Map Card',
   'settings.farm.seasonTitle': 'Season {year} setup',
-  'settings.farm.seasonLedeA': 'Season setup is wizard-synced — edit at',
-  'settings.farm.seasonLedeB': 'or via the planning wizard.',
+  'settings.farm.seasonLede':
+    'Season setup is shared with the planning wizard. Change it in season settings or from the wizard.',
+  'settings.farm.seasonLink': 'Season settings',
   'settings.billing.billedYear': '{price} a year',
   'settings.billing.billedMonth': '{price} a month',
   'settings.billing.notSetUp': "Billing isn't set up on this server yet.",

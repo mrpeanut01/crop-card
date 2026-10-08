@@ -299,6 +299,8 @@
   }
 </script>
 
+<svelte:head><title>{tr('core.docTitle', { title: tr('fert.title') })}</title></svelte:head>
+
 <h1>{tr('fert.title')}</h1>
 <p class="lede">
   {tr('fert.lede')}

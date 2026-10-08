@@ -19,6 +19,10 @@ export const NITRATE_UNIT_LABELS: Readonly<Record<NitrateUnits, string>> = {
   'pct-kno3': '% potassium nitrate (KNO3)'
 };
 
+export function nitrateUnitLabel(u: NitrateUnits, locale?: string | null): string {
+  return locale ? t(locale, `forage.unit.${u}`) : NITRATE_UNIT_LABELS[u];
+}
+
 export const RATING_BASES = ['dry-matter', 'as-fed', 'not-stated'] as const;
 export type RatingBasis = (typeof RATING_BASES)[number];
 

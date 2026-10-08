@@ -54,7 +54,7 @@ const KNOWN_ENGLISH_KEYS = [
   'docs.copy.backupNote',
   'organic.pack.title',
   'organic.add.help',
-  'forage.page.nameOne',
+  'forage.page.pickLede',
   'settings.helpers.noPending',
   'settings.notif.typesSub',
   'settings.farm.nothingDrawn',
@@ -241,7 +241,7 @@ test.describe('language picker, flag on', () => {
     for (const route of routes) {
       await test.step(route, async () => {
         const res = await page.goto(route);
-        // /forage with no subject answers 400 by design; anything under 500 renders a page.
+        // Anything under 500 renders a page.
         expect(res?.status(), route).toBeLessThan(500);
         await page.waitForLoadState('networkidle');
         await expect(page.locator('html'), route).toHaveAttribute('lang', 'es');

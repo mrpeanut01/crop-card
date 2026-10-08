@@ -275,6 +275,8 @@
   }
 </script>
 
+<svelte:head><title>{tr('core.docTitle', { title: tr('hayui.title') })}</title></svelte:head>
+
 <h1>{tr('hayui.title')}</h1>
 <p class="lede">
   {tr('hayui.lede')}

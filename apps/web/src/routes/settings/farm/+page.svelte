@@ -211,11 +211,8 @@
   </SettingsSection>
 
   <SettingsSection title={tr('settings.farm.seasonTitle', { year: data.currentYear })}>
-    <p class="lede">
-      {tr('settings.farm.seasonLedeA')}
-      <a href="/settings/season">/settings/season</a>
-      {tr('settings.farm.seasonLedeB')}
-    </p>
+    <p class="lede">{tr('settings.farm.seasonLede')}</p>
+    <a class="card-link" href="/settings/season">{tr('settings.farm.seasonLink')}</a>
   </SettingsSection>
 </SettingsShell>
 
@@ -280,6 +277,8 @@
     font-family: inherit;
     outline: none;
     width: 100%;
+    min-height: var(--btn-height-min-tap);
+    box-sizing: border-box;
   }
   .s-input.mono {
     font-family: var(--font-mono, ui-monospace, monospace);
@@ -299,11 +298,12 @@
     align-self: flex-end;
     color: var(--color-forest-deep);
     text-decoration: none;
-    font-size: 11.5px;
+    font-size: 13px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    min-height: var(--btn-height-min-tap);
   }
   .map-edit-link:hover {
     text-decoration: underline;
@@ -352,6 +352,8 @@
     font-style: italic;
   }
   .block-row {
+    min-height: var(--btn-height-min-tap);
+    box-sizing: border-box;
     padding: 10px 14px;
     display: grid;
     grid-template-columns: auto 1fr auto auto;
@@ -399,11 +401,13 @@
   .primary-sm {
     background: var(--color-forest-deep);
     color: var(--color-paper);
-    padding: 6px 12px;
+    min-height: var(--btn-height-min-tap);
+    box-sizing: border-box;
+    padding: 8px 14px;
     border-radius: var(--radius-input, 6px);
     text-decoration: none;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
@@ -417,14 +421,6 @@
     margin: 0;
     color: var(--color-ink-soft);
     font-size: 13px;
-  }
-  .lede a {
-    color: var(--color-forest-deep);
-    font-weight: 600;
-    text-decoration: none;
-  }
-  .lede a:hover {
-    text-decoration: underline;
   }
   .card-link {
     display: inline-flex;

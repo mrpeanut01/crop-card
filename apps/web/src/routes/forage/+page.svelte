@@ -30,64 +30,83 @@
 
 <svelte:head><title>{tr('forage.page.titleTag', { title: data.title })}</title></svelte:head>
 
-<main class="forage-page">
+<div class="forage-page">
   <a class="back" href={data.backHref}>{tr('forage.page.back')}</a>
   <h1>{tr('forage.page.h1')}</h1>
-  <p class="lede">{data.title}</p>
+  {#if !data.picker}<p class="lede">{data.title}</p>{/if}
 
-  {#if banner}<p class="banner" role="status">{banner}</p>{/if}
-  {#if error}<p class="error" role="alert">{error}</p>{/if}
+  {#if data.picker}
+    <section class="card" data-testid="forage-picker">
+      <h2>{tr('forage.page.pickTitle')}</h2>
+      {#if data.picker.length === 0}
+        <p class="muted">{tr('forage.page.pickNone')}</p>
+        <a class="pick" href="/plan">{tr('forage.page.pickPlan')}</a>
+      {:else}
+        <p class="muted">{tr('forage.page.pickLede')}</p>
+        <ul class="picks">
+          {#each data.picker as a (a.id)}
+            <li>
+              <a class="pick" href={`/forage?fieldId=${encodeURIComponent(a.id)}`}>{a.name}</a>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
+  {:else}
+    {#if banner}<p class="banner" role="status">{banner}</p>{/if}
+    {#if error}<p class="error" role="alert">{error}</p>{/if}
 
-  {#if data.access.canRecord}
-    {#if !data.target && data.blocks.length === 0}
-      <p class="muted">{tr('forage.page.noBlocks')}</p>
-    {:else}
-      <section class="card">
-        <h2>{tr('forage.record')}</h2>
-        <ForageTestForm
-          target={data.target}
-          blocks={data.blocks}
-          canAttach={data.access.canAttach}
-          onSaved={async () => {
-            banner = tr('forage.saved');
-            await invalidateAll();
-          }}
-        />
-      </section>
+    {#if data.access.canRecord}
+      {#if !data.target && data.blocks.length === 0}
+        <p class="muted">{tr('forage.page.noBlocks')}</p>
+      {:else}
+        <section class="card">
+          <h2>{tr('forage.record')}</h2>
+          <ForageTestForm
+            target={data.target}
+            blocks={data.blocks}
+            canAttach={data.access.canAttach}
+            onSaved={async () => {
+              banner = tr('forage.saved');
+              await invalidateAll();
+            }}
+          />
+        </section>
+      {/if}
     {/if}
+
+    <section class="card">
+      <h2>{tr('forage.page.onFile')}</h2>
+      {#if data.tests.length === 0}
+        <p class="muted">{tr('forage.page.none')}</p>
+      {:else}
+        <ul class="tests">
+          {#each data.tests as t (t.id)}
+            <li data-testid="forage-test-row">
+              {#if t.where}<p class="where">{t.where}{t.lab ? ` · ${t.lab}` : ''}</p>{/if}
+              {#if t.ratingText}
+                <p class="rating">{t.ratingText} <Provenance source="manual" compact /></p>
+              {/if}
+              {#if t.valueText}<p>{t.valueText}</p>{/if}
+              {#if t.convertedText}<p class="muted">{t.convertedText}</p>{/if}
+              {#if t.hasReport}<p class="muted">{tr('forage.page.reportAttached')}</p>{/if}
+              {#if data.access.canDelete}
+                <button
+                  class="secondary"
+                  type="button"
+                  disabled={deleting === t.id}
+                  onclick={() => remove(t.id)}
+                >
+                  {deleting === t.id ? tr('forage.page.deleting') : tr('forage.page.delete')}
+                </button>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
   {/if}
-
-  <section class="card">
-    <h2>{tr('forage.page.onFile')}</h2>
-    {#if data.tests.length === 0}
-      <p class="muted">{tr('forage.page.none')}</p>
-    {:else}
-      <ul class="tests">
-        {#each data.tests as t (t.id)}
-          <li data-testid="forage-test-row">
-            {#if t.where}<p class="where">{t.where}{t.lab ? ` · ${t.lab}` : ''}</p>{/if}
-            {#if t.ratingText}
-              <p class="rating">{t.ratingText} <Provenance source="manual" compact /></p>
-            {/if}
-            {#if t.valueText}<p>{t.valueText}</p>{/if}
-            {#if t.convertedText}<p class="muted">{t.convertedText}</p>{/if}
-            {#if t.hasReport}<p class="muted">{tr('forage.page.reportAttached')}</p>{/if}
-            {#if data.access.canDelete}
-              <button
-                class="secondary"
-                type="button"
-                disabled={deleting === t.id}
-                onclick={() => remove(t.id)}
-              >
-                {deleting === t.id ? tr('forage.page.deleting') : tr('forage.page.delete')}
-              </button>
-            {/if}
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </section>
-</main>
+</div>
 
 <style>
   .forage-page {
@@ -167,6 +186,19 @@
   .error {
     margin: 0;
     color: var(--color-rust);
+  }
+  .picks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .pick {
+    display: flex;
+    align-items: center;
+    min-height: var(--btn-height-min-tap);
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    overflow-wrap: anywhere;
   }
   .secondary {
     min-height: 48px;

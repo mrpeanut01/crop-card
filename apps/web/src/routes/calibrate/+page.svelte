@@ -35,6 +35,8 @@
   }
 </script>
 
+<svelte:head><title>{tr('core.docTitle', { title: tr('calib.pageTitle') })}</title></svelte:head>
+
 <h1>{tr('calib.pageTitle')}</h1>
 <p class="lede">
   {tr('calib.lede')}

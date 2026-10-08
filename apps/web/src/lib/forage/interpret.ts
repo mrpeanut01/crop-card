@@ -7,7 +7,7 @@
 import { numberToLocaleString } from '$lib/intlCache';
 import { t } from '$lib/i18n';
 import { intlLocale } from '$lib/prefs';
-import { NITRATE_UNIT_LABELS, type NitrateUnits } from './model';
+import { nitrateUnitLabel, type NitrateUnits } from './model';
 
 /** `forage-toxicity-sources.json` entry the two factors come from. */
 export const NITRATE_CONVERSION_ENTRY = 'nitrate.conversion.no3ToNo3N';
@@ -44,9 +44,9 @@ function num(n: number, locale?: string | null): string {
   return numberToLocaleString(n, intlLocale(locale), { maximumFractionDigits: digits });
 }
 
-/** The value exactly as the lab printed it, with its unit (units stay English). */
+/** The value exactly as the lab printed it, with its unit. */
 export function nitrateAsTyped(value: number, units: NitrateUnits, locale?: string | null): string {
-  return `${num(value, locale)} ${NITRATE_UNIT_LABELS[units]}`;
+  return `${num(value, locale)} ${nitrateUnitLabel(units, locale)}`;
 }
 
 /** The other forms, labelled as converted, or why there are none. */
@@ -58,8 +58,10 @@ export function nitrateConvertedText(
   const c = convertNitrate(value, units);
   if (!c) return t(locale, 'forage.notConverted');
   const parts: string[] = [];
-  if (units !== 'ppm-nitrate') parts.push(`${num(c.ppmNitrate, locale)} ppm nitrate`);
-  if (units !== 'ppm-nitrate-n') parts.push(`${num(c.ppmNitrateN, locale)} ppm nitrate-nitrogen`);
+  if (units !== 'ppm-nitrate')
+    parts.push(t(locale, 'forage.convertedPpmNitrate', { n: num(c.ppmNitrate, locale) }));
+  if (units !== 'ppm-nitrate-n')
+    parts.push(t(locale, 'forage.convertedPpmNitrateN', { n: num(c.ppmNitrateN, locale) }));
   const values =
     parts.length === 2 ? t(locale, 'forage.orPair', { a: parts[0], b: parts[1] }) : parts[0];
   return t(locale, 'forage.converted', { values });

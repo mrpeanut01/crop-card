@@ -26,6 +26,7 @@
  *   - Per-page header (farm + date + page #) and signature footer
  */
 
+import { nutrientFromStorage } from '$lib/fertility/applicationMath';
 import { createHash } from 'node:crypto';
 import { type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import {
@@ -135,9 +136,9 @@ interface FertilityRow {
   source: string;
   ratePerAcre: number;
   rateUnit: string;
-  nLbPerAcre: number;
-  pLbPerAcre: number;
-  kLbPerAcre: number;
+  nLbPerAcre: number | null;
+  pLbPerAcre: number | null;
+  kLbPerAcre: number | null;
   performedById?: string;
 }
 
@@ -166,9 +167,9 @@ function listFertilityForExport(filters: {
       source: r.source,
       ratePerAcre: r.ratePerAcreHundredths / 100,
       rateUnit: r.rateUnit,
-      nLbPerAcre: r.nDeliveredHundredths / 100,
-      pLbPerAcre: r.pDeliveredHundredths / 100,
-      kLbPerAcre: r.kDeliveredHundredths / 100,
+      nLbPerAcre: nutrientFromStorage(r.nDeliveredHundredths),
+      pLbPerAcre: nutrientFromStorage(r.pDeliveredHundredths),
+      kLbPerAcre: nutrientFromStorage(r.kDeliveredHundredths),
       performedById: r.performedById ?? undefined
     }));
 }

@@ -279,6 +279,27 @@ describe('wateringCards', () => {
     expect(noNetwork.forecast).not.toHaveBeenCalled();
   });
 
+  it('never gives a field Area the vegetable target, and sorts its card last (#724)', async () => {
+    const owner = seedOwner();
+    const g = seedGarden(owner);
+    const f = seedGarden(owner, 'field');
+    seedStationRain('KBZN', 0.01);
+    seedForecast(NEAR);
+    const cards = await runWithTenantAsync(owner, () =>
+      wateringCards(ctx([g.bed1, f.bed1], NEAR), noNetwork)
+    );
+    const field = cards.find((c) => c.id === `water:${f.fieldId}`)!;
+    const garden = cards.find((c) => c.id === `water:${g.fieldId}`)!;
+    expect(field.lines.join(' ')).toContain('No water target on file for field crops');
+    expect(field.detail).not.toContain('NC State');
+    expect(field.sortKey).toBeGreaterThan(garden.sortKey);
+    runWithTenant(owner, () => setSetting(waterTargetKey(f.fieldId), '0.5'));
+    const after = await runWithTenantAsync(owner, () =>
+      wateringCards(ctx([f.bed1], NEAR), noNetwork)
+    );
+    expect(after[0].detail).toContain('0.5 in');
+  });
+
   it('reads as unknown when the rain feed fails on a cold cache', async () => {
     const owner = seedOwner();
     const g = seedGarden(owner);
@@ -291,10 +312,17 @@ describe('wateringCards', () => {
 });
 
 describe('resolveTarget', () => {
-  it('uses the owner value in range, else the sourced default', () => {
-    expect(resolveTarget('1.5')).toEqual({ inches: 1.5, provenance: 'manual' });
-    expect(resolveTarget('9')).toEqual({ inches: 1, provenance: 'fallback' });
-    expect(resolveTarget(null)).toEqual({ inches: 1, provenance: 'fallback' });
+  it('uses the owner value in range, else the sourced default on a garden Area', () => {
+    expect(resolveTarget('1.5', 'garden')).toEqual({ inches: 1.5, provenance: 'manual' });
+    expect(resolveTarget('9', 'garden')).toEqual({ inches: 1, provenance: 'fallback' });
+    expect(resolveTarget(null, 'garden')).toEqual({ inches: 1, provenance: 'fallback' });
+  });
+
+  it('gives a rain-fed field Area no default target, only the owner value (#724)', () => {
+    expect(resolveTarget(null, 'field')).toBeNull();
+    expect(resolveTarget('9', 'field')).toBeNull();
+    expect(resolveTarget('0.75', 'field')).toEqual({ inches: 0.75, provenance: 'manual' });
+    expect(resolveTarget(null, null)).toBeNull();
   });
 });
 

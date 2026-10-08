@@ -173,6 +173,8 @@ test.describe('Start closes the task outside the spray flows', () => {
     await startFromToday(page, id, 'Start feeding', 'Side-dress bed 2');
     await expect(page).toHaveURL(new RegExp(`/fertility\\?task=${id}&block=${blockId}`));
     await expect(page.getByTestId('task-close-note')).toHaveText('From the task: Side-dress bed 2');
+    await page.getByTestId('fertility-source').fill('Urea (46-0-0)');
+    await page.getByTestId('fertility-rate').fill('65');
     await page.getByRole('button', { name: 'Record', exact: true }).click();
     await expect(page.getByTestId('task-close-note')).toHaveText('Saved. The task is marked done.');
     await expectDoneOnToday(page, id);

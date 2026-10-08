@@ -12,6 +12,7 @@ import { countBatches } from '$lib/db/amendments';
 import { stateChip } from '$lib/amendments/carryover';
 import { carryoverHref } from '$lib/farm/areaCarryover';
 import { loadTaskContext } from '$lib/server/recordTaskClose';
+import { listStockItems } from '$lib/db/stock';
 
 export interface FertilizerMark {
   displayName: string;
@@ -20,6 +21,27 @@ export interface FertilizerMark {
 
 /** B-21: fertility sources resolve as a fertilizer plugin id. Sent only
  *  when the notice can show. */
+export interface FertilizerAnalysisEntry {
+  id: string;
+  displayName: string;
+  analysis: { n: number; p: number; k: number } | null;
+}
+
+/** #739: fertilizer plugins with their guaranteed analysis, for the source
+ *  list and for working N, P₂O₅ and K₂O out of a weight rate. */
+async function fertilizerAnalyses(): Promise<FertilizerAnalysisEntry[]> {
+  const out: FertilizerAnalysisEntry[] = [];
+  for (const r of (await getRegistry()).all()) {
+    if (r.plugin.type !== 'fertilizer') continue;
+    out.push({
+      id: r.plugin.pluginId,
+      displayName: r.plugin.displayName,
+      analysis: r.plugin.analysis ?? null
+    });
+  }
+  return out.sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+
 async function fertilizerMarks(): Promise<Record<string, FertilizerMark>> {
   const out: Record<string, FertilizerMark> = {};
   for (const r of (await getRegistry()).all()) {
@@ -45,8 +67,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const crop = cropId ? getCrop(cropId) : undefined;
   const blockId =
     crop?.blockId ?? url.searchParams.get('block') ?? taskContext?.blockId ?? blocks[0]?.id ?? '';
-  const year =
-    Number(url.searchParams.get('year')) || Number(todayYmd(prefsFor(locals.user?.id)).slice(0, 4));
+  const today = todayYmd(prefsFor(locals.user?.id));
+  const year = Number(url.searchParams.get('year')) || Number(today.slice(0, 4));
 
   const organicBlocks = organicBlocksForNotice(
     blocks.map((b) => b.id),
@@ -67,6 +89,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     amendmentBatches,
     carryoverHref: blockId ? carryoverHref(blockId) : null,
     fertilizerMarks: hasOrganicBlock ? await fertilizerMarks() : {},
+    fertilizers: await fertilizerAnalyses(),
+    fertilizerStock: listStockItems()
+      .filter((i) => i.category === 'fertilizer')
+      .map((i) => ({
+        id: i.id,
+        displayName: i.displayName,
+        pluginId: i.pluginId ?? null,
+        defaultUnit: i.defaultUnit,
+        onHand: i.onHand
+      })),
+    today,
     selectedCropId: crop?.id ?? null,
     taskContext,
     blocks: blocks.map((b) => ({

@@ -69,7 +69,7 @@ export const GET: RequestHandler = (event) => {
       canRemove: canRemoveLog(user, l.performedById)
     })
   );
-  const target = resolveTarget(getSetting(waterTargetKey(fieldId)));
+  const target = resolveTarget(getSetting(waterTargetKey(fieldId)), field.kind);
 
   return json({
     area: { id: field.id, name: field.name, kind: field.kind, sized: hasSize(field) },

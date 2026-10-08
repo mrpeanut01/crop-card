@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PREFS } from '$lib/prefs';
 import { observationLine, scoutMetricLabel } from './metricLabel';
-import { harvestDetail, scoutDetail, sprayDetail, deconDetail } from './recordDetail';
+import {
+  harvestDetail,
+  scoutDetail,
+  sprayDetail,
+  deconDetail,
+  fertilityDetail
+} from './recordDetail';
 import { soilTestLine } from '$lib/fertility/soilLine';
 import { createT } from '$lib/i18n';
 
@@ -147,5 +153,28 @@ describe('soilTestLine (#703)', () => {
     expect(soilTestLine({ ph: 6.1 }, tr)).toBe('pH 6.1');
     expect(soilTestLine({}, tr)).toBe('No values entered');
     expect(soilTestLine({ organicMatterPct: 2 }, createT('es'))).toBe('MO 2.0%');
+  });
+});
+
+describe('fertilityDetail unknown nutrients', () => {
+  const base = {
+    blockLabel: 'Bed 1',
+    source: 'Compost',
+    ratePerAcre: 2,
+    rateUnit: 'ton/acre',
+    nLbPerAcre: null,
+    pLbPerAcre: 12,
+    kLbPerAcre: null
+  };
+  it('shows a nutrient left blank as not known, never as a number', () => {
+    const rows = fertilityDetail(base, en).rows;
+    expect(rows.find((r) => r.label === 'N delivered')?.value).toBe('Not known');
+    expect(rows.find((r) => r.label === 'K delivered')?.value).toBe('Not known');
+    expect(rows.some((r) => /-1|−1/.test(r.value))).toBe(false);
+    expect(rows.find((r) => r.label === 'P delivered')?.value).toMatch(/12/);
+  });
+  it('says not known in Spanish', () => {
+    const rows = fertilityDetail(base, es).rows;
+    expect(rows.filter((r) => r.value === 'No se sabe')).toHaveLength(2);
   });
 });

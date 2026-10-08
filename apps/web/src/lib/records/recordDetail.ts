@@ -255,15 +255,21 @@ export function hayDetail(
   return { rows, technical };
 }
 
+function nutrientValue(lbPerAcre: number | null, prefs: P): string {
+  return lbPerAcre === null
+    ? L(prefs, 'records.detail.nutrientNotKnown')
+    : formatQuantity(lbPerAcre, 'weightPerArea', prefs);
+}
+
 export function fertilityDetail(
   input: {
     blockLabel: string;
     source: string;
     ratePerAcre: number;
     rateUnit: string;
-    nLbPerAcre: number;
-    pLbPerAcre: number;
-    kLbPerAcre: number;
+    nLbPerAcre: number | null;
+    pLbPerAcre: number | null;
+    kLbPerAcre: number | null;
     notes?: string | null;
   },
   prefs: P
@@ -277,15 +283,15 @@ export function fertilityDetail(
     },
     {
       label: L(prefs, 'records.detail.nDelivered'),
-      value: formatQuantity(input.nLbPerAcre, 'weightPerArea', prefs)
+      value: nutrientValue(input.nLbPerAcre, prefs)
     },
     {
       label: L(prefs, 'records.detail.pDelivered'),
-      value: formatQuantity(input.pLbPerAcre, 'weightPerArea', prefs)
+      value: nutrientValue(input.pLbPerAcre, prefs)
     },
     {
       label: L(prefs, 'records.detail.kDelivered'),
-      value: formatQuantity(input.kLbPerAcre, 'weightPerArea', prefs)
+      value: nutrientValue(input.kLbPerAcre, prefs)
     },
     ...notesRow(prefs, input.notes)
   ];

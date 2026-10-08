@@ -138,6 +138,41 @@ describe('wateringCard copy', () => {
     expect(c.lines).toContain('Rain known for only 1 day of the last 7: at least 1.5 in.');
   });
 
+  it('shows logged watering beside a partial rain total (#732)', () => {
+    const far = { name: 'Far AP (KFAR)', distanceMi: 25 };
+    const gauges = [{ fromMs: NOW - 24 * H, toMs: NOW, inches: 0.4 }];
+    const log = (inches: number) => ({
+      occurredAtMs: NOW - 2 * H,
+      blockId: null,
+      inches,
+      gallons: null,
+      durationMin: null
+    });
+    const partial = card({ station: far, gauges, logs: [log(0.5)] });
+    expect(partial.lines).toContain('Rain known for only 1 day of the last 7: at least 0.4 in.');
+    expect(partial.lines).toContain('Watering logged this week: 0.5 in.');
+    const enough = card({ station: far, gauges, logs: [log(0.6)] });
+    expect(enough.title).toBe('Kitchen beds: watered enough this week');
+    const oneBed = card({ station: far, gauges, logs: [{ ...log(0.3), blockId: 'b1' }] });
+    expect(oneBed.lines).toContain('Watering logged this week on some beds.');
+  });
+
+  it('gives a field Area with no target a field-crop line and sorts it last (#724)', () => {
+    const balance = waterBalance(base({ areaKind: 'field', target: null }));
+    const c = wateringCard({
+      fieldId: 'f1',
+      areaName: 'Wheat A',
+      areaKind: 'field',
+      balance,
+      nearestStation: balance.station,
+      forecastIn: null,
+      timeZone: 'America/New_York'
+    });
+    expect(c.lines.join(' ')).toContain('No water target on file for field crops');
+    expect(c.detail).not.toContain('NC State');
+    expect(c.sortKey).toBeGreaterThan(card().sortKey + 30);
+  });
+
   it('states the week total once rain is trusted', () => {
     const wet = dry.map((h, i) => (i === 5 ? { ...h, inches: 1.3 } : h));
     expect(card({ stationRain: wet }).lines).toContain('Rain in the last 7 days: about 1.3 in.');

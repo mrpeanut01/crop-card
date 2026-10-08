@@ -76,6 +76,7 @@ test.describe('organic input notice', () => {
 
     await source.fill('urea-46-0-0');
     await expect(notice).toBeVisible();
+    await page.getByTestId('fertility-rate').fill('100');
     await page.getByRole('button', { name: 'Record', exact: true }).click();
     const history = page.locator('section.card', {
       has: page.getByRole('heading', { name: /History — applications/ })

@@ -9,6 +9,7 @@
  * owner's export only; a helper's export leaves `documents` out.
  */
 
+import { nutrientFromStorage } from '$lib/fertility/applicationMath';
 import type { RequestEvent } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
@@ -72,9 +73,9 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
     carryoverAck: r.carryoverAckJson ? (JSON.parse(r.carryoverAckJson) as unknown) : null,
     ratePerAcre: r.ratePerAcreHundredths / 100,
     rateUnit: r.rateUnit,
-    nLbPerAcre: r.nDeliveredHundredths / 100,
-    pLbPerAcre: r.pDeliveredHundredths / 100,
-    kLbPerAcre: r.kDeliveredHundredths / 100,
+    nLbPerAcre: nutrientFromStorage(r.nDeliveredHundredths),
+    pLbPerAcre: nutrientFromStorage(r.pDeliveredHundredths),
+    kLbPerAcre: nutrientFromStorage(r.kDeliveredHundredths),
     performedById: r.performedById ?? null,
     notes: r.notes ?? null
   }));

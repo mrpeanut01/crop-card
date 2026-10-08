@@ -466,6 +466,11 @@ export const enToday = {
   'today.empty.planSpray': 'Plan a spray',
   'today.forecast.nwsLong': 'National Weather Service forecast',
   'advice.water.rainUnknown': 'Rain unknown here, check your gauge.',
+  'advice.water.noTargetField':
+    'No water target on file for field crops. If you irrigate this Area, set your own target.',
+  'advice.water.wateredWeek': 'Watering logged this week: {inches}.',
+  'advice.water.wateredWeekAtLeast': 'Watering logged this week: at least {inches}.',
+  'advice.water.wateredWeekSome': 'Watering logged this week on some beds.',
   'advice.water.noTarget': 'No weekly water target set.',
   'advice.water.greenhouse': "Rain doesn't reach a greenhouse. Check the soil.",
   'advice.water.gaugePartial':

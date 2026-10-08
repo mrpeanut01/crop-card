@@ -99,6 +99,18 @@ describe('buildForageAdvisory (M-55, M-56)', () => {
     expect(tested.items[0].headline).toBe('Oats on North strip: a nitrate test is on file.');
   });
 
+  it('shows nitrate when nitrogen was applied in an unknown amount', () => {
+    const r = buildForageAdvisory(
+      input({
+        plantings: [{ blockId: 'b1', cropPluginId: 'oats', plantingDate: NOW - 30 * DAY }],
+        nitrogen: [{ blockId: 'b1', occurredAt: NOW - 10 * DAY, amountKnown: false }]
+      })
+    );
+    expect(r.items.map((i) => i.hazard)).toEqual(['nitrate']);
+    const line = r.items[0].triggersOnFile.find((o) => o.trigger === 'heavy-nitrogen');
+    expect(line?.text).toMatch(/How much nitrogen it had is not known\.$/);
+  });
+
   it('counts nitrogen only since the later of planting and the last cut', () => {
     const base = {
       plantings: [{ blockId: 'b1', cropPluginId: 'oats', plantingDate: NOW - 90 * DAY }],

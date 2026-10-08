@@ -5,7 +5,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, gt, gte, inArray, lte, or } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lte, ne, or } from 'drizzle-orm';
+import { nutrientFromStorage } from '$lib/fertility/applicationMath';
 import { db } from './client';
 import {
   blocks,
@@ -212,6 +213,9 @@ export interface ForageCutFact {
 export interface ForageNitrogenFact {
   blockId: string;
   occurredAt: number;
+  /** False when the application's N was left blank (#738): it may have
+   *  carried nitrogen, so it still counts. */
+  amountKnown: boolean;
 }
 
 export interface ForageAreaFacts {
@@ -306,18 +310,23 @@ function nitrogenFacts(blockIds: readonly string[]): ForageNitrogenFact[] {
   return db
     .select({
       blockId: fertilityApplications.blockId,
-      occurredAt: fertilityApplications.occurredAt
+      occurredAt: fertilityApplications.occurredAt,
+      nDeliveredHundredths: fertilityApplications.nDeliveredHundredths
     })
     .from(fertilityApplications)
     .where(
       withTenant(
         fertilityApplications,
         inArray(fertilityApplications.blockId, [...blockIds]),
-        gt(fertilityApplications.nDeliveredHundredths, 0)
+        ne(fertilityApplications.nDeliveredHundredths, 0)
       )
     )
     .all()
-    .map((r) => ({ blockId: r.blockId, occurredAt: r.occurredAt.getTime() }));
+    .map((r) => ({
+      blockId: r.blockId,
+      occurredAt: r.occurredAt.getTime(),
+      amountKnown: nutrientFromStorage(r.nDeliveredHundredths) !== null
+    }));
 }
 
 /** What the advisory needs for one Area of the active Owner. */

@@ -109,7 +109,8 @@ describe('forageTests repo', () => {
         occurredAt: now - DAY,
         source: 'lime',
         ratePerAcre: 1,
-        rateUnit: 'lb/acre'
+        rateUnit: 'lb/acre',
+        nLbPerAcre: 0
       });
       const cut = createCutting({
         blockId: block.id,
@@ -122,6 +123,32 @@ describe('forageTests repo', () => {
       expect(facts.plantings.map((p) => p.cropPluginId)).toEqual(['sudangrass-piper']);
       expect(facts.nitrogen).toHaveLength(1);
       expect(facts.cuts.map((c) => c.id)).toEqual([cut.id]);
+    });
+  });
+
+  it('counts an application with N left blank as nitrogen of unknown amount', () => {
+    runWithTenant(farm(), () => {
+      const now = Date.now();
+      const field = createField({ name: 'Back pasture', kind: 'pasture' });
+      const block = createBlock({ name: 'Strip 2', fieldId: field.id });
+      insertFertilityApplication({
+        blockId: block.id,
+        occurredAt: now - DAY,
+        source: 'compost',
+        ratePerAcre: 1,
+        rateUnit: 'lb/acre'
+      });
+      insertFertilityApplication({
+        blockId: block.id,
+        occurredAt: now - DAY,
+        source: 'potash',
+        ratePerAcre: 1,
+        rateUnit: 'lb/acre',
+        nLbPerAcre: 0
+      });
+      const facts = forageFactsForArea(field.id, now);
+      expect(facts.nitrogen).toHaveLength(1);
+      expect(facts.nitrogen[0].amountKnown).toBe(false);
     });
   });
 });

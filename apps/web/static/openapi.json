@@ -9711,16 +9711,37 @@
                     "maxLength": 40
                   },
                   "nLbPerAcre": {
-                    "type": "number",
-                    "minimum": 0
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "pLbPerAcre": {
-                    "type": "number",
-                    "minimum": 0
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "kLbPerAcre": {
-                    "type": "number",
-                    "minimum": 0
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "notes": {
                     "type": "string",

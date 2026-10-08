@@ -480,6 +480,11 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.empty.planSpray': 'Planear una aplicación',
   'today.forecast.nwsLong': 'Pronóstico del Servicio Meteorológico Nacional',
   'advice.water.rainUnknown': 'No se sabe cuánto llovió aquí; revisa tu pluviómetro.',
+  'advice.water.noTargetField':
+    'No hay meta de agua registrada para cultivos de campo. Si riegas esta área, pon tu propia meta.',
+  'advice.water.wateredWeek': 'Riego registrado esta semana: {inches}.',
+  'advice.water.wateredWeekAtLeast': 'Riego registrado esta semana: al menos {inches}.',
+  'advice.water.wateredWeekSome': 'Riego registrado esta semana en algunas camas.',
   'advice.water.noTarget': 'No hay meta semanal de agua.',
   'advice.water.greenhouse': 'La lluvia no llega a un invernadero. Revisa el suelo.',
   'advice.water.gaugePartial':

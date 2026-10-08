@@ -6,7 +6,8 @@
  * hour covers at least 90% of the window's hours, and the station is within
  * 10 miles. A far or missing station is not evidence of no rain, so both
  * skip and water need that coverage. Watering with no known amount can never
- * turn into "water again".
+ * turn into "water again". Logged watering plus the rain known so far (a
+ * lower bound) that reaches the target reads as watered enough (#732).
  */
 
 import { HOUR_MS } from './leafWet';
@@ -256,8 +257,13 @@ function bedVerdict(
   wateredIn = round2(wateredIn);
   const withLogs = { ...base, wateredIn, unknownLogAtMs, unknownLogNeedsSize };
   if (!input.target) return { ...withLogs, verdict: 'unknown', reason: 'no-target' };
-  if (!rain.trusted) return { ...withLogs, verdict: 'unknown', reason: 'rain-unknown' };
   const target = input.target.inches;
+  if (!rain.trusted) {
+    if (wateredIn > 0 && rain.inches + wateredIn >= target) {
+      return { ...withLogs, verdict: 'ok', reason: null };
+    }
+    return { ...withLogs, verdict: 'unknown', reason: 'rain-unknown' };
+  }
   if (rain.inches >= target) return { ...withLogs, verdict: 'skip', reason: null };
   if (unknownLogAtMs !== null) {
     return { ...withLogs, verdict: 'unknown', reason: 'amount-not-logged' };

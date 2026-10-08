@@ -6,6 +6,8 @@
 
 import { listBlocks, inferBlockAxes } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
+import { listFields } from '$lib/db/fields';
+import { protectedBlockIds } from './bedSharing';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import type { PluginRegistry } from '$lib/plugins/registry';
 import { companionIndex } from '$lib/plugins/companionRelations';
@@ -39,6 +41,7 @@ export function buildPlanInput(
     axes,
     existingCrops,
     pluginIndex,
-    companions
+    companions,
+    protectedBlockIds: protectedBlockIds(blocks, listFields())
   };
 }

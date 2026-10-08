@@ -2,7 +2,7 @@ import { listBlocks, type BlockWithPlantings } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { listFields } from '$lib/db/fields';
 import { withSpacingProvenance, type PlanInput, type SeedRequest } from '$lib/layout/engine';
-import { blockCapacity, sharedBedBlockIds } from '$lib/layout/bedSharing';
+import { blockCapacity, protectedBlockIds, sharedBedBlockIds } from '$lib/layout/bedSharing';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import { companionIndex } from '$lib/plugins/companionRelations';
 import type { PluginRegistry } from '$lib/plugins/registry';
@@ -78,7 +78,8 @@ export function buildAllocationInput(
     };
   }
 
-  const bedIds = new Set(sharedBedBlockIds(selectedBlocks, listFields()));
+  const fields = listFields();
+  const bedIds = new Set(sharedBedBlockIds(selectedBlocks, fields));
   const seeds: SeedRequest[] = seedSelections.map((s) => {
     const byArea = isAreaCrop(pluginIndex[s.cropPluginId]);
     // #555: a crop sown by area is planned in square feet. Without an area
@@ -112,7 +113,8 @@ export function buildAllocationInput(
       existingCrops: listCrops(),
       pluginIndex,
       companions: companionIndex(companionSystems),
-      bedBlockIds: [...bedIds]
+      bedBlockIds: [...bedIds],
+      protectedBlockIds: protectedBlockIds(selectedBlocks, fields)
     }
   };
 }

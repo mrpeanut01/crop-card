@@ -5,6 +5,7 @@ import type { PlanInput, SeedRequest } from '$lib/layout/engine';
 import { t } from '$lib/i18n';
 import {
   allocateDeterministic,
+  buildAllocationPrompt,
   buildCandidacyMatrix,
   splitLotParts,
   threeSistersOnBlock
@@ -151,5 +152,38 @@ describe('engine Why text (#690)', () => {
     ]);
     expect([...parts.keys()]).toEqual(['x']);
     expect(parts.get('x')).toEqual({ parts: 2, placed: 17, firstBlockId: 'A' });
+  });
+});
+
+describe('protected space (#797)', () => {
+  const PROTECTED = t(undefined, 'wizard.engine.why.protected');
+  const blocks = [block('open', 'full'), block('a-tunnel', 'full')];
+  const plan = (seeds: SeedRequest[], bs = blocks): PlanInput => ({
+    ...input(seeds, bs),
+    protectedBlockIds: ['a-tunnel']
+  });
+
+  it('marks protected blocks for Claude and adds a soft preference', () => {
+    const p = plan([seed('s', 'squash', 20)]);
+    const prompt = buildAllocationPrompt(buildCandidacyMatrix(p), p);
+    expect(prompt).toMatch(/- a-tunnel \|.*protected=Y/);
+    expect(prompt).not.toMatch(/- open \|.*protected=Y/);
+    expect(prompt).toContain('Never leave seed unplaced to keep it out of protected space');
+    const plain = input([seed('s', 'squash', 20)], blocks);
+    expect(buildAllocationPrompt(buildCandidacyMatrix(plain), plain)).not.toContain('protected');
+  });
+
+  it('the engine fallback fills open ground first and explains a tunnel row', () => {
+    const open = allocateDeterministic(plan([seed('s', 'squash', 20)]), 'no-api-key');
+    expect(open.assignments.map((a) => a.blockId)).toEqual(['open']);
+    for (const why of Object.values(open.perRowRationale)) expect(why).not.toContain(PROTECTED);
+
+    const tunnelOnly = allocateDeterministic(
+      plan([seed('s', 'squash', 20)], [block('a-tunnel', 'full')]),
+      'no-api-key'
+    );
+    expect(tunnelOnly.assignments.map((a) => a.blockId)).toEqual(['a-tunnel']);
+    expect(tunnelOnly.perRowRationale['s:a-tunnel']).toContain(PROTECTED);
+    expect(t('es', 'wizard.engine.why.protected')).not.toBe(PROTECTED);
   });
 });

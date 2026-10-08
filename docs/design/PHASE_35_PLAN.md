@@ -188,3 +188,14 @@ The three clusters merged in contract order (split-engine, split-ui, wizard-e2e)
 - Only one migration, `0085_crop_split_group.sql`; Phase 36 renumbers after it (R-25).
 - `roomFor` on a field block holds the plant count to the engine's capacity and also to one whole block of space, so a block filled by a wide crop is not then packed with a narrow one. This is stricter than R-10, never looser.
 - The partial-failure commit test in `allocation-wizard-ai.spec.ts` was `test.fixme` on the wizard-e2e branch and is switched on at integration, as C-3 requires. The keep-in-one-bed replan test in `plan-split.spec.ts` skips itself only when the allocate response has no `leftover`, which the merged engine always sends.
+
+## Protected space preference (#797)
+
+The planting engine used to know nothing about greenhouses or high tunnels, and both its capacity-fit score and its "more room" tie-break favour the biggest bed. On the Willow Run demo farm each 4 x 64 ft tunnel bed is four times the size of a 4 x 16 ft garden bed, so a space-hungry crop such as Delicata winter squash ranked the tunnel first and landed there.
+
+Ruling (the most conservative option that uses only data the app has):
+
+- A block in a greenhouse Area (any structure: glass, poly, high tunnel, caterpillar) is protected space. `protectedBlockIds` in `lib/layout/bedSharing.ts` derives it from the Area kind; `buildAllocationInput` and `buildPlanInput` pass it to the engine.
+- No crop plugin field says a crop needs protection, so the preference applies to every crop. A rule from days to maturity against the frost-free season was considered and rejected: it misreads transplanted, hardy and overwintered crops and would be an agronomy inference with no source.
+- It is a ranking nudge only (`PROTECTED_SPACE_NUDGE`, equal to the capacity-fit weight, so a tunnel's extra room alone never outranks an open block that suits the crop). It is never compared against a score floor and never a rule-out, so protected space is used as soon as open ground is full or ruled out, an all-protected selection plans exactly as before, and the Phase 35 leftover rule (no seed left while a picked block has room) is unchanged. The validator does not check it.
+- Claude sees `protected=Y` on those blocks with the same soft preference, and is told never to leave seed unplaced because of it. An engine row on protected space says so in its Why line (`wizard.engine.why.protected`, English and Spanish). The farmer can still put any crop in a tunnel by hand or ask for it in the chat.

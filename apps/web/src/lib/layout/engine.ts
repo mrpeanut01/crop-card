@@ -112,6 +112,9 @@ export interface PlanInput {
   /** #440 — blocks in garden or greenhouse Areas. Their crops share the bed
    *  by area (see `bedSharing.ts`); every other block keeps the field model. */
   bedBlockIds?: ReadonlyArray<string>;
+  /** #797 — blocks in greenhouse Areas (glass, poly, high tunnel). Open
+   *  ground ranks ahead of them for every crop; see `rankScore`. */
+  protectedBlockIds?: ReadonlyArray<string>;
   /** Clock for the rotation lookback; defaults to now. */
   nowMs?: number;
 }
@@ -127,6 +130,21 @@ export const SCORE_WEIGHTS = {
   narrowBlockPenalty: -10,
   threeSistersBonus: 30
 } as const;
+
+/** #797 — how far a protected block ranks behind open ground. Equal to the
+ *  capacity-fit weight, so a tunnel's extra room alone never outranks an
+ *  open block that suits the crop. Only ever used to rank candidates, never
+ *  against a score floor, so protected space is still used when open ground
+ *  is full or ruled out. */
+export const PROTECTED_SPACE_NUDGE = SCORE_WEIGHTS.capacityFit;
+
+export function isProtectedBlock(input: Pick<PlanInput, 'protectedBlockIds'>, blockId: string) {
+  return (input.protectedBlockIds ?? []).includes(blockId);
+}
+
+function rankScore(input: PlanInput, blockId: string, score: number): number {
+  return isProtectedBlock(input, blockId) ? score - PROTECTED_SPACE_NUDGE : score;
+}
 
 /** Score floor for the first (tight) pass. Seeds that can't clear this on
  *  any block fall through to pass B. */
@@ -404,7 +422,7 @@ function bestBlock(
   if (!plugin) return null;
   const firstPart = seed.fillToCapacity ? true : !hasPart(placed, seed.stockItemId);
 
-  let best: Candidate | null = null;
+  let best: (Candidate & { rank: number }) | null = null;
   for (const block of input.blocks) {
     const fit = state.remaining(block.id, seed.cropPluginId);
     if (fit <= 0) continue;
@@ -412,11 +430,12 @@ function bestBlock(
     const needed = partial ? Math.min(remainingPlants, fit) : remainingPlants;
     const score = scoreBlock(seed, plugin, block, needed, fit, state, input);
     if (score < floor) continue;
-    if (!best || score > best.score || (score === best.score && block.id < best.blockId)) {
-      best = { blockId: block.id, score, fit };
+    const rank = rankScore(input, block.id, score);
+    if (!best || rank > best.rank || (rank === best.rank && block.id < best.blockId)) {
+      best = { blockId: block.id, score, fit, rank };
     }
   }
-  return best;
+  return best && { blockId: best.blockId, score: best.score, fit: best.fit };
 }
 
 /** R-03: a later part of a lot goes to the best-scoring block that is not
@@ -432,7 +451,7 @@ function laterPartBlock(
   const plugin = input.pluginIndex[seed.cropPluginId];
   if (!plugin) return null;
   const holding = placed.filter((a) => a.stockItemId === seed.stockItemId).map((a) => a.blockId);
-  let best: (Candidate & { adjacent: boolean }) | null = null;
+  let best: (Candidate & { adjacent: boolean; rank: number }) | null = null;
   for (const block of input.blocks) {
     const fit = state.remaining(block.id, seed.cropPluginId);
     if (fit <= 0) continue;
@@ -453,17 +472,23 @@ function laterPartBlock(
         const other = state.axis(h);
         return !!other && h !== block.id && isAxisAdjacent(myAxis, other);
       });
-    const cand = { blockId: block.id, score, fit, adjacent };
+    const cand = {
+      blockId: block.id,
+      score,
+      fit,
+      adjacent,
+      rank: rankScore(input, block.id, score)
+    };
     if (!best || laterBetter(cand, best)) best = cand;
   }
-  return best;
+  return best && { blockId: best.blockId, score: best.score, fit: best.fit };
 }
 
 function laterBetter(
-  a: Candidate & { adjacent: boolean },
-  b: Candidate & { adjacent: boolean }
+  a: Candidate & { adjacent: boolean; rank: number },
+  b: Candidate & { adjacent: boolean; rank: number }
 ): boolean {
-  if (a.score !== b.score) return a.score > b.score;
+  if (a.rank !== b.rank) return a.rank > b.rank;
   if (a.adjacent !== b.adjacent) return a.adjacent;
   if (a.fit !== b.fit) return a.fit > b.fit;
   return a.blockId < b.blockId;
@@ -694,6 +719,7 @@ function packSharedBeds(
   interface Ranked {
     bed: BlockWithPlantings;
     score: number;
+    rank: number;
     fit: number;
     room: number;
     adjacent: boolean;
@@ -723,11 +749,11 @@ function packSharedBeds(
           const other = state.axis(h);
           return !!other && h !== bed.id && isAxisAdjacent(myAxis, other);
         });
-      ranked.push({ bed, score, fit, room, adjacent });
+      ranked.push({ bed, score, rank: rankScore(input, bed.id, score), fit, room, adjacent });
     }
     ranked.sort(
       (x, y) =>
-        y.score - x.score ||
+        y.rank - x.rank ||
         (x.adjacent === y.adjacent ? 0 : x.adjacent ? -1 : 1) ||
         y.room - x.room ||
         (x.bed.id < y.bed.id ? -1 : 1)
@@ -836,7 +862,7 @@ function packSharedBeds(
     let chosenScore = -Infinity;
     if (plugin) {
       for (const r of rankBeds(seed, plugin, seed.quantityPlants, MIN_SCORE_LOOSE)) {
-        const s = r.score - FILL_CROWDING_PENALTY * (fillOn.get(r.bed.id)?.length ?? 0);
+        const s = r.rank - FILL_CROWDING_PENALTY * (fillOn.get(r.bed.id)?.length ?? 0);
         if (s > chosenScore) {
           chosenScore = s;
           chosen = { bed: r.bed, fit: r.fit };

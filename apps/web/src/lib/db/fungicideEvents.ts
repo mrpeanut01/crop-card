@@ -5,7 +5,7 @@
  * immutable after the same 48-hour lock window so audit trails stay
  * consistent across herbicide / insecticide / fungicide operations.
  * Stores REI / PHI clear-by timestamps computed from the plugin so the
- * /today re-entry banner has a fast lookup.
+ * /today re-entry card reads them from the stored row.
  *
  * Field-for-field parallel to `insecticideEvents` — the only structural
  * difference is the product-snapshot carries FRAC codes (Fungicide
@@ -161,9 +161,9 @@ export function listFungicideEvents(filters: ListFilters = {}): FungicideEvent[]
   return q.all().map(rowToEvent);
 }
 
-/** Blocks currently inside a fungicide re-entry interval — feeds the
- *  /today re-entry banner alongside `activeReEntryRestrictions` from
- *  the insecticide repo. */
+/** Fungicide sprays still inside a re-entry interval, for the
+ *  /spray/fungicide banner. /today builds its re-entry card from the rows
+ *  it already reads instead (ruling LF-3). */
 export function activeFungicideReEntryRestrictions(now: number = Date.now()): FungicideEvent[] {
   const all = db
     .select()

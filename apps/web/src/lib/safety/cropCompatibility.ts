@@ -24,10 +24,15 @@
  * #768: an active ingredient listed in `ingredientLethality.ts` adds the
  * families its label shows it harms to its class's row. The violation is
  * still reported under that ingredient's chemistry class.
+ *
+ * Ruling LF-1: an ingredient can also stop a crop plugin by id (Chaparral on
+ * timothy and orchardgrass hay, Harmony SG on cereals its label does not
+ * name). Those stops apply even under a trait claim and even when the
+ * planting reports no family.
  */
 
 import { killsFamily, type CropFamily } from './cropFamilyLethality';
-import { ingredientKillsFamily } from './ingredientLethality';
+import { ingredientKillsFamily, ingredientStopsCropPlugin } from './ingredientLethality';
 import type {
   ChemistryClass,
   CropIncompatibilityCrop,
@@ -55,22 +60,35 @@ export function checkCropCompatibility(
     const grouped = new Map<ChemistryClass, CropIncompatibilityCrop[]>();
 
     for (const crop of allCrops) {
-      if (!crop.cropFamily) continue;
-      if (traitOverrideActive(product, crop)) continue;
+      const family = crop.cropFamily as CropFamily | undefined;
+      const killing = new Set<ChemistryClass>();
+      let reported: CropFamily | undefined = family;
 
-      const family = crop.cropFamily as CropFamily;
-      const killing = uniqueClasses(product).filter(
-        (cls) =>
-          killsFamily(cls, family) ||
-          product.activeIngredients.some(
-            (ai) => ai.chemistryClass === cls && ingredientKillsFamily(ai.name, family)
-          )
-      );
+      if (family && !traitOverrideActive(product, crop)) {
+        for (const cls of uniqueClasses(product)) {
+          if (
+            killsFamily(cls, family) ||
+            product.activeIngredients.some(
+              (ai) => ai.chemistryClass === cls && ingredientKillsFamily(ai.name, family)
+            )
+          ) {
+            killing.add(cls);
+          }
+        }
+      }
+      for (const ai of product.activeIngredients) {
+        const stop = ingredientStopsCropPlugin(ai.name, crop.cropPluginId, family);
+        if (!stop) continue;
+        killing.add(ai.chemistryClass);
+        reported ??= stop;
+      }
+      if (!reported) continue;
+
       for (const cls of killing) {
         const list = grouped.get(cls) ?? [];
         list.push({
           cropPluginId: crop.cropPluginId,
-          cropFamily: crop.cropFamily as CropFamily,
+          cropFamily: reported,
           isCoPlanted: crop !== primary
         });
         grouped.set(cls, list);

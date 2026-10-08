@@ -288,6 +288,8 @@ export const enToday = {
   'today.decon.run': 'Run the cleanout',
   'today.decon.see': 'See the cleanout steps',
   'today.decon.allEquipment': 'All equipment',
+  'today.reEntry.heading': 'Stay out: re-entry interval in effect',
+  'today.reEntry.openRecord': 'Open the spray record',
   'today.title': 'Today',
   'today.tray.log': 'Log the tray',
   'today.tray.notNow': 'Not now',

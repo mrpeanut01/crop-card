@@ -43,6 +43,7 @@
     plugin={data.plugin}
     phiByCrop={data.phiByCrop}
     rateByCrop={data.rateByCrop}
+    rateByCropEarlierLabels={data.rateByCropEarlierLabels}
   />
 {:else if data.type === 'fertility'}
   <FertilityDetail

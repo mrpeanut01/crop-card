@@ -54,6 +54,11 @@ import { loadTodayAdvice } from '$lib/server/todayAdvice.server';
 import type { TodayAdviceCard } from '$lib/today/advice';
 import { careCards, careCloseFormData } from '$lib/server/careView';
 import { todayDigestInput } from '$lib/digest/todayInput';
+import {
+  activeReEntryItems,
+  longestLibraryReiHours,
+  reEntryReadStart
+} from '$lib/today/reEntryCard';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;
@@ -235,13 +240,28 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   const weather = await loadTodayWeather();
 
-  // YTD spray count = spray + insecticide + fungicide events since Jan 1.
+  // One read of spray + insecticide + fungicide events feeds both the YTD
+  // count (since Jan 1) and the re-entry card (ruling LF-3), so it starts
+  // early enough to reach the longest REI in the library.
   const farmZone = careTimeZone;
   const yearStart = startOfYear(now, farmZone);
+  const readFrom = reEntryReadStart(yearStart, now, longestLibraryReiHours(registry));
+  const sprayRows = listSprayEvents({ fromMs: readFrom, toMs: now });
+  const insecticideRows = listInsecticideEvents({ fromMs: readFrom, toMs: now });
+  const fungicideRows = listFungicideEvents({ fromMs: readFrom, toMs: now });
+  const sinceYearStart = (ev: { occurredAt: number }) => ev.occurredAt >= yearStart;
   const spraysYTD =
-    listSprayEvents({ fromMs: yearStart, toMs: now }).length +
-    listInsecticideEvents({ fromMs: yearStart, toMs: now }).length +
-    listFungicideEvents({ fromMs: yearStart, toMs: now }).length;
+    sprayRows.filter(sinceYearStart).length +
+    insecticideRows.filter(sinceYearStart).length +
+    fungicideRows.filter(sinceYearStart).length;
+  const reEntry = activeReEntryItems({
+    registry,
+    sprays: sprayRows,
+    insecticides: insecticideRows,
+    fungicides: fungicideRows,
+    blockNameById,
+    now
+  });
   const seasonGlance = deriveSeasonGlance({
     activePlantings: totalPlantings,
     spraysYTD,
@@ -389,6 +409,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     seasonGlance,
     winterizeAlerts,
     deconAlerts,
+    reEntry,
     setupLatLon: hasLocation ? getFarmLatLon() : null,
     // #475 — ask the farm location and frost dates here too; the weather,
     // frost alerts and calendar all read them.

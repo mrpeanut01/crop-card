@@ -65,5 +65,11 @@
         }
       }
     }
+  },
+  "fertility": {
+    "preplant": {
+      "p2o5LbPerAcre": 120,
+      "k2oLbPerAcre": 120
+    }
   }
 }

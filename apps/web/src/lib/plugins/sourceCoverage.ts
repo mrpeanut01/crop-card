@@ -20,6 +20,7 @@ import type {
   ForageHazardKind,
   AnimalHealthPlugin,
   CropPlugin,
+  CropSprayWindow,
   FungicidePlugin,
   GrazingRestrictions,
   HerbicidePlugin,
@@ -162,7 +163,170 @@ export function cropFactPaths(c: CropPlugin): string[] {
   if (c.harvestSeason) paths.push('harvestSeason');
   for (const [, key] of rowSpacingFields(c)) if (!paths.includes(key)) paths.push(key);
   if (guide.inRowSpacingIn !== undefined) paths.push('inRowSpacingIn');
+  if (c.fertility) {
+    paths.push(
+      ...present('fertility.preplant.', c.fertility.preplant, [...FERTILITY_PREPLANT_KEYS])
+    );
+    for (const t of c.fertility.topdressN ?? []) paths.push(`fertility.topdressN.${t.stageCode}`);
+  }
+  if (!UNSOURCED_SPRAY_WINDOW_CROPS.has(c.pluginId)) {
+    for (const w of c.sprayWindows ?? []) {
+      const key = sprayWindowSourceKey(w);
+      if (!paths.includes(key)) paths.push(key);
+    }
+  }
   return paths;
+}
+
+export const FERTILITY_PREPLANT_KEYS = ['nLbPerAcre', 'p2o5LbPerAcre', 'k2oLbPerAcre'] as const;
+
+/** #720: the source key for a crop spray window. */
+export function sprayWindowSourceKey(
+  w: Pick<CropSprayWindow, 'purpose' | 'chemistryClass'>
+): string {
+  return `sprayWindows.${w.purpose ?? 'unknown'}.${w.chemistryClass}`;
+}
+
+/** #720: crops whose spray windows predate the source rule (Phase 17 and
+ *  Phase 21 defaults for sweet and ornamental corn and cucurbits). None was
+ *  quoted from a source; source them and take them off this list, or drop
+ *  them. Every other crop's windows must be quoted. */
+export const UNSOURCED_SPRAY_WINDOW_CROPS: ReadonlySet<string> = new Set([
+  'acorn-squash-table-queen',
+  'bloody-butcher-ornamental-corn-raw-untreated-non-gmo-1-2-lb',
+  'butternut-squash-waltham',
+  'cantaloupe-hales-best',
+  'corn-bantam-sweet',
+  'corn-bloody-butcher',
+  'corn-sweet-bodacious',
+  'cucumber-marketmore-76',
+  'fairytale-pumpkin-film-coated-treated-seed',
+  'ornamental-corn-earth-tones-dent-raw-untreated-non-gmo',
+  'ornamental-corn-oxacana-green-dent',
+  'popcorn-strawberry',
+  'pumpkin-cinderella-film-coated-treated',
+  'pumpkin-ez-gro-monster',
+  'pumpkin-flat-white-boer-ford-standard-treated-harris-seeds',
+  'pumpkin-grizzly-bear-film-coated-farmore-harris-seeds',
+  'pumpkin-jarrahdale-film-coat-treated',
+  'pumpkin-rouge-vif-d-etampes-film-coated-treated',
+  'pumpkin-silver-moon-film-coated-treated',
+  'pumpkin',
+  'squash-butterkin-film-coated-farmore',
+  'squash-marina-de-chioggia-film-coated-treated',
+  'squash-queensland-blue-raw-untreated-non-gmo',
+  'squash-sunshine-standard-treated',
+  'summer-squash-yellow-crookneck',
+  'watermelon-sugar-baby',
+  'zucchini-black-beauty'
+]);
+
+const NUMBER_WORDS = [
+  'zero',
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'nine',
+  'ten'
+];
+
+/** A day offset is stated as days ("28 days") or, for whole weeks, as weeks
+ *  in digits or words ("four to five weeks", "3-4 weeks"). */
+function statesDays(quote: string, days: number): boolean {
+  if (new RegExp(`(^|[^\\d.])${days}([^\\d]|$)`).test(quote) && /\bdays?\b/i.test(quote)) {
+    return true;
+  }
+  if (days % 7 !== 0 || !/\bweeks?\b/i.test(quote)) return false;
+  const w = days / 7;
+  return (
+    new RegExp(`(^|[^\\d.])${w}([^\\d]|$)`).test(quote) ||
+    (NUMBER_WORDS[w] !== undefined && new RegExp(`\\b${NUMBER_WORDS[w]}\\b`, 'i').test(quote))
+  );
+}
+
+/** #720: every sourced spray window comes from an extension, government or
+ *  label page, and its quote states each day offset (a 0 offset from
+ *  planting names planting) and, for a stage window, the stage is one of
+ *  the crop's growth stages. Returns "pluginId: problem" lines. */
+export function sprayWindowQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'sprayWindows' | 'growthStageTable'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    if (UNSOURCED_SPRAY_WINDOW_CROPS.has(c.pluginId)) continue;
+    for (const w of c.sprayWindows ?? []) {
+      const key = sprayWindowSourceKey(w);
+      if (!w.purpose) gaps.push(`${c.pluginId}: ${key} has no purpose`);
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
+      if (!entry.success) continue;
+      if (!isAllowedSpacingSource(entry.data.url)) {
+        gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+      }
+      for (const d of new Set([w.offsetDaysMin, w.offsetDaysMax])) {
+        if (d === 0) {
+          if (w.anchor === 'planting' && !/\bplant(ed|ing)?\b/i.test(entry.data.quote)) {
+            gaps.push(`${c.pluginId}: ${key} quote does not name planting`);
+          }
+        } else if (!statesDays(entry.data.quote, d)) {
+          gaps.push(`${c.pluginId}: ${key} quote does not state ${d} days`);
+        }
+      }
+      if (w.anchor === 'stage' && !c.growthStageTable?.stages.some((s) => s.code === w.stageCode)) {
+        gaps.push(`${c.pluginId}: ${key} stage ${w.stageCode} is not in the growth stage table`);
+      }
+    }
+  }
+  return gaps;
+}
+
+/** #720: each fertility figure appears in its quote ("zero N" for a 0 N),
+ *  and each topdress stage is one of the crop's growth stages. */
+export function fertilityQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'fertility' | 'growthStageTable'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  const quoteOf = (id: string, key: string) => {
+    const e = sourceEntrySchema.safeParse(sources[id]?.[key]);
+    return e.success ? e.data : null;
+  };
+  for (const c of crops) {
+    if (!c.fertility) continue;
+    for (const k of FERTILITY_PREPLANT_KEYS) {
+      const v = c.fertility.preplant[k];
+      if (v === undefined) continue;
+      const entry = quoteOf(c.pluginId, `fertility.preplant.${k}`);
+      if (!entry) continue;
+      if (!isAllowedSpacingSource(entry.url)) {
+        gaps.push(`${c.pluginId}: fertility.preplant.${k} source is not an extension page`);
+      }
+      const ok =
+        v === 0
+          ? k === 'nLbPerAcre' && /\bzero N\b/i.test(entry.quote)
+          : quoteStates(entry.quote, String(v));
+      if (!ok) gaps.push(`${c.pluginId}: fertility.preplant.${k} quote does not state ${v}`);
+    }
+    for (const t of c.fertility.topdressN ?? []) {
+      const key = `fertility.topdressN.${t.stageCode}`;
+      const entry = quoteOf(c.pluginId, key);
+      if (entry && !quoteStates(entry.quote, String(t.nLbPerAcre))) {
+        gaps.push(`${c.pluginId}: ${key} quote does not state ${t.nLbPerAcre}`);
+      }
+      if (entry && !isAllowedSpacingSource(entry.url)) {
+        gaps.push(`${c.pluginId}: ${key} source is not an extension page`);
+      }
+      if (!c.growthStageTable?.stages.some((s) => s.code === t.stageCode)) {
+        gaps.push(`${c.pluginId}: ${key} stage is not in the growth stage table`);
+      }
+    }
+  }
+  return gaps;
 }
 
 type RowSpacingKey = 'rowSpacingIn' | 'defaultRowSpacingInches';

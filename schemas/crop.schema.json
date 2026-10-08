@@ -1202,6 +1202,59 @@
         "additionalProperties": false
       }
     },
+    "fertility": {
+      "type": "object",
+      "properties": {
+        "preplant": {
+          "type": "object",
+          "properties": {
+            "nLbPerAcre": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 400
+            },
+            "p2o5LbPerAcre": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 400
+            },
+            "k2oLbPerAcre": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 400
+            }
+          },
+          "additionalProperties": false
+        },
+        "topdressN": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "stageCode": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16
+              },
+              "nLbPerAcre": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 200
+              }
+            },
+            "required": [
+              "stageCode",
+              "nLbPerAcre"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "preplant"
+      ],
+      "additionalProperties": false
+    },
     "harvestStyle": {
       "type": "string",
       "enum": [

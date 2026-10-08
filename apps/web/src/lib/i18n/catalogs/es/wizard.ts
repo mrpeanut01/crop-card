@@ -950,6 +950,8 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'inputs.warn.stage.title': 'No hay tabla de etapas de crecimiento para {name}',
   'inputs.warn.stage.body':
     'El complemento de cultivo "{plugin}" fija algunas ventanas de aplicación por etapa de crecimiento, pero no tiene tabla de etapas, así que esas ventanas no se planificaron. Revisa la etiqueta del producto para saber cuándo aplicarlo en este cultivo.',
+  'inputs.warn.stage.topdressBody':
+    'El complemento de cultivo "{plugin}" fija una aplicación de nitrógeno en cobertura por etapa de crecimiento, pero no tiene tabla de etapas, así que esa aplicación no se planificó. Decide cuándo hacerla con tu análisis de suelo y la guía de extensión.',
   'inputs.warn.herb.title': 'No se planificó herbicida para algunos cultivos',
   'inputs.warn.herb.body':
     'La biblioteca de cultivos no tiene fechas de herbicida para {names}, así que no se planificó herbicida para ellos. Revisa la etiqueta del herbicida que uses para saber cuándo aplicarlo en cada cultivo.',

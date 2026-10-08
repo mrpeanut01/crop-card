@@ -19,23 +19,39 @@
   },
   "sprayWindows": [
     {
-      "chemistryClass": "synthetic-auxin",
-      "stageCode": "V2",
-      "anchor": "stage",
+      "chemistryClass": "chloroacetamide",
+      "anchor": "planting",
       "offsetDaysMin": 0,
       "offsetDaysMax": 0,
-      "title": "POST broadleaf scout window (V2–V3)",
-      "body": "Scout block; if ≥3 broadleaves per 10 sq ft, plan a 2,4-D spray. Block-level lockout if companions are co-planted.",
+      "title": "PRE residual at planting (Group 15)",
+      "body": "Apply a Group 15 residual herbicide (acetochlor, dimethenamid, S-metolachlor or pyroxasulfone) to the soil after planting and before the corn emerges. Rain or irrigation activates it.",
+      "purpose": "pre-emergent"
+    },
+    {
+      "chemistryClass": "photosystem-ii-triazine",
+      "anchor": "planting",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "PRE atrazine at planting",
+      "body": "Atrazine goes on preemergence, after planting and before the corn emerges. Follow the atrazine use restrictions on the label.",
+      "purpose": "pre-emergent"
+    },
+    {
+      "chemistryClass": "photosystem-ii-triazine",
+      "anchor": "planting",
+      "offsetDaysMin": 28,
+      "offsetDaysMax": 35,
+      "title": "POST atrazine, four to five weeks after planting",
+      "body": "Control weeds that came up with the crop four to five weeks after planting. Apply atrazine before weeds are 1.5 inches tall and before corn reaches 12 inches.",
       "purpose": "post-emergent"
     },
     {
       "chemistryClass": "hppd-inhibitor",
-      "stageCode": "V4",
-      "anchor": "stage",
-      "offsetDaysMin": 0,
-      "offsetDaysMax": 0,
-      "title": "POST grass + late broadleaf window (V4–V6)",
-      "body": "Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin.",
+      "anchor": "planting",
+      "offsetDaysMin": 28,
+      "offsetDaysMax": 35,
+      "title": "POST mesotrione, four to five weeks after planting",
+      "body": "Control weeds that came up with the crop four to five weeks after planting. Mesotrione (Callisto) goes on postemergence to corn up to 30 inches tall (8-leaf stage).",
       "purpose": "post-emergent"
     }
   ],

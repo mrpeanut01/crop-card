@@ -495,6 +495,13 @@
                       {#if app.rateAmount != null && app.rateUnit}
                         <p class="rate-line">{formatApplicationRateLine(app, currentPrefs())}</p>
                         {#if app.rateProvenance === 'fallback'}<FallbackRateLine />{/if}
+                        {#if app.budgetProvenance === 'fallback'}
+                          <small class="typical-budget" data-testid="typical-budget-line"
+                            ><Provenance source="fallback" compact /><span
+                              >{tr('inputs.budgetTypical')}</span
+                            ></small
+                          >
+                        {/if}
                       {:else if app.productPluginId}
                         <p class="rate-line" data-testid="rate-missing">
                           {tr('inputs.rateMissing')}
@@ -890,6 +897,14 @@
     color: #555;
     font-size: 0.9rem;
     margin: 0.25rem 0;
+  }
+  .typical-budget {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    font-size: 0.85rem;
+    color: #555;
   }
   .rate-line {
     color: #333;

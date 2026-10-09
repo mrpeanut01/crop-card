@@ -382,21 +382,28 @@
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 5",
       "date": "December 15, 2023",
       "quote": "Barley, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O. Topdress with 80 lbs N in February or early March.\"",
-      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is under fertility.topdressN.calendar."
     },
     "fertility.preplant.p2o5LbPerAcre": {
       "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 5",
       "date": "December 15, 2023",
       "quote": "Barley, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O. Topdress with 80 lbs N in February or early March.\"",
-      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is under fertility.topdressN.calendar."
     },
     "fertility.preplant.k2oLbPerAcre": {
       "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 5",
       "date": "December 15, 2023",
       "quote": "Barley, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O. Topdress with 80 lbs N in February or early March.\"",
-      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is under fertility.topdressN.calendar."
+    },
+    "fertility.topdressN.calendar": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 5",
+      "date": "December 15, 2023",
+      "quote": "Barley, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O. Topdress with 80 lbs N in February or early March.\"",
+      "note": "Planned the first February 1 to March 10 after planting (#720 ruling R720-2: \"February\" is the whole month, \"early March\" March 1-10)."
     }
   },
   "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed": {
@@ -538,6 +545,27 @@
       "date": "Revised April 2026 (orig. September 2017) (accessed 2026-10-06)",
       "quote": "MU Extension G4661, Annual Warm-Season Grass Forages for Missouri, Sorghum–Sudangrass and Sudangrass, Recommended seeding rates: \"Drill: 20–25 lb/acre\"; \"Row spacing: 7–15 inches\"",
       "note": "Drill-row width for drilled forage. VCE 424-100 'Sudangrass ... or Sorghum-Sudangrass Hybrid' says only 'Plant in narrow rows or solid-seeded' (no number), so no disagreement. MU notes 'Piper' is an older sudangrass cultivar. BMR sorghum-sudangrass hybrids are covered by the same section. Lower end of the between-row figure (#591 ruling Q1). Also read: https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299.pdf (no figure ('narrow rows or solid-seeded'), overlaps)."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 32",
+      "date": "December 15, 2023",
+      "quote": "Sudangrass – Annual (Sorghum sudanense) or Sorghum-Sudangrass Hybrid – Annual, Fertilizer: \"60-80 lbs each of N, P2O5, and K2O, plus 40-60 lbs N after each cutting.\"",
+      "note": "Lower end of the range (#591 ruling Q1). The entry covers sorghum-sudangrass hybrids. The N after each cutting is not planned (#720 ruling R720-7)."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 32",
+      "date": "December 15, 2023",
+      "quote": "Sudangrass – Annual (Sorghum sudanense) or Sorghum-Sudangrass Hybrid – Annual, Fertilizer: \"60-80 lbs each of N, P2O5, and K2O, plus 40-60 lbs N after each cutting.\"",
+      "note": "Lower end of the range (#591 ruling Q1). The entry covers sorghum-sudangrass hybrids. The N after each cutting is not planned (#720 ruling R720-7)."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 32",
+      "date": "December 15, 2023",
+      "quote": "Sudangrass – Annual (Sorghum sudanense) or Sorghum-Sudangrass Hybrid – Annual, Fertilizer: \"60-80 lbs each of N, P2O5, and K2O, plus 40-60 lbs N after each cutting.\"",
+      "note": "Lower end of the range (#591 ruling Q1). The entry covers sorghum-sudangrass hybrids. The N after each cutting is not planned (#720 ruling R720-7)."
     }
   },
   "broccoli-arcadia-f1": {
@@ -3223,6 +3251,27 @@
       "date": "Revised April 2026 (orig. September 2017) (accessed 2026-10-06)",
       "quote": "MU Extension G4661, Annual Warm-Season Grass Forages for Missouri, Sorghum–Sudangrass and Sudangrass, Recommended seeding rates: \"Drill: 20–25 lb/acre\"; \"Row spacing: 7–15 inches\"",
       "note": "Drill-row width for drilled forage. VCE 424-100 'Sudangrass ... or Sorghum-Sudangrass Hybrid' says only 'Plant in narrow rows or solid-seeded' (no number), so no disagreement. MU notes 'Piper' is an older sudangrass cultivar. Lower end of the between-row figure (#591 ruling Q1). Also read: https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299.pdf (no figure ('narrow rows or solid-seeded'), overlaps)."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 32",
+      "date": "December 15, 2023",
+      "quote": "Sudangrass – Annual (Sorghum sudanense) or Sorghum-Sudangrass Hybrid – Annual, Fertilizer: \"60-80 lbs each of N, P2O5, and K2O, plus 40-60 lbs N after each cutting.\"",
+      "note": "Lower end of the range (#591 ruling Q1). The N after each cutting is not planned (#720 ruling R720-7)."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 32",
+      "date": "December 15, 2023",
+      "quote": "Sudangrass – Annual (Sorghum sudanense) or Sorghum-Sudangrass Hybrid – Annual, Fertilizer: \"60-80 lbs each of N, P2O5, and K2O, plus 40-60 lbs N after each cutting.\"",
+      "note": "Lower end of the range (#591 ruling Q1). The N after each cutting is not planned (#720 ruling R720-7)."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 32",
+      "date": "December 15, 2023",
+      "quote": "Sudangrass – Annual (Sorghum sudanense) or Sorghum-Sudangrass Hybrid – Annual, Fertilizer: \"60-80 lbs each of N, P2O5, and K2O, plus 40-60 lbs N after each cutting.\"",
+      "note": "Lower end of the range (#591 ruling Q1). The N after each cutting is not planned (#720 ruling R720-7)."
     }
   },
   "summer-squash-yellow-crookneck": {
@@ -4515,13 +4564,6 @@
       "quote": "Fertilizer 20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).",
       "note": "#739. Stored as two parts: 20 lb N in the fall and 40-80 lb N in late March (60-100 total). The 30-50 lb February topdress applies only if the stand is thin or shows N deficiency, so it is not counted."
     },
-    "sprayWindows.post-emergent.sulfonylurea": {
-      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
-      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Chapter 5, Weed Control in Field Crops, p. 5-219",
-      "date": "January 20, 2026 (PDF creation date; 2026 edition)",
-      "quote": "\"Harmony SG 50DF thifensulfuron 2 (growth stages 1– 7) 0.45–0.9 oz 0.014–0.028\"; \"Two-leaf to before visible flag leaf\"; \"Harmony SG can be used on fall-seeded wheat, barley, triticale, and spring-seeded oats.\"; \"Do not apply within 45 days of harvest.\"",
-      "note": "Table 5.67, Comments on Herbicides for Small Grains (p. 5-219, table layout collapsed; growth stages are Feekes). The Harmony Extra SG comment on the same page adds \"Fall applications have been more consistent than spring applications for weed control in regional trials.\" Anchored at this plugin's Z20 (tillering begins), which falls inside two-leaf to before flag leaf."
-    },
     "fertility.preplant.nLbPerAcre": {
       "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
@@ -4543,12 +4585,12 @@
       "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
       "note": "Lower end of the P2O5 and K2O range (#591 ruling Q1). 424-026 (Alley et al. 2009, p. 2) says to apply 15 to 30 lbs N/acre just before planting, which agrees with the 20."
     },
-    "fertility.topdressN.Z30": {
+    "fertility.topdressN.calendar": {
       "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
       "date": "December 15, 2023",
       "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
-      "note": "Lower end of the late March range. Virginia Tech 424-026, Nitrogen Management for Winter Wheat (Alley et al. 2009, p. 3, https://vtechworks.lib.vt.edu/bitstream/handle/10919/56759/424-026.pdf?sequence=1) places late March at stem elongation: \"from the beginning of April (approximately GS 30)\". The February topdress depends on a GS 25 tiller count (fewer than 50 tillers per square foot, Virginia Tech SPES-431, https://aaec.vt.edu/content/dam/pubs_ext_vt_edu/spes/spes-431/SPES-431.pdf), so it is not planned."
+      "note": "Lower end of the late March range (#591 ruling Q1), planned the first late March (21-31) after planting (#720 ruling R720-2). The February topdress depends on the stand and a GS 25 tiller count, so it is not planned (#720 ruling R720-5)."
     }
   },
   "white-clover-cover": {
@@ -6515,21 +6557,28 @@
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 28",
       "date": "December 15, 2023",
       "quote": "Rye, Fertilizer: \"20 lbs of N in fall, plus 40-80 lbs each of P2O5 and K2O. Topdress with 60 lbs N in February or early March.\"",
-      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is under fertility.topdressN.calendar."
     },
     "fertility.preplant.p2o5LbPerAcre": {
       "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 28",
       "date": "December 15, 2023",
       "quote": "Rye, Fertilizer: \"20 lbs of N in fall, plus 40-80 lbs each of P2O5 and K2O. Topdress with 60 lbs N in February or early March.\"",
-      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is under fertility.topdressN.calendar."
     },
     "fertility.preplant.k2oLbPerAcre": {
       "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
       "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 28",
       "date": "December 15, 2023",
       "quote": "Rye, Fertilizer: \"20 lbs of N in fall, plus 40-80 lbs each of P2O5 and K2O. Topdress with 60 lbs N in February or early March.\"",
-      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is not planned because this plugin has no growth stage table."
+      "note": "Lower end of each range (#591 ruling Q1). The spring topdress is under fertility.topdressN.calendar."
+    },
+    "fertility.topdressN.calendar": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 28",
+      "date": "December 15, 2023",
+      "quote": "Rye, Fertilizer: \"20 lbs of N in fall, plus 40-80 lbs each of P2O5 and K2O. Topdress with 60 lbs N in February or early March.\"",
+      "note": "Planned the first February 1 to March 10 after planting (#720 ruling R720-2: \"February\" is the whole month, \"early March\" March 1-10)."
     }
   },
   "wheat-hard-red-spring": {
@@ -6576,6 +6625,13 @@
       "date": "December 15, 2023",
       "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
       "note": "The Wheat entry covers Triticum aestivum; a hard white winter wheat takes the crop-type figure (#591 ruling Q3). Lower end of the P2O5 and K2O range (#591 ruling Q1). 424-026 (Alley et al. 2009, p. 2) says to apply 15 to 30 lbs N/acre just before planting, which agrees with the 20."
+    },
+    "fertility.topdressN.calendar": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 43",
+      "date": "December 15, 2023",
+      "quote": "Wheat, Fertilizer: \"20 lbs of N in the fall plus 40-80 lbs each of P2O5 and K2O at medium soil test levels. Topdress with 30-50 lbs N in February if the stand is thin or shows obvious N deficiency. Additional N should be applied in late March (40-80 lbs).\"",
+      "note": "Lower end of the late March range (#591 ruling Q1), planned the first late March (21-31) after planting (#720 ruling R720-2). The February topdress depends on the stand and a GS 25 tiller count, so it is not planned (#720 ruling R720-5)."
     }
   },
   "foxtail-millet-japanese": {
@@ -6585,6 +6641,27 @@
       "date": "Publication date December 11, 2023 (Agronomy Handbook 2023) (accessed 2026-10-06)",
       "quote": "VCE 424-100 (SPES-299), Agronomy Handbook, Part I. Crop Descriptions, Millet, Foxtail – Annual (Setaria italica): \"May 1-July 1 at 15-30 lbs alone; 15-30 lbs in mixtures in 6-8 inch rows or solid-\"",
       "note": "Drill-row width for a drilled small grain/forage (the source says rows); 'or solid-seeded' is the alternative. Generic foxtail millet entry (Setaria italica), same species as the plugin. AFCM Millets page gives only a drill seeding rate, no row width. Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 22",
+      "date": "December 15, 2023",
+      "quote": "Millet, Foxtail, Fertilizer: \"60-80 lbs each of N, P2O5 and K2O, at medium soil test levels.\"",
+      "note": "Lower end of the range (#591 ruling Q1). Plugin is Setaria italica, the species of this entry."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 22",
+      "date": "December 15, 2023",
+      "quote": "Millet, Foxtail, Fertilizer: \"60-80 lbs each of N, P2O5 and K2O, at medium soil test levels.\"",
+      "note": "Lower end of the range (#591 ruling Q1). Plugin is Setaria italica, the species of this entry."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 22",
+      "date": "December 15, 2023",
+      "quote": "Millet, Foxtail, Fertilizer: \"60-80 lbs each of N, P2O5 and K2O, at medium soil test levels.\"",
+      "note": "Lower end of the range (#591 ruling Q1). Plugin is Setaria italica, the species of this entry."
     }
   },
   "pearl-millet-tifleaf": {
@@ -6594,6 +6671,27 @@
       "date": "Publication date December 11, 2023 (Agronomy Handbook 2023) (accessed 2026-10-06)",
       "quote": "VCE 424-100 (SPES-299), Agronomy Handbook, Part I. Crop Descriptions, Millet, Pearl – Annual (Pennisetum glaucum): \"May 1-July 1 at 25-40 lbs alone; 15-20 lbs in mixtures in 6-8 inch rows or solid-\"",
       "note": "Drill-row width for a drilled small grain/forage (the source says rows); 'or solid-seeded' is the alternative. Forage pearl millet entry; Tifleaf is a forage pearl millet. (PDF text breaks 'solid-' / 'seeded.' across lines.) MU G4661 gives a pearl millet drill rate but no row width. Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 21",
+      "date": "December 15, 2023",
+      "quote": "Millet, Pearl, Fertilizer: \"At seeding: 60-80 lbs N, 70-90 lbs P2O5, and 70-90 lbs K2O at medium soil test level. After each cutting: 40-60 lbs N.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The per-cutting N is for forage use and is not planned (#720 ruling R720-7)."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 21",
+      "date": "December 15, 2023",
+      "quote": "Millet, Pearl, Fertilizer: \"At seeding: 60-80 lbs N, 70-90 lbs P2O5, and 70-90 lbs K2O at medium soil test level. After each cutting: 40-60 lbs N.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The per-cutting N is for forage use and is not planned (#720 ruling R720-7)."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Crop Descriptions, p. 21",
+      "date": "December 15, 2023",
+      "quote": "Millet, Pearl, Fertilizer: \"At seeding: 60-80 lbs N, 70-90 lbs P2O5, and 70-90 lbs K2O at medium soil test level. After each cutting: 40-60 lbs N.\"",
+      "note": "Lower end of each range (#591 ruling Q1). The per-cutting N is for forage use and is not planned (#720 ruling R720-7)."
     }
   },
   "broomcorn-mennonite": {
@@ -6766,6 +6864,13 @@
       "date": "January 20, 2026 (PDF creation date; 2026 edition)",
       "quote": "\"Weeds that germinate with the crop but are controlled in a timely fashion (four to five weeks after planting) will also not impact final yields. This POST herbicide approach relies on effective and timely postemergence weed control.\"; \"Callisto can be applied postemergence at 3 fl oz/A to corn up to 30 inches tall (8-leaf stage).\"",
       "note": "Timing sentence from p. 5-29; the Callisto sentence is the Table 5.19 postemergence comment (p. 5-76). Four to five weeks is stored as 28 to 35 days after planting."
+    },
+    "sprayWindows.post-emergent.glyphosate": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Weed Control in Field Crops: Corn, pp. 29 and 91 (PDF pages)",
+      "date": "2026",
+      "quote": "\"Weeds that germinate with the crop but are controlled in a timely fashion (four to five weeks after planting) will also not impact final yields. This POST herbicide approach relies on effective and timely postemergence weed control.\"; Table 5.21: \"Glyphosate products | Up to 30 inches tall (V8 stage) | 30 – 48 inches tall | Apply to Roundup Ready hybrids only.\"",
+      "note": "Four to five weeks = 28-35 days. Only planned for a crop plugin carrying glyphosate-tolerant-rr2 through a label traitGatedSafeFor claim (#720 ruling R720-1)."
     }
   },
   "corn-bloody-butcher": {
@@ -7346,6 +7451,13 @@
       "date": "December 15, 2023",
       "quote": "Soybean, Fertilizer: \"Zero N, 40-60 lbs each of P2O5 and K2O\"",
       "note": "Lower end of each range (#591 ruling Q1)."
+    },
+    "sprayWindows.post-emergent.glyphosate": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-016/ENTO-633-E.pdf",
+      "publisher": "Virginia Cooperative Extension, 2026 Pest Management Guide: Field Crops (456-016), Weed Control in Field Crops: Soybeans, pp. 137 and 186 (PDF pages)",
+      "date": "2026",
+      "quote": "\"Make residual soil-applied herbicide applications as close to planting as possible and postemergence applications three to four weeks after planting, when weeds are 4 inches in height or less.\"; Table 5.54, Glyphosate: \"Apply over-the-top to glyphosate-resistant (Roundup Ready) soybean varieties only.\" \"Treat in-crop from soybean emergence through full flowering of soybeans.\"",
+      "note": "Three to four weeks = 21-28 days. Only planned for a crop plugin carrying glyphosate-tolerant-rr2 through a label traitGatedSafeFor claim (#720 ruling R720-1)."
     }
   }
 }

@@ -59,5 +59,19 @@
     "lactatingDairyGrazeDays": 56,
     "meatAnimalRemovalBeforeSlaughterDays": 0,
     "source": "Alligare Glyphosate 4 Plus, EPA Reg. No. 81927-9, label notification accepted 2020-02-24"
-  }
+  },
+  "traitGatedSafeFor": [
+    {
+      "cropPluginId": "corn-feed-dent-pioneer",
+      "requiresTraits": [
+        "glyphosate-tolerant-rr2"
+      ]
+    },
+    {
+      "cropPluginId": "soybean-asgrow-roundup-ready-2-xtend",
+      "requiresTraits": [
+        "glyphosate-tolerant-rr2"
+      ]
+    }
+  ]
 }

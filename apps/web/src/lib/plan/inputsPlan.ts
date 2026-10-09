@@ -36,11 +36,10 @@
  *   - Sprayer-capacity sizing (`dilution/calculator.ts` runs at spray
  *     execution).
  *
- * Family yield + N/P/K removal estimates are hardcoded in
- * `FAMILY_REMOVAL_DEFAULTS` below. Sourcing: Penn State + UMD Extension
- * small-plot guidelines (Penn State Agronomy Guide 2025; UMD Extension
- * Fact Sheet FS-947 Soil Fertility for Vegetable Production). These are
- * conservative small-plot defaults, not production-row-crop targets.
+ * Family yield + N/P/K removal estimates in `FAMILY_REMOVAL_DEFAULTS`
+ * below have no source (#720 ruling R720-6). They plan as typical
+ * estimates tagged `fallback` ("typical estimate, not from a source"), as
+ * does the family sidedress.
  *
  * A crop plugin's own `fertility` block (#720), quoted in
  * `apps/web/scripts/crop-data-sources.json`, replaces its family default,
@@ -64,6 +63,7 @@ import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import { isProductAllowed } from '$lib/season/philosophyFilter';
 import { effectiveWeedGate, weedStrategyAllows } from '$lib/season/sprayWindowFilter';
 import { nCreditForIntent } from '$lib/fertility/coverCropCredits';
+import { nextCalendarWindow } from './calendarWords';
 import type {
   FertilityApproach,
   PestStrategy,
@@ -104,8 +104,9 @@ function pestGateAllows(gate: 'preventive' | 'ipm' | undefined, setup: PestStrat
 
 /* ─── Family yield + N/P/K removal defaults ─────────────────────────── */
 
-/** Conservative small-plot yield + nutrient-removal estimates per crop
- *  family. Used to size the pre-plant fertility budget when the crop
+/** Typical, unsourced yield + nutrient-removal estimates per crop family
+ *  (#720 ruling R720-6: shown as `fallback`). Used to size the pre-plant
+ *  fertility budget when the crop
  *  plugin doesn't declare its own yield goal. Families not listed get
  *  zero recommendation + a `missing-yield-goal` warning so the operator
  *  knows to add a soil-test-based custom plan. */
@@ -314,6 +315,10 @@ export interface InputsPlanApplication {
   /** Herbicides (#737 swarm 2026-10-07): `fallback` when the rate is a
    *  typical one, not from the label. */
   rateProvenance?: RateProvenance | null;
+  /** #720 ruling R720-6 — fertility only: `data` when the N/P/K amount comes
+   *  from the crop's sourced extension budget, `fallback` when it is the
+   *  unsourced family estimate. */
+  budgetProvenance?: 'data' | 'fallback';
   /** Block acreage. */
   acres: number;
   /** Total product needed = `rateAmount × acres`. `null` when no product. */
@@ -690,20 +695,24 @@ function rateCandidate(p: { pluginId: string; displayName: string }): Candidate 
   };
 }
 
-/** True when the herbicide's chemistry would not harm the standing crop. */
-function herbicideSafeOnCrop(h: HerbicidePlugin, crop: CropPlugin): boolean {
+/** True when the herbicide's chemistry would not harm the standing crop. A
+ *  label's trait claim (`traitGatedSafeFor`) counts only when the crop
+ *  carries every trait it requires, as at /spray (#720). */
+export function herbicideSafeOnCrop(h: HerbicidePlugin, crop: CropPlugin): boolean {
   const product: HerbicideProduct = {
     pluginId: h.pluginId,
     displayName: h.displayName,
     activeIngredients: h.activeIngredients.map((ai) => ({
       name: ai.name,
       chemistryClass: ai.chemistryClass as ChemistryClass
-    }))
+    })),
+    traitGatedSafeFor: h.traitGatedSafeFor
   };
   return (
     checkCropCompatibility([product], {
       cropPluginId: crop.pluginId,
-      cropFamily: crop.cropFamily
+      cropFamily: crop.cropFamily,
+      traits: crop.traits
     }).length === 0
   );
 }
@@ -1132,6 +1141,7 @@ function planForPlanting(
         applicationDateMs: windowStart,
         acres,
         ...choice,
+        budgetProvenance: bedFert.sourced ? 'data' : 'fallback',
         coversPlantingIds: bed.plantingIds,
         rationale:
           `Pre-plant fertility budget: ` +
@@ -1139,7 +1149,9 @@ function planForPlanting(
           `P₂O₅ ${Math.max(0, deficit.p).toFixed(0)} lb/ac, ` +
           `K₂O ${Math.max(0, deficit.k).toFixed(0)} lb/ac ` +
           `(${bedFert.families.join(' / ')} ` +
-          (bedFert.sourced ? 'extension budget' : 'removal at family default') +
+          (bedFert.sourced
+            ? 'extension budget'
+            : 'typical estimate, not from a source; adjust to your soil test') +
           ` − soil credits − fertility credits` +
           (coverNCredit > 0
             ? ` − ${coverNCredit} lb-N/ac cover-crop credit (${seasonSetup.coverCropIntent})`
@@ -1209,7 +1221,8 @@ function planForPlanting(
       applicationDateMs: sidedressDateMs,
       acres,
       ...choice,
-      rationale: `Sidedress N (~40 lb-N/ac) at ${v6 ? `stage ${v6.code}` : `+${anchorDays}d`}; covers post-emergence demand peak for ${crop.cropFamily}.`
+      budgetProvenance: 'fallback',
+      rationale: `Sidedress N (~40 lb-N/ac) at ${v6 ? `stage ${v6.code}` : `+${anchorDays}d`}; covers post-emergence demand peak for ${crop.cropFamily} (typical estimate, not from a source; adjust to your soil test).`
     });
   }
 
@@ -1218,8 +1231,10 @@ function planForPlanting(
   const topdress = crop.fertility?.topdressN ?? [];
   if (plantingDateMs != null) {
     topdress.forEach((t, i) => {
-      const stage = crop.growthStageTable?.stages.find((s) => s.code === t.stageCode);
-      if (!stage) {
+      const stage = t.stageCode
+        ? crop.growthStageTable?.stages.find((s) => s.code === t.stageCode)
+        : undefined;
+      if (!t.calendar && !stage) {
         warnings.push({
           kind: 'no-growth-stage-table',
           plantingId: planting.id,
@@ -1256,8 +1271,15 @@ function planForPlanting(
           reason: `No ${seasonSetup.philosophy}-compliant high-N fertilizer available for topdress.`
         });
       }
-      const startMs = plantingDateMs + stage.daysFromPlanting.min * DAY_MS;
-      const endMs = plantingDateMs + stage.daysFromPlanting.max * DAY_MS;
+      const { startMs, endMs } = t.calendar
+        ? nextCalendarWindow(t.calendar, plantingDateMs)
+        : {
+            startMs: plantingDateMs + stage!.daysFromPlanting.min * DAY_MS,
+            endMs: plantingDateMs + stage!.daysFromPlanting.max * DAY_MS
+          };
+      const when = t.calendar
+        ? `in ${t.calendar.sourceWords}`
+        : `at stage ${stage!.code} (${stage!.name})`;
       applications.push({
         id: applicationId(planting.id, 'sidedress-n', i),
         plantingId: planting.id,
@@ -1270,7 +1292,8 @@ function planForPlanting(
         applicationDateMs: startMs,
         acres,
         ...choice,
-        rationale: `Topdress N (~${t.nLbPerAcre} lb-N/ac) at stage ${stage.code} (${stage.name}), as the extension source for ${crop.displayName} recommends.`
+        budgetProvenance: 'data',
+        rationale: `Topdress N (~${t.nLbPerAcre} lb-N/ac) ${when}, as the extension source for ${crop.displayName} recommends.`
       });
     });
   }

@@ -162,18 +162,7 @@
       "max": 80
     }
   ],
-  "sprayWindows": [
-    {
-      "chemistryClass": "sulfonylurea",
-      "stageCode": "Z20",
-      "anchor": "stage",
-      "offsetDaysMin": 0,
-      "offsetDaysMax": 0,
-      "title": "Thifensulfuron (Harmony SG), two-leaf to before visible flag leaf",
-      "body": "Harmony SG goes on fall-seeded wheat from the two-leaf stage to before the flag leaf is visible. Fall applications have been more consistent than spring ones in regional trials. Do not apply within 45 days of harvest.",
-      "purpose": "post-emergent"
-    }
-  ],
+  "sprayWindows": [],
   "fertility": {
     "preplant": {
       "nLbPerAcre": 20,
@@ -182,7 +171,17 @@
     },
     "topdressN": [
       {
-        "stageCode": "Z30",
+        "calendar": {
+          "start": {
+            "month": 3,
+            "day": 21
+          },
+          "end": {
+            "month": 3,
+            "day": 31
+          },
+          "sourceWords": "late March"
+        },
         "nLbPerAcre": 40
       }
     ]

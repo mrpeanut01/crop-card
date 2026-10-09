@@ -30,5 +30,13 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "traitGatedSafeFor": [
+    {
+      "cropPluginId": "corn-feed-dent-pioneer",
+      "requiresTraits": [
+        "glyphosate-tolerant-rr2"
+      ]
+    }
+  ]
 }

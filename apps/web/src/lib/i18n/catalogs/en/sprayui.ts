@@ -216,6 +216,30 @@ export const enSprayui = {
     'From a {year} label of the earlier registration {number}. Check your current label.',
   'sprayui.cropRate.byCropHint':
     'Label rate depends on the crop. The mix uses it when every crop on the block has one on file.',
+  'sprayui.seasonCap.title': 'Label season limits',
+  'sprayui.seasonCap.limit': 'Up to {amount} {unit}/acre {period}',
+  'sprayui.seasonCap.forCrops': 'For: {crops}',
+  'sprayui.seasonCap.period.crop-year': 'per crop year',
+  'sprayui.seasonCap.period.season': 'per season',
+  'sprayui.seasonCap.period.growing-season': 'per growing season',
+  'sprayui.seasonCap.period.year': 'per year',
+  'sprayui.seasonCap.period.365-days': 'in any 365 days',
+  'sprayui.seasonCap.within':
+    '{product}: {total} of {cap} {unit}/acre {period} on this block, this pass included.',
+  'sprayui.seasonCap.over':
+    '{product}: {total} {unit}/acre on this block would go over the label limit of {cap} {unit}/acre {period}. Do not spray it here.',
+  'sprayui.seasonCap.unknown':
+    "{product}: can't confirm this stays under the label limit of {cap} {unit}/acre {period} on this block.",
+  'sprayui.seasonCap.unknown.earlier-rate':
+    'Other sprays of it on this block with no rate on file or a custom rate: {count}. Check those records.',
+  'sprayui.seasonCap.unknown.this-pass-rate':
+    'This pass has no label rate on file or uses a custom rate, so its amount is not counted.',
+  'sprayui.seasonCap.unknown.unit':
+    "A rate on file is in a unit that can't be compared with the label limit.",
+  'sprayui.seasonCap.calendarNote':
+    'Counted from January 1. Deleted sprays count unless they were marked as never applied.',
+  'sprayui.seasonCap.rollingNote':
+    'Counted over every 365-day stretch that includes this pass. Deleted sprays count unless they were marked as never applied.',
   'sprayui.card.product': 'Product',
   'sprayui.card.totalNeeded': 'Total needed',
   'sprayui.card.perTank': 'Per full {gal}-gal tank',

@@ -29134,5 +29134,154 @@
         "note": "Text from the PPLS file's OCR layer; the OCR renders the printed '½' as '}2' or 'Y:.', and the quote gives '½' as printed on the page image (checked 2026-10-08). Label 66330-276 is the newest posted for 70506-461 (see entries.banvel)."
       }
     ]
+  },
+  "seasonCapByCrop": {
+    "$comment": "#820 herbicide label caps on the total per acre in a crop year or season. One list per plugin carrying seasonCapByCrop: [{ cropPluginIds, amount, unit, period, sourceUrl, docDate, page, quote }], where the quote states the amount and the period in the label words (\"per crop year\", \"per season\", \"per growing season\", \"per year\", \"per 365 days\"). Rows name the crop plugins clearly inside the label's crop class (ruling SC-5; ornamental and flint corn left out). Checked by pesticideLabelSources.gate.test.ts.",
+    "banvel": [
+      {
+        "cropPluginIds": [
+          "corn-feed-dent-pioneer",
+          "corn-bloody-butcher",
+          "corn",
+          "popcorn-strawberry",
+          "popcorn-top-pop-f1-seed-standard-treated-100-seeds"
+        ],
+        "amount": 1.5,
+        "unit": "pt",
+        "period": "crop-year",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 12,
+        "quote": "Up to 2 applications of DICAMBA DMA 4# AG may be made during a growing season. DO NOT exceed a total of 1 ½ pints of DICAMBA DMA 4# AG per treated acre per crop year.",
+        "note": "Section \"FIELD, SEED*, POPCORN*, AND SILAGE CORN\" (page 12), which also says the product \"is not registered for use on sweet corn\"; so the cap covers the field and dent corn plugins and popcorn, not sweet corn (ruling SC-5). The OCR layer renders the printed ½ as \"Y:.\"; the quote gives ½ as printed on the page image. Label 66330-276 is the newest posted for 70506-461 (see entries.banvel; ruling LF-2). Checked 2026-10-09 against the PPLS file (#820)."
+      },
+      {
+        "cropPluginIds": ["wheat-soft-red-winter", "barley-grain-thoroughbred"],
+        "amount": 4,
+        "unit": "pt",
+        "period": "year",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+        "docDate": "2009-09-11",
+        "page": 6,
+        "quote": "DO NOT exceed more than 4 pts of DICAMBA DMA 4# AG (2 lbs dicamba) per acre per year.",
+        "note": "General directions for every use (page 6), so it covers the small grains the plugin carries rates for; the small grains section gives no lower total. The OCR layer reads \"2 Ibs\". Checked 2026-10-09 against the PPLS file (#820)."
+      }
+    ],
+    "callisto": [
+      {
+        "cropPluginIds": [
+          "corn-feed-dent-pioneer",
+          "corn-bloody-butcher",
+          "corn",
+          "corn-bantam-sweet",
+          "corn-sweet-bodacious",
+          "sweet-corn-american-dream-f1-seed",
+          "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+          "sweet-corn-honey-select-f1",
+          "sweet-corn-mirai-f1",
+          "sweet-corn-silver-queen-f1",
+          "sweet-corn-sugar-buns-f1"
+        ],
+        "amount": 6,
+        "unit": "fl-oz",
+        "period": "season",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20131122.pdf",
+        "docDate": "2013-11-22",
+        "page": 22,
+        "quote": "Only one postemergence application may be made if Callisto has been applied preemergence. Do not exceed a total of two applications per season. Do not exceed a total of 7.7 fl. oz./A (0.24 lb. a.i./A) of Callisto per season. • Do not make the second application within 14 days of the first application. • Application of Callisto at rates less than 3.0 fl. oz./A (0.094 lb. a.i./A) postemergence may result in incomplete weed control and loss of residual control. • Do not exceed a total of 6.0 fl. oz./A (0.19 lb. a.i./A) for the two postemergence applications.",
+        "note": "Corn section, \"Two postemergence applications of Callisto may be made with the following restrictions.\" The section covers \"field corn, seed corn, yellow popcorn, and sweet corn\" and says not to apply to white popcorn or ornamental (Indian) corn. The plugin is POST only, so the 6.0 fl oz/A postemergence total (inside the 7.7 fl oz/A season total) is the cap it carries (ruling SC-5). The two popcorn plugins are left out: the label covers only yellow popcorn and Strawberry popcorn is red, Top Pop gives no colour. The OCR layer reads \"lb.\" as \"Ib.\". Checked 2026-10-09 against the PPLS file (#820)."
+      }
+    ],
+    "laudis": [
+      {
+        "cropPluginIds": [
+          "corn-feed-dent-pioneer",
+          "corn-bloody-butcher",
+          "corn",
+          "popcorn-strawberry",
+          "popcorn-top-pop-f1-seed-standard-treated-100-seeds"
+        ],
+        "amount": 6,
+        "unit": "fl-oz",
+        "period": "growing-season",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00860-20180921.pdf",
+        "docDate": "2018-09-21",
+        "page": 13,
+        "quote": "Do NOT exceed a total of 6 fl oz/A of LAUDIS Herbicide (0.16 lb ai) per growing season on field corn or popcorn, or 3 fl oz/A (0.08 lb ai) per growing season on sweet corn.",
+        "note": "Corn section \"Crop – Specific Restrictions\"; field corn and popcorn rows. Checked 2026-10-09 against the PPLS file (#820)."
+      },
+      {
+        "cropPluginIds": [
+          "corn-bantam-sweet",
+          "corn-sweet-bodacious",
+          "sweet-corn-american-dream-f1-seed",
+          "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+          "sweet-corn-honey-select-f1",
+          "sweet-corn-mirai-f1",
+          "sweet-corn-silver-queen-f1",
+          "sweet-corn-sugar-buns-f1"
+        ],
+        "amount": 3,
+        "unit": "fl-oz",
+        "period": "growing-season",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00860-20180921.pdf",
+        "docDate": "2018-09-21",
+        "page": 13,
+        "quote": "Do NOT exceed a total of 6 fl oz/A of LAUDIS Herbicide (0.16 lb ai) per growing season on field corn or popcorn, or 3 fl oz/A (0.08 lb ai) per growing season on sweet corn.",
+        "note": "Corn section \"Crop – Specific Restrictions\"; sweet corn row. Checked 2026-10-09 against the PPLS file (#820)."
+      }
+    ],
+    "capreno-thiencarbazone-tembotrione": [
+      {
+        "cropPluginIds": [
+          "corn-feed-dent-pioneer",
+          "corn-bloody-butcher",
+          "corn",
+          "popcorn-strawberry",
+          "popcorn-top-pop-f1-seed-standard-treated-100-seeds"
+        ],
+        "amount": 6,
+        "unit": "fl-oz",
+        "period": "365-days",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01063-20260210.pdf",
+        "docDate": "2026-02-10",
+        "page": 11,
+        "quote": "Do not exceed a total of 6 fl oz of product/A of SC 547 Herbicide per 365 days for all corn types except sweet corn.",
+        "note": "POSTEMERGENCE USE section. The 2026 stamped label for 264-1063 prints the product as \"SC 547 Herbicide\". \"All corn types except sweet corn\" also takes in flint and ornamental corn, which are left uncapped here because no shipped plugin of theirs names the product (ruling SC-5). Checked 2026-10-09 against the PPLS file (#820)."
+      },
+      {
+        "cropPluginIds": [
+          "corn-bantam-sweet",
+          "corn-sweet-bodacious",
+          "sweet-corn-american-dream-f1-seed",
+          "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+          "sweet-corn-honey-select-f1",
+          "sweet-corn-mirai-f1",
+          "sweet-corn-silver-queen-f1",
+          "sweet-corn-sugar-buns-f1"
+        ],
+        "amount": 3,
+        "unit": "fl-oz",
+        "period": "365-days",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01063-20260210.pdf",
+        "docDate": "2026-02-10",
+        "page": 11,
+        "quote": "For sweet corn, do not exceed 3 fl oz per acre per 365 days of SC 547 Herbicide.",
+        "note": "POSTEMERGENCE USE section, sweet corn. Checked 2026-10-09 against the PPLS file (#820)."
+      }
+    ],
+    "engenia": [
+      {
+        "cropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend"],
+        "amount": 25.6,
+        "unit": "fl-oz",
+        "period": "year",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00507-20260206.pdf",
+        "docDate": "2026-02-06",
+        "page": 35,
+        "quote": "DO NOT exceed 25.6 fluid ounces (1 pound acid equivalent (a.e.) dicamba) of Engenia® herbicide per acre per year.",
+        "note": "Section 12.2 Dicamba-Tolerant Soybean, \"Maximum Application Per Year\". The next sentence, 1 pound dicamba a.e. per acre per calendar year from all dicamba products combined, spans products and is not counted (ruling SC-4 residual). Checked 2026-10-09 against the PPLS file (#820)."
+      }
+    ]
   }
 }

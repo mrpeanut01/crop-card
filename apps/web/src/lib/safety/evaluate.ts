@@ -3,11 +3,14 @@ import { checkCropCompatibility } from './cropCompatibility';
 import { checkCropStage } from './cropStage';
 import { checkCrossContamination } from './crossContamination';
 import { checkEnvironment } from './environment';
+import { checkSeasonCaps, type SeasonCapContext } from './seasonCap';
 import { checkTankMix, type PriorApplication } from './tankMix';
 import type { SafetyResult, SprayContext } from './types';
 
 export interface EvaluateOptions {
   priorApplications?: PriorApplication[];
+  /** #820: the block's other applications and the label season caps. */
+  seasonCaps?: SeasonCapContext;
 }
 
 /**
@@ -22,7 +25,8 @@ export function evaluateSpray(ctx: SprayContext, options: EvaluateOptions = {}):
     ...checkChemistryCompatibility(ctx.products),
     ...checkCropStage(ctx.products, ctx.crop),
     ...checkTankMix(ctx.products, ctx.occurredAt, options.priorApplications),
-    ...checkEnvironment(ctx.conditions)
+    ...checkEnvironment(ctx.conditions),
+    ...(options.seasonCaps ? checkSeasonCaps(options.seasonCaps) : [])
   ];
 
   const contamination = checkCrossContamination(ctx.products, ctx.sprayer);

@@ -41,6 +41,8 @@ import {
   type TankMixStep
 } from '$lib/safety';
 import { augmentSafetyResult } from '$lib/safety/userAddedRestrictions';
+import { evaluateSeasonCaps, type SeasonCapVerdict } from '$lib/safety/seasonCap';
+import { loadSeasonCapContext } from '$lib/server/seasonCap';
 import {
   buildRestrictionsFromStockItems,
   type StockPluginPair
@@ -189,8 +191,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     conditions: parsed.data.conditions
   };
 
+  // #820: label season caps, counted only when the block is known.
+  const sprayedCropIds = [crops.primary, ...crops.coPlanted].map((c) => c.cropPluginId);
+  const ratedProducts = fullProducts.map((p) => withCropRate(p, sprayedCropIds));
+  const seasonCapCtx = parsed.data.blockId
+    ? loadSeasonCapContext({
+        blockId: parsed.data.blockId,
+        occurredAt,
+        cropPluginIds: sprayedCropIds,
+        products: ratedProducts
+      })
+    : null;
+  const seasonCaps: SeasonCapVerdict[] = seasonCapCtx ? evaluateSeasonCaps(seasonCapCtx) : [];
   const kernelResult = evaluateSpray(ctx, {
-    priorApplications: parsed.data.priorApplications
+    priorApplications: parsed.data.priorApplications,
+    seasonCaps: seasonCapCtx ?? undefined
   });
 
   const restrictions = buildRestrictionsFromStockItems(
@@ -202,7 +217,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   let noLabelRate: string[] | undefined;
   let tankMixOrder: TankMixStep[] | undefined;
   // #737: label rates and stage limits by crop for the crops on this block.
-  const sprayedCropIds = [crops.primary, ...crops.coPlanted].map((c) => c.cropPluginId);
   const cropLabel: Array<{
     pluginId: string;
     rows: CropRateRow[];
@@ -224,7 +238,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // uncalibrated; coalesce to undefined so computeTankMixDilutions falls
     // back to the herbicide-plugin default rather than treating null as 0.
     const effectiveGpa = parsed.data.calibratedGpa ?? stored?.calibratedGpa ?? undefined;
-    const ratedProducts = fullProducts.map((p) => withCropRate(p, sprayedCropIds));
     dilutions = computeTankMixDilutions(ratedProducts, tankSize, effectiveGpa);
     noLabelRate = productsWithoutRate(ratedProducts);
     tankMixOrder = buildTankMixSteps(fullProducts);
@@ -235,6 +248,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     dilutions,
     noLabelRate,
     cropLabel,
+    seasonCaps: seasonCaps.map((v) => {
+      const plugin = fullProducts.find((p) => p.pluginId === v.pluginId);
+      return { ...v, earlierLabels: plugin ? cropRateEarlierLabels(plugin) : [] };
+    }),
     tankMixOrder,
     ruleVersion: RULES_VERSION,
     pluginHashes,

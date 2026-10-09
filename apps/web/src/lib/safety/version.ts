@@ -86,5 +86,11 @@
  * use. Thifensulfuron (Harmony SG) passes only on the wheat, barley, oats
  * and triticale plugins in the cereal-grain and cover-grass families and
  * stops every other plugin of those families. These stops only add.
+ * #820 — 0.7.10: label season caps (`seasonCap.ts`). A herbicide's quoted
+ * cap on the total per acre per crop year, season or 365 days is summed
+ * over the other applications of the product on the block (deleted ones
+ * that were applied included); a known total over the cap is a stop with
+ * no override (SC-1), and an amount that is not known is a warning that
+ * never reads as under the cap (SC-2).
  */
-export const RULES_VERSION = '0.7.9' as const;
+export const RULES_VERSION = '0.7.10' as const;

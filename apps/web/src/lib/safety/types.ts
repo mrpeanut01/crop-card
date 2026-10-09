@@ -151,7 +151,9 @@ export type ViolationCode =
   | 'IPM_THRESHOLD_NOT_MET'
   | 'POLLINATOR_BLOOM_BLOCK'
   // #130 — label bee-toxicity / bloom / dusk-to-dawn gate (pollinatorProtection.ts).
-  | 'POLLINATOR_BLOCK';
+  | 'POLLINATOR_BLOCK'
+  // #820 — label total per acre per crop year or season (seasonCap.ts).
+  | 'SEASON_CAP_EXCEEDED';
 
 export interface SafetyViolation {
   code: ViolationCode;

@@ -2,7 +2,11 @@
   "pluginId": "capreno-thiencarbazone-tembotrione",
   "type": "herbicide",
   "version": "1.0.2",
-  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Capreno', 'tembotrione'; the 3 'Capreno' hits are unrelated copper products). Label (264-1063, accepted 2026-02-10) makes no organic-production claim; conventional synthetic herbicide."},
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Capreno', 'tembotrione'; the 3 'Capreno' hits are unrelated copper products). Label (264-1063, accepted 2026-02-10) makes no organic-production claim; conventional synthetic herbicide."
+  },
   "formulation": "SC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
@@ -28,5 +32,34 @@
   "deconRequired": true,
   "epaRegistrationNumber": "264-1063",
   "reEntryIntervalHours": 12,
-  "notes": "Bayer POST corn premix combining Group 2 ALS with Group 27 HPPD. Add AMS and methylated seed oil."
+  "notes": "Bayer POST corn premix combining Group 2 ALS with Group 27 HPPD. Add AMS and methylated seed oil.",
+  "seasonCapByCrop": [
+    {
+      "cropPluginIds": [
+        "corn-feed-dent-pioneer",
+        "corn-bloody-butcher",
+        "corn",
+        "popcorn-strawberry",
+        "popcorn-top-pop-f1-seed-standard-treated-100-seeds"
+      ],
+      "amount": 6,
+      "unit": "fl-oz",
+      "period": "365-days"
+    },
+    {
+      "cropPluginIds": [
+        "corn-bantam-sweet",
+        "corn-sweet-bodacious",
+        "sweet-corn-american-dream-f1-seed",
+        "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+        "sweet-corn-honey-select-f1",
+        "sweet-corn-mirai-f1",
+        "sweet-corn-silver-queen-f1",
+        "sweet-corn-sugar-buns-f1"
+      ],
+      "amount": 3,
+      "unit": "fl-oz",
+      "period": "365-days"
+    }
+  ]
 }

@@ -1,10 +1,15 @@
 /**
  * Ruling LF-2: the earlier-registration labels behind a herbicide's rates by
- * crop and stage limits, read from the `rateByCrop` and `stageLimitByCrop`
- * sources in apps/web/scripts/epa-reg-sources.json.
+ * crop, stage limits and season caps (#820), read from the `rateByCrop`,
+ * `stageLimitByCrop` and `seasonCapByCrop` sources in
+ * apps/web/scripts/epa-reg-sources.json.
  */
 
-import { rateByCrop, stageLimitByCrop } from '../../../scripts/epa-reg-sources.json';
+import {
+  rateByCrop,
+  seasonCapByCrop,
+  stageLimitByCrop
+} from '../../../scripts/epa-reg-sources.json';
 import {
   earlierRegistrationLabels,
   type EarlierLabel,
@@ -24,6 +29,7 @@ export function cropRateEarlierLabels(plugin: {
 }): EarlierLabel[] {
   return earlierRegistrationLabels(plugin.epaRegistrationNumber, [
     ...refsFor(rateByCrop as SourceTable, plugin.pluginId),
-    ...refsFor(stageLimitByCrop as SourceTable, plugin.pluginId)
+    ...refsFor(stageLimitByCrop as SourceTable, plugin.pluginId),
+    ...refsFor(seasonCapByCrop as SourceTable, plugin.pluginId)
   ]);
 }

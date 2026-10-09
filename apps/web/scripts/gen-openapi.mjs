@@ -595,7 +595,7 @@ const paths = {
   '/api/spray/record': recordEndpoint({
     summary: 'Record a spray event (safety-kernel re-validated)',
     description:
-      'Every POST re-runs `evaluateSpray()` on the server regardless of UI. A Bearer-authed agent cannot bypass the safety kernel, the 48h spray lock, the helper custom-rate restriction, or tenant isolation. Returns 422 with kernel violations on safety failure.',
+      'Every POST re-runs `evaluateSpray()` on the server regardless of UI. A Bearer-authed agent cannot bypass the safety kernel, the 48h spray lock, the helper custom-rate restriction, or tenant isolation. Returns 422 with kernel violations on safety failure, including `SEASON_CAP_EXCEEDED` when the label total per acre per crop year, season or 365 days would be passed on this block (#820). Both the saved response and the 422 carry `seasonCaps`: one verdict per label cap with `status` `within`, `over`, or `unknown` when an amount on file (no rate, a custom rate, or a unit that cannot be compared) cannot be counted; `unknown` never means under the cap.',
     schema: sprayRecordSchema
   }),
 

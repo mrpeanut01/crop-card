@@ -39,6 +39,8 @@ import {
   type SprayContext
 } from '$lib/safety';
 import { augmentSafetyResult } from '$lib/safety/userAddedRestrictions';
+import { evaluateSeasonCaps } from '$lib/safety/seasonCap';
+import { loadSeasonCapContext } from '$lib/server/seasonCap';
 import {
   buildRestrictionsFromStockItems,
   type StockPluginPair
@@ -175,7 +177,16 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     }
   };
 
-  const kernelResult = evaluateSpray(ctx);
+  // #820: the label's season caps against the block's other applications.
+  const seasonCapCtx = loadSeasonCapContext({
+    blockId: parsed.data.blockId,
+    occurredAt,
+    cropPluginIds: sprayedCropIds,
+    products: ratedProducts,
+    customRateOverride: parsed.data.customRateOverride ?? false
+  });
+  const seasonCaps = seasonCapCtx ? evaluateSeasonCaps(seasonCapCtx) : [];
+  const kernelResult = evaluateSpray(ctx, { seasonCaps: seasonCapCtx ?? undefined });
 
   // Resolve stock items once: explicit ids first, then pluginId lookup. The
   // map is also reused below for auto-decrement so we hit the DB once per item.
@@ -211,6 +222,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
       {
         error: 'kernel rejected spray; refusing to persist',
         ...kernel,
+        seasonCaps,
         ruleVersion: RULES_VERSION
       },
       { status: 422 }
@@ -349,6 +361,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     ruleVersion: RULES_VERSION,
     stockDecrements: stockResults,
     stockWarnings,
-    taskClose
+    taskClose,
+    seasonCaps
   });
 });

@@ -44,6 +44,7 @@
     phiByCrop={data.phiByCrop}
     rateByCrop={data.rateByCrop}
     rateByCropEarlierLabels={data.rateByCropEarlierLabels}
+    seasonCaps={data.seasonCaps}
   />
 {:else if data.type === 'fertility'}
   <FertilityDetail

@@ -54,6 +54,8 @@ import type { PhiProduct } from '$lib/safety/preHarvestInterval';
 import { cropFamilyLabel } from '$lib/plugins/familyLabel';
 import { cropRateRows, type CropRateRow } from '$lib/plugins/cropRate';
 import { cropRateEarlierLabels } from '$lib/server/cropRateSources';
+import type { HerbicideSeasonCapByCrop } from '$lib/plugins/schemas';
+import type { SeasonCapPeriod } from '$lib/safety/seasonCap';
 import type { EarlierLabel } from '$lib/plugins/earlierRegistration';
 
 export interface PesticideDetailPayload {
@@ -77,6 +79,13 @@ export interface PesticideDetailPayload {
   /** #737 — the label's rates and stage limits by crop. */
   rateByCrop?: CropRateRow[];
   rateByCropEarlierLabels?: EarlierLabel[];
+  /** #820 — the label's season caps, each with its crops named. */
+  seasonCaps?: Array<{
+    amount: number;
+    unit: string;
+    period: SeasonCapPeriod;
+    crops: Array<{ cropPluginId: string; name: string }>;
+  }>;
 }
 
 export interface FertilityDetailPayload {
@@ -306,6 +315,7 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
   let phiByCrop: PesticideDetailPayload['phiByCrop'] = [];
   let rateByCrop: CropRateRow[] = [];
   let rateByCropEarlierLabels: EarlierLabel[] = [];
+  let seasonCaps: NonNullable<PesticideDetailPayload['seasonCaps']> = [];
   if (item.pluginId) {
     const registry = await getRegistry();
     const rec = registry.get(item.pluginId);
@@ -328,7 +338,18 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
         plugin as Parameters<typeof cropRateRows>[0],
         (id) => registry.get(id)?.plugin.displayName ?? id
       );
-      if (rateByCrop.length > 0) {
+      seasonCaps = (
+        (plugin as { seasonCapByCrop?: HerbicideSeasonCapByCrop[] }).seasonCapByCrop ?? []
+      ).map((c) => ({
+        amount: c.amount,
+        unit: c.unit,
+        period: c.period,
+        crops: c.cropPluginIds.map((id) => ({
+          cropPluginId: id,
+          name: registry.get(id)?.plugin.displayName ?? id
+        }))
+      }));
+      if (rateByCrop.length > 0 || seasonCaps.length > 0) {
         rateByCropEarlierLabels = cropRateEarlierLabels(
           plugin as { pluginId: string; epaRegistrationNumber?: string }
         );
@@ -345,7 +366,8 @@ export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPa
       plugin: plugin as PesticideDetailPayload['plugin'],
       phiByCrop,
       rateByCrop,
-      rateByCropEarlierLabels
+      rateByCropEarlierLabels,
+      seasonCaps
     };
   }
   if (type === 'fertility') {

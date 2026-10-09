@@ -222,6 +222,30 @@ export const esSprayui: Partial<Record<MessageKey, string>> = {
     'De una etiqueta de {year} del registro anterior {number}. Revise su etiqueta actual.',
   'sprayui.cropRate.byCropHint':
     'La dosis de la etiqueta depende del cultivo. La mezcla la usa cuando todos los cultivos del bloque tienen una registrada.',
+  'sprayui.seasonCap.title': 'Límites por temporada de la etiqueta',
+  'sprayui.seasonCap.limit': 'Hasta {amount} {unit}/acre {period}',
+  'sprayui.seasonCap.forCrops': 'Para: {crops}',
+  'sprayui.seasonCap.period.crop-year': 'por año de cultivo',
+  'sprayui.seasonCap.period.season': 'por temporada',
+  'sprayui.seasonCap.period.growing-season': 'por temporada de cultivo',
+  'sprayui.seasonCap.period.year': 'por año',
+  'sprayui.seasonCap.period.365-days': 'en cualquier período de 365 días',
+  'sprayui.seasonCap.within':
+    '{product}: {total} de {cap} {unit}/acre {period} en este bloque, contando esta pasada.',
+  'sprayui.seasonCap.over':
+    '{product}: {total} {unit}/acre en este bloque pasaría del límite de la etiqueta de {cap} {unit}/acre {period}. No lo aplique aquí.',
+  'sprayui.seasonCap.unknown':
+    '{product}: no se puede confirmar que quede por debajo del límite de la etiqueta de {cap} {unit}/acre {period} en este bloque.',
+  'sprayui.seasonCap.unknown.earlier-rate':
+    'Otras aplicaciones de este producto en este bloque sin dosis registrada o con una dosis personalizada: {count}. Revise esos registros.',
+  'sprayui.seasonCap.unknown.this-pass-rate':
+    'Esta pasada no tiene dosis de la etiqueta registrada o usa una dosis personalizada, así que su cantidad no se cuenta.',
+  'sprayui.seasonCap.unknown.unit':
+    'Una dosis registrada está en una unidad que no se puede comparar con el límite de la etiqueta.',
+  'sprayui.seasonCap.calendarNote':
+    'Se cuenta desde el 1 de enero. Las aplicaciones borradas cuentan, salvo las marcadas como nunca aplicadas.',
+  'sprayui.seasonCap.rollingNote':
+    'Se cuenta en cada período de 365 días que incluye esta pasada. Las aplicaciones borradas cuentan, salvo las marcadas como nunca aplicadas.',
   'sprayui.card.product': 'Producto',
   'sprayui.card.totalNeeded': 'Total necesario',
   'sprayui.card.perTank': 'Por tanque lleno de {gal} gal',

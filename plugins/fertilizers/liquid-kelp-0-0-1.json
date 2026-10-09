@@ -1,7 +1,7 @@
 {
   "pluginId": "liquid-kelp-0-0-1",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "gal",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -10,7 +10,7 @@
     "k": 1
   },
   "form": "liquid",
-  "displayName": "Liquid Kelp (0-0-1, OMRI)",
+  "displayName": "Liquid Kelp (0-0-1)",
   "organic": true,
   "applicationRange": {
     "min": 1,
@@ -18,10 +18,7 @@
     "unit": "qt-per-acre"
   },
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Ascophyllum nodosum extract. Foliar source of trace minerals, cytokinins, auxins. Stress-recovery aid post-transplant or under heat. Not a primary N-P-K source."
 }

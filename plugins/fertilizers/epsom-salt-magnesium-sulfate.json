@@ -1,7 +1,7 @@
 {
   "pluginId": "epsom-salt-magnesium-sulfate",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -22,10 +22,10 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": true,
     "nonGmoCompliant": true,
     "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "transitioningAllowed": true,
+    "notes": "Magnesium sulfate—allowed with a documented soil deficiency."
   },
   "notes": "Mined magnesium sulfate. Fully soluble. Foliar Mg correction at 1 to 2 lb per 100 gal water; soil Mg supplementation by broadcast."
 }

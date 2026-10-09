@@ -377,6 +377,28 @@ function organicFlagGaps(p: LabelSourcePlugin, sources: LabelSources): string[] 
   return [`${p.pluginId}: ${set.join(', ')} true with no OMRI listing or 7 CFR 205 quote`];
 }
 
+/** #805: the same organic-flag rule for fertilizer plugins, whose sources
+ *  live in apps/web/scripts/fertilizer-organic-sources.json (one entry per
+ *  pluginId, the shape of the `complianceFlags` section above). A name that
+ *  says OMRI needs `omriListed: true`, and every entry names a plugin. */
+export function fertilizerOrganicSourceGaps(
+  plugins: readonly LabelSourcePlugin[],
+  sources: Record<string, unknown>
+): string[] {
+  const gaps: string[] = [];
+  const ids = new Set(plugins.map((p) => p.pluginId));
+  for (const p of plugins) {
+    if (/\bOMRI\b/.test(p.displayName) && p.complianceFlags?.omriListed !== true) {
+      gaps.push(`${p.pluginId}: the name says OMRI but omriListed is not true`);
+    }
+    gaps.push(...organicFlagGaps(p, { complianceFlags: sources }));
+  }
+  for (const id of Object.keys(sources)) {
+    if (!id.startsWith('$') && !ids.has(id)) gaps.push(`${id}: source entry names no plugin`);
+  }
+  return gaps;
+}
+
 type CropRow = QuotedSource & { cropPluginId?: unknown };
 
 function cropRows(list: unknown, cropPluginId: string): CropRow[] {

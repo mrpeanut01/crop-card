@@ -324,7 +324,8 @@ export const enInventory = {
   'inv.fert.application': 'Application',
   'inv.fert.noRange': 'No application range declared.',
   'inv.fert.approachClass': 'Approach class',
-  'inv.fert.organic': 'OMRI / organic',
+  'inv.fert.organic': 'Organic source',
+  'inv.fert.organicUse': 'Organic use',
   'inv.fert.conventional': 'Conventional',
   'inv.fert.impact': 'Nutrient-plan impact',
   'inv.fert.impactNote':

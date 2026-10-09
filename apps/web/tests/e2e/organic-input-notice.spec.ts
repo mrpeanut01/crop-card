@@ -71,7 +71,7 @@ test.describe('organic input notice', () => {
     await source.fill('Neighbor compost');
     await expect(notice).toContainText("This product isn't marked as allowed for organic use.");
 
-    await source.fill('biochar');
+    await source.fill('sulfur-pastille-elemental');
     await expect(notice).toHaveCount(0);
 
     await source.fill('urea-46-0-0');

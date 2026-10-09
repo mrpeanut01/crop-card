@@ -31,7 +31,7 @@ describe('blockOrganicFacts', () => {
           rateUnit: 'lb'
         });
       apply('urea-46-0-0', now - 10 * DAY);
-      apply('biochar', now - 9 * DAY);
+      apply('sulfur-pastille-elemental', now - 9 * DAY);
       apply('Neighbor compost', now - 8 * DAY);
       apply('urea-46-0-0', now - 2000 * DAY);
       const crop = createPlanned({

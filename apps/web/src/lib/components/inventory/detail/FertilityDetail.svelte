@@ -12,6 +12,11 @@
    * come from the registered fertilizer label, not free-form user input).
    */
   import { createT } from '$lib/i18n';
+  import {
+    organicInputClass,
+    organicInputClassLabel,
+    type OrganicComplianceFlags
+  } from '$lib/organic/inputCompliance';
   import { movementReasonText } from '$lib/stock/animalStock';
   import { page } from '$app/state';
   import InvSection from '../InvSection.svelte';
@@ -30,6 +35,7 @@
 
   const npk = $derived(plugin?.analysis ?? { n: 0, p: 0, k: 0 });
   const npkMax = $derived(Math.max(npk.n, npk.p, npk.k, 1));
+  const flags = $derived(plugin?.complianceFlags as OrganicComplianceFlags | undefined);
 </script>
 
 <header class="detail-header">
@@ -39,7 +45,7 @@
     {#if plugin}
       <p class="sub">
         {tr('inv.fert.npkLabel')} <span class="mono">{npk.n}-{npk.p}-{npk.k}</span>
-        {#if plugin.organic}· <span class="omri">OMRI</span>{/if}
+        {#if flags?.omriListed === true}· <span class="omri">OMRI</span>{/if}
       </p>
     {/if}
   </div>
@@ -97,6 +103,20 @@
         label={tr('inv.fert.approachClass')}
         value={plugin?.organic ? tr('inv.fert.organic') : tr('inv.fert.conventional')}
       />
+      {#if plugin}
+        <InvKVP
+          label={tr('inv.fert.organicUse')}
+          value={organicInputClassLabel(
+            organicInputClass({ type: 'fertilizer', complianceFlags: flags }),
+            page.data?.locale
+          )}
+        />
+        {#if flags?.notes}
+          <p class="small" lang="en" data-english-only="regulatory" data-testid="organic-condition">
+            {flags.notes}
+          </p>
+        {/if}
+      {/if}
     </InvSection>
 
     <InvSection title={tr('inv.fert.impact')} kicker="Phase 21b">

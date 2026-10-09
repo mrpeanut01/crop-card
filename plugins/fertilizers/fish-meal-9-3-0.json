@@ -1,7 +1,7 @@
 {
   "pluginId": "fish-meal-9-3-0",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -10,7 +10,7 @@
     "k": 0
   },
   "form": "meal",
-  "displayName": "Fish Meal (9-3-0, OMRI)",
+  "displayName": "Fish Meal (9-3-0)",
   "organic": true,
   "applicationRange": {
     "min": 200,
@@ -18,10 +18,7 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Dried ground fish (menhaden or whitefish byproduct). Faster N release than feather meal. Strong odor for first 1 to 2 weeks. Side-dress or pre-plant."
 }

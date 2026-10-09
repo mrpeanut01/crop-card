@@ -56,6 +56,22 @@
       "nLbPerAcre": 20,
       "p2o5LbPerAcre": 40,
       "k2oLbPerAcre": 40
-    }
+    },
+    "topdressN": [
+      {
+        "calendar": {
+          "start": {
+            "month": 3,
+            "day": 21
+          },
+          "end": {
+            "month": 3,
+            "day": 31
+          },
+          "sourceWords": "late March"
+        },
+        "nLbPerAcre": 40
+      }
+    ]
   }
 }

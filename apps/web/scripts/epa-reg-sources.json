@@ -29283,5 +29283,40 @@
         "note": "Section 12.2 Dicamba-Tolerant Soybean, \"Maximum Application Per Year\". The next sentence, 1 pound dicamba a.e. per acre per calendar year from all dicamba products combined, spans products and is not counted (ruling SC-4 residual). Checked 2026-10-09 against the PPLS file (#820)."
       }
     ]
+  },
+  "traitGatedSafeFor": {
+    "$comment": "#720 ruling R720-1 - each traitGatedSafeFor claim on a herbicide plugin, keyed pluginId -> cropPluginId: { sourceUrl, docDate, page, quote, note? }. The quote is the product label's own in-crop (postemergence) use over that glyphosate-tolerant crop and names Roundup Ready and the crop. Only real product labels count; a master label whose Roundup Ready text is optional on the printed label does not (Roundup PowerMAX 3, 524-659). Checked by pesticideLabelSources.gate.test.ts.",
+    "glyphosate-4-plus": {
+      "corn-feed-dent-pioneer": {
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+        "docDate": "2020-02-24",
+        "page": 42,
+        "quote": "This product may be applied postemergence to Roundup Ready® corn during the period beginning at corn emergence and continuing through the 12-leaf stage or until corn height reaches 30 inches, whichever comes first."
+      },
+      "soybean-asgrow-roundup-ready-2-xtend": {
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+        "docDate": "2020-02-24",
+        "page": 32,
+        "quote": "This product may be applied postemergence to Roundup Ready® soybeans from the cracking stage throughout flowering."
+      }
+    },
+    "touchdown-hitech": {
+      "corn-feed-dent-pioneer": {
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01182-20150318.pdf",
+        "docDate": "2015-03-18",
+        "page": 4,
+        "quote": "For use on the following glyphosate-tolerant corn only: all Agrisure® GT corn (including Agrisure Viptera™ 3110 and Agrisure Viptera™ 3111); Attribute® II Sweet Corn, all Roundup Ready corn, including Roundup Ready Corn, Roundup Ready 2 Corn, Roundup Ready 2 Sweet Corn ... Method of Application: Before, during, or after planting; and postemergence in corn varieties which have been genetically modified to be tolerant to glyphosate-based herbicides.",
+        "note": "The soybean section names Roundup Ready 2 Yield soybeans, not Roundup Ready 2 Xtend, so no soybean claim is made (#720 ruling R720-1)."
+      }
+    },
+    "halex-gt": {
+      "corn-feed-dent-pioneer": {
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01282-20250115.pdf",
+        "docDate": "2025-01-15",
+        "page": 11,
+        "quote": "Halex GT Herbicide can be applied postemergence to Glyphosate Tolerant (e.g. Roundup Ready®, Agrisure™ GT) corn only. An application of Halex GT Herbicide to a corn hybrid that is not Glyphosate Tolerant will result in crop death.",
+        "note": "Claim shipped before #720; sourced here so every glyphosate trait claim is quoted."
+      }
+    }
   }
 }

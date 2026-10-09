@@ -71,6 +71,15 @@
       "title": "POST clethodim for grasses, three to four weeks after planting",
       "body": "Postemergence spray three to four weeks after planting, when weeds are 4 inches tall or less. Clethodim (Select Max) goes on postemergence for grass weeds.",
       "purpose": "post-emergent"
+    },
+    {
+      "chemistryClass": "glyphosate",
+      "anchor": "planting",
+      "offsetDaysMin": 21,
+      "offsetDaysMax": 28,
+      "title": "POST glyphosate on Roundup Ready soybeans, three to four weeks after planting",
+      "body": "Postemergence spray three to four weeks after planting, when weeds are 4 inches tall or less. Glyphosate goes over the top of glyphosate-resistant (Roundup Ready) soybeans only, from emergence through full flowering.",
+      "purpose": "post-emergent"
     }
   ],
   "fertility": {

@@ -74,6 +74,15 @@
       "title": "POST mesotrione, four to five weeks after planting",
       "body": "Control weeds that came up with the crop four to five weeks after planting. Mesotrione (Callisto) goes on postemergence to corn up to 30 inches tall (8-leaf stage).",
       "purpose": "post-emergent"
+    },
+    {
+      "chemistryClass": "glyphosate",
+      "anchor": "planting",
+      "offsetDaysMin": 28,
+      "offsetDaysMax": 35,
+      "title": "POST glyphosate on Roundup Ready corn, four to five weeks after planting",
+      "body": "Control weeds that came up with the crop four to five weeks after planting. Glyphosate goes over the top of Roundup Ready corn up to 30 inches tall (V8 stage); use drop nozzles from 30 to 48 inches. Apply to Roundup Ready hybrids only.",
+      "purpose": "post-emergent"
     }
   ],
   "pluginSchemaVersion": "1.1",

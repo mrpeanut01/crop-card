@@ -138,6 +138,76 @@ function hasUrl(s: QuotedSource): boolean {
   return typeof s.sourceUrl === 'string' && /^https:\/\//.test(s.sourceUrl);
 }
 
+export interface TraitClaimPlugin {
+  pluginId: string;
+  type: string;
+  epaRegistrationNumber?: string;
+  activeIngredients?: ReadonlyArray<{ chemistryClass?: string }>;
+  traitGatedSafeFor?: ReadonlyArray<{ cropPluginId: string; requiresTraits: string[] }>;
+}
+
+/** "100-1182" as the PPLS file stem "000100-01182". */
+function pplsStem(reg: string): string | null {
+  const m = /^(\d+)-(\d+)$/.exec(reg);
+  return m ? `${m[1].padStart(6, '0')}-${m[2].padStart(5, '0')}` : null;
+}
+
+/**
+ * #720 ruling R720-1: a glyphosate herbicide's `traitGatedSafeFor` claim
+ * lifts the kernel's family-kill stop for that crop, so each one needs a
+ * `traitGatedSafeFor.<pluginId>.<cropPluginId>` entry in
+ * epa-reg-sources.json quoting the product's own PPLS label (the file for
+ * its EPA number) on postemergence use over Roundup Ready or
+ * glyphosate-tolerant plantings of that crop. An entry with no matching
+ * claim is stale.
+ */
+export function traitClaimSourceGaps(
+  plugins: readonly TraitClaimPlugin[],
+  sources: { traitGatedSafeFor?: Record<string, unknown> }
+): string[] {
+  const gaps: string[] = [];
+  const section = sources.traitGatedSafeFor ?? {};
+  const byId = new Map(plugins.map((p) => [p.pluginId, p]));
+  for (const p of plugins) {
+    if (p.type !== 'herbicide') continue;
+    if (!(p.activeIngredients ?? []).some((a) => a.chemistryClass === 'glyphosate')) continue;
+    for (const claim of p.traitGatedSafeFor ?? []) {
+      const key = `${p.pluginId} -> ${claim.cropPluginId}`;
+      const entry = (section[p.pluginId] as Record<string, QuotedSource> | undefined)?.[
+        claim.cropPluginId
+      ];
+      if (!entry) {
+        gaps.push(`${key}: trait claim has no label source`);
+        continue;
+      }
+      const stem = p.epaRegistrationNumber ? pplsStem(p.epaRegistrationNumber) : null;
+      const ppls = `https://www3.epa.gov/pesticides/chem_search/ppls/${stem}-`;
+      if (!hasUrl(entry) || !stem || !String(entry.sourceUrl).startsWith(ppls)) {
+        gaps.push(`${key}: source is not the product's own PPLS label`);
+      }
+      const quote = typeof entry.quote === 'string' ? entry.quote : '';
+      const crop = claim.cropPluginId.split('-')[0];
+      if (
+        !/postemergence/i.test(quote) ||
+        !/roundup ready|glyphosate.tolerant/i.test(quote) ||
+        !new RegExp(`\\b${crop}`, 'i').test(quote)
+      ) {
+        gaps.push(`${key}: quote does not state postemergence use over tolerant ${crop}`);
+      }
+    }
+  }
+  for (const [pluginId, claims] of Object.entries(section)) {
+    if (pluginId.startsWith('$') || !claims || typeof claims !== 'object') continue;
+    for (const cropPluginId of Object.keys(claims)) {
+      const has = byId
+        .get(pluginId)
+        ?.traitGatedSafeFor?.some((c) => c.cropPluginId === cropPluginId);
+      if (!has) gaps.push(`${pluginId} -> ${cropPluginId}: source has no matching trait claim`);
+    }
+  }
+  return gaps;
+}
+
 type PhiSource = QuotedSource & {
   cropPluginId?: unknown;
   cropPluginIds?: unknown;

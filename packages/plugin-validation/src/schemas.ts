@@ -701,6 +701,18 @@ export const cropSprayWindowSchema = z
   });
 export type CropSprayWindow = z.infer<typeof cropSprayWindowSchema>;
 
+const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
+
+export const monthDaySchema = z
+  .strictObject({
+    month: z.number().int().min(1).max(12),
+    day: z.number().int().min(1).max(31),
+  })
+  .refine((v) => v.day <= DAYS_IN_MONTH[v.month - 1], {
+    message: "day is past the end of the month",
+  });
+export type MonthDay = z.infer<typeof monthDaySchema>;
+
 /** #720: lb per acre at planting, as an extension source recommends at
  *  medium soil test levels. A nutrient the source does not name is left
  *  out and plans as none. */
@@ -723,24 +735,45 @@ export const cropFertilitySchema = z
         { message: "preplant needs at least one nutrient" },
       ),
     /** Nitrogen topdressed at a growth stage of this crop's
-     *  `growthStageTable` (one entry per stage). */
+     *  `growthStageTable` (one entry per stage), or (#720 ruling R720-2) in
+     *  a calendar window the source names in words ("February or early
+     *  March"), applied the first time that window comes after planting.
+     *  At most one calendar entry; its source key is
+     *  `fertility.topdressN.calendar`. */
     topdressN: z
       .array(
         z
           .object({
-            stageCode: z.string().min(1).max(16),
+            stageCode: z.string().min(1).max(16).optional(),
+            calendar: z
+              .strictObject({
+                start: monthDaySchema,
+                end: monthDaySchema,
+                sourceWords: z.string().min(3).max(80),
+              })
+              .optional(),
             nLbPerAcre: z.number().positive().max(200),
           })
-          .strict(),
+          .strict()
+          .refine(
+            (t) => (t.stageCode === undefined) !== (t.calendar === undefined),
+            {
+              message:
+                "a topdressN entry names a stageCode or a calendar window",
+            },
+          ),
       )
       .optional(),
   })
   .strict()
   .refine(
-    (v) =>
-      new Set((v.topdressN ?? []).map((t) => t.stageCode)).size ===
-      (v.topdressN ?? []).length,
-    { message: "one topdressN entry per stage" },
+    (v) => {
+      const keys = (v.topdressN ?? []).map((t) => t.stageCode ?? "calendar");
+      return new Set(keys).size === keys.length;
+    },
+    {
+      message: "one topdressN entry per stage and at most one calendar entry",
+    },
   );
 export type CropFertility = z.infer<typeof cropFertilitySchema>;
 
@@ -873,19 +906,6 @@ export type TreeSizeClassRow = z.infer<typeof treeSizeClassesSchema>[number];
 // under `harvestSeason` in apps/web/scripts/crop-data-sources.json whose quote
 // states both dates. The calendar repeats it each bearing year; an end before
 // the start runs into the next year.
-
-const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
-
-export const monthDaySchema = z
-  .strictObject({
-    month: z.number().int().min(1).max(12),
-    day: z.number().int().min(1).max(31),
-  })
-  .refine((v) => v.day <= DAYS_IN_MONTH[v.month - 1], {
-    message: "day is past the end of the month",
-  });
-export type MonthDay = z.infer<typeof monthDaySchema>;
-
 export const harvestSeasonSchema = z.strictObject({
   start: monthDaySchema,
   end: monthDaySchema,

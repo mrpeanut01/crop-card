@@ -6,6 +6,7 @@ import {
   LABEL_SOURCED_CLASSES,
   pesticideLabelSourceGaps,
   statesAmount,
+  traitClaimSourceGaps,
   type LabelSourcePlugin
 } from './pesticideLabelSources';
 import { hracGroupOf } from '$lib/safety/cropFamilyLethality';
@@ -593,5 +594,51 @@ describe('pesticide label sources (#640 #661 #716)', () => {
         'x: season cap names popcorn, which is not a crop plugin'
       ]);
     });
+  });
+});
+
+describe('glyphosate trait claims (#720 ruling R720-1)', () => {
+  it('every shipped glyphosate trait claim quotes its own PPLS label', () => {
+    expect(traitClaimSourceGaps(loadPesticides(), SOURCES)).toEqual([]);
+  });
+
+  it('Roundup PowerMAX 3 (master label) carries no trait claim', () => {
+    const rpm = loadPesticides().find((p) => p.pluginId === 'roundup-powermax-3') as {
+      traitGatedSafeFor?: unknown[];
+    };
+    expect(rpm.traitGatedSafeFor ?? []).toEqual([]);
+  });
+
+  const herb = {
+    pluginId: 'g',
+    type: 'herbicide',
+    epaRegistrationNumber: '100-1182',
+    activeIngredients: [{ chemistryClass: 'glyphosate' }],
+    traitGatedSafeFor: [{ cropPluginId: 'corn-x', requiresTraits: ['glyphosate-tolerant-rr2'] }]
+  };
+  const ppls = 'https://www3.epa.gov/pesticides/chem_search/ppls/000100-01182-20150318.pdf';
+  const quote = 'may be applied postemergence to Roundup Ready corn';
+
+  it('refuses an unsourced claim, another label, a quote without the use, and stale sources', () => {
+    expect(traitClaimSourceGaps([herb], {})).toEqual([
+      'g -> corn-x: trait claim has no label source'
+    ]);
+    expect(
+      traitClaimSourceGaps([herb], {
+        traitGatedSafeFor: { g: { 'corn-x': { sourceUrl: url, quote } } }
+      })
+    ).toEqual(["g -> corn-x: source is not the product's own PPLS label"]);
+    expect(
+      traitClaimSourceGaps([herb], {
+        traitGatedSafeFor: { g: { 'corn-x': { sourceUrl: ppls, quote: 'Roundup Ready corn' } } }
+      })
+    ).toEqual(['g -> corn-x: quote does not state postemergence use over tolerant corn']);
+    expect(
+      traitClaimSourceGaps([herb], {
+        traitGatedSafeFor: {
+          g: { 'corn-x': { sourceUrl: ppls, quote }, 'soybean-y': { sourceUrl: ppls, quote } }
+        }
+      })
+    ).toEqual(['g -> soybean-y: source has no matching trait claim']);
   });
 });

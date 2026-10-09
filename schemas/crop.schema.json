@@ -1236,6 +1236,62 @@
                 "minLength": 1,
                 "maxLength": 16
               },
+              "calendar": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "object",
+                    "properties": {
+                      "month": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 12
+                      },
+                      "day": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 31
+                      }
+                    },
+                    "required": [
+                      "month",
+                      "day"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "end": {
+                    "type": "object",
+                    "properties": {
+                      "month": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 12
+                      },
+                      "day": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 31
+                      }
+                    },
+                    "required": [
+                      "month",
+                      "day"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "sourceWords": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 80
+                  }
+                },
+                "required": [
+                  "start",
+                  "end",
+                  "sourceWords"
+                ],
+                "additionalProperties": false
+              },
               "nLbPerAcre": {
                 "type": "number",
                 "exclusiveMinimum": 0,
@@ -1243,7 +1299,6 @@
               }
             },
             "required": [
-              "stageCode",
               "nLbPerAcre"
             ],
             "additionalProperties": false

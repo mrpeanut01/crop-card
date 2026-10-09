@@ -15,6 +15,7 @@ import {
   isPageReaderSource
 } from '$lib/forage/hazardSources';
 import { SEEDING_RATE_KEYS } from './schemas';
+import { calendarWindowFromWords } from '../plan/calendarWords';
 import type {
   ForageHazard,
   ForageHazardKind,
@@ -167,7 +168,9 @@ export function cropFactPaths(c: CropPlugin): string[] {
     paths.push(
       ...present('fertility.preplant.', c.fertility.preplant, [...FERTILITY_PREPLANT_KEYS])
     );
-    for (const t of c.fertility.topdressN ?? []) paths.push(`fertility.topdressN.${t.stageCode}`);
+    for (const t of c.fertility.topdressN ?? []) {
+      paths.push(`fertility.topdressN.${t.stageCode ?? 'calendar'}`);
+    }
   }
   if (!UNSOURCED_SPRAY_WINDOW_CROPS.has(c.pluginId)) {
     for (const w of c.sprayWindows ?? []) {
@@ -313,7 +316,7 @@ export function fertilityQuoteGaps(
       if (!ok) gaps.push(`${c.pluginId}: fertility.preplant.${k} quote does not state ${v}`);
     }
     for (const t of c.fertility.topdressN ?? []) {
-      const key = `fertility.topdressN.${t.stageCode}`;
+      const key = `fertility.topdressN.${t.stageCode ?? 'calendar'}`;
       const entry = quoteOf(c.pluginId, key);
       if (entry && !quoteStates(entry.quote, String(t.nLbPerAcre))) {
         gaps.push(`${c.pluginId}: ${key} quote does not state ${t.nLbPerAcre}`);
@@ -321,7 +324,18 @@ export function fertilityQuoteGaps(
       if (entry && !isAllowedSpacingSource(entry.url)) {
         gaps.push(`${c.pluginId}: ${key} source is not an extension page`);
       }
-      if (!c.growthStageTable?.stages.some((s) => s.code === t.stageCode)) {
+      if (t.calendar) {
+        const words = t.calendar.sourceWords;
+        if (entry && !entry.quote.includes(words)) {
+          gaps.push(`${c.pluginId}: ${key} quote does not contain "${words}"`);
+        }
+        const w = calendarWindowFromWords(words);
+        const same = (a: { month: number; day: number }, b: { month: number; day: number }) =>
+          a.month === b.month && a.day === b.day;
+        if (!w || !same(w.start, t.calendar.start) || !same(w.end, t.calendar.end)) {
+          gaps.push(`${c.pluginId}: ${key} window is not what "${words}" names (ruling R720-2)`);
+        }
+      } else if (!c.growthStageTable?.stages.some((s) => s.code === t.stageCode)) {
         gaps.push(`${c.pluginId}: ${key} stage is not in the growth stage table`);
       }
     }

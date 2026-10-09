@@ -257,7 +257,7 @@
       "docDate": "2014-02-11",
       "page": 3,
       "quote": "Poast Plus herbicide For broad-spectrum, postemergence selective control of annual and perennial grass weeds ... Equivalent to 1 pound of sethoxydim per gallon formulated as an emulsifiable concentrate ... EPA Reg. No. 7969-88",
-      "note": "Verified 2026-09-25 (confirmed). Right product, but PPLS status is Inactive since 2021-08-27 (cancel flag Yes, 'Company Request'); the 2014-02-11 label is the last on file (existing stocks only). Plugin 1.5 pt/A is within label rates (e.g. carrot max single 3.75 pt/A, p18)."
+      "note": "Verified 2026-09-25 (confirmed). Right product, but PPLS status is Inactive since 2021-08-27 (cancel flag Yes, 'Company Request'); the 2014-02-11 label is the last on file. Re-checked 2026-10-09 (#828, ruling D828-2): kept with this note; no cancellation order was found, so the existing-stocks terms are unverified, and there is no direct successor (Poast 7969-58 is sethoxydim 18%, a different concentration and rate). Plugin 1.5 pt/A is within label rates (e.g. carrot max single 3.75 pt/A, p18)."
     },
     "princep-4l": {
       "epaRegistrationNumber": "100-526",
@@ -366,7 +366,7 @@
       "docDate": "2015-03-18",
       "page": 7,
       "quote": "Touchdown HiTech® Herbicide Nonselective Foliar Systemic Herbicide for Weed Control Active Ingredient: *Glyphosate ... in the form of the monopotassium salt",
-      "note": "Verified 2026-09-25 (confirmed). Right product (Syngenta, glyphosate K salt 52.3%, soluble liquid) but PPLS status Inactive since 2020-11-02 (cancel flag Yes, 'Company Request'); the 2015-03-18 label is the last on file."
+      "note": "Verified 2026-09-25 (confirmed). Right product (Syngenta, glyphosate K salt 52.3%, soluble liquid) but PPLS status Inactive since 2020-11-02 (cancel flag Yes, 'Company Request'); the 2015-03-18 label is the last on file. Re-checked 2026-10-09 (#828, ruling D828-3): kept with this note; no cancellation order was found, so the existing-stocks terms are unverified; other glyphosate plugins are different salts and concentrations."
     },
     "warrior-ii-with-zeon": {
       "epaRegistrationNumber": "100-1295",
@@ -726,7 +726,7 @@
       "docDate": "2015-03-03",
       "page": 2,
       "quote": "(Deadline M-Ps Mini-Pellets (ABN) Language Only) Mini-Pellets! ONE LAST MEAL FOR SLUGS & SNAILS EFFECTIVE DEADLINE M-Ps excel at attracting and destroying slugs and snails.",
-      "note": "Corrected 2026-09-25 from 70506-130. 70506-130 has no PPLS record. 5481-507 (primary brand Deadline Bullets, AMVAC, metaldehyde 4%, Active) carries the ABN 'Deadline® M-Ps™ Mini-Pellets'. It has agricultural per-acre rates (p6 '10 – 20 lbs. / acre'), which fit the plugin's 20 lb/acre. PPLS also lists 'DEADLINE M-PS' as an alternate brand of 5481-511 (Deadline Ornamental / T&O), but that label only gives pellets-per-square-foot garden and ornamental rates and no per-acre crop use. The newest 5481-507 file (2024-04-19) is image-only, so the 2015-03-03 label was read."
+      "note": "Corrected 2026-09-25 from 70506-130. 70506-130 has no PPLS record. 5481-507 (primary brand Deadline Bullets, AMVAC, metaldehyde 4%, Active) carries the ABN 'Deadline® M-Ps™ Mini-Pellets'. It has agricultural per-acre rates (p6 '10 – 20 lbs. / acre'), which fit the plugin's 20 lb/acre. PPLS also lists 'DEADLINE M-PS' as an alternate brand of 5481-511 (Deadline Ornamental / T&O), but that label only gives pellets-per-square-foot garden and ornamental rates and no per-acre crop use. The newest 5481-507 file (2024-04-19) is image-only, so the 2015-03-03 label was read. Re-read visually 2026-10-09 (#828): the 2024-04-19 master label keeps 5481-507 and the Deadline M-Ps ABN, but replaces the '10 – 20 lbs. / acre' table with per-crop maximum rates (25 lb/A for most crops; 20 for berries, clover, prickly pear cactus and grass; 10 for soybean). The plugin's 20 lb/acre is within every per-crop maximum except soybean."
     },
     "double-nickel-55": {
       "epaRegistrationNumber": "70051-108",
@@ -4039,8 +4039,8 @@
           "certifiedOrganicAllowed": true
         },
         "sourceUrl": "https://www.omri.org/omri-search?query=M-Pede",
-        "docDate": "2026-09-25",
-        "quote": "OMRI NOP listing 'M-Pede Insecticide/Miticide/Fungicide', Gowan Company, goc-2510, expires 2026-12-01"
+        "docDate": "2026-10-09",
+        "quote": "OMRI NOP listing 'M-Pede Insecticide/Miticide/Fungicide', Gowan Company, goc-2510, expires 2027-12-01"
       }
     ],
     "aza-direct": [
@@ -4055,8 +4055,8 @@
           "certifiedOrganicAllowed": true
         },
         "sourceUrl": "https://www.omri.org/omri-search?query=Aza-Direct",
-        "docDate": "2026-09-25",
-        "quote": "OMRI NOP listing 'Aza-Direct Botanical Insecticide', Gowan Company, goc-9305, expires 2026-12-01"
+        "docDate": "2026-10-09",
+        "quote": "OMRI NOP listing 'Aza-Direct Botanical Insecticide', Gowan Company, goc-9305, expires 2027-12-01"
       }
     ],
     "kumulus-df": [

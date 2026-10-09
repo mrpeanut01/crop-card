@@ -2,7 +2,7 @@
   "pluginId": "composted-poultry-litter",
   "type": "fertilizer",
   "displayName": "Composted Poultry Litter (3-3-2)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "analysis": {
     "n": 3,
@@ -18,9 +18,7 @@
   },
   "notes": "Mid-Atlantic standard organic amendment (Delmarva broiler-litter compost). Soil-test based + manure-N mineralization model. Watch P loading.",
   "complianceFlags": {
-    "omriListed": true,
-    "nonGmoCompliant": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1"
 }

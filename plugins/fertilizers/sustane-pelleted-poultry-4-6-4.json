@@ -1,7 +1,7 @@
 {
   "pluginId": "sustane-pelleted-poultry-4-6-4",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -10,7 +10,7 @@
     "k": 4
   },
   "form": "granular",
-  "displayName": "Sustane Pelleted Poultry Compost (4-6-4, OMRI)",
+  "displayName": "Suståne 4-6-4 All Natural Granulated Slow Release Nitrogen Fertilizer Medium Grade (OMRI)",
   "organic": true,
   "applicationRange": {
     "min": 250,

@@ -1,0 +1,238 @@
+{
+  "$comment": "#805 organic flags on fertilizer plugins, same rule as the complianceFlags section of epa-reg-sources.json (#779): a plugin may set omriListed, certifiedOrganicAllowed or transitioningAllowed to true only with an entry here, either an OMRI Products List NOP listing ({ omriListed: true, sourceUrl on omri.org, quote \"<product> | <company> | <OMRI code> | NOP | <status> | expires <date>\" }) or, for a generic plugin that names no brand, a 7 CFR 205 quote that names the material ({ basis: \"7 CFR 205\", citation, sourceUrl on ecfr.gov, quote }), which never sets omriListed. omriListed: false entries record why a plugin carries no allowed flag. Rulings F805-1 to F805-4 in docs/design/LABEL_FOLLOWUP_RULINGS.md. eCFR text up to date as of 2026-10-07. Checked by fertilizerOrganicSources.gate.test.ts.",
+  "ag-lime-calcitic": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "alfalfa-pellets-3-1-2": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "azomite-trace-mineral": {
+    "omriListed": true,
+    "sourceUrl": "https://www.omri.org/omri-search?query=Azomite",
+    "docDate": "2026-10-09",
+    "quote": "AZOMITE Granulated Nature Based Trace Minerals 0-0-0.2 | AZOMITE Mineral Products, Inc. | pma-18018 | NOP | Allowed | expires 2027-09-01"
+  },
+  "bat-guano-7-3-1": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "biochar": {
+    "omriListed": false,
+    "cleared": ["certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "blood-meal-12-0-0": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "bone-meal-3-15-0": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "chilean-nitrate-16-0-0": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.602(h)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.602",
+    "docDate": "2026-10-09",
+    "quote": "The following nonsynthetic substances may not be used in organic crop production: ... (h) Sodium nitrate—unless use is restricted to no more than 20% of the crop's total nitrogen requirement; use in spirulina production is unrestricted until October 21, 2005.",
+    "note": "Ruling F805-1: generic plugin with no brand; the regulation names the material. omriListed removed."
+  },
+  "composted-chicken-3-2-2": {
+    "omriListed": false,
+    "cleared": ["certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "composted-cow-manure": {
+    "omriListed": false,
+    "cleared": ["certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "composted-poultry-litter": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "cottonseed-meal-6-2-1": {
+    "omriListed": false,
+    "cleared": ["transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "crab-meal-4-3-0": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "dolomitic-lime": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "epsom-salt-magnesium-sulfate": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.601(j)(6)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.601",
+    "docDate": "2026-10-09",
+    "quote": "(j) As crop or soil amendments. ... (6) Magnesium sulfate—allowed with a documented soil deficiency.",
+    "note": "Ruling F805-1: generic plugin with no brand; the regulation names the material. omriListed removed."
+  },
+  "feather-meal-12-0-0": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "feather-meal-13-0-0-pelleted": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "fish-emulsion-5-1-1": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.601(j)(8)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.601",
+    "docDate": "2026-10-09",
+    "quote": "(j) As crop or soil amendments. ... (8) Liquid fish products—can be pH adjusted with sulfuric, citric or phosphoric acid. The amount of acid used shall not exceed the minimum needed to lower the pH to 3.5.",
+    "note": "Ruling F805-1: generic plugin with no brand; the regulation names the material. omriListed removed."
+  },
+  "fish-hydrolysate-2-4-0-2": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.601(j)(8)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.601",
+    "docDate": "2026-10-09",
+    "quote": "(j) As crop or soil amendments. ... (8) Liquid fish products—can be pH adjusted with sulfuric, citric or phosphoric acid. The amount of acid used shall not exceed the minimum needed to lower the pH to 3.5.",
+    "note": "Ruling F805-1: generic plugin with no brand; the regulation names the material. omriListed removed."
+  },
+  "fish-meal-9-3-0": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "fulvic-acid-liquid": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "greensand-0-0-3": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "gypsum": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "humic-acid-12-percent": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.601(j)(3)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.601",
+    "docDate": "2026-10-09",
+    "quote": "(j) As crop or soil amendments. ... (3) Humic acids—naturally occurring deposits, water and alkali extracts only.",
+    "note": "Ruling F805-1: generic plugin with no brand; the regulation names the material. omriListed removed."
+  },
+  "kelp-meal-1-0-2": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "liquid-kelp-0-0-1": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-1: 7 CFR 205.601(j)(1) covers only \"Aquatic plant extracts (other than hydrolyzed)\" made with potassium or sodium hydroxide; a generic liquid kelp may be hydrolyzed or extracted another way. Check the extraction method or an OMRI listing on the product label."
+  },
+  "molasses-soil-amendment": {
+    "omriListed": false,
+    "cleared": ["certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "mycorrhizae-endo-granular": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "pgpr-azotobacter-inoculant": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "polysulphate-mined": {
+    "omriListed": true,
+    "sourceUrl": "https://www.omri.org/omri-search?query=Polysulphate",
+    "docDate": "2026-10-09",
+    "quote": "Polysulphate Granular 0-0-14 | ICL Specialty Products Inc. | icb-13836 | NOP | Allowed | expires 2027-06-01"
+  },
+  "rock-phosphate-0-3-0": {
+    "omriListed": false,
+    "cleared": ["omriListed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "soybean-meal-7-1-2": {
+    "omriListed": false,
+    "cleared": ["transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "sulfate-potash-magnesia-langbeinite": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "sulfur-pastille-elemental": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.601(j)(2)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.601",
+    "docDate": "2026-10-09",
+    "quote": "(j) As crop or soil amendments. ... (2) Elemental sulfur.",
+    "note": "Ruling F805-1: generic plugin with no brand; the regulation names the material. omriListed removed."
+  },
+  "sustane-pelleted-poultry-4-6-4": {
+    "omriListed": true,
+    "sourceUrl": "https://www.omri.org/omri-search?query=Sustane",
+    "docDate": "2026-10-09",
+    "quote": "Suståne 4-6-4 All Natural Granulated Slow Release Nitrogen Fertilizer Medium Grade | Suståne® Natural Fertilizer, Inc. | sus-0002 | NOP | Allowed | expires 2027-09-01",
+    "note": "The listing covers the Medium Grade 4-6-4 product named here; another grade or analysis is not covered by this entry."
+  },
+  "trichoderma-inoculant": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "worm-castings-1-0-0": {
+    "omriListed": false,
+    "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
+    "docDate": "2026-10-09",
+    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  }
+}

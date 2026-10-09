@@ -1,7 +1,7 @@
 {
   "pluginId": "composted-cow-manure",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -18,10 +18,7 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": false,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
-    "transitioningAllowed": true
+    "nonGmoCompliant": true
   },
   "notes": "Aged composted bovine manure. Bulk soil-building amendment with modest N-P-K. NOP requires composting protocols (temperature and turning) for organic certification."
 }

@@ -1,7 +1,7 @@
 {
   "pluginId": "cottonseed-meal-6-2-1",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -21,7 +21,6 @@
     "omriListed": false,
     "nonGmoCompliant": false,
     "certifiedOrganicAllowed": false,
-    "transitioningAllowed": true,
     "notes": "Most cottonseed meal is from GMO cotton; verify source."
   },
   "notes": "Slow-release organic N for acid-loving crops (blueberry, azalea). Mildly acidifying. Most product is non-organic; source carefully."

@@ -29189,12 +29189,12 @@
         ],
         "amount": 6,
         "unit": "fl-oz",
-        "period": "season",
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20131122.pdf",
-        "docDate": "2013-11-22",
-        "page": 22,
-        "quote": "Only one postemergence application may be made if Callisto has been applied preemergence. Do not exceed a total of two applications per season. Do not exceed a total of 7.7 fl. oz./A (0.24 lb. a.i./A) of Callisto per season. • Do not make the second application within 14 days of the first application. • Application of Callisto at rates less than 3.0 fl. oz./A (0.094 lb. a.i./A) postemergence may result in incomplete weed control and loss of residual control. • Do not exceed a total of 6.0 fl. oz./A (0.19 lb. a.i./A) for the two postemergence applications.",
-        "note": "Corn section, \"Two postemergence applications of Callisto may be made with the following restrictions.\" The section covers \"field corn, seed corn, yellow popcorn, and sweet corn\" and says not to apply to white popcorn or ornamental (Indian) corn. The plugin is POST only, so the 6.0 fl oz/A postemergence total (inside the 7.7 fl oz/A season total) is the cap it carries (ruling SC-5). The two popcorn plugins are left out: the label covers only yellow popcorn and Strawberry popcorn is red, Top Pop gives no colour. The OCR layer reads \"lb.\" as \"Ib.\". Checked 2026-10-09 against the PPLS file (#820)."
+        "period": "year",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20260409.pdf",
+        "docDate": "2026-04-09",
+        "page": 26,
+        "quote": "Only one postemergence application may be made if Callisto Herbicide has been applied preemergence. Do not exceed a total of two applications per year. Do not exceed a total of 7.7 fl oz/A (0.24 lb ai/A) of Callisto Herbicide per year. x Do not make the second application within 14 days of the first application. x Application of Callisto Herbicide at rates less than 3.0 fl oz/A (0.094 lb ai/A) postemergence may result in incomplete weed control and loss of residual control. x Do not exceed a total of 6.0 fl oz/A (0.19 lb ai/A) for the two postemergence applications.",
+        "note": "Corn section, \"Two postemergence applications of Callisto may be made with the following restrictions.\" The section covers \"field corn, seed corn, yellow popcorn, and sweet corn\" and says not to apply to white popcorn or ornamental (Indian) corn. The plugin is POST only, so the 6.0 fl oz/A postemergence total (inside the 7.7 fl oz/A season total) is the cap it carries (ruling SC-5). The two popcorn plugins are left out: the label covers only yellow popcorn and Strawberry popcorn is red, Top Pop gives no colour. The OCR layer reads \"lb.\" as \"Ib.\". Checked 2026-10-09 against the PPLS file (#820). Re-quoted 2026-10-09 (#828) from the 2026-04-09 label, which keeps the 6.0 fl oz/A postemergence total, the same corn types and the white popcorn exclusion but words the totals \"per year\" where the 2013 label said \"per season\"; period changed from season to year. Both periods use the same calendar-year window in lib/safety/seasonCap.ts, so no verdict changes; only the stop text reads \"per year\"."
       }
     ],
     "laudis": [

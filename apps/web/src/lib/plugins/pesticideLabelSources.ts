@@ -23,7 +23,11 @@
  * - every herbicide `ratePerAcreByCrop` row needs a `rateByCrop` entry for
  *   the same crop whose quote states the amount (and the maximum, when one
  *   is given), and every `stageLimitByCrop` row a `stageLimitByCrop` entry
- *   for the same crop whose quote contains the limit sentence (#737).
+ *   for the same crop whose quote contains the limit sentence (#737);
+ * - every herbicide `seasonCapByCrop` row needs a `seasonCapByCrop` entry
+ *   with the same crops, amount, unit and period whose quote states the
+ *   amount and the period ("per crop year", "per 365 days"), and a crop is
+ *   capped at most once per plugin (#820).
  */
 
 export const LABEL_SOURCED_CLASSES: Readonly<Record<string, number>> = { thiocarbamate: 15 };
@@ -42,6 +46,12 @@ export interface LabelSourcePlugin {
     unit: string;
   }>;
   stageLimitByCrop?: ReadonlyArray<{ cropPluginId: string; limit: string }>;
+  seasonCapByCrop?: ReadonlyArray<{
+    cropPluginIds: readonly string[];
+    amount: number;
+    unit: string;
+    period: string;
+  }>;
   preHarvestIntervalsByCrop?: ReadonlyArray<{
     cropPluginId?: string;
     cropFamily?: string;
@@ -68,6 +78,7 @@ export interface LabelSources {
   complianceFlags?: Record<string, unknown>;
   rateByCrop?: Record<string, unknown>;
   stageLimitByCrop?: Record<string, unknown>;
+  seasonCapByCrop?: Record<string, unknown>;
 }
 
 function statesNumber(quote: unknown, n: number): boolean {
@@ -155,7 +166,12 @@ export function pesticideLabelSourceGaps(
       }
     }
     if (p.type === 'herbicide') {
-      gaps.push(...rateGaps(p, sources), ...classGaps(p, sources), ...rateByCropGaps(p, sources));
+      gaps.push(
+        ...rateGaps(p, sources),
+        ...classGaps(p, sources),
+        ...rateByCropGaps(p, sources),
+        ...seasonCapGaps(p, sources, cropPluginIds)
+      );
     }
     const seen = new Set<string>();
     for (const row of p.preHarvestIntervalsByCrop ?? []) {
@@ -323,6 +339,68 @@ function rateByCropGaps(p: LabelSourcePlugin, sources: LabelSources): string[] {
     );
     if (!ok) {
       gaps.push(`${p.pluginId}: stage limit for ${row.cropPluginId} has no quote containing it`);
+    }
+  }
+  return gaps;
+}
+
+/** #820: the label's own words for each season cap period. */
+export const SEASON_CAP_PERIOD_WORDS: Readonly<Record<string, RegExp>> = {
+  'crop-year': /\bper crop year\b/i,
+  season: /\bper season\b/i,
+  'growing-season': /\bper growing season\b/i,
+  year: /\bper year\b/i,
+  '365-days': /\bper 365[ -]days?\b/i
+};
+
+function sameSet(a: unknown, b: readonly string[]): boolean {
+  if (!Array.isArray(a) || a.length !== b.length) return false;
+  const set = new Set(b);
+  return a.every((x) => typeof x === 'string' && set.has(x)) && new Set(a).size === a.length;
+}
+
+type CapSource = QuotedSource & {
+  cropPluginIds?: unknown;
+  amount?: unknown;
+  unit?: unknown;
+  period?: unknown;
+};
+
+function seasonCapGaps(
+  p: LabelSourcePlugin,
+  sources: LabelSources,
+  cropPluginIds?: ReadonlySet<string>
+): string[] {
+  const gaps: string[] = [];
+  const capped = new Set<string>();
+  const list = sources.seasonCapByCrop?.[p.pluginId];
+  for (const row of p.seasonCapByCrop ?? []) {
+    for (const id of row.cropPluginIds) {
+      if (capped.has(id)) gaps.push(`${p.pluginId}: season cap for ${id} is listed twice`);
+      capped.add(id);
+      if (cropPluginIds && !cropPluginIds.has(id)) {
+        gaps.push(`${p.pluginId}: season cap names ${id}, which is not a crop plugin`);
+      }
+    }
+    const label = `${row.amount} ${row.unit} ${row.period}`;
+    const words = SEASON_CAP_PERIOD_WORDS[row.period];
+    const match = (Array.isArray(list) ? (list as CapSource[]) : []).find(
+      (s) =>
+        sameSet(s.cropPluginIds, row.cropPluginIds) &&
+        s.amount === row.amount &&
+        s.unit === row.unit &&
+        s.period === row.period
+    );
+    if (!match) {
+      gaps.push(`${p.pluginId}: season cap ${label} has no matching seasonCapByCrop source`);
+    } else if (
+      !hasUrl(match) ||
+      !words ||
+      typeof match.quote !== 'string' ||
+      !statesAmount(match.quote, row.amount) ||
+      !words.test(normalizeSpace(match.quote))
+    ) {
+      gaps.push(`${p.pluginId}: seasonCapByCrop source does not quote ${label}`);
     }
   }
   return gaps;

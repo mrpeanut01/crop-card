@@ -186,7 +186,15 @@ export interface ApplicationTombstone {
   id: string;
   blockId: string;
   occurredAt: number;
-  products: Array<{ pluginId?: string | null; displayName?: string }>;
+  products: Array<{
+    pluginId?: string | null;
+    displayName?: string;
+    /** #820: the rate per acre the record stored, when it had one. */
+    rate?: { amount?: unknown; unit?: unknown } | null;
+  }>;
+  /** #820: the record was saved with an owner's custom rate, so its stored
+   *  rate is not the amount applied. */
+  customRateOverride?: boolean;
   /** Set when the application's block was deleted: the Area the block was
    *  in. The ground is still there, so the application still counts on
    *  that Area (review round 4). */
@@ -228,6 +236,7 @@ export function listApplicationTombstones(fromMs: number): ApplicationTombstone[
       blockId: e.blockId,
       occurredAt: e.occurredAt,
       products: Array.isArray(e.products) ? (e.products as ApplicationTombstone['products']) : [],
+      ...(e.customRateOverride === true ? { customRateOverride: true } : {}),
       ...(typeof e.deletedFromFieldId === 'string' ? { formerFieldId: e.deletedFromFieldId } : {})
     });
   }

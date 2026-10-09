@@ -59,6 +59,26 @@
       "limit": "DO NOT exceed a total of 1 ½ pints of DICAMBA DMA 4# AG per treated acre per crop year."
     }
   ],
+  "seasonCapByCrop": [
+    {
+      "cropPluginIds": [
+        "corn-feed-dent-pioneer",
+        "corn-bloody-butcher",
+        "corn",
+        "popcorn-strawberry",
+        "popcorn-top-pop-f1-seed-standard-treated-100-seeds"
+      ],
+      "amount": 1.5,
+      "unit": "pt",
+      "period": "crop-year"
+    },
+    {
+      "cropPluginIds": ["wheat-soft-red-winter", "barley-grain-thoroughbred"],
+      "amount": 4,
+      "unit": "pt",
+      "period": "year"
+    }
+  ],
   "labelClaims": {
     "safeForCropPluginIds": [
       "corn-feed-dent-pioneer",

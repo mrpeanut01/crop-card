@@ -25,9 +25,7 @@
   "traitGatedSafeFor": [
     {
       "cropPluginId": "soybean-asgrow-roundup-ready-2-xtend",
-      "requiresTraits": [
-        "dicamba-tolerant-xtend"
-      ]
+      "requiresTraits": ["dicamba-tolerant-xtend"]
     }
   ],
   "notes": "RESTRICTED-USE. Use ONLY on Xtend-traited soybeans + cotton. Phase 11 trait override: the kernel allows engenia on the Xtend-traited soybean cultivar; dicamba (synthetic-auxin) would otherwise be lethal to the legume family. Strict label requirements: TTI nozzles, ≤10 mph wind, no tank mix outside approved list, sensitive-crop downwind buffer.",
@@ -37,5 +35,13 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "seasonCapByCrop": [
+    {
+      "cropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend"],
+      "amount": 25.6,
+      "unit": "fl-oz",
+      "period": "year"
+    }
+  ]
 }

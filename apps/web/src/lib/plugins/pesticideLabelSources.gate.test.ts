@@ -518,4 +518,80 @@ describe('pesticide label sources (#640 #661 #716)', () => {
       ).toEqual([]);
     });
   });
+
+  describe('season caps (#820)', () => {
+    const cap = {
+      cropPluginIds: ['corn', 'popcorn'],
+      amount: 1.5,
+      unit: 'pt',
+      period: 'crop-year'
+    };
+    const p: LabelSourcePlugin = { ...base, seasonCapByCrop: [cap] };
+    const src = (quote: string, over: Record<string, unknown> = {}) => ({
+      seasonCapByCrop: {
+        x: [
+          {
+            cropPluginIds: ['popcorn', 'corn'],
+            amount: 1.5,
+            unit: 'pt',
+            period: 'crop-year',
+            sourceUrl: url,
+            quote,
+            ...over
+          }
+        ]
+      }
+    });
+    const good = 'DO NOT exceed a total of 1 ½ pints per treated acre per crop year.';
+
+    it('accepts a quote that states the amount and the period, crops in any order', () => {
+      expect(pesticideLabelSourceGaps([p], src(good), new Set(['corn', 'popcorn']))).toEqual([]);
+      expect(
+        pesticideLabelSourceGaps(
+          [p],
+          src('Do not exceed 1 1/2 pints per treated acre per\ncrop year.')
+        )
+      ).toEqual([]);
+    });
+
+    it('refuses a missing source, a different value, or a quote without the amount or period', () => {
+      expect(pesticideLabelSourceGaps([p], {})).toHaveLength(1);
+      expect(pesticideLabelSourceGaps([p], src(good, { amount: 2 }))).toHaveLength(1);
+      expect(pesticideLabelSourceGaps([p], src(good, { unit: 'qt' }))).toHaveLength(1);
+      expect(pesticideLabelSourceGaps([p], src(good, { period: 'year' }))).toHaveLength(1);
+      expect(pesticideLabelSourceGaps([p], src(good, { cropPluginIds: ['corn'] }))).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([p], src('DO NOT exceed a total of 2 pints per crop year.'))
+      ).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([p], src('DO NOT exceed a total of 1 ½ pints per season.'))
+      ).toHaveLength(1);
+      expect(
+        pesticideLabelSourceGaps([p], src(good, { sourceUrl: 'http://example.com/x.pdf' }))
+      ).toHaveLength(1);
+    });
+
+    it('reads each period in the label words', () => {
+      const cases: Array<[string, string]> = [
+        ['season', 'Do not apply more than a total of 1.5 pt per acre per season.'],
+        ['growing-season', 'Do not exceed 1.5 pt per growing season on field corn.'],
+        ['year', 'DO NOT exceed 1.5 pt of product per acre per year.'],
+        ['365-days', 'Do not exceed a total of 1.5 pt per 365 days for all corn types.']
+      ];
+      for (const [period, quote] of cases) {
+        const q = { ...base, seasonCapByCrop: [{ ...cap, period }] };
+        expect(pesticideLabelSourceGaps([q], src(quote, { period }))).toEqual([]);
+      }
+    });
+
+    it('refuses a crop capped twice or one that is not in the library', () => {
+      const twice = { ...base, seasonCapByCrop: [cap, { ...cap, amount: 2 }] };
+      expect(
+        pesticideLabelSourceGaps([twice], src(good)).filter((g) => g.includes('twice'))
+      ).toHaveLength(2);
+      expect(pesticideLabelSourceGaps([p], src(good), new Set(['corn']))).toEqual([
+        'x: season cap names popcorn, which is not a crop plugin'
+      ]);
+    });
+  });
 });

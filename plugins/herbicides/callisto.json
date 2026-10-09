@@ -37,5 +37,25 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "seasonCapByCrop": [
+    {
+      "cropPluginIds": [
+        "corn-feed-dent-pioneer",
+        "corn-bloody-butcher",
+        "corn",
+        "corn-bantam-sweet",
+        "corn-sweet-bodacious",
+        "sweet-corn-american-dream-f1-seed",
+        "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+        "sweet-corn-honey-select-f1",
+        "sweet-corn-mirai-f1",
+        "sweet-corn-silver-queen-f1",
+        "sweet-corn-sugar-buns-f1"
+      ],
+      "amount": 6,
+      "unit": "fl-oz",
+      "period": "season"
+    }
+  ]
 }

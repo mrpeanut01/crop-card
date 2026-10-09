@@ -22,6 +22,9 @@
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText, formatStockQuantity, perAcreRateUnit } from '$lib/stock/units';
   import { pollinatorLabelText } from '$lib/pollinator/labelText';
+  import { seasonCapLimitText } from '$lib/spray/seasonCapText';
+  import { earlierLabelNotice } from '$lib/plugins/earlierRegistration';
+  import { cropDisplayName } from '$lib/i18n/cropName';
   import type { PesticideDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<PesticideDetailPayload, 'type'>;
@@ -32,7 +35,8 @@
     plugin,
     phiByCrop = [],
     rateByCrop = [],
-    rateByCropEarlierLabels = []
+    rateByCropEarlierLabels = [],
+    seasonCaps = []
   }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
   const rateFallback = $derived(isFallbackRate(plugin));
@@ -153,6 +157,30 @@
         <p class="empty">{tr('inv.pest.noRate')}</p>
       {/if}
       <CropLabelRates rows={rateByCrop} earlierLabels={rateByCropEarlierLabels} />
+      {#if seasonCaps.length > 0}
+        <div class="season-caps" data-testid="season-cap-limits">
+          <h4>{tr('sprayui.seasonCap.title')}</h4>
+          <ul>
+            {#each seasonCaps as cap (`${cap.amount}|${cap.unit}|${cap.period}`)}
+              <li>
+                <strong>{seasonCapLimitText(cap, page.data?.locale)}</strong>
+                <span class="crops"
+                  >{tr('sprayui.seasonCap.forCrops', {
+                    crops: cap.crops
+                      .map((c) => cropDisplayName(c.cropPluginId, c.name, page.data?.locale))
+                      .join(', ')
+                  })}</span
+                >
+              </li>
+            {/each}
+          </ul>
+          {#if rateByCrop.length === 0}
+            {#each rateByCropEarlierLabels as label (`${label.registration}|${label.year}`)}
+              <p class="crops">{earlierLabelNotice(label, page.data?.locale)}</p>
+            {/each}
+          {/if}
+        </div>
+      {/if}
     </InvSection>
   </div>
 
@@ -190,6 +218,20 @@
 </div>
 
 <style>
+  .season-caps {
+    margin-top: 0.75rem;
+  }
+  .season-caps h4 {
+    margin: 0 0 0.25rem;
+  }
+  .season-caps ul {
+    margin: 0;
+    padding-left: 1rem;
+  }
+  .season-caps .crops {
+    display: block;
+    font-size: 0.9rem;
+  }
   .detail-header {
     margin-bottom: 16px;
     display: flex;

@@ -1350,6 +1350,42 @@ export const herbicideStageLimitByCropSchema = z
   .strict();
 export type HerbicideStageLimitByCrop = z.infer<typeof herbicideStageLimitByCropSchema>;
 
+/**
+ * #820 — the label's period for a season cap, in the label's words: "per
+ * crop year", "per season", "per growing season", "per year" or "per 365
+ * days". Only `365-days` is a rolling window; every other wording is the
+ * farm-local calendar year (ruling SC-3).
+ */
+export const herbicideSeasonCapPeriodSchema = z.enum([
+  "crop-year",
+  "season",
+  "growing-season",
+  "year",
+  "365-days",
+]);
+export type HerbicideSeasonCapPeriod = z.infer<
+  typeof herbicideSeasonCapPeriodSchema
+>;
+
+/**
+ * #820 — a label's cap on the total product per acre in a period, for the
+ * crop plugins the label's sentence covers. The kernel sums earlier
+ * applications of the product on the block against it. Each row needs a
+ * quoted label source in apps/web/scripts/epa-reg-sources.json
+ * (`seasonCapByCrop`) whose quote states the amount and the period.
+ */
+export const herbicideSeasonCapByCropSchema = z
+  .object({
+    cropPluginIds: z.array(z.string().min(1)).min(1),
+    amount: z.number().positive(),
+    unit: herbicideRateUnitSchema,
+    period: herbicideSeasonCapPeriodSchema,
+  })
+  .strict();
+export type HerbicideSeasonCapByCrop = z.infer<
+  typeof herbicideSeasonCapByCropSchema
+>;
+
 export const herbicidePluginSchema = pluginBase.extend({
   type: z.literal("herbicide"),
   activeIngredients: z.array(activeIngredientSchema).min(1),
@@ -1377,6 +1413,8 @@ export const herbicidePluginSchema = pluginBase.extend({
   ratePerAcreByCrop: z.array(herbicideRateByCropSchema).optional(),
   /** #737 — label growth-stage and seasonal limits by crop. */
   stageLimitByCrop: z.array(herbicideStageLimitByCropSchema).optional(),
+  /** #820 — label caps on the total per acre in a crop year or season. */
+  seasonCapByCrop: z.array(herbicideSeasonCapByCropSchema).optional(),
   /** #640 — label restricted-entry interval. Optional: shown as "not on file"
    *  when missing. Each value needs a quoted label source in
    *  apps/web/scripts/epa-reg-sources.json (`rei`). */

@@ -2144,6 +2144,18 @@
     "quote:water-sources.json:entries.metarPrecipSensorOut.url:f721b557b4be": {
       "url": "https://www.faa.gov/documentLibrary/media/Notice/N_JO_7900.12.pdf",
       "on": "2026-10-08"
+    },
+    "quote:epa-reg-sources.json:seasonCapByCrop.banvel.0.sourceUrl:992f62fc78d3": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "on": "2026-10-09"
+    },
+    "quote:epa-reg-sources.json:seasonCapByCrop.banvel.1.sourceUrl:cc3799dc206d": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00276-20090911.pdf",
+      "on": "2026-10-09"
+    },
+    "quote:epa-reg-sources.json:seasonCapByCrop.callisto.0.sourceUrl:58329a2ba6e3": {
+      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20131122.pdf",
+      "on": "2026-10-09"
     }
   }
 }

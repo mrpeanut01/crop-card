@@ -206,6 +206,53 @@
         "additionalProperties": false
       }
     },
+    "seasonCapByCrop": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cropPluginIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "oz",
+              "fl-oz",
+              "lb",
+              "pt",
+              "qt"
+            ]
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "crop-year",
+              "season",
+              "growing-season",
+              "year",
+              "365-days"
+            ]
+          }
+        },
+        "required": [
+          "cropPluginIds",
+          "amount",
+          "unit",
+          "period"
+        ],
+        "additionalProperties": false
+      }
+    },
     "reEntryIntervalHours": {
       "type": "integer",
       "minimum": 0,

@@ -19,6 +19,8 @@
   import { herbicideRatePreview } from '$lib/dilution/ratePreview';
   import FallbackRateLine from '$lib/components/spray/FallbackRateLine.svelte';
   import CropLabelRates from '$lib/components/spray/CropLabelRates.svelte';
+  import SeasonCapNotes from '$lib/components/spray/SeasonCapNotes.svelte';
+  import type { SeasonCapVerdictLike } from '$lib/spray/seasonCapText';
   import type { CropRateRow } from '$lib/plugins/cropRate';
   import type { EarlierLabel } from '$lib/plugins/earlierRegistration';
   import Banner from '$lib/components/ui/Banner.svelte';
@@ -230,6 +232,7 @@
     dilutions?: Dilution[];
     noLabelRate?: string[];
     cropLabel?: Array<{ pluginId: string; rows: CropRateRow[]; earlierLabels?: EarlierLabel[] }>;
+    seasonCaps?: Array<SeasonCapVerdictLike & { earlierLabels?: EarlierLabel[] }>;
     tankMixOrder?: TankMixStep[];
     ruleVersion: string;
     pluginHashes: Record<string, string>;
@@ -1590,6 +1593,12 @@
         {/each}
       </ul>
     {/if}
+    {#each [...perBlockResults.entries()] as [blockId, blockResult] (blockId)}
+      <SeasonCapNotes
+        verdicts={blockResult.seasonCaps ?? []}
+        blockLabel={perBlockResults.size > 1 ? blockNames[blockId] : undefined}
+      />
+    {/each}
   </section>
 {/if}
 

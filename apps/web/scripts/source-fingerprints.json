@@ -89,6 +89,10 @@
       "reason": "The plugin (dithane-rainshield) already carries 70506-654, the current registration for Dithane F-45 (alt. Dithane F-45 Rainshield). PPLS lists no label filed under 70506-654 yet: its newest stamped file is still 062719-00396-20240229.pdf, printed under 62719-396, so the stored quotes stay on it. Re-check when a label is filed under 70506-654.",
       "on": "2026-10-09"
     },
+    "ppls:62719-628:label:2020-03-24": {
+      "reason": "The 2020-03-24 file is an EPA letter plus a supplemental label (addendum to the master label) allowing off-farm hay sale and silage in 23 listed states, not Virginia; it expired 2023-04-07. Its grazing (0), 14-day hay cutting, 3-day manure and 18-month compost lines match the stored values. REI 48 h, the base claim and the off-farm hay restriction stay quoted from the 2017-03-13 master label.",
+      "on": "2026-10-09"
+    },
     "ppls:66330-276:transfer:70506-461": {
       "reason": "The plugin (banvel) already carries 70506-461, the current registration for Dicamba DMA 4# Ag (alt. Banvel Herbicide). PPLS lists no label filed under 70506-461 yet: its newest stamped file is still 066330-00276-20090911.pdf, printed under 66330-276, so the stored quotes stay on it. Re-check when a label is filed under 70506-461.",
       "on": "2026-10-09"
@@ -1466,10 +1470,6 @@
       "url": "https://www.yara.us/contentassets/280676bbae1c466799e9d22b57225584/yaraliva-can-17-bulk-label.pdf",
       "on": "2026-10-08"
     },
-    "quote:epa-reg-sources.json:entries.anthem-maxx.sourceUrl:80d3841fdf98": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20251125.pdf",
-      "on": "2026-10-08"
-    },
     "quote:epa-reg-sources.json:entries.curzate-60df-cymoxanil.sourceUrl:fdd925b6c644": {
       "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00592-20210505.pdf",
       "on": "2026-10-08"
@@ -1928,38 +1928,6 @@
     },
     "quote:epa-reg-sources.json:phiByCrop.lannate-lv.4.sourceUrl:d8d920be4067": {
       "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.0.sourceUrl:54fe1281ea90": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.11.sourceUrl:9a94af06fc19": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.12.sourceUrl:0835707ea132": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.13.sourceUrl:c565e542cc00": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.18.sourceUrl:2de7a3f8c687": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.25.sourceUrl:32128d83cd72": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.7.sourceUrl:f2ad02fb34ea": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.8.sourceUrl:801b03d27a29": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
       "on": "2026-10-08"
     },
     "quote:epa-reg-sources.json:phiByCrop.movento.13.sourceUrl:b0b91903db96": {

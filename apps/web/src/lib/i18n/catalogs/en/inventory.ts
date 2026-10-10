@@ -323,10 +323,10 @@ export const enInventory = {
     'No product label linked, so the analysis below is unknown and nutrient plans cannot use it. Link the product with Edit.',
   'inv.fert.application': 'Application',
   'inv.fert.noRange': 'No application range declared.',
-  'inv.fert.approachClass': 'Approach class',
-  'inv.fert.organic': 'Organic source',
+  'inv.fert.approachClass': 'Source class',
+  'inv.fert.organic': 'Natural source',
   'inv.fert.organicUse': 'Organic use',
-  'inv.fert.conventional': 'Conventional',
+  'inv.fert.conventional': 'Manufactured',
   'inv.fert.impact': 'Nutrient-plan impact',
   'inv.fert.impactNote':
     "Per-acre delivery rates flow through `inputsPlan.ts` when this product is the philosophy-allowed choice for the season's fertility approach.",

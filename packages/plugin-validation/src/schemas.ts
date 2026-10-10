@@ -97,7 +97,9 @@ export const seedingRateSchema = z
     sownBy: z
       .array(z.enum(SOWN_BY_METHODS))
       .min(1)
-      .refine((a) => new Set(a).size === a.length, { message: "duplicate method" })
+      .refine((a) => new Set(a).size === a.length, {
+        message: "duplicate method",
+      })
       .optional(),
   })
   .strict();
@@ -1329,10 +1331,15 @@ export const preHarvestIntervalByCropSchema = z
     preHarvestIntervalDays: z.number().int().nonnegative(),
   })
   .strict()
-  .refine((e) => (e.cropPluginId === undefined) !== (e.cropFamily === undefined), {
-    message: "give exactly one of cropPluginId or cropFamily",
-  });
-export type PreHarvestIntervalByCrop = z.infer<typeof preHarvestIntervalByCropSchema>;
+  .refine(
+    (e) => (e.cropPluginId === undefined) !== (e.cropFamily === undefined),
+    {
+      message: "give exactly one of cropPluginId or cropFamily",
+    },
+  );
+export type PreHarvestIntervalByCrop = z.infer<
+  typeof preHarvestIntervalByCropSchema
+>;
 
 const herbicideRateUnitSchema = z.enum(["oz", "fl-oz", "lb", "pt", "qt"]);
 
@@ -1368,7 +1375,9 @@ export const herbicideStageLimitByCropSchema = z
     limit: z.string().trim().min(1),
   })
   .strict();
-export type HerbicideStageLimitByCrop = z.infer<typeof herbicideStageLimitByCropSchema>;
+export type HerbicideStageLimitByCrop = z.infer<
+  typeof herbicideStageLimitByCropSchema
+>;
 
 /**
  * #820 — the label's period for a season cap, in the label's words: "per
@@ -1747,11 +1756,11 @@ export const fertilizerPluginSchema = pluginBase.extend({
     })
     .refine((v) => v.min <= v.max, { message: "min must be ≤ max" })
     .optional(),
-  /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. The
-   *  fertilizer plugin already carries `organic: boolean`; that flag is
-   *  the source of truth for "is this an organic-source amendment" while
-   *  `complianceFlags` adds the NOP / OMRI distinction (e.g., a manure
-   *  compost can be `organic: true` but `omriListed: false` if uncertified). */
+  /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`.
+   *  `organic` above is the app's own source class (plant, animal or mined
+   *  material against manufactured). It is not a regulatory status, needs
+   *  no source, only orders products in the planner and never admits one
+   *  to an organic plan; `complianceFlags` alone does that (ruling OT-1). */
   complianceFlags: complianceFlagsSchema,
   notes: z.string().optional(),
 });

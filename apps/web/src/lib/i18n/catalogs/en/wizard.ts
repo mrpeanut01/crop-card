@@ -902,6 +902,11 @@ export const enWizard = {
   'inputs.opt.onHand': '{name} (on hand)',
   'inputs.opt.some': '{name} (some on hand)',
   'inputs.opt.toBuy': '{name} (to buy)',
+  'inputs.opt.notMarked': '{label}, not marked',
+  'inputs.organicNotMarked': 'Not marked for organic use in our library. Ask your certifier.',
+  'inputs.warn.byHand.title': 'No fertilizer picked for {name}',
+  'inputs.warn.byHand.body':
+    'No fertilizer with a sourced organic mark fits. Pick one yourself and ask your certifier.',
   'inputs.warn.thisPlanting': 'this planting',
   'inputs.warn.noCompliant.title': 'No compliant product for {name}',
   'inputs.warn.noCompliant.body':

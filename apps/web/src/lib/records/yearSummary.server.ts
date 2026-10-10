@@ -28,7 +28,7 @@ import { listScoutObservations } from '$lib/db/scoutObservations';
 import { getRegistry } from '$lib/server/registry';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { SEASON_SETUP_DEFAULTS, type Philosophy } from '$lib/season/setup';
-import { isProductAllowed, type FilterableInputPlugin } from '$lib/season/philosophyFilter';
+import { philosophyProductClass, type FilterableInputPlugin } from '$lib/season/philosophyFilter';
 import { resolveArchetype, type Archetype, type CropPlugin } from '$lib/plugins/schemas';
 
 import {
@@ -227,5 +227,6 @@ function productAllowedUnder(
   const rec = registry.get(productId);
   if (!rec) return undefined;
   if (!FILTERABLE_PLUGIN_TYPES.has(rec.plugin.type)) return undefined;
-  return isProductAllowed(rec.plugin as FilterableInputPlugin, philosophy);
+  const cls = philosophyProductClass(rec.plugin as FilterableInputPlugin, philosophy);
+  return cls === 'not-marked' ? undefined : cls === 'allowed';
 }

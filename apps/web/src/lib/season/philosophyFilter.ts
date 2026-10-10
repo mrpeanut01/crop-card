@@ -20,7 +20,10 @@
  *                                  stand in for tillage, so nothing is gated)
  *   non-gmo                    — requires `complianceFlags.nonGmoCompliant === true`
  *   organic-transitioning      — requires `transitioningAllowed === true`
- *                                  OR `omriListed === true`
+ *                                  OR `omriListed === true`; a fertilizer
+ *                                  the library marks neither way is never
+ *                                  planned, but the farmer may pick it by
+ *                                  hand (`philosophyProductClass`)
  *   certified-organic          — requires `omriListed === true` AND
  *                                  `certifiedOrganicAllowed !== false`
  *
@@ -29,9 +32,10 @@
  * UI surfaces a "no compliant product available" warning instead of
  * silently substituting the wrong product.
  *
- * Fertilizer plugins additionally honor their existing `organic: boolean`
- * flag under `organic-transitioning`, which keeps the existing fertilizer
- * library usable without a mass-backfill of `complianceFlags`.
+ * Ruling OT-1 (docs/design/LABEL_FOLLOWUP_RULINGS.md): the fertilizer
+ * source-class field is never read here. 7 CFR 205.202(b) gives land in
+ * transition the same prohibited-substance rule as certified land, so only
+ * a sourced flag admits a product to an organic-transitioning plan.
  *
  * Phase 33B (B-18): the flags are read through
  * `$lib/organic/inputCompliance`, the same reader organic records use, and
@@ -68,12 +72,7 @@ export function isProductAllowed(plugin: FilterableInputPlugin, philosophy: Phil
   if (philosophy === 'organic-transitioning') {
     if (organicInputClass(plugin) === 'not-allowed') return false;
     if (flags?.transitioningAllowed === true) return true;
-    if (flags?.omriListed === true) return true;
-    // Fertilizer-specific escape: `organic: true` is the historical
-    // signal for organic-compatible amendments; honor it during the
-    // transition window even without an OMRI listing.
-    if (plugin.type === 'fertilizer' && plugin.organic) return true;
-    return false;
+    return flags?.omriListed === true;
   }
 
   if (philosophy === 'certified-organic') {
@@ -85,6 +84,29 @@ export function isProductAllowed(plugin: FilterableInputPlugin, philosophy: Phil
   const _exhaustive: never = philosophy;
   void _exhaustive;
   return false;
+}
+
+export type PhilosophyProductClass = 'allowed' | 'not-marked' | 'not-allowed';
+
+/**
+ * OT-1: `allowed` products may be planned. A `not-marked` product is a
+ * fertilizer the library marks neither way for organic use under an
+ * organic-transitioning season: the planner and Claude never choose it,
+ * and the farmer may pick it by hand beside "Ask your certifier."
+ */
+export function philosophyProductClass(
+  plugin: FilterableInputPlugin,
+  philosophy: Philosophy
+): PhilosophyProductClass {
+  if (isProductAllowed(plugin, philosophy)) return 'allowed';
+  if (
+    philosophy === 'organic-transitioning' &&
+    plugin.type === 'fertilizer' &&
+    organicInputClass(plugin) === 'not-marked'
+  ) {
+    return 'not-marked';
+  }
+  return 'not-allowed';
 }
 
 /**

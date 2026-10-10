@@ -1224,3 +1224,67 @@ describe('planInputs — on-hand products first (#480)', () => {
     expect(terminate.productDisplayName).toBe('roundup');
   });
 });
+
+describe('OT-1: unmarked fertilizers in an organic-transitioning plan', () => {
+  const crop = buildCrop('corn', 'crop-corn');
+  const run = (fertilizers: FertilizerPlugin[], philosophy: Philosophy = 'organic-transitioning') =>
+    planInputs(
+      buildBaseInput({
+        plantings: [buildPlanting('p1', 'b1', 'crop-corn')],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'crop-corn': crop },
+        seasonSetup: buildSetup(philosophy, 'compost-amendments'),
+        productPlugins: { ...buildProductPool(), fertilizers }
+      })
+    );
+  const unmarkedCompost = buildFertilizer('compost-unmarked', {
+    analysis: { n: 2, p: 1, k: 1 },
+    organic: true
+  });
+  const sourced = buildFertilizer('fish-sourced', {
+    analysis: { n: 5, p: 1, k: 1 },
+    organic: true,
+    certifiedOrganicAllowed: true,
+    transitioningAllowed: true
+  });
+  sourced.complianceFlags = { ...sourced.complianceFlags, notes: 'The condition, word for word.' };
+  const notAllowed = buildFertilizer('urea-marked', {
+    analysis: { n: 46, p: 0, k: 0 },
+    certifiedOrganicAllowed: false
+  });
+
+  it('never chooses an unmarked fertilizer, and lists it last for a pick by hand', () => {
+    const plan = run([unmarkedCompost, sourced, notAllowed]);
+    const fert = plan.applications.filter((a) => a.productCategory === 'fertilizer');
+    expect(fert.length).toBeGreaterThan(0);
+    for (const app of fert) {
+      expect(app.productPluginId).toBe('fish-sourced');
+      expect(app.options?.map((o) => [o.pluginId, o.organicMark])).toEqual([
+        ['fish-sourced', undefined],
+        ['compost-unmarked', 'not-marked']
+      ]);
+      expect(app.options?.[0].organicCondition).toBe('The condition, word for word.');
+    }
+    expect(plan.warnings.filter((w) => w.kind === 'no-compliant-product')).toEqual([]);
+  });
+
+  it('leaves the slot empty with a pick-by-hand warning when only unmarked ones fit', () => {
+    const plan = run([unmarkedCompost, notAllowed]);
+    const app = plan.applications.find((a) => a.slot === 'pre-plant-fertility');
+    expect(app?.productPluginId).toBeNull();
+    expect(app?.options?.map((o) => o.pluginId)).toEqual(['compost-unmarked']);
+    const warning = plan.warnings.find(
+      (w) => w.kind === 'no-compliant-product' && w.slot === 'pre-plant-fertility'
+    );
+    expect(warning).toMatchObject({ byHand: true });
+    expect(warning && 'reason' in warning ? warning.reason : '').toMatch(/ask your certifier/);
+  });
+
+  it('a certified-organic plan lists no unmarked fertilizer at all', () => {
+    const plan = run([unmarkedCompost, sourced], 'certified-organic');
+    for (const app of plan.applications.filter((a) => a.productCategory === 'fertilizer')) {
+      expect(app.options?.some((o) => o.organicMark)).toBe(false);
+      expect(app.productPluginId).not.toBe('compost-unmarked');
+    }
+  });
+});

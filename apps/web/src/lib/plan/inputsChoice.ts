@@ -27,6 +27,12 @@ export interface InputsPlanProductOption {
   totalAmount: number | null;
   onHand: number;
   stock: StockCoverage;
+  /** OT-1: a fertilizer the library marks neither way for organic use,
+   *  offered to an organic-transitioning season for a pick by hand only. */
+  organicMark?: 'not-marked';
+  /** The regulation's or listing's condition on an allowed fertilizer,
+   *  word for word (`complianceFlags.notes`), under an organic season. */
+  organicCondition?: string;
 }
 
 /** Where the product on an application came from. */

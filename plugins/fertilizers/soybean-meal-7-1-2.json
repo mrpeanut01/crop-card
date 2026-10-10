@@ -1,7 +1,7 @@
 {
   "pluginId": "soybean-meal-7-1-2",
   "type": "fertilizer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -18,9 +18,7 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": false,
     "nonGmoCompliant": false,
-    "certifiedOrganicAllowed": false,
     "notes": "Most US soybean meal is GMO; source NonGMO or organic if needed."
   },
   "notes": "Defatted ground soybean as slow-release organic N. Faster mineralization than feather meal in warm soils."

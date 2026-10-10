@@ -1,5 +1,5 @@
 {
-  "$comment": "#805 organic flags on fertilizer plugins, same rule as the complianceFlags section of epa-reg-sources.json (#779): a plugin may set omriListed, certifiedOrganicAllowed or transitioningAllowed to true only with an entry here, either an OMRI Products List NOP listing ({ omriListed: true, sourceUrl on omri.org, quote \"<product> | <company> | <OMRI code> | NOP | <status> | expires <date>\" }) or, for a generic plugin that names no brand, a 7 CFR 205 quote that names the material ({ basis: \"7 CFR 205\", citation, sourceUrl on ecfr.gov, quote }), which never sets omriListed. omriListed: false entries record why a plugin carries no allowed flag. Rulings F805-1 to F805-4 in docs/design/LABEL_FOLLOWUP_RULINGS.md. eCFR text up to date as of 2026-10-07. Checked by fertilizerOrganicSources.gate.test.ts.",
+  "$comment": "#805 and #834 organic flags on fertilizer plugins, same rule as the complianceFlags section of epa-reg-sources.json (#779): a plugin may set omriListed, certifiedOrganicAllowed or transitioningAllowed to true only with an entry here, either an OMRI Products List NOP listing ({ omriListed: true, sourceUrl on omri.org, quote \"<product> | <company> | <OMRI code> | NOP | <status> | expires <date>\" }) or, for a generic plugin that names no brand, a 7 CFR 205 quote that names the material ({ basis: \"7 CFR 205\", citation, sourceUrl on ecfr.gov, quote }), which never sets omriListed. #834: certifiedOrganicAllowed: false also needs an entry ({ certifiedOrganicAllowed: false, basis, citation, sourceUrl, quote }), either an unconditional 7 CFR 205.602 paragraph whose quote holds the entry's `material`, or 205.105(a) with the 205.2 `definition` of synthetic quoted and an `inference` line that says it is the app's own; an entry with this field needs the plugin to carry the false mark. omriListed: false entries record why a plugin carries no flag. Rulings F805-1 to F805-4 and F834-1 to F834-7 in docs/design/LABEL_FOLLOWUP_RULINGS.md. eCFR text up to date as of 2026-10-08. Checked by fertilizerOrganicSources.gate.test.ts.",
   "ag-lime-calcitic": {
     "omriListed": false,
     "cleared": ["omriListed", "transitioningAllowed"],
@@ -11,6 +11,22 @@
     "cleared": ["omriListed", "transitioningAllowed"],
     "docDate": "2026-10-09",
     "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "ammonium-sulfate-21-0-0": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: ammonium sulfate is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
   },
   "azomite-trace-mineral": {
     "omriListed": true,
@@ -42,6 +58,46 @@
     "docDate": "2026-10-09",
     "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
   },
+  "calcium-chloride-foliar": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.602(c)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.602",
+    "docDate": "2026-10-10",
+    "quote": "The following nonsynthetic substances may not be used in organic crop production: ... (c) Calcium chloride, brine process is natural and prohibited for use except as a foliar spray to treat a physiological disorder associated with calcium uptake.",
+    "note": "Ruling F834-3 (2-1): generic plugin with no brand; the regulation names the material and excepts the foliar use this plugin describes. Nothing here says a given product is brine-process. No omriListed."
+  },
+  "calcium-nitrate-15-5-0-19ca": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: calcium nitrate is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
+  },
+  "can-17-calcium-ammonium-nitrate": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: calcium ammonium nitrate is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
+  },
   "chilean-nitrate-16-0-0": {
     "basis": "7 CFR 205",
     "citation": "7 CFR 205.602(h)",
@@ -68,17 +124,41 @@
     "docDate": "2026-10-09",
     "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
   },
+  "copper-sulfate-pentahydrate": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.601(j)(7)(ii)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.601",
+    "docDate": "2026-10-10",
+    "quote": "(j) As crop or soil amendments. ... (7) Micronutrients—not to be used as a defoliant, herbicide, or desiccant. Those made from nitrates or chlorides are not allowed. Micronutrient deficiency must be documented by soil or tissue testing or other documented and verifiable method as approved by the certifying agent. ... (ii) Sulfates, carbonates, oxides, or silicates of zinc, copper, iron, manganese, molybdenum, selenium, and cobalt.",
+    "note": "Ruling F834-1: generic plugin with no brand; the regulation names the material. The unsourced \"not allowed\" mark is replaced; no omriListed."
+  },
   "cottonseed-meal-6-2-1": {
     "omriListed": false,
-    "cleared": ["transitioningAllowed"],
-    "docDate": "2026-10-09",
-    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+    "cleared": ["transitioningAllowed", "certifiedOrganicAllowed"],
+    "docDate": "2026-10-10",
+    "reason": "Rulings F805-2 and F834-5: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material. The \"not allowed\" mark had no source (205.105(e) would need the app to assert a given lot comes from excluded methods) and is removed; the non-GMO flag and the verify-source note stay. Not marked either way; the certifier decides for a given product."
   },
   "crab-meal-4-3-0": {
     "omriListed": false,
     "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
     "docDate": "2026-10-09",
     "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "dap-18-46-0": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: diammonium phosphate is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
   },
   "dolomitic-lime": {
     "omriListed": false,
@@ -154,6 +234,18 @@
     "quote": "(j) As crop or soil amendments. ... (3) Humic acids—naturally occurring deposits, water and alkali extracts only.",
     "note": "Ruling F805-1: generic plugin with no brand; the regulation names the material. omriListed removed."
   },
+  "iron-chelate-feeddha": {
+    "omriListed": false,
+    "cleared": ["certifiedOrganicAllowed"],
+    "docDate": "2026-10-10",
+    "reason": "Ruling F834-6 (3-0 on this material): the \"not allowed\" mark had no source and is removed. 7 CFR 205.601(j)(7)(ii) names sulfates, carbonates, oxides and silicates of iron and says nothing of chelates, and no paragraph names EDDHA. Not marked either way; the certifier decides for a given product."
+  },
+  "k-mag-0-0-22": {
+    "omriListed": false,
+    "cleared": ["certifiedOrganicAllowed"],
+    "docDate": "2026-10-10",
+    "reason": "Ruling F834-4: the \"not allowed\" mark had no source and is removed. No OMRI NOP listing was found for K-Mag (searches \"K-Mag\", \"K-Mag Natural\", \"Mosaic K-Mag\" and \"langbeinite\" on 2026-10-10), and 7 CFR 205 does not name langbeinite (205.203(d)(3) covers it at most as a category, F805-2). Not marked either way; the certifier decides for a given product."
+  },
   "kelp-meal-1-0-2": {
     "omriListed": false,
     "cleared": ["omriListed", "transitioningAllowed"],
@@ -165,6 +257,30 @@
     "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
     "docDate": "2026-10-09",
     "reason": "Ruling F805-1: 7 CFR 205.601(j)(1) covers only \"Aquatic plant extracts (other than hydrolyzed)\" made with potassium or sodium hydroxide; a generic liquid kelp may be hydrolyzed or extracted another way. Check the extraction method or an OMRI listing on the product label."
+  },
+  "manganese-sulfate-32-percent": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.601(j)(7)(ii)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.601",
+    "docDate": "2026-10-10",
+    "quote": "(j) As crop or soil amendments. ... (7) Micronutrients—not to be used as a defoliant, herbicide, or desiccant. Those made from nitrates or chlorides are not allowed. Micronutrient deficiency must be documented by soil or tissue testing or other documented and verifiable method as approved by the certifying agent. ... (ii) Sulfates, carbonates, oxides, or silicates of zinc, copper, iron, manganese, molybdenum, selenium, and cobalt.",
+    "note": "Ruling F834-1: generic plugin with no brand; the regulation names the material. The unsourced \"not allowed\" mark is replaced; no omriListed."
+  },
+  "map-11-52-0": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: monoammonium phosphate is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
   },
   "molasses-soil-amendment": {
     "omriListed": false,
@@ -190,17 +306,64 @@
     "docDate": "2026-10-09",
     "quote": "Polysulphate Granular 0-0-14 | ICL Specialty Products Inc. | icb-13836 | NOP | Allowed | expires 2027-06-01"
   },
+  "potash-mop-0-0-60": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.602(e)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.602",
+    "docDate": "2026-10-10",
+    "quote": "The following nonsynthetic substances may not be used in organic crop production: ... (e) Potassium chloride—unless derived from a mined source and applied in a manner that minimizes chloride accumulation in the soil.",
+    "note": "Ruling F834-3 (2-1): generic plugin with no brand; the regulation names the material with an \"unless\" condition, as it does sodium nitrate (F805-1). Nothing here says a given product is mined. No omriListed."
+  },
+  "potassium-nitrate-13-0-44": {
+    "omriListed": false,
+    "cleared": ["certifiedOrganicAllowed"],
+    "docDate": "2026-10-10",
+    "reason": "Ruling F834-6 (2-1 on this material): the \"not allowed\" mark had no source and is removed. 7 CFR 205.601 and 205.602 do not name potassium nitrate (the 205.601(j)(7) nitrate sentence covers micronutrients only), and the panel did not hold it beyond dispute that every product is manufactured. Not marked either way; the certifier decides for a given product."
+  },
   "rock-phosphate-0-3-0": {
     "omriListed": false,
     "cleared": ["omriListed", "transitioningAllowed"],
     "docDate": "2026-10-09",
     "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
   },
+  "single-superphosphate-0-20-0": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: single superphosphate is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
+  },
+  "solubor-20-percent-b": {
+    "omriListed": true,
+    "sourceUrl": "https://www.omri.org/omri-search?query=Solubor",
+    "docDate": "2026-10-10",
+    "quote": "20 Mule Team Borax Solubor Sodium Borate 20.5% B Soluble borate for fluid fertilizers and nutrient sprays | U.S. Borax, Inc. | usb-9853 | NOP | Allowed with Restrictions | expires 2027-12-01",
+    "restrictions": [
+      "Micronutrient deficiency must be documented by soil or tissue testing or other documented and verifiable method as approved by a certifying agent.",
+      "Must not be used as an herbicide, defoliant or desiccant."
+    ],
+    "note": "Ruling F834-2: the plugin is the U.S. Borax product on listing usb-9853, renamed to the listed product name (F805-4). The listing covers this 20.5% B soluble product; Solubor Flow (usb-20458) is a separate listing."
+  },
+  "sop-0-0-50": {
+    "omriListed": false,
+    "cleared": ["certifiedOrganicAllowed"],
+    "docDate": "2026-10-10",
+    "reason": "Ruling F834-4: the \"not allowed\" mark had no source and is removed. Generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name potassium sulfate (205.203(d)(3) covers a mined product at most as a category, F805-2). Not marked either way; the certifier decides for a given product."
+  },
   "soybean-meal-7-1-2": {
     "omriListed": false,
-    "cleared": ["transitioningAllowed"],
-    "docDate": "2026-10-09",
-    "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+    "cleared": ["transitioningAllowed", "certifiedOrganicAllowed"],
+    "docDate": "2026-10-10",
+    "reason": "Rulings F805-2 and F834-5: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material. The \"not allowed\" mark had no source (205.105(e) would need the app to assert a given lot comes from excluded methods) and is removed; the non-GMO flag and the verify-source note stay. Not marked either way; the certifier decides for a given product."
   },
   "sulfate-potash-magnesia-langbeinite": {
     "omriListed": false,
@@ -229,10 +392,82 @@
     "docDate": "2026-10-09",
     "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
   },
+  "triple-superphosphate-0-46-0": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: triple superphosphate is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
+  },
+  "uan-28": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: urea ammonium nitrate solution is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
+  },
+  "uan-32": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: urea ammonium nitrate solution is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
+  },
+  "urea-46-0-0": {
+    "certifiedOrganicAllowed": false,
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.105(a)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.105",
+    "docDate": "2026-10-10",
+    "quote": "To be sold or labeled as “100 percent organic,” “organic,” or “made with organic (specified ingredients or food group(s)),” the product must be produced and handled without the use of: (a) Synthetic substances and ingredients, except as provided in § 205.601 or § 205.603;",
+    "definition": {
+      "citation": "7 CFR 205.2",
+      "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.2",
+      "docDate": "2026-10-10",
+      "quote": "Synthetic. A substance that is formulated or manufactured by a chemical process or by a process that chemically changes a substance extracted from naturally occurring plant, animal, or mineral sources, except that such term shall not apply to substances created by naturally occurring biological processes."
+    },
+    "inference": "App inference, not a quote: urea is a manufactured fertilizer made by a chemical process, and 7 CFR 205.601 does not name it.",
+    "note": "Ruling F834-6 (2-1): the \"not allowed\" mark is kept on 205.105(a) with the inference recorded as the app's own."
+  },
   "worm-castings-1-0-0": {
     "omriListed": false,
     "cleared": ["omriListed", "certifiedOrganicAllowed", "transitioningAllowed"],
     "docDate": "2026-10-09",
     "reason": "Ruling F805-2: generic plugin with no brand, so no OMRI listing can apply, and 7 CFR 205 does not name this material (205.203 covers it at most as a category, which depends on how a given product was made: preservatives or processing aids, compost process, mined source). Allowed flags cleared; the certifier decides for a given product."
+  },
+  "zinc-sulfate-monohydrate": {
+    "basis": "7 CFR 205",
+    "citation": "7 CFR 205.601(j)(7)(ii)",
+    "sourceUrl": "https://www.ecfr.gov/current/title-7/section-205.601",
+    "docDate": "2026-10-10",
+    "quote": "(j) As crop or soil amendments. ... (7) Micronutrients—not to be used as a defoliant, herbicide, or desiccant. Those made from nitrates or chlorides are not allowed. Micronutrient deficiency must be documented by soil or tissue testing or other documented and verifiable method as approved by the certifying agent. ... (ii) Sulfates, carbonates, oxides, or silicates of zinc, copper, iron, manganese, molybdenum, selenium, and cobalt.",
+    "note": "Ruling F834-1: generic plugin with no brand; the regulation names the material. The unsourced \"not allowed\" mark is replaced; no omriListed."
   }
 }

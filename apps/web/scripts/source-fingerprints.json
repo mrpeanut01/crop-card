@@ -1,6 +1,131 @@
 {
   "$comment": "Baseline for apps/web/scripts/check-source-drift.mjs (.github/workflows/source-drift.yml). pages: one fingerprint per cited .edu or .gov URL other than PPLS labels and eCFR (HTTP status, Last-Modified, ETag, and a sha256 of the page text, or of the bytes for a PDF); refresh one after a reviewer confirmed its quotes with --only pages --update-fingerprints --url <url>. acknowledged: finding ids that need no data change, each with a reason a reviewer can check; an id names the state seen, so a later change shows up again. Never edit by hand to hide drift; see docs/research/source-refresh-prompt.md.",
-  "acknowledged": {},
+  "acknowledged": {
+    "omri:wba-2473:expiring:2026-12-01": {
+      "reason": "Checked the OMRI search API on 2026-10-09: San Agrow SUPPRESS Herbicide EC (wba-2473) is still listed, Allowed with Restrictions, expiring 2026-12-01; no renewal is published yet. An expired or renewed listing raises a new finding.",
+      "on": "2026-10-09"
+    },
+    "ppls:100-1182:status:Inactive": {
+      "reason": "Ruling D828-3 (2-1, keep with a note): Touchdown HiTech is Inactive (Company Request) since 2020-11-02; no cancellation order was found, so existing-stocks terms are unverified. The stored values still match the last label (2015-03-18). Retiring stays the owner's call.",
+      "on": "2026-10-09"
+    },
+    "ppls:100-1534:label:2024-04-18": {
+      "reason": "Plugin is retired (plugins/_retired). The 2024-04-18 label text uses a shifted-font encoding; decoded and read visually it still says Velista is a water-dispersible granule containing 0.5 pounds of penthiopyrad per pound of product (p. 3). Formulation unchanged.",
+      "on": "2026-10-09"
+    },
+    "ppls:1021-1771:transfer:73049-551": {
+      "reason": "The plugin (pyganic-1-4) already carries 73049-551, the current registration for PyGanic Crop Protection EC 1.4 II. PPLS lists no label filed under 73049-551 yet: its newest stamped file is still 001021-01771-20260427.pdf, printed under 1021-1771, so the stored quotes stay on it. Re-check when a label is filed under 73049-551.",
+      "on": "2026-10-09"
+    },
+    "ppls:1021-1772:transfer:73049-552": {
+      "reason": "The plugin (pyganic-5-0) already carries 73049-552, the current registration for PyGanic Crop Protection EC 5.0 II. PPLS lists no label filed under 73049-552 yet: its newest stamped file is still 001021-01772-20260917.pdf, printed under 1021-1772, so the stored quotes stay on it. Re-check when a label is filed under 73049-552.",
+      "on": "2026-10-09"
+    },
+    "ppls:19713-549:label:2023-01-04": {
+      "reason": "The 2023-01-04 master label (interim decision and NMFS amendments) states no formulation type; nothing in it contradicts EC (it calls for agitation to keep a uniform emulsion). The 2010 accepted file remains the only primary text that says emulsifiable concentrate, so the formulation quote stays on it.",
+      "on": "2026-10-09"
+    },
+    "ppls:241-418:label:2026-08-19": {
+      "reason": "The 2026-08-19 file is an EPA letter plus a Navajo Nation dry bulb onion supplemental label (addendum, expires 2029-08-19). The 2024-09-25 master label stays the source; its REI 24 hours and aqueous capsule suspension quotes are unchanged.",
+      "on": "2026-10-09"
+    },
+    "ppls:241-441:label:2024-04-22": {
+      "reason": "PRN 98-10 notification whose stamped label (pp. 3-35) is scanned with no text layer. Its only change is a California weed-claim removal. Read visually: soluble liquid (p. 6) and REI 4 hours (p. 5) unchanged; quotes stay on the 2022-10-11 text label.",
+      "on": "2026-10-09"
+    },
+    "ppls:264-1141:label:2021-06-03": {
+      "reason": "The 2021-06-03 file is an EPA letter plus a crop-group supplemental label (an addendum to the master label) that expired 2023-09-24. Every PHI it covers matches the stored value; the stored quotes stay on the 2020-09-24 master label, which the supplemental does not supersede.",
+      "on": "2026-10-09"
+    },
+    "ppls:264-827:label:2019-09-17": {
+      "reason": "The 2019-09-17 file is a PRN 98-10 notification label written only under the GAUCHO 550 SC brand (same registration, imidacloprid 42.8%, 4.6 lb/gal SC). It never names Admire Pro, so the Admire Pro identity quote stays on the 2011 EPA-accepted Admire Pro supplemental for 264-827.",
+      "on": "2026-10-09"
+    },
+    "ppls:279-3313:not-found": {
+      "reason": "Ruling D828-4 (3-0): the PPLS product API has no record for 279-3313, but EPA's label server holds stamped Brigade 2EC labels 000279-03313-20211119.pdf and 000279-03313-20260630.pdf, and the Active SLN acceptance letters OR070014 (2024-10-08) and CO170003 name Brigade 2EC with parent EPA Reg. No. 279-3313 (see epa-reg-sources.json entries.brigade-2ec).",
+      "on": "2026-10-09"
+    },
+    "ppls:33906-26:transfer:81880-30": {
+      "reason": "The plugin (quintec-quinoxyfen) already carries 81880-30, the current registration for Quintec. PPLS lists no label filed under 81880-30 yet: its newest stamped file is still 033906-00026-20230413.pdf, printed under 33906-26, so the stored quotes stay on it. Re-check when a label is filed under 81880-30.",
+      "on": "2026-10-09"
+    },
+    "ppls:352-592:label:2021-05-05": {
+      "reason": "The 2021-05-05 label's body text is in a shifted-font encoding that pdftotext cannot search. Decoded (+29 code points), every stored quote (pollinator, PHIs, dataCorrections) and the rainfast statement (2 hours) is present unchanged; the quotes stay on the 2018-10-19 label, whose text layer the monthly quote check can verify.",
+      "on": "2026-10-09"
+    },
+    "ppls:400-461:transfer:70506-525": {
+      "reason": "Ruling D828-1 (3-0): the plugin keeps 400-461, the number printed on the only label EPA holds (000400-00461-20201102.pdf, the newest file listed under 70506-525), as the owner ruled on 2026-09-30. PPLS records the transfer of 400-461 (MacDermid) to 70506-525 (UPL NA) on 2021-06-09; move the plugin to 70506-525 and re-quote once a label is filed under it.",
+      "on": "2026-10-09"
+    },
+    "ppls:400-503:transfer:70506-536": {
+      "reason": "The plugin (acramite-bifenazate) already carries 70506-536, the current registration for Acramite-50WS. PPLS lists no label filed under 70506-536 yet: its newest stamped file is still 000400-00503-20201216.pdf, printed under 400-503, so the stored quotes stay on it. Re-check when a label is filed under 70506-536.",
+      "on": "2026-10-09"
+    },
+    "ppls:50534-188:transfer:66222-276": {
+      "reason": "The plugin (bravo-weather-stik) already carries 66222-276, the current registration for Bravo 720 (alt. Bravo Weatherstik). PPLS lists no label filed under 66222-276 yet: its newest stamped file is still 050534-00188-20140822.pdf, printed under 50534-188, so the stored quotes stay on it. Re-check when a label is filed under 66222-276.",
+      "on": "2026-10-09"
+    },
+    "ppls:524-659:transfer:105211-118": {
+      "reason": "The plugin (roundup-powermax-3) already carries 105211-118, the current registration for MON 301108 (alt. Roundup PowerMax 3). PPLS lists no label filed under 105211-118 yet: its newest stamped file is still 000524-00659-20241213.pdf, printed under 524-659, so the stored quotes stay on it. Re-check when a label is filed under 105211-118.",
+      "on": "2026-10-09"
+    },
+    "ppls:53575-6:label:2014-02-03": {
+      "reason": "The 2014-02-03 label page is a rotated scan with no usable text layer (EPA letter is a storage and disposal amendment). Read visually: Environmental Hazards is the same text with no bee or pollinator statement; the quote stays on the 2009-03-04 text label.",
+      "on": "2026-10-09"
+    },
+    "ppls:5481-507:label:2024-04-19": {
+      "reason": "2024-04-19 master label is scanned with no text layer (read visually 2026-10-09). Reg. no., the Deadline M-Ps ABN, Environmental Hazards (still no bee language), granular application wording and REI 12 hours are unchanged. The M-Ps marketing heading and the \"10 - 20 lbs. / acre\" table are reworded into per-crop maxima (25 lb/A most crops, 20 for berries, clover, prickly pear and grass, 10 for soybean); the plugin default 20 lb/A has no per-crop rate data. Quotes stay on the 2015-03-03 text label; see the entries note.",
+      "on": "2026-10-09"
+    },
+    "ppls:55146-97:label:2020-11-30": {
+      "reason": "The 2020-11-30 file is an EPA letter plus a citrus HLB supplemental label that expired 2021-06-15 (citrus PHI 40 days, unchanged). The 2019-11-07 master label stays the source for every stored value.",
+      "on": "2026-10-09"
+    },
+    "ppls:61842-55:label:2025-07-29": {
+      "reason": "2025-07-29 master label (NMFS BiOp registration-review amendments) has a garbled-font text layer, so pdftotext cannot match it; read visually 2026-10-09. Every stored value is unchanged: SL 2.4 lb/gal, bee and blueberry bloom statements, REI 48 h (3 d apple etc., 4 d peaches), Chicory PHI 80 and all 34 phiByCrop PHIs (pages shift +2). New on the label but not stored: per-year (not per-crop) season limits with the same pints, a 13 lb ai/acre/year cap, a rain/saturated-soil restriction and a spray drift management box. Quotes stay on the 2024-10-10 text label.",
+      "on": "2026-10-09"
+    },
+    "ppls:62719-396:transfer:70506-654": {
+      "reason": "The plugin (dithane-rainshield) already carries 70506-654, the current registration for Dithane F-45 (alt. Dithane F-45 Rainshield). PPLS lists no label filed under 70506-654 yet: its newest stamped file is still 062719-00396-20240229.pdf, printed under 62719-396, so the stored quotes stay on it. Re-check when a label is filed under 70506-654.",
+      "on": "2026-10-09"
+    },
+    "ppls:62719-628:label:2020-03-24": {
+      "reason": "The 2020-03-24 file is an EPA letter plus a supplemental label (addendum to the master label) allowing off-farm hay sale and silage in 23 listed states, not Virginia; it expired 2023-04-07. Its grazing (0), 14-day hay cutting, 3-day manure and 18-month compost lines match the stored values. REI 48 h, the base claim and the off-farm hay restriction stay quoted from the 2017-03-13 master label.",
+      "on": "2026-10-09"
+    },
+    "ppls:66330-276:transfer:70506-461": {
+      "reason": "The plugin (banvel) already carries 70506-461, the current registration for Dicamba DMA 4# Ag (alt. Banvel Herbicide). PPLS lists no label filed under 70506-461 yet: its newest stamped file is still 066330-00276-20090911.pdf, printed under 66330-276, so the stored quotes stay on it. Re-check when a label is filed under 70506-461.",
+      "on": "2026-10-09"
+    },
+    "ppls:66330-29:transfer:70506-445": {
+      "reason": "The plugin (captan-80wdg) already carries 70506-445, the current registration for Captan 80 WDG. PPLS lists no label filed under 70506-445 yet: its newest stamped file is still 066330-00029-20180226.pdf, printed under 66330-29, so the stored quotes stay on it. Re-check when a label is filed under 70506-445.",
+      "on": "2026-10-09"
+    },
+    "ppls:66330-404:label:2025-02-27": {
+      "reason": "070506-00430-20250227.pdf is a one-page EPA letter (extension of the time-limited kasugamycin uses on cherry, walnut and pome fruit to 2026-03-01) with no labeling; nothing quoted changes. The 2019-10-21 label stays the source.",
+      "on": "2026-10-09"
+    },
+    "ppls:66330-404:transfer:70506-430": {
+      "reason": "The plugin (kasumin-2l-kasugamycin) already carries 70506-430 (Kasumin 2L, UPL). The only file filed under 70506-430 (070506-00430-20250227.pdf) is an EPA letter granting a time-limited-use extension to 2026-03-01, with no labeling, so the newest label remains 066330-00404-20191021.pdf and the stored quotes stay on it.",
+      "on": "2026-10-09"
+    },
+    "ppls:70051-19:label:2020-10-28": {
+      "reason": "The 2020-10-28 file is an EPA letter plus a hemp supplemental label that expired 2022-04-30 and has no bee language. The 2020-02-04 master label stays the source of the foraging-bees quote.",
+      "on": "2026-10-09"
+    },
+    "ppls:70506-187:label:2026-09-03": {
+      "reason": "PRN 98-10 notification (adds \"DO NOT\" in two places on label p. 10); the stamped label is scanned with no text layer. Read visually: Environmental Hazards text (no bee language), 80% micronized wettable sulfur and REI 24 hours unchanged from the 2024-10-13 text label, which stays the source.",
+      "on": "2026-10-09"
+    },
+    "ppls:7969-88:status:Inactive": {
+      "reason": "Ruling D828-2 (2-1, keep with a note): Poast Plus is Inactive (Company Request) since 2021-08-27; no cancellation order was found, so existing-stocks terms are unverified, and there is no direct successor (Poast 7969-58 is a different concentration). The stored values still match the last label (2014-02-11). Retiring stays the owner's call.",
+      "on": "2026-10-09"
+    },
+    "ppls:88847-6:transfer:56336-97": {
+      "reason": "The plugin (spear-lep) already carries 56336-97, the current registration for VST-006340 LC (alt. Spear-Lep). PPLS lists no label filed under 56336-97 yet: its newest stamped file is still 088847-00006-20220928.pdf, printed under 88847-6, so the stored quotes stay on it. Re-check when a label is filed under 56336-97.",
+      "on": "2026-10-09"
+    }
+  },
   "pages": {
     "http://www.gardening.cornell.edu/homegardening/scene05f6.html": {
       "status": 200,
@@ -1345,10 +1470,6 @@
       "url": "https://www.yara.us/contentassets/280676bbae1c466799e9d22b57225584/yaraliva-can-17-bulk-label.pdf",
       "on": "2026-10-08"
     },
-    "quote:epa-reg-sources.json:entries.anthem-maxx.sourceUrl:80d3841fdf98": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20251125.pdf",
-      "on": "2026-10-08"
-    },
     "quote:epa-reg-sources.json:entries.curzate-60df-cymoxanil.sourceUrl:fdd925b6c644": {
       "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00592-20210505.pdf",
       "on": "2026-10-08"
@@ -1807,38 +1928,6 @@
     },
     "quote:epa-reg-sources.json:phiByCrop.lannate-lv.4.sourceUrl:d8d920be4067": {
       "url": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.0.sourceUrl:54fe1281ea90": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.11.sourceUrl:9a94af06fc19": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.12.sourceUrl:0835707ea132": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.13.sourceUrl:c565e542cc00": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.18.sourceUrl:2de7a3f8c687": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.25.sourceUrl:32128d83cd72": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.7.sourceUrl:f2ad02fb34ea": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "on": "2026-10-08"
-    },
-    "quote:epa-reg-sources.json:phiByCrop.miravis-pydiflumetofen.8.sourceUrl:801b03d27a29": {
-      "url": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
       "on": "2026-10-08"
     },
     "quote:epa-reg-sources.json:phiByCrop.movento.13.sourceUrl:b0b91903db96": {

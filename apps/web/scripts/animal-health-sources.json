@@ -384,29 +384,29 @@
     },
     "gordons-livestock-backrubber-pour-on": {
       "withdrawal.pig.all.meatDays": {
-        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20240520.pdf",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20250106.pdf",
         "publisher": "PBI/Gordon Corporation, EI-792 Insecticide (alt. brand Livestock Backrubber & Pour-On), EPA Reg. No. 2217-861, EPA-stamped label",
-        "date": "2024-05-20",
+        "date": "2025-01-06",
         "quote": "Do not slaughter swine within 5 days of last treatment."
       },
       "withdrawal.cattle.all.meatDays": {
-        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20240520.pdf",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20250106.pdf",
         "publisher": "PBI/Gordon Corporation, EI-792 Insecticide (alt. brand Livestock Backrubber & Pour-On), EPA Reg. No. 2217-861, EPA-stamped label",
-        "date": "2024-05-20",
+        "date": "2025-01-06",
         "quote": "POUR ON TECHNIQUE: Apply undiluted to beef cattle, dairy cattle, calves and sheep along back and down face at 1/2 to 2 fl.oz. per 100 lb body weight of animal up to a maximum of 20 fl.oz. per animal.",
         "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30, extended to EPA-registered livestock pesticides by the #571 panel (ruling P571-1). Closest label text: the pour-on use direction naming cattle; the label gives a slaughter interval for swine only."
       },
       "withdrawal.cattle.lactating-dairy.milkHours": {
-        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20240520.pdf",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20250106.pdf",
         "publisher": "PBI/Gordon Corporation, EI-792 Insecticide (alt. brand Livestock Backrubber & Pour-On), EPA Reg. No. 2217-861, EPA-stamped label",
-        "date": "2024-05-20",
+        "date": "2025-01-06",
         "quote": "Treat lactating dairy cows after milking is completed.",
         "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30, extended to EPA-registered livestock pesticides by the #571 panel (ruling P571-1). Closest label text: the only lactating dairy direction; no milk discard is stated."
       },
       "withdrawal.sheep.all.meatDays": {
-        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20240520.pdf",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/002217-00861-20250106.pdf",
         "publisher": "PBI/Gordon Corporation, EI-792 Insecticide (alt. brand Livestock Backrubber & Pour-On), EPA Reg. No. 2217-861, EPA-stamped label",
-        "date": "2024-05-20",
+        "date": "2025-01-06",
         "quote": "POUR ON TECHNIQUE: Apply undiluted to beef cattle, dairy cattle, calves and sheep along back and down face at 1/2 to 2 fl.oz. per 100 lb body weight of animal up to a maximum of 20 fl.oz. per animal.",
         "note": "Label states no interval; recorded 0 per owner ruling 2026-09-30, extended to EPA-registered livestock pesticides by the #571 panel (ruling P571-1). Closest label text: the pour-on use direction naming sheep; the label gives a slaughter interval for swine only."
       }

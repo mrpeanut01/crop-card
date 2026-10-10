@@ -3,8 +3,8 @@
   "entries": {
     "aatrex-4l": {
       "epaRegistrationNumber": "100-497",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00497-20211110.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, AATREX 4L HERBICIDE"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00497-20240708.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, AATREX 4L HERBICIDE,07/08/2024"
     },
     "actara": {
       "epaRegistrationNumber": "100-938",
@@ -14,13 +14,13 @@
     },
     "actigard-50wg": {
       "epaRegistrationNumber": "100-922",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00922-20160928.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, ACTIGARD 50WG"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00922-20211102.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, ACTIGARD 50WG PLANT ACTIVATOR,11/02/2021"
     },
     "acuron": {
       "epaRegistrationNumber": "100-1466",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20150424.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, ACURON HERBICIDE"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20211110.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, ACURON  HERBICIDE,11/10/2021"
     },
     "agrimek-sc": {
       "epaRegistrationNumber": "100-1351",
@@ -32,25 +32,25 @@
     },
     "aprovia": {
       "epaRegistrationNumber": "100-1471",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20180817.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, APROVIA FUNGICIDE",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20241030.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, APROVIA FUNGICIDE,10/30/2024",
       "note": "not Aprovia Top, 100-1476"
     },
     "asana-xl": {
       "epaRegistrationNumber": "59639-209",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20150206.pdf",
-      "matchedTitle": "Dupont Asana XL Insecticide",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, DUPONT ASANA XL INSECTICIDE,04/14/2026",
       "note": "Valent company no. 59639; the older DuPont registration was 352-515"
     },
     "assail-30sg": {
       "epaRegistrationNumber": "8033-36",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00036-20110629.pdf",
-      "matchedTitle": "Assail 30SG Insecticide"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00036-20210611.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, ASSAIL 30 SG INSECTICIDE,06/11/2021"
     },
     "avaunt-evo": {
       "epaRegistrationNumber": "279-9629",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20201123.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, AVAUNT EVO INSECT CONTROL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, AVAUNT EVO INSECT CONTROL,08/22/2024",
       "note": "FMC company no. 279; the older DuPont registration was 352-906"
     },
     "baythroid-xl": {
@@ -60,8 +60,8 @@
     },
     "beleaf-50sg": {
       "epaRegistrationNumber": "71512-10",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00010-20220616.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, BELEAF 50SG"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00010-20221121.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Beleaf® 50SG Insecticide,11/21/2022"
     },
     "beyond": {
       "epaRegistrationNumber": "241-441",
@@ -78,8 +78,8 @@
     },
     "callisto": {
       "epaRegistrationNumber": "100-1131",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20131122.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, CALLISTO HERBICIDE"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20260409.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, CALLISTO HERBICIDE,04/09/2026"
     },
     "champ-dp": {
       "epaRegistrationNumber": "55146-57",
@@ -89,18 +89,18 @@
     },
     "cobra": {
       "epaRegistrationNumber": "59639-34",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00034-20250121.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, COBRA HERBICIDE"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00034-20260113.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, COBRA HERBICIDE,01/13/2026"
     },
     "command-3me": {
       "epaRegistrationNumber": "279-3158",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03158-20190131.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, COMMAND 3ME"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03158-20260707.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, COMMAND 3ME MICROENCAPSULATED HERBICIDE,07/07/2026"
     },
     "coragen": {
       "epaRegistrationNumber": "279-9606",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20180914.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, CORAGEN INSECT CONTROL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, CORAGEN INSECT CONTROL,10/27/2020",
       "note": "FMC company no. 279; the older DuPont registration was 352-729"
     },
     "crossbow": {
@@ -110,8 +110,8 @@
     },
     "cuprofix-ultra-disperss": {
       "epaRegistrationNumber": "70506-201",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20110926.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, CUPROFIX ULTRA 40 ...",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20251204.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, CUPROFIX ULTRA 40 DISPERSS ,12/04/2025",
       "note": "the only Cuprofix Ultra Disperss product; not Cuprofix Flex 70506-393"
     },
     "dimilin-2l": {
@@ -140,8 +140,8 @@
     },
     "dual-ii-magnum": {
       "epaRegistrationNumber": "100-818",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00818-20201026.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, DUAL II MAGNUM"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00818-20240521.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Dual II Magnum® Herbicide,05/21/2024"
     },
     "elevate-50wdg": {
       "epaRegistrationNumber": "70506-446",
@@ -153,8 +153,8 @@
     },
     "entrust-sc": {
       "epaRegistrationNumber": "62719-621",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20240325.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, Entrust® SC,03/25/2024"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Entrust® SC,06/11/2026"
     },
     "exirel": {
       "epaRegistrationNumber": "279-9615",
@@ -179,14 +179,14 @@
     },
     "headline-sc": {
       "epaRegistrationNumber": "7969-289",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20211014.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, Headline SC,10/14/2021",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20260223.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, HEADLINE SC FUNGICIDE,02/23/2026",
       "note": "not Headline EC 7969-186"
     },
     "inspire-super": {
       "epaRegistrationNumber": "100-1317",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01317-20191219.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, INSPIRE SUPER,12/19/2019"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01317-20210505.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, INSPIRE SUPER,05/05/2021"
     },
     "javelin-wg": {
       "epaRegistrationNumber": "70051-66",
@@ -210,25 +210,25 @@
     },
     "liberty-280-sl": {
       "epaRegistrationNumber": "7969-448",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00448-20221209.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, LIBERTY 280 SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00448-20260826.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, LIBERTY 280 SL HERBICIDE,08/26/2026",
       "note": "BASF company no. 7969; the older Bayer registration 264-829 is the pre-divestiture label"
     },
     "lumax-ez": {
       "epaRegistrationNumber": "100-1442",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20180321.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, Lumax EZ Herbicide,03/21/2018"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20221214.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Lumax EZ Herbicide,12/14/2022"
     },
     "m-pede": {
       "epaRegistrationNumber": "10163-324",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20200122.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, M-PEDE INSECTICIDE/ ...",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20210121.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, M-PEDE INSECTICIDE/MITICIDE/FUNGICIDE,01/21/2021",
       "note": "Gowan company no. 10163; the older Dow registration was 62719-515"
     },
     "manzate-pro-stick": {
       "epaRegistrationNumber": "70506-234",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00234-20231204.pdf",
-      "matchedTitle": "Manzate® Pro-Stick Fungicide"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00234-20260416.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, MANZATE PRO-STICK FUNGICIDE,04/16/2026"
     },
     "merivon": {
       "epaRegistrationNumber": "7969-310",
@@ -257,12 +257,12 @@
       "docDate": "2014-02-11",
       "page": 3,
       "quote": "Poast Plus herbicide For broad-spectrum, postemergence selective control of annual and perennial grass weeds ... Equivalent to 1 pound of sethoxydim per gallon formulated as an emulsifiable concentrate ... EPA Reg. No. 7969-88",
-      "note": "Verified 2026-09-25 (confirmed). Right product, but PPLS status is Inactive since 2021-08-27 (cancel flag Yes, 'Company Request'); the 2014-02-11 label is the last on file (existing stocks only). Plugin 1.5 pt/A is within label rates (e.g. carrot max single 3.75 pt/A, p18)."
+      "note": "Verified 2026-09-25 (confirmed). Right product, but PPLS status is Inactive since 2021-08-27 (cancel flag Yes, 'Company Request'); the 2014-02-11 label is the last on file. Re-checked 2026-10-09 (#828, ruling D828-2): kept with this note; no cancellation order was found, so the existing-stocks terms are unverified, and there is no direct successor (Poast 7969-58 is sethoxydim 18%, a different concentration and rate). Plugin 1.5 pt/A is within label rates (e.g. carrot max single 3.75 pt/A, p18)."
     },
     "princep-4l": {
       "epaRegistrationNumber": "100-526",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00526-20110726.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, PRINCEP 4L"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00526-20221222.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, PRINCEP 4L HERBICIDE,12/22/2022"
     },
     "pristine": {
       "epaRegistrationNumber": "7969-199",
@@ -288,8 +288,8 @@
     },
     "radiant-sc": {
       "epaRegistrationNumber": "62719-545",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20240325.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, RADIANT SC,03/25/2024"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, RADIANT SC,06/11/2026"
     },
     "rally-40wsp": {
       "epaRegistrationNumber": "62719-410",
@@ -310,31 +310,31 @@
     },
     "regalia": {
       "epaRegistrationNumber": "84059-3",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00003-20100623.pdf",
-      "matchedTitle": "U.S. EPA, Pesticides, Label, REGALIA, 6/23/2010",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00003-20260820.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, REGALIA BIOPROTECTANT CONCENTRATE,08/20/2026",
       "note": "not Regalia Maxx 84059-6"
     },
     "revus": {
       "epaRegistrationNumber": "100-1254",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20211109.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, REVUS,11/09/2021",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, REVUS® FUNGICIDE,10/16/2025",
       "note": "not Revus Top 100-1278"
     },
     "sandea": {
       "epaRegistrationNumber": "81880-18",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00018-20220310.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, SANDEA HERBICIDE"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00018-20250911.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, SANDEA HERBICIDE,09/11/2025"
     },
     "serenade-aso": {
       "epaRegistrationNumber": "264-1152",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01152-20150803.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, SERENADE ASO",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01152-20250212.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, SERENADE ASO,02/12/2025",
       "note": "Bayer company no. 264; the older AgraQuest registration was 69592-12"
     },
     "sevin-xlr-plus": {
       "epaRegistrationNumber": "61842-37",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250409.pdf",
-      "matchedTitle": "Sevin XLR Plus Carbaryl Insecticide",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, SEVIN XLR PLUS CARBARYL INSECTICIDE,07/17/2025",
       "note": "Tessenderlo Kerley company no. 61842; the older registration was 264-333"
     },
     "spartan-charge": {
@@ -347,13 +347,13 @@
     },
     "stinger": {
       "epaRegistrationNumber": "62719-73",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20140923.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, STINGER, 09/23/2014"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20190311.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, STINGER,03/11/2019"
     },
     "surround-wp": {
       "epaRegistrationNumber": "61842-18",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00018-20080529.pdf",
-      "matchedTitle": "Surround WP Crop Protectant"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00018-20191223.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, SURROUND WP AGRICULTURAL CROP PROTECTANT,12/23/2019"
     },
     "switch-625wg": {
       "epaRegistrationNumber": "100-953",
@@ -366,23 +366,23 @@
       "docDate": "2015-03-18",
       "page": 7,
       "quote": "Touchdown HiTech® Herbicide Nonselective Foliar Systemic Herbicide for Weed Control Active Ingredient: *Glyphosate ... in the form of the monopotassium salt",
-      "note": "Verified 2026-09-25 (confirmed). Right product (Syngenta, glyphosate K salt 52.3%, soluble liquid) but PPLS status Inactive since 2020-11-02 (cancel flag Yes, 'Company Request'); the 2015-03-18 label is the last on file."
+      "note": "Verified 2026-09-25 (confirmed). Right product (Syngenta, glyphosate K salt 52.3%, soluble liquid) but PPLS status Inactive since 2020-11-02 (cancel flag Yes, 'Company Request'); the 2015-03-18 label is the last on file. Re-checked 2026-10-09 (#828, ruling D828-3): kept with this note; no cancellation order was found, so the existing-stocks terms are unverified; other glyphosate plugins are different salts and concentrations."
     },
     "warrior-ii-with-zeon": {
       "epaRegistrationNumber": "100-1295",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20141113.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, WARRIOR II WITH ZEON ..."
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, WARRIOR II WITH ZEON TECHNOLOGY,07/03/2025"
     },
     "xentari": {
       "epaRegistrationNumber": "73049-40",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00040-20030806.pdf",
-      "matchedTitle": "XENTARI® BIOLOGICAL INSECTICIDE DRY FLOWABLE",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00040-20220503.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, XENTARI BIOLOGICAL INSECTICIDE DRY FLOWABLE,05/03/2022",
       "note": "not XenTari AS 73049-31 or WDG 73049-23"
     },
     "zidua-sc": {
       "epaRegistrationNumber": "7969-374",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00374-20240423.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, Zidua SC Herbicide,04/23/2024"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00374-20250318.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Zidua SC Herbicide,03/18/2025"
     },
     "admire-pro": {
       "epaRegistrationNumber": "264-827",
@@ -394,11 +394,11 @@
     },
     "anthem-maxx": {
       "epaRegistrationNumber": "279-3468",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20251125.pdf",
-      "docDate": "2025-11-25",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20260512.pdf",
+      "docDate": "2026-05-12",
       "page": 3,
-      "quote": "F9310-7 (ABN: Anthem Maxx Herbicide) For preplant burndown/ preemergence, preplant incorporated and postemergence weed c",
-      "note": "FMC, Active. PPLS alternate brand names: ANTHEM MAXX HERBICIDE, ANTHEM NXT HERBICIDE. The newer 2026 label files print only F9310-7; 279-3450 is plain Anthem (different product)."
+      "quote": "F9310-7 For preplant burndown/ preemergence, preplant incorporated and postemergence weed control in field corn, sweet corn, popcorn, cotton and soybeans.",
+      "note": "FMC, Active. PPLS alternate brand names: ANTHEM MAXX HERBICIDE, ANTHEM NXT HERBICIDE. The newer 2026 label files print only F9310-7; 279-3450 is plain Anthem (different product). Re-quoted 2026-10-09 (#828): the 2026-05-12 label no longer prints \"(ABN: Anthem Maxx Herbicide)\"; Anthem Maxx remains a PPLS alternate brand name of 279-3468. The label now adds cotton."
     },
     "aza-direct": {
       "epaRegistrationNumber": "71908-1-10163",
@@ -458,8 +458,8 @@
     },
     "indar-2f": {
       "epaRegistrationNumber": "62719-416",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00416-20130711.pdf",
-      "docDate": "2013-07-11",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00416-20261005.pdf",
+      "docDate": "2026-10-05",
       "page": 3,
       "quote": "Group FUNGICIDE Enable® 2F [Alternate Brand Name: Indar® 2F] Fungicide Active Ingredient fenbuconazole ... 23.5%",
       "note": "Resolves the allowlist question: the federal Enable 2F label (Corteva, Active) carries Indar 2F as an alternate brand name (also on container page p6); PPLS search also lists 'INDAR 2F' as alt brand of 62719-416. The MI090002 etc. entries are 24(c) SLNs."
@@ -726,7 +726,7 @@
       "docDate": "2015-03-03",
       "page": 2,
       "quote": "(Deadline M-Ps Mini-Pellets (ABN) Language Only) Mini-Pellets! ONE LAST MEAL FOR SLUGS & SNAILS EFFECTIVE DEADLINE M-Ps excel at attracting and destroying slugs and snails.",
-      "note": "Corrected 2026-09-25 from 70506-130. 70506-130 has no PPLS record. 5481-507 (primary brand Deadline Bullets, AMVAC, metaldehyde 4%, Active) carries the ABN 'Deadline® M-Ps™ Mini-Pellets'. It has agricultural per-acre rates (p6 '10 – 20 lbs. / acre'), which fit the plugin's 20 lb/acre. PPLS also lists 'DEADLINE M-PS' as an alternate brand of 5481-511 (Deadline Ornamental / T&O), but that label only gives pellets-per-square-foot garden and ornamental rates and no per-acre crop use. The newest 5481-507 file (2024-04-19) is image-only, so the 2015-03-03 label was read."
+      "note": "Corrected 2026-09-25 from 70506-130. 70506-130 has no PPLS record. 5481-507 (primary brand Deadline Bullets, AMVAC, metaldehyde 4%, Active) carries the ABN 'Deadline® M-Ps™ Mini-Pellets'. It has agricultural per-acre rates (p6 '10 – 20 lbs. / acre'). PPLS also lists 'DEADLINE M-PS' as an alternate brand of 5481-511 (Deadline Ornamental / T&O), but that label only gives pellets-per-square-foot garden and ornamental rates and no per-acre crop use. The newest 5481-507 file (2024-04-19) is image-only, so the 2015-03-03 label was read. Re-read visually 2026-10-09 (#828): the 2024-04-19 master label keeps 5481-507 and the Deadline M-Ps ABN, but replaces the '10 – 20 lbs. / acre' table with per-crop maximum rates (25 lb/A for most crops; 20 for berries, clover, prickly pear cactus and grass; 10 for soybean). Tables I–III, read visually 2026-10-09 (no text layer). Ruling D828-5 (3-0): the plugin default was lowered from 20 to 10 lb/acre, the lowest per-crop maximum, so the default never exceeds the label on any crop; 10 is also within the 2015 label's '10 – 20 lbs. / acre'."
     },
     "double-nickel-55": {
       "epaRegistrationNumber": "70051-108",
@@ -906,11 +906,11 @@
     },
     "met52-ec-metarhizium": {
       "epaRegistrationNumber": "64137-33",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070127-00010-20171109.pdf",
-      "docDate": "2017-11-09",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/064137-00033-20260528.pdf",
+      "docDate": "2026-05-28",
       "page": 4,
-      "quote": "TICK-EX EC BIOINSECTICIDE [ABN: MET52® EC ] ... ACTIVE INGREDIENT – Metarhizium anisopliae Strain 52 ... 11.0%",
-      "note": "Corrected 2026-09-25 from 64137-12. 64137-12 is RotStop C (Phlebiopsis gigantea biofungicide). The Met52 EC registration was 70127-10 (Novozymes), which transferred to 64137-33 (Danstar Ferment / Lallemand Plant Care) on 2022-03-15. EPA letter of 2022-09-14 (064137-00033-20220914.pdf p1): 'the alternate brand-names, MET52 EC and Tick-EX EC Bioinsecticide have been removed from the registration'. The product is now LALGUARD M52 OD. Registration Active, REI 4 h (2026 label p7) matches. The plugin brand is discontinued; the owner may want to rename the plugin to Lalguard M52 OD."
+      "quote": "LALGUARD® M52 OD ... Active Ingredient: Metarhizium brunneum Strain F52* ... 11.0%",
+      "note": "Corrected 2026-09-25 from 64137-12. 64137-12 is RotStop C (Phlebiopsis gigantea biofungicide). The Met52 EC registration was 70127-10 (Novozymes), which transferred to 64137-33 (Danstar Ferment / Lallemand Plant Care) on 2022-03-15. EPA letter of 2022-09-14 (064137-00033-20220914.pdf p1): 'the alternate brand-names, MET52 EC and Tick-EX EC Bioinsecticide have been removed from the registration'. The product is now LALGUARD M52 OD. Registration Active, REI 4 h (2026 label p7) matches. The plugin brand is discontinued; the owner may want to rename the plugin to Lalguard M52 OD. Re-quoted 2026-10-09 (#828): 70127-10 was transferred to 64137-33 on 2022-03-15 and the 2026-05-28 label is printed as LALGUARD M52 OD (same strain F52, 11.0%; Metarhizium anisopliae renamed M. brunneum); the Tick-EX EC and Met52 names no longer appear on it."
     },
     "method-aminocyclopyrachlor": {
       "epaRegistrationNumber": "101563-177",
@@ -930,8 +930,8 @@
     },
     "miravis-pydiflumetofen": {
       "epaRegistrationNumber": "100-1601",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "docDate": "2025-07-24",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+      "docDate": "2026-09-30",
       "page": 3,
       "quote": "PYDIFLUMETOFEN GROUP 7 FUNGICIDE A19649 Crop [Alternate brand names: Miravis®, Miravis® Ace A] Fungicide ADEPIDYN® Technology",
       "note": "Corrected 2026-09-25 from 100-1577. 100-1577 has no PPLS record. Miravis (pydiflumetofen solo, 18.3%) is an alternate brand of A19649 Crop, 100-1601 (Syngenta, Active). The EPA letter p.1 names 'Product Name: Miravis®' for this registration."
@@ -1188,8 +1188,8 @@
     },
     "miravis-ace": {
       "epaRegistrationNumber": "100-1645",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
-      "docDate": "2020-10-02",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20260930.pdf",
+      "docDate": "2026-09-30",
       "page": 1,
       "quote": "Product Name: Miravis Ace EPA Registration Number: 100-1645",
       "note": "Newest EPA-stamped label found for this registration on 2026-10-08. The PPLS index page (ordspub.epa.gov) returned 502/503 all day, so the label list was taken from the www3.epa.gov PPLS PDF names a web search returned. REI: 'Do not enter or allow worker entry into treated areas during the restricted-entry interval (REI) of 12 hours.' (p9). Default rate 10.0 fl oz is the low end of the head blight range 'Fusarium head blight 10.0 -13.7*' (p26). Top-level PHI 30 is the longest on the label (bushberry, canola, corn, quinoa, sorghum; p40 use summary). Not the same registration as miravis-pydiflumetofen (100-1601)."
@@ -2227,9 +2227,9 @@
         "beeToxicity": "relatively-nontoxic",
         "bloomRestriction": "none"
       },
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00416-20130711.pdf",
-      "docDate": "2013-07-11",
-      "page": 11,
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00416-20261005.pdf",
+      "docDate": "2026-10-05",
+      "page": 9,
       "quote": "Enable 2F is considered not hazardous to bees, including those which are actively foraging in the area during application, when used as directed.",
       "note": "Enable 2F master label; Indar 2F is an alternate brand of 62719-416. Environmental Hazards (p4) mention only fish and aquatic organisms. The explicit not-hazardous-to-bees statement maps to relatively-nontoxic with no bloom restriction."
     },
@@ -2359,8 +2359,8 @@
         "beeToxicity": "unknown",
         "bloomRestriction": "none"
       },
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "docDate": "2025-07-24",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+      "docDate": "2026-09-30",
       "page": 7,
       "quote": "Environmental Hazards Pydiflumetofen is toxic to fish, aquatic invertebrates, and oysters and shrimp. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated areas. For terrestrial uses: Do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark. Do not contaminate water when disposing of equipment washwater or rinsate.",
       "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. A19649 Crop master label (Miravis alternate brand)."
@@ -2711,8 +2711,8 @@
         "beeToxicity": "unknown",
         "bloomRestriction": "none"
       },
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
-      "docDate": "2020-10-02",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20260930.pdf",
+      "docDate": "2026-09-30",
       "page": 7,
       "quote": "2.3 Environmental Hazards Propiconazole is toxic to fish and shrimp. Pydiflumetofen is toxic to fish, aquatic invertebrates, and oysters and shrimp. Drift and runoff may be hazardous to aquatic organisms in water adjacent to treated area.",
       "note": "Label silent on bees: no bee, pollinator, hive or foraging language anywhere on the label (grep \\bbees?\\b|pollinat|foraging|hive), so the label supports only 'unknown' with no bloom restriction. No legacy pollinatorRisk hint is set, since none is sourced; the small-grain crop plugins are not bee-attractive."
@@ -2772,8 +2772,8 @@
     },
     "anthem-maxx": {
       "formulation": "SC",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20251125.pdf",
-      "docDate": "2025-11-25",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20260512.pdf",
+      "docDate": "2026-05-12",
       "page": 3,
       "quote": "F9310-7 is a SC (suspension concentrate) containing 4.30 total lbs. active ingredients per gallon",
       "note": "PPLS formulation field says 'Emulsifiable Concentrate'; label text wins."
@@ -3115,8 +3115,8 @@
     },
     "miravis-pydiflumetofen": {
       "formulation": "SC",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-      "docDate": "2025-07-24",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+      "docDate": "2026-09-30",
       "page": 3,
       "quote": "A19649 Crop is formulated as a suspension concentrate (SC) and contains 1.67 lb of pydiflumetofen per gallon.",
       "note": "Label base name A19649 Crop '[Alternate brand names: Miravis®, Miravis® Ace A]' (p3); EPA letter p1 'Product Name: Miravis®'."
@@ -3558,8 +3558,8 @@
     },
     "miravis-ace": {
       "formulation": "SE",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
-      "docDate": "2020-10-02",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20260930.pdf",
+      "docDate": "2026-09-30",
       "page": 3,
       "quote": "Miravis® Ace is a suspoemulsion (SE) formulation and contains 1.254 lb of active ingredient pydiflumetofen and 1.047 lb ai active ingredient propiconazole per gallon."
     }
@@ -3822,8 +3822,8 @@
         "path": "preHarvestIntervalDays",
         "from": 7,
         "to": 30,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
         "page": "PDF pages 32-33",
         "quote": "7.9 Corn ... 6) Pre-harvest Interval (PHI) ... a. Forage: 7 days ... b. Grain and Stover: 30 days",
         "note": "Raised to the longest pre-harvest interval on the label (issue #661); it is the fallback for crops with no per-crop row."
@@ -4039,8 +4039,8 @@
           "certifiedOrganicAllowed": true
         },
         "sourceUrl": "https://www.omri.org/omri-search?query=M-Pede",
-        "docDate": "2026-09-25",
-        "quote": "OMRI NOP listing 'M-Pede Insecticide/Miticide/Fungicide', Gowan Company, goc-2510, expires 2026-12-01"
+        "docDate": "2026-10-09",
+        "quote": "OMRI NOP listing 'M-Pede Insecticide/Miticide/Fungicide', Gowan Company, goc-2510, expires 2027-12-01"
       }
     ],
     "aza-direct": [
@@ -4055,8 +4055,8 @@
           "certifiedOrganicAllowed": true
         },
         "sourceUrl": "https://www.omri.org/omri-search?query=Aza-Direct",
-        "docDate": "2026-09-25",
-        "quote": "OMRI NOP listing 'Aza-Direct Botanical Insecticide', Gowan Company, goc-9305, expires 2026-12-01"
+        "docDate": "2026-10-09",
+        "quote": "OMRI NOP listing 'Aza-Direct Botanical Insecticide', Gowan Company, goc-9305, expires 2027-12-01"
       }
     ],
     "kumulus-df": [
@@ -4618,8 +4618,8 @@
     },
     "miravis-ace": {
       "defaultUnit": "fl-oz",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20201002.pdf",
-      "docDate": "2020-10-02",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01645-20260930.pdf",
+      "docDate": "2026-09-30",
       "page": 26,
       "quote": "Rate Target Disease (fl oz/A) Application Timing Use Directions Fusarium head blight 10.0 -13.7*"
     },
@@ -10199,10 +10199,11 @@
           "currant-white-imperial"
         ],
         "preHarvestIntervalDays": 0,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
         "page": "PDF page 24",
-        "quote": "7.2 Blueberry and Bushberry Crop Subgroup 13-07B Aronia berry Currant, red Jostaberry Blueberry, highbush Elderberry Juneberry (Saskatoon berry) Currant, black Honeysuckle, edible Sea buckthorn ... Pre-harvest Interval (PHI): 0 days"
+        "quote": "7.2 Blueberry and Bushberry Crop Subgroup 13-07B ... Aronia berry Currant, red Jostaberry Blueberry, highbush Elderberry Juneberry (Saskatoon berry) ... Honeysuckle, edible ... Sea buckthorn Currant, black ... 6) Pre-harvest Interval (PHI): 0 days",
+        "note": "Re-quoted 2026-10-09 (#828) from the 2026-09-30 label; the old quote joined table cells out of reading order. Value unchanged."
       },
       {
         "cropPluginIds": [
@@ -10220,8 +10221,8 @@
           "napa-cabbage-michihili"
         ],
         "preHarvestIntervalDays": 0,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
         "page": "PDF page 25",
         "quote": "7.3 Brassica Head and Stem Vegetable Crop Group 5-16 Broccoli Brussels sprouts Cauliflower Cabbage, Chinese, napa Cabbage ... Pre-harvest Interval (PHI): 0 days"
       },
@@ -10247,8 +10248,8 @@
           "ramp-wild-leek"
         ],
         "preHarvestIntervalDays": 7,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
         "page": "PDF page 26",
         "quote": "7.4 Bulb Vegetables Crop Group 3-07, Bulb and Green Onion Chive, fresh leaves Leek Leek, wild Onion, tree, tops Onion, Welsh, tops Garlic, bulb Onion, bulb Shallot, bulb ... Pre-harvest Interval (PHI): 7 days"
       },
@@ -10260,24 +10261,24 @@
           "raspberry-heritage"
         ],
         "preHarvestIntervalDays": 0,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
         "page": "PDF page 27",
         "quote": "7.5 Caneberry Crop Subgroup 13-07A Blackberry Raspberry, red and black ... Pre-harvest Interval (PHI): 0 days"
       },
       {
         "cropPluginIds": ["citrus-meyer-lemon"],
         "preHarvestIntervalDays": 0,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
         "page": "PDF page 31",
         "quote": "7.8 Citrus Fruit, Crop Group 10-10 Lemon ... Pre-harvest Interval (PHI): 0 days"
       },
       {
         "cropFamily": "corn",
         "preHarvestIntervalDays": 30,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
         "page": "PDF pages 32-33",
         "quote": "7.9 Corn 7.9.1 Field Corn, Popcorn (Including For Seed Production) ... 6) Pre-harvest Interval (PHI) ... a. Forage: 7 days ... b. Grain and Stover: 30 days",
         "note": "Field corn and popcorn grain and stover (30 days) kept over forage (7 days); the family row carries the longest corn interval."
@@ -10294,19 +10295,19 @@
           "sweet-corn-sugar-buns-f1"
         ],
         "preHarvestIntervalDays": 7,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
         "page": "PDF page 33",
         "quote": "7.9.2 Sweet Corn (Including For Seed Production) ... 6) Pre-harvest Interval (PHI): 7 days"
       },
       {
         "cropFamily": "cucurbit",
         "preHarvestIntervalDays": 14,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF pages 35-36",
-        "quote": "7.11 Cucurbit Vegetables, Crop Group 9 Cucumber Muskmelon Squash, Summer Gourd, Edible Squash, Winter Zucchini ... 6) Pre-harvest Interval (PHI): ... a. Foliar: 0 days ... b. Soil: 14 days",
-        "note": "Soil applications (14 days) kept over foliar applications (0 days)."
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF pages 36-37",
+        "quote": "7.11 Cucurbit Vegetables, Crop Group 9 ... Cucumber ... Gourd, Edible ... Muskmelon ... Squash, Summer ... Zucchini Squash, Winter ... Pre-harvest Interval (PHI): a. Foliar: 0 days b. Soil: 14 days",
+        "note": "Soil applications (14 days) kept over foliar applications (0 days). Re-quoted 2026-10-09 (#828) from the 2026-09-30 label; the old quote joined table cells out of reading order. Value unchanged."
       },
       {
         "cropPluginIds": [
@@ -10367,11 +10368,11 @@
           "goji-berry-phoenix-tears"
         ],
         "preHarvestIntervalDays": 14,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF pages 37-38",
-        "quote": "7.12 Fruiting Vegetables, Crop Group 8-10 Goji berry Bell pepper Groundcherry Okra Tomatillo Eggplant Tomato Nonbell pepper ... 7) Pre-harvest Interval (PHI): ... a. Foliar: 0 days ... b. Soil: 14 days",
-        "note": "Soil applications (14 days) kept over foliar applications (0 days)."
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF pages 38-39",
+        "quote": "7.12 Fruiting Vegetables, Crop Group 8-10 ... Bell pepper ... Eggplant ... Goji berry Groundcherry ... Okra ... Nonbell pepper ... Tomatillo Tomato ... 7) Pre-harvest Interval (PHI): a. Foliar: 0 days b. Soil: 14 days",
+        "note": "Soil applications (14 days) kept over foliar applications (0 days). Re-quoted 2026-10-09 (#828) from the 2026-09-30 label; the old quote joined table cells out of reading order. Value unchanged."
       },
       {
         "cropPluginIds": [
@@ -10385,17 +10386,17 @@
           "gooseberry-invicta"
         ],
         "preHarvestIntervalDays": 14,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 39",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF pages 40-41",
         "quote": "7.13 Grape and Small Fruit Vine Climbing Subgroup except Fuzzy Grape Gooseberry ... Pre-harvest Interval (PHI): 14 days"
       },
       {
         "cropPluginIds": ["celery-tall-utah-52-70", "rhubarb-victoria"],
         "preHarvestIntervalDays": 0,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 40",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 42",
         "quote": "7.14 Leaf Petiole Vegetables, Crop Subgroup 22B Celery Rhubarb ... Pre-harvest Interval (PHI): 0 days"
       },
       {
@@ -10424,11 +10425,11 @@
           "dill-mammoth"
         ],
         "preHarvestIntervalDays": 14,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF pages 41-42",
-        "quote": "7.15 Leafy Greens, Crop Subgroup 4-16A Dillweed Dock Parsley, fresh leaves Chervil, fresh leaves Endive Purslane, winter Lettuce, head ... 6) Pre-harvest Interval (PHI): ... a. Foliar: 0 days ... b. Soil: 14 days",
-        "note": "Soil applications (14 days) kept over foliar applications (0 days)."
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF pages 43-44",
+        "quote": "7.15 Leafy Greens, Crop Subgroup 4-16A ... Lettuce, head ... Dillweed ... Dock Parsley, fresh leaves ... Chervil, fresh leaves Endive ... Purslane, winter ... Spinach ... Good king henry Spinach, malabar Cilantro, fresh leaves ... Spinach, New Zealand Corn salad ... Swiss chard ... Lettuce, leaf ... 6) Pre-harvest Interval (PHI): a. Foliar: 0 days b. Soil: 14 days",
+        "note": "Soil applications (14 days) kept over foliar applications (0 days). Re-quoted 2026-10-09 (#828) from the 2026-09-30 label; the old quote joined table cells out of reading order. Value unchanged."
       },
       {
         "cropPluginIds": [
@@ -10452,10 +10453,11 @@
           "edamame-tohya"
         ],
         "preHarvestIntervalDays": 14,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF pages 44-45",
-        "quote": "7.17 Legume Vegetables, Dry and Succulent, Crop Group 6 Bean (Phaseolus spp.) Bean (Vigna spp.) Pea (Pisum spp.) Edible-podded pea Chinese longbean Field Pea Snowpea Kidney Bean Blackeyed Pea ... a. Peas and beans: 14 days ... b. Pea vines and hay: 14 days"
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF pages 46-47",
+        "quote": "7.17 Legume Vegetables, Dry and Succulent, Crop Group 6 ... Bean (Vigna spp.) Pea (Pisum spp.) ... Blackeyed Pea ... Edible-podded pea ... Chinese longbean ... Field Pea Bean (Phaseolus spp.) ... Kidney Bean ... Snowpea Lima Bean ... Lentil Sugar snap Pea ... Pigeon Pea Pinto Bean Southern Pea Soy (immature seed) ... Snap Bean ... 7) Pre-harvest Interval (PHI): a. Peas and beans: 14 days b. Pea vines and hay: 14 days",
+        "note": "Re-quoted 2026-10-09 (#828) from the 2026-09-30 label; the old quote joined table cells out of reading order. Value unchanged."
       },
       {
         "cropPluginIds": [
@@ -10473,17 +10475,18 @@
           "watercress-true"
         ],
         "preHarvestIntervalDays": 0,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 47",
-        "quote": "7.19 Mustard Green and Brassica Leafy Greens Subgroup 4-16B Arugula Collards Mustard greens Broccoli raab Kale Mizuna Watercress Cabbage, Chinese, bok choy ... Pre-harvest Interval (PHI): 0 days"
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 49",
+        "quote": "7.19 Mustard Green and Brassica Leafy Greens Subgroup 4-16B ... Arugula ... Broccoli raab ... Cabbage, Chinese, bok choy ... Collards ... Kale ... Mizuna ... Mustard greens ... Watercress ... Pre-harvest Interval (PHI): 0 days",
+        "note": "Re-quoted 2026-10-09 (#828) from the 2026-09-30 label; the old quote joined table cells out of reading order. Value unchanged."
       },
       {
         "cropPluginIds": ["peanut-virginia-jumbo"],
         "preHarvestIntervalDays": 21,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 48",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF pages 50-51",
         "quote": "7.20 Peanut ... a. Option 1: 14 days ... b. Option 2: 21 days",
         "note": "Option 2 (21 days) kept over option 1 (14 days)."
       },
@@ -10500,9 +10503,9 @@
           "quince-orange"
         ],
         "preHarvestIntervalDays": 30,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF pages 51-52",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF pages 53-54",
         "quote": "7.23 Pome Fruit, Crop Group 11-10 Apple Pear Pear, Asian Quince ... Pre-harvest Interval (PHI): 30 days"
       },
       {
@@ -10515,17 +10518,17 @@
           "potato-yukon-gold"
         ],
         "preHarvestIntervalDays": 7,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF pages 53-54",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF pages 55-56",
         "quote": "7.24 Potato ... Pre-harvest Interval (PHI): 7 days"
       },
       {
         "cropPluginIds": ["quinoa-cherry-vanilla"],
         "preHarvestIntervalDays": 30,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 55",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 57",
         "quote": "7.25 Quinoa ... Pre-harvest Interval (PHI): 30 days"
       },
       {
@@ -10551,34 +10554,35 @@
           "parsnip-hollow-crown"
         ],
         "preHarvestIntervalDays": 7,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 56",
-        "quote": "7.26 Root Vegetables, Crop Subgroup 1A Beet, garden Burdock, edible Carrot Celeriac Parsnip Radish Radish, oriental (daikon) Turnip ... Pre-harvest Interval (PHI): 7 days"
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 58",
+        "quote": "7.26 Root Vegetables, Crop Subgroup 1A ... Beet, garden ... Burdock, edible ... Carrot Parsnip ... Celeriac Radish ... Radish, oriental (daikon) Turnip ... 6) Pre-harvest Interval (PHI): 7 days",
+        "note": "Re-quoted 2026-10-09 (#828) from the 2026-09-30 label; the old quote joined table cells out of reading order. Value unchanged."
       },
       {
         "cropPluginIds": ["sorghum-grain-pioneer"],
         "preHarvestIntervalDays": 30,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 57",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 59",
         "quote": "7.27 Sorghum Sorghum (grain) ... a. Forage: 30 days ... b. Grain and Stover: 21 days",
         "note": "Forage (30 days) kept over grain and stover (21 days)."
       },
       {
         "cropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend"],
         "preHarvestIntervalDays": 14,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF pages 58-59",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF pages 60-61",
         "quote": "7.28 Soybean ... Pre-harvest Interval (PHI): 14 days"
       },
       {
         "cropFamily": "stone-fruit",
         "preHarvestIntervalDays": 0,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 60",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 62",
         "quote": "7.29 Stone Fruit, Crop Group 12-12 Apricot Peach Plum Cherry, sweet Cherry, tart ... Pre-harvest Interval (PHI): 0 days"
       },
       {
@@ -10588,25 +10592,25 @@
           "strawberry-jewel"
         ],
         "preHarvestIntervalDays": 0,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 61",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 63",
         "quote": "7.30 Strawberry and Low Growing Berry Crop Subgroup 13-07G, Strawberry ... Pre-harvest Interval (PHI): 0 days"
       },
       {
         "cropPluginIds": ["sunflower-mammoth-russian"],
         "preHarvestIntervalDays": 30,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 62",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 64",
         "quote": "7.31 Sunflower (Sunflower Seed Subgroup 20B) Sunflower ... Pre-harvest Interval (PHI): 30 days"
       },
       {
         "cropPluginIds": ["chestnut-dunstan", "hazelnut-jefferson", "walnut-carpathian-english"],
         "preHarvestIntervalDays": 14,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 63",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 65",
         "quote": "7.32 Tree Nuts, Crop Group 14-12 Hazelnut (filbert) ... Pre-harvest Interval (PHI): 14 days"
       },
       {
@@ -10619,10 +10623,11 @@
           "sunchoke-stampede"
         ],
         "preHarvestIntervalDays": 7,
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
-        "docDate": "2025-07-24",
-        "page": "PDF page 64",
-        "quote": "7.33 Tuberous and Corm Vegetables, Crop Subgroup 1C Sweet potato Turmeric Dasheen (Taro) Ginger ... Pre-harvest Interval (PHI): 7 days"
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20260930.pdf",
+        "docDate": "2026-09-30",
+        "page": "PDF page 66",
+        "quote": "7.33 Tuberous and Corm Vegetables, Crop Subgroup 1C ... Sweet potato ... Artichoke (Chinese and ... Dasheen (Taro) Turmeric ... Jerusalem) Ginger ... 6) Pre-harvest Interval (PHI): 7 days",
+        "note": "Re-quoted 2026-10-09 (#828) from the 2026-09-30 label; the old quote joined table cells out of reading order. Value unchanged."
       }
     ],
     "merivon": [
@@ -28797,10 +28802,10 @@
         "amount": 3,
         "unit": "fl-oz"
       },
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20131122.pdf",
-      "docDate": "2013-11-22",
-      "page": 22,
-      "quote": "Apply Callisto at 3.0 fl. oz./A per application.",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20260409.pdf",
+      "docDate": "2026-04-09",
+      "page": 26,
+      "quote": "CALLISTO HERBICIDE USED ALONE – POSTEMERGENCE Apply Callisto Herbicide at 3.0 fl oz/A per application.",
       "note": "Corn section, 'CALLISTO USED ALONE - POSTEMERGENCE', which covers field corn, seed corn, yellow popcorn and sweet corn. The plugin is POST only; PRE rates (6.0 to 7.7 fl oz/A by soil) are a different use. The label also says not to apply to white popcorn or ornamental (Indian) corn; Bloody Butcher is a dent corn. Checked 2026-10-08 (#737)."
     },
     "laudis": {
@@ -29184,12 +29189,12 @@
         ],
         "amount": 6,
         "unit": "fl-oz",
-        "period": "season",
-        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20131122.pdf",
-        "docDate": "2013-11-22",
-        "page": 22,
-        "quote": "Only one postemergence application may be made if Callisto has been applied preemergence. Do not exceed a total of two applications per season. Do not exceed a total of 7.7 fl. oz./A (0.24 lb. a.i./A) of Callisto per season. • Do not make the second application within 14 days of the first application. • Application of Callisto at rates less than 3.0 fl. oz./A (0.094 lb. a.i./A) postemergence may result in incomplete weed control and loss of residual control. • Do not exceed a total of 6.0 fl. oz./A (0.19 lb. a.i./A) for the two postemergence applications.",
-        "note": "Corn section, \"Two postemergence applications of Callisto may be made with the following restrictions.\" The section covers \"field corn, seed corn, yellow popcorn, and sweet corn\" and says not to apply to white popcorn or ornamental (Indian) corn. The plugin is POST only, so the 6.0 fl oz/A postemergence total (inside the 7.7 fl oz/A season total) is the cap it carries (ruling SC-5). The two popcorn plugins are left out: the label covers only yellow popcorn and Strawberry popcorn is red, Top Pop gives no colour. The OCR layer reads \"lb.\" as \"Ib.\". Checked 2026-10-09 against the PPLS file (#820)."
+        "period": "year",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20260409.pdf",
+        "docDate": "2026-04-09",
+        "page": 26,
+        "quote": "Only one postemergence application may be made if Callisto Herbicide has been applied preemergence. Do not exceed a total of two applications per year. Do not exceed a total of 7.7 fl oz/A (0.24 lb ai/A) of Callisto Herbicide per year. x Do not make the second application within 14 days of the first application. x Application of Callisto Herbicide at rates less than 3.0 fl oz/A (0.094 lb ai/A) postemergence may result in incomplete weed control and loss of residual control. x Do not exceed a total of 6.0 fl oz/A (0.19 lb ai/A) for the two postemergence applications.",
+        "note": "Corn section, \"Two postemergence applications of Callisto may be made with the following restrictions.\" The section covers \"field corn, seed corn, yellow popcorn, and sweet corn\" and says not to apply to white popcorn or ornamental (Indian) corn. The plugin is POST only, so the 6.0 fl oz/A postemergence total (inside the 7.7 fl oz/A season total) is the cap it carries (ruling SC-5). The two popcorn plugins are left out: the label covers only yellow popcorn and Strawberry popcorn is red, Top Pop gives no colour. The OCR layer reads \"lb.\" as \"Ib.\". Checked 2026-10-09 against the PPLS file (#820). Re-quoted 2026-10-09 (#828) from the 2026-04-09 label, which keeps the 6.0 fl oz/A postemergence total, the same corn types and the white popcorn exclusion but words the totals \"per year\" where the 2013 label said \"per season\"; period changed from season to year. Both periods use the same calendar-year window in lib/safety/seasonCap.ts, so no verdict changes; only the stop text reads \"per year\"."
       }
     ],
     "laudis": [

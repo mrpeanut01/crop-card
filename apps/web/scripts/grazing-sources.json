@@ -533,25 +533,25 @@
     "resicore-rev": {
       "carryoverManureWindow": {
         "value": "silent",
-        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20220725.pdf",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20250404.pdf",
         "publisher": "Corteva Agriscience / Dow AgroSciences (EPA PPLS stamped label, GF-4556 alternate brand ResiCore REV)",
-        "date": "2022-07-25",
+        "date": "2025-04-04",
         "quote": "Do not graze or harvest rotational cover crops for food or animal feed for 18 months following the last application of GF-4556.",
         "note": "The label text (EPA registration notice dated 7/25/22, label GF-4556) has no manure, urine, compost, mulch or off-farm hay statement; the nearest livestock-feed statement is the quoted cover-crop rule."
       },
       "carryoverHayOffFarm": {
         "value": "silent",
-        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20220725.pdf",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20250404.pdf",
         "publisher": "Corteva Agriscience / Dow AgroSciences (EPA PPLS stamped label, GF-4556 alternate brand ResiCore REV)",
-        "date": "2022-07-25",
+        "date": "2025-04-04",
         "quote": "Do not graze or harvest rotational cover crops for food or animal feed for 18 months following the last application of GF-4556.",
         "note": "The label text (EPA registration notice dated 7/25/22, label GF-4556) has no manure, urine, compost, mulch or off-farm hay statement; the nearest livestock-feed statement is the quoted cover-crop rule."
       },
       "carryoverCompostWarning": {
         "value": "silent",
-        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20220725.pdf",
+        "url": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20250404.pdf",
         "publisher": "Corteva Agriscience / Dow AgroSciences (EPA PPLS stamped label, GF-4556 alternate brand ResiCore REV)",
-        "date": "2022-07-25",
+        "date": "2025-04-04",
         "quote": "Do not graze or harvest rotational cover crops for food or animal feed for 18 months following the last application of GF-4556.",
         "note": "The label text (EPA registration notice dated 7/25/22, label GF-4556) has no manure, urine, compost, mulch or off-farm hay statement; the nearest livestock-feed statement is the quoted cover-crop rule."
       }

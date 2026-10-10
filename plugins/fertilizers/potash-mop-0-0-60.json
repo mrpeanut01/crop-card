@@ -2,7 +2,7 @@
   "pluginId": "potash-mop-0-0-60",
   "type": "fertilizer",
   "displayName": "Muriate of Potash / MOP (0-0-60)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "analysis": {
     "n": 0,
@@ -18,10 +18,10 @@
   },
   "notes": "Standard K source — KCl. Avoid on chloride-sensitive crops (potato seed pieces, tobacco) — use SOP instead. Soil-test based rate.",
   "complianceFlags": {
-    "omriListed": false,
     "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": false,
-    "transitioningAllowed": false
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true,
+    "notes": "Potassium chloride—unless derived from a mined source and applied in a manner that minimizes chloride accumulation in the soil."
   },
   "pluginSchemaVersion": "1.1"
 }

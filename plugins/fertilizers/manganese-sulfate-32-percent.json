@@ -1,7 +1,7 @@
 {
   "pluginId": "manganese-sulfate-32-percent",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -18,10 +18,10 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": false,
     "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": false,
-    "transitioningAllowed": false
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true,
+    "notes": "Micronutrients—not to be used as a defoliant, herbicide, or desiccant. Those made from nitrates or chlorides are not allowed. Micronutrient deficiency must be documented by soil or tissue testing or other documented and verifiable method as approved by the certifying agent."
   },
   "notes": "Standard Mn source. Foliar application preferred for correcting Mn deficiency on soybean, sugar beet, citrus, tree fruit."
 }

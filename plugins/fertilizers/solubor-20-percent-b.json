@@ -1,7 +1,7 @@
 {
   "pluginId": "solubor-20-percent-b",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -10,7 +10,7 @@
     "k": 0
   },
   "form": "soluble",
-  "displayName": "Solubor (sodium tetraborate, 20.5% B)",
+  "displayName": "20 Mule Team Borax Solubor Sodium Borate 20.5% B (OMRI)",
   "organic": false,
   "secondaryNutrients": {
     "b": 20
@@ -21,10 +21,11 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": false,
+    "omriListed": true,
     "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": false,
-    "transitioningAllowed": false
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true,
+    "notes": "Micronutrient deficiency must be documented by soil or tissue testing or other documented and verifiable method as approved by a certifying agent. Must not be used as an herbicide, defoliant or desiccant."
   },
-  "notes": "U.S. Borax soluble sodium tetraborate. Standard B source for alfalfa, brassica, beet, tree fruit. Narrow B sufficiency window; verify need via tissue test."
+  "notes": "U.S. Borax soluble sodium borate. Standard B source for alfalfa, brassica, beet, tree fruit. Narrow B sufficiency window; verify need via tissue test."
 }

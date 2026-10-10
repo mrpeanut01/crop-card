@@ -1,7 +1,7 @@
 {
   "pluginId": "calcium-chloride-foliar",
   "type": "fertilizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
@@ -21,10 +21,10 @@
     "unit": "lb-per-acre"
   },
   "complianceFlags": {
-    "omriListed": false,
     "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": false,
-    "transitioningAllowed": false
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true,
+    "notes": "Calcium chloride, brine process is natural and prohibited for use except as a foliar spray to treat a physiological disorder associated with calcium uptake."
   },
   "notes": "High-purity calcium chloride for foliar Ca correction. Standard for blossom-end rot when soil Ca adequate but uptake limited."
 }

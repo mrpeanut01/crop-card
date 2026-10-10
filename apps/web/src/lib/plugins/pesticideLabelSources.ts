@@ -377,6 +377,58 @@ function organicFlagGaps(p: LabelSourcePlugin, sources: LabelSources): string[] 
   return [`${p.pluginId}: ${set.join(', ')} true with no OMRI listing or 7 CFR 205 quote`];
 }
 
+interface NotAllowedSource extends OrganicSource {
+  certifiedOrganicAllowed?: unknown;
+  material?: unknown;
+  inference?: unknown;
+  definition?: QuotedSource & { citation?: unknown };
+}
+
+/** #834 (ruling F834-7): `certifiedOrganicAllowed: false` reads "not allowed
+ *  for organic use", so it needs a quoted basis too: an unconditional 7 CFR
+ *  205.602 paragraph that names the material, or 205.105(a) with the 205.2
+ *  definition of synthetic and the app's own inference recorded as such. */
+function notAllowedGaps(p: LabelSourcePlugin, s: NotAllowedSource | undefined): string[] {
+  const marked = p.complianceFlags?.certifiedOrganicAllowed === false;
+  if (!marked) {
+    return s?.certifiedOrganicAllowed === false
+      ? [`${p.pluginId}: a not-allowed source but the plugin carries no false mark`]
+      : [];
+  }
+  if (p.complianceFlags?.omriListed === true || p.complianceFlags?.transitioningAllowed === true) {
+    return [`${p.pluginId}: certifiedOrganicAllowed false beside an allowed flag`];
+  }
+  if (!s || s.certifiedOrganicAllowed !== false || !isCfr205(s)) {
+    return [`${p.pluginId}: certifiedOrganicAllowed false with no 7 CFR 205 quote`];
+  }
+  const citation = s.citation as string;
+  const quote = (s.quote as string).toLowerCase();
+  if (citation.startsWith('7 CFR 205.602(')) {
+    const material = typeof s.material === 'string' ? s.material.trim().toLowerCase() : '';
+    if (!material || !quote.includes(material) || !p.displayName.toLowerCase().includes(material)) {
+      return [`${p.pluginId}: the 205.602 quote does not name the plugin's material`];
+    }
+    return /\b(unless|except)\b/.test(quote)
+      ? [`${p.pluginId}: a conditional 205.602 paragraph cannot back a not-allowed mark`]
+      : [];
+  }
+  if (citation.startsWith('7 CFR 205.105(a)')) {
+    const d = s.definition;
+    const defined =
+      !!d &&
+      d.citation === '7 CFR 205.2' &&
+      typeof d.sourceUrl === 'string' &&
+      d.sourceUrl.startsWith('https://www.ecfr.gov/') &&
+      typeof d.quote === 'string' &&
+      d.quote.startsWith('Synthetic.');
+    const inferred = typeof s.inference === 'string' && s.inference.startsWith('App inference');
+    return quote.includes('synthetic substances') && defined && inferred
+      ? []
+      : [`${p.pluginId}: a 205.105(a) basis needs the 205.2 definition and a stated inference`];
+  }
+  return [`${p.pluginId}: certifiedOrganicAllowed false must cite 205.602 or 205.105(a)`];
+}
+
 /** #805: the same organic-flag rule for fertilizer plugins, whose sources
  *  live in apps/web/scripts/fertilizer-organic-sources.json (one entry per
  *  pluginId, the shape of the `complianceFlags` section above). A name that
@@ -392,6 +444,7 @@ export function fertilizerOrganicSourceGaps(
       gaps.push(`${p.pluginId}: the name says OMRI but omriListed is not true`);
     }
     gaps.push(...organicFlagGaps(p, { complianceFlags: sources }));
+    gaps.push(...notAllowedGaps(p, sources[p.pluginId] as NotAllowedSource | undefined));
   }
   for (const id of Object.keys(sources)) {
     if (!id.startsWith('$') && !ids.has(id)) gaps.push(`${id}: source entry names no plugin`);

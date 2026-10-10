@@ -2,7 +2,7 @@
   "pluginId": "m-pede",
   "type": "insecticide",
   "displayName": "M-Pede (Gowan insecticidal soap — OMRI)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "epaRegistrationNumber": "10163-324",
   "defaultUnit": "fl-oz",
   "activeIngredients": [
@@ -24,8 +24,7 @@
     "thrips",
     "soft-bodied insects"
   ],
-  "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"prohibited-during-bloom"},
   "notes": "Organic insecticidal soap. Contact-only — must wet the pest. Phytotoxicity risk on stressed plants.",
   "complianceFlags": {
     "omriListed": true,

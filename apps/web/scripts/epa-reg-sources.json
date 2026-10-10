@@ -221,8 +221,8 @@
     },
     "m-pede": {
       "epaRegistrationNumber": "10163-324",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20210121.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, M-PEDE INSECTICIDE/MITICIDE/FUNGICIDE,01/21/2021",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20261009.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, M-PEDE INSECTICIDE/MITICIDE/FUNGICIDE,10/09/2026",
       "note": "Gowan company no. 10163; the older Dow registration was 62719-515"
     },
     "manzate-pro-stick": {
@@ -1797,24 +1797,24 @@
     "m-pede": {
       "pollinator": {
         "beeToxicity": "unknown",
-        "bloomRestriction": "none"
+        "bloomRestriction": "prohibited-during-bloom"
       },
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20210121.pdf",
-      "docDate": "2021-01-21",
-      "page": 7,
-      "quote": "Pear psylla ... PRECAUTIONS: Do not tank mix with oil. Do not apply during bloom.",
-      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. Label has no bee/pollinator statement (Environmental Hazards p4: 'may be hazardous to aquatic invertebrates' only), so relatively-nontoxic is unsupported -> unknown. Pear psylla and rosy apple aphid directions both say 'Do not apply during bloom' (p7); likely a phytotoxicity precaution, but the brief's rule maps any crop-level bloom prohibition to prohibited-during-bloom. silentLabel=true refers to bees; the bloom sentence is not bee language. Review: bloomRestriction kept at 'none' because the pome bloom ban is not bee language."
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20261009.pdf",
+      "docDate": "2026-10-09",
+      "page": 5,
+      "quote": "RESTRICTION: DO NOT make repeat applications at less than 7-day intervals ... DO NOT apply during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. Label has no bee/pollinator statement (Environmental Hazards p4: 'may be hazardous to aquatic invertebrates' only), so relatively-nontoxic is unsupported -> unknown. Pear psylla and rosy apple aphid directions both say 'Do not apply during bloom' (p7); likely a phytotoxicity precaution, but the brief's rule maps any crop-level bloom prohibition to prohibited-during-bloom. silentLabel=true refers to bees; the bloom sentence is not bee language. Review: bloomRestriction kept at 'none' because the pome bloom ban is not bee language. Re-quoted 2026-10-10 from the 2026-10-09 master label (panel M828-1, 3-0): under Timing of Application the label now says for every crop \"DO NOT apply during bloom\", so bloomRestriction is prohibited-during-bloom. The label gives no reason and still has no bee or pollinator statement (Environmental Hazards p.3 names aquatic invertebrates only), so beeToxicity stays unknown and this is not a bee-toxicity claim. The sentence \"may alter the waxy bloom on the surface of treated crops\" uses bloom in another sense and is not the basis."
     },
     "m-pede-organic": {
       "pollinator": {
         "beeToxicity": "unknown",
-        "bloomRestriction": "none"
+        "bloomRestriction": "prohibited-during-bloom"
       },
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20210121.pdf",
-      "docDate": "2021-01-21",
-      "page": 7,
-      "quote": "PRECAUTIONS: Do not tank mix with oil. Do not apply during bloom.",
-      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. Label (10163-324, Gowan) has no bee/pollinator statement at all (grep bee|pollinat|forag), so beeToxicity -> unknown. The pome-fruit sections (pear psylla, rosy apple aphid, p.7) say 'Do not apply during bloom'; the label gives no reason (likely phytotoxicity/fruit finish), but per the rule any bloom ban -> prohibited-during-bloom. Owner may choose to scope this to pome fruit only. Review: bloomRestriction kept at 'none' because the pome bloom ban is not bee language."
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20261009.pdf",
+      "docDate": "2026-10-09",
+      "page": 5,
+      "quote": "RESTRICTION: DO NOT make repeat applications at less than 7-day intervals ... DO NOT apply during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. Label (10163-324, Gowan) has no bee/pollinator statement at all (grep bee|pollinat|forag), so beeToxicity -> unknown. The pome-fruit sections (pear psylla, rosy apple aphid, p.7) say 'Do not apply during bloom'; the label gives no reason (likely phytotoxicity/fruit finish), but per the rule any bloom ban -> prohibited-during-bloom. Owner may choose to scope this to pome fruit only. Review: bloomRestriction kept at 'none' because the pome bloom ban is not bee language. Re-quoted 2026-10-10 from the 2026-10-09 master label (panel M828-1, 3-0): under Timing of Application the label now says for every crop \"DO NOT apply during bloom\", so bloomRestriction is prohibited-during-bloom. The label gives no reason and still has no bee or pollinator statement (Environmental Hazards p.3 names aquatic invertebrates only), so beeToxicity stays unknown and this is not a bee-toxicity claim. The sentence \"may alter the waxy bloom on the surface of treated crops\" uses bloom in another sense and is not the basis."
     },
     "madex-hp-virus": {
       "pollinator": {

@@ -2,9 +2,12 @@
  * Tests for the philosophy → product filter (Phase 21 / B-25).
  *
  * Covers the 4 philosophies × 3 representative flag combinations matrix
- * plus the fertilizer `organic: true` escape for the transitioning case.
+ * plus ruling OT-1: the fertilizer source-class field admits nothing.
  */
 
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -17,13 +20,14 @@ import type {
 import {
   filterByPhilosophy,
   isProductAllowed,
+  philosophyProductClass,
   philosophyRejectionReason
 } from './philosophyFilter';
+import type { Philosophy } from './setup';
 
 // Minimal valid herbicide shape with mutable complianceFlags. Real plugins
 // carry many more fields but `isProductAllowed` only reads
-// `complianceFlags` (+ `type` + `organic` for fertilizers), so a partial
-// shape is sufficient.
+// `complianceFlags` (+ `type`), so a partial shape is sufficient.
 function herbicide(id: string, flags?: HerbicidePlugin['complianceFlags']): HerbicidePlugin {
   return {
     pluginId: id,
@@ -136,9 +140,15 @@ describe('isProductAllowed — organic-transitioning', () => {
     expect(isProductAllowed(herbicide('h2'), 'organic-transitioning')).toBe(false);
   });
 
-  it('accepts fertilizer with organic: true even without complianceFlags', () => {
+  it('OT-1: does not admit a fertilizer on organic: true alone', () => {
     expect(
       isProductAllowed(fertilizer('compost', { organic: true }), 'organic-transitioning')
+    ).toBe(false);
+    expect(
+      isProductAllowed(
+        fertilizer('sulfur', { organic: false, flags: { transitioningAllowed: true } }),
+        'organic-transitioning'
+      )
     ).toBe(true);
   });
 
@@ -219,5 +229,115 @@ describe('isProductAllowed — B-18 shared organic reader', () => {
         'organic-transitioning'
       )
     ).toBe(false);
+  });
+});
+
+const ALL_PHILOSOPHIES: Philosophy[] = [
+  'conventional',
+  'no-till',
+  'non-gmo',
+  'organic-transitioning',
+  'certified-organic'
+];
+
+const REPO_ROOT = path.resolve(__dirname, '../../../../..');
+
+function shippedFertilizers(): FertilizerPlugin[] {
+  const dir = path.join(REPO_ROOT, 'plugins', 'fertilizers');
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => JSON.parse(readFileSync(path.join(dir, f), 'utf8')) as FertilizerPlugin);
+}
+
+describe('OT-1: the fertilizer source class never decides a philosophy', () => {
+  const flag = fc.option(fc.boolean(), { nil: undefined });
+  const flags = fc.option(
+    fc.record({
+      omriListed: flag,
+      certifiedOrganicAllowed: flag,
+      transitioningAllowed: flag,
+      nonGmoCompliant: flag
+    }),
+    { nil: undefined }
+  );
+
+  it('flipping organic changes no verdict, for any flags', () => {
+    fc.assert(
+      fc.property(flags, fc.constantFrom(...ALL_PHILOSOPHIES), (f, philosophy) => {
+        const yes = fertilizer('x', { organic: true, flags: f });
+        const no = fertilizer('x', { organic: false, flags: f });
+        expect(isProductAllowed(yes, philosophy)).toBe(isProductAllowed(no, philosophy));
+        expect(philosophyProductClass(yes, philosophy)).toBe(
+          philosophyProductClass(no, philosophy)
+        );
+      })
+    );
+  });
+
+  it('flipping organic changes no verdict for any shipped fertilizer', () => {
+    for (const p of shippedFertilizers()) {
+      for (const philosophy of ALL_PHILOSOPHIES) {
+        expect(
+          philosophyProductClass({ ...p, organic: !p.organic }, philosophy),
+          `${p.pluginId} under ${philosophy}`
+        ).toBe(philosophyProductClass(p, philosophy));
+      }
+    }
+  });
+
+  it('the filter and the organic readers contain no read of the field', () => {
+    const files = [
+      path.join(__dirname, 'philosophyFilter.ts'),
+      path.join(__dirname, '../organic/inputCompliance.ts'),
+      path.join(__dirname, '../server/inputsChoiceValidate.ts')
+    ];
+    for (const file of files) {
+      expect(readFileSync(file, 'utf8'), file).not.toMatch(/\.organic\b/);
+    }
+  });
+
+  it('every shipped fertilizer an organic-transitioning plan may choose has a sourced flag', () => {
+    const sources = JSON.parse(
+      readFileSync(path.join(REPO_ROOT, 'apps/web/scripts/fertilizer-organic-sources.json'), 'utf8')
+    ) as Record<string, unknown>;
+    const admitted = shippedFertilizers().filter((p) =>
+      isProductAllowed(p, 'organic-transitioning')
+    );
+    expect(admitted.length).toBeGreaterThan(0);
+    for (const p of admitted) {
+      const f = p.complianceFlags;
+      expect(f?.transitioningAllowed === true || f?.omriListed === true, p.pluginId).toBe(true);
+      expect(sources[p.pluginId], p.pluginId).toBeDefined();
+    }
+  });
+});
+
+describe('philosophyProductClass (OT-1)', () => {
+  it('a fertilizer marked neither way is not-marked for organic-transitioning only', () => {
+    const compost = fertilizer('compost', { organic: true });
+    expect(philosophyProductClass(compost, 'organic-transitioning')).toBe('not-marked');
+    expect(philosophyProductClass(compost, 'certified-organic')).toBe('not-allowed');
+    expect(philosophyProductClass(compost, 'non-gmo')).toBe('not-allowed');
+    expect(philosophyProductClass(compost, 'conventional')).toBe('allowed');
+  });
+
+  it('a fertilizer marked not allowed stays not-allowed', () => {
+    const urea = fertilizer('urea', { organic: false, flags: { certifiedOrganicAllowed: false } });
+    expect(philosophyProductClass(urea, 'organic-transitioning')).toBe('not-allowed');
+  });
+
+  it('an unmarked pesticide is never offered for a pick by hand', () => {
+    expect(philosophyProductClass(herbicide('h'), 'organic-transitioning')).toBe('not-allowed');
+    expect(philosophyProductClass(insecticide('i'), 'organic-transitioning')).toBe('not-allowed');
+    expect(philosophyProductClass(fungicide('f'), 'organic-transitioning')).toBe('not-allowed');
+  });
+
+  it('sourced flags read as allowed', () => {
+    expect(
+      philosophyProductClass(
+        fertilizer('s', { organic: false, flags: { transitioningAllowed: true } }),
+        'organic-transitioning'
+      )
+    ).toBe('allowed');
   });
 });

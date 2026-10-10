@@ -934,6 +934,12 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'inputs.opt.onHand': '{name} (en existencia)',
   'inputs.opt.some': '{name} (algo en existencia)',
   'inputs.opt.toBuy': '{name} (por comprar)',
+  'inputs.opt.notMarked': '{label}, sin marca',
+  'inputs.organicNotMarked':
+    'Sin marca para uso orgánico en nuestra biblioteca. Pregunta a tu certificador.',
+  'inputs.warn.byHand.title': 'No se eligió fertilizante para {name}',
+  'inputs.warn.byHand.body':
+    'Ningún fertilizante con marca orgánica respaldada por una fuente sirve aquí. Elige uno tú y pregunta a tu certificador.',
   'inputs.warn.thisPlanting': 'esta siembra',
   'inputs.warn.noCompliant.title': 'No hay un producto compatible para {name}',
   'inputs.warn.noCompliant.body':

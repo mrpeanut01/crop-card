@@ -122,10 +122,15 @@
     onChoicesChange?.(choices);
   }
 
-  function optionLabel(o: InputsPlanProductOption): string {
+  function stockLabel(o: InputsPlanProductOption): string {
     if (o.stock === 'enough') return tr('inputs.opt.onHand', { name: o.displayName });
     if (o.stock === 'some') return tr('inputs.opt.some', { name: o.displayName });
     return tr('inputs.opt.toBuy', { name: o.displayName });
+  }
+
+  function optionLabel(o: InputsPlanProductOption): string {
+    const label = stockLabel(o);
+    return o.organicMark === 'not-marked' ? tr('inputs.opt.notMarked', { label }) : label;
   }
 
   function sourceFor(app: InputsPlanApplication): 'plugin' | 'data' | 'ai' | 'manual' | 'fallback' {
@@ -144,6 +149,12 @@
       tr('inputs.warn.thisPlanting');
     switch (w.kind) {
       case 'no-compliant-product':
+        if (w.byHand) {
+          return {
+            title: tr('inputs.warn.byHand.title', { name: plantingName }),
+            body: tr('inputs.warn.byHand.body')
+          };
+        }
         return {
           title: tr('inputs.warn.noCompliant.title', { name: plantingName }),
           body: tr('inputs.warn.noCompliant.body', { reason: noCompliantReason(w) })
@@ -442,6 +453,7 @@
 
                 {#each apps as app (app.id)}
                   {@const opts = app.options ?? []}
+                  {@const picked = opts.find((o) => o.pluginId === app.productPluginId)}
                   <div class="row app-row" class:rejected={rejectedAppIds.has(app.id)}>
                     <input
                       type="checkbox"
@@ -487,6 +499,20 @@
                         <Provenance source={sourceFor(app)} compact />
                       </div>
                       <p class="rationale">{localizeRationale(app.rationale, currentPrefs())}</p>
+                      {#if picked?.organicMark === 'not-marked'}
+                        <p class="rationale" data-testid="organic-not-marked">
+                          {tr('inputs.organicNotMarked')}
+                        </p>
+                      {:else if picked?.organicCondition}
+                        <p
+                          class="rationale"
+                          lang="en"
+                          data-english-only="regulatory"
+                          data-testid="organic-condition"
+                        >
+                          {picked.organicCondition}
+                        </p>
+                      {/if}
                       {#if (app.coversPlantingIds?.length ?? 0) > 1}
                         <p class="rationale" data-testid="bed-wide">
                           {tr('inputs.bedWide', { count: app.coversPlantingIds?.length ?? 0 })}

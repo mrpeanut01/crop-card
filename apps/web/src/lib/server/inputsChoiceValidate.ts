@@ -2,13 +2,15 @@
  * #480 — server re-check of every product being committed from the Inputs
  * step. `productSource` is set by the client, so it is never trusted: every
  * row with a product is checked, in the same order as the AI validator pyramid: the season's
- * philosophy filter, then crop compatibility, then the label rate ceiling.
+ * philosophy filter (OT-1: a fertilizer the library marks neither way passes
+ * here for an organic-transitioning season, since only the farmer can have
+ * picked it), then crop compatibility, then the label rate ceiling.
  * Crop compatibility is checked where the crop is already in the ground
  * (post-emergent herbicides); a burndown or pre-emergent spray goes on
  * before the crop is up.
  */
 
-import { isProductAllowed } from '$lib/season/philosophyFilter';
+import { philosophyProductClass } from '$lib/season/philosophyFilter';
 import type { Philosophy } from '$lib/season/setup';
 import { checkCropCompatibility } from '$lib/safety/cropCompatibility';
 import type { ChemistryClass } from '$lib/safety/types';
@@ -47,7 +49,10 @@ export function validateManualChoices(
     }
     if (
       ctx.philosophy &&
-      !isProductAllowed(plugin as Parameters<typeof isProductAllowed>[0], ctx.philosophy)
+      philosophyProductClass(
+        plugin as Parameters<typeof philosophyProductClass>[0],
+        ctx.philosophy
+      ) === 'not-allowed'
     ) {
       problems.push(`${plugin.displayName} is not allowed under your ${ctx.philosophy} season.`);
       continue;

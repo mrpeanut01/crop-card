@@ -143,4 +143,36 @@ describe('manual input choices (#480)', () => {
       expect(problems[0]).toMatch(/no label rate on file, only a typical rate/);
     }
   });
+
+  it('OT-1: an organic-transitioning season takes an unmarked fertilizer picked by hand', () => {
+    const ferts = new Map<string, { type: string; pluginId: string; displayName: string }>([
+      ['compost', { type: 'fertilizer', pluginId: 'compost', displayName: 'Compost' }],
+      [
+        'urea',
+        {
+          type: 'fertilizer',
+          pluginId: 'urea',
+          displayName: 'Urea',
+          complianceFlags: { certifiedOrganicAllowed: false }
+        } as { type: string; pluginId: string; displayName: string }
+      ]
+    ]);
+    const fert = (productPluginId: string) =>
+      choice({
+        slot: 'pre-plant-fertility',
+        productCategory: 'fertilizer',
+        productPluginId,
+        rateAmount: 100
+      });
+    const ctx = { products: ferts, cropPlugins };
+    expect(
+      validateManualChoices([fert('compost')], { ...ctx, philosophy: 'organic-transitioning' })
+    ).toEqual([]);
+    expect(
+      validateManualChoices([fert('urea')], { ...ctx, philosophy: 'organic-transitioning' })[0]
+    ).toMatch(/not allowed under your organic-transitioning season/);
+    expect(
+      validateManualChoices([fert('compost')], { ...ctx, philosophy: 'certified-organic' })[0]
+    ).toMatch(/not allowed under your certified-organic season/);
+  });
 });

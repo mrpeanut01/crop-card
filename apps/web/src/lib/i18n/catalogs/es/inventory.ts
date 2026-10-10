@@ -329,10 +329,10 @@ export const esInventory: Partial<Record<MessageKey, string>> = {
     'No hay etiqueta de producto vinculada, así que se desconoce el análisis de abajo y los planes de nutrientes no pueden usarlo. Vincula el producto con Editar.',
   'inv.fert.application': 'Aplicación',
   'inv.fert.noRange': 'No se declaró un rango de aplicación.',
-  'inv.fert.approachClass': 'Clase de enfoque',
-  'inv.fert.organic': 'Fuente orgánica',
+  'inv.fert.approachClass': 'Clase de fuente',
+  'inv.fert.organic': 'Fuente natural',
   'inv.fert.organicUse': 'Uso orgánico',
-  'inv.fert.conventional': 'Convencional',
+  'inv.fert.conventional': 'Fabricado',
   'inv.fert.impact': 'Efecto en el plan de nutrientes',
   'inv.fert.impactNote':
     'Las dosis por acre pasan por `inputsPlan.ts` cuando este producto es la opción permitida por la filosofía del enfoque de fertilidad de la temporada.',

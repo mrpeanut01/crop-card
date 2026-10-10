@@ -60,7 +60,12 @@ import type {
   SprayWindowPurpose
 } from '$lib/plugins/schemas';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
-import { isProductAllowed } from '$lib/season/philosophyFilter';
+import {
+  isProductAllowed,
+  philosophyProductClass,
+  type PhilosophyProductClass
+} from '$lib/season/philosophyFilter';
+import { organicInputClass } from '$lib/organic/inputCompliance';
 import { effectiveWeedGate, weedStrategyAllows } from '$lib/season/sprayWindowFilter';
 import { nCreditForIntent } from '$lib/fertility/coverCropCredits';
 import { nextCalendarWindow } from './calendarWords';
@@ -375,6 +380,8 @@ export type PlannerWarning =
       plantingId: string;
       slot: SprayWindowPurpose | 'pre-plant-fertility';
       reason: string;
+      /** OT-1: unmarked fertilizers are listed for a pick by hand. */
+      byHand?: true;
     }
   | {
       kind: 'missing-yield-goal';
@@ -577,6 +584,8 @@ interface Candidate {
   rateAmount: number | null;
   rateUnit: string | null;
   rateProvenance?: RateProvenance | null;
+  organicMark?: 'not-marked';
+  organicCondition?: string;
 }
 
 /** A fertilizer that supplies none of the budgeted nutrients (lime, gypsum,
@@ -619,7 +628,9 @@ function rankCandidates(
         ...(c.rateProvenance ? { rateProvenance: c.rateProvenance } : {}),
         totalAmount: total,
         onHand: round2(onHand ?? 0),
-        stock: stockCoverage(onHand, total)
+        stock: stockCoverage(onHand, total),
+        ...(c.organicMark ? { organicMark: c.organicMark } : {}),
+        ...(c.organicCondition ? { organicCondition: c.organicCondition } : {})
       }
     };
   });
@@ -631,10 +642,12 @@ function rankCandidates(
 
 /** The chosen product's fields for an application, plus its options. Takes
  *  the pick's amount out of `stockLeft` so a later application sees what is
- *  really left. */
+ *  really left. `byHand` products are listed after the ranked ones and are
+ *  never the pick (OT-1). */
 function chooseProduct(
   ranked: ReadonlyArray<Ranked>,
-  stockLeft: Map<string, StockAmount[]>
+  stockLeft: Map<string, StockAmount[]>,
+  byHand: ReadonlyArray<Ranked> = []
 ): Pick<
   InputsPlanApplication,
   | 'productPluginId'
@@ -647,7 +660,7 @@ function chooseProduct(
   | 'options'
 > {
   const pick = ranked[0];
-  const options = ranked.slice(0, MAX_OPTIONS).map((r) => r.option);
+  const options = [...ranked, ...byHand].slice(0, MAX_OPTIONS).map((r) => r.option);
   if (!pick) {
     return {
       productPluginId: null,
@@ -748,15 +761,18 @@ function allowedCandidates<T extends Parameters<typeof isProductAllowed>[0]>(
  *  `'n'` puts the highest-N first; `'balanced'` puts products with all
  *  three nutrients first. Compost and cover-crop approaches prefer
  *  `organic === true` products when any are allowed, and the synthetic
- *  approach prefers the ones that are not, keeping any the farm holds. */
+ *  approach prefers the ones that are not, keeping any the farm holds.
+ *  `organic` is the app's source class (plant, animal or mined material)
+ *  and only orders products here; it never admits one (OT-1). */
 function fertilizerPreference(
   pool: ReadonlyArray<FertilizerPlugin>,
   philosophy: Philosophy,
   emphasis: 'n' | 'balanced',
   approach: FertilityApproach,
-  held: ReadonlySet<string> = new Set()
+  held: ReadonlySet<string> = new Set(),
+  cls: PhilosophyProductClass = 'allowed'
 ): FertilizerPlugin[] {
-  const allowed = pool.filter((p) => isProductAllowed(p, philosophy));
+  const allowed = pool.filter((p) => philosophyProductClass(p, philosophy) === cls);
   if (allowed.length === 0) return [];
   const approachFiltered =
     approach === 'compost-amendments' || approach === 'cover-crop-credits'
@@ -770,6 +786,49 @@ function fertilizerPreference(
     p.analysis.n > 0 && p.analysis.p > 0 && p.analysis.k > 0;
   return [...pool2.filter(complete), ...pool2.filter((p) => !complete(p))];
 }
+
+const ORGANIC_PHILOSOPHIES: ReadonlySet<Philosophy> = new Set([
+  'organic-transitioning',
+  'certified-organic'
+]);
+
+/** Fertilizer candidates for a slot: `planned` are the philosophy-allowed
+ *  ones the planner may choose; `byHand` are the ones the library marks
+ *  neither way, which only the farmer may pick (OT-1). */
+function fertilizerCandidates(
+  pool: ReadonlyArray<FertilizerPlugin>,
+  philosophy: Philosophy,
+  emphasis: 'n' | 'balanced',
+  approach: FertilityApproach,
+  held: ReadonlySet<string>,
+  rate: (f: FertilizerPlugin) => { amount: number | null; unit: string | null }
+): { planned: Candidate[]; byHand: Candidate[] } {
+  const build = (cls: PhilosophyProductClass): Candidate[] =>
+    fertilizerPreference(pool, philosophy, emphasis, approach, held, cls)
+      .map((f): Candidate => {
+        const r = rate(f);
+        const condition =
+          cls === 'allowed' &&
+          ORGANIC_PHILOSOPHIES.has(philosophy) &&
+          organicInputClass(f) === 'allowed'
+            ? f.complianceFlags?.notes
+            : undefined;
+        return {
+          plugin: f,
+          rateAmount: r.amount,
+          rateUnit: r.unit,
+          ...(cls === 'not-marked' ? { organicMark: 'not-marked' as const } : {}),
+          ...(condition ? { organicCondition: condition } : {})
+        };
+      })
+      .filter(suppliesBudget);
+  return { planned: build('allowed'), byHand: build('not-marked') };
+}
+
+/** OT-1: nothing with a sourced mark fits, and unmarked fertilizers are
+ *  listed for a pick by hand. */
+const BY_HAND_REASON =
+  'No fertilizer with a sourced organic mark fits. Pick one yourself and ask your certifier.';
 
 /** Pre-plant fertilizer rate in lb/acre derived from the dominant
  *  deficit nutrient + the fertilizer's analysis. Returns 0 when the
@@ -1016,22 +1075,25 @@ function planForPlanting(
       continue;
     }
 
-    const { category, candidates } = candidatesForPurpose(
-      window,
-      window.purpose,
-      productPlugins,
-      seasonSetup.philosophy,
-      crop
+    const {
+      category,
+      candidates,
+      byHand = []
+    } = candidatesForPurpose(window, window.purpose, productPlugins, seasonSetup.philosophy, crop);
+    const choice = chooseProduct(
+      rankCandidates(candidates, acres, stockLeft),
+      stockLeft,
+      rankCandidates(byHand, acres, stockLeft)
     );
-    const choice = chooseProduct(rankCandidates(candidates, acres, stockLeft), stockLeft);
 
     if (!choice.productPluginId) {
-      const reason = reasonForEmptyPool(window.purpose, seasonSetup.philosophy);
       warnings.push({
         kind: 'no-compliant-product',
         plantingId: planting.id,
         slot: window.purpose,
-        reason
+        ...(byHand.length > 0
+          ? { reason: BY_HAND_REASON, byHand: true as const }
+          : { reason: reasonForEmptyPool(window.purpose, seasonSetup.philosophy) })
       });
     }
 
@@ -1093,28 +1155,18 @@ function planForPlanting(
 
     if (totalDeficit > 0) {
       const emphasis = deficit.n >= deficit.p && deficit.n >= deficit.k ? 'n' : 'balanced';
+      const cands = fertilizerCandidates(
+        productPlugins.fertilizers,
+        seasonSetup.philosophy,
+        emphasis,
+        seasonSetup.fertilityApproach,
+        held,
+        (f) => ({ amount: fertilizerRateFromDeficit(deficit, f) || null, unit: 'lb' })
+      );
       const choice = chooseProduct(
-        rankCandidates(
-          fertilizerPreference(
-            productPlugins.fertilizers,
-            seasonSetup.philosophy,
-            emphasis,
-            seasonSetup.fertilityApproach,
-            held
-          )
-            .map((f) => {
-              const rate = fertilizerRateFromDeficit(deficit, f);
-              return {
-                plugin: f,
-                rateAmount: rate || null,
-                rateUnit: 'lb'
-              };
-            })
-            .filter(suppliesBudget),
-          acres,
-          stockLeft
-        ),
-        stockLeft
+        rankCandidates(cands.planned, acres, stockLeft),
+        stockLeft,
+        rankCandidates(cands.byHand, acres, stockLeft)
       );
 
       if (!choice.productPluginId) {
@@ -1122,7 +1174,11 @@ function planForPlanting(
           kind: 'no-compliant-product',
           plantingId: planting.id,
           slot: 'pre-plant-fertility',
-          reason: `No ${seasonSetup.philosophy}-compliant fertilizer in catalog for ${seasonSetup.fertilityApproach} approach.`
+          ...(cands.byHand.length > 0
+            ? { reason: BY_HAND_REASON, byHand: true as const }
+            : {
+                reason: `No ${seasonSetup.philosophy}-compliant fertilizer in catalog for ${seasonSetup.fertilityApproach} approach.`
+              })
         });
       }
 
@@ -1169,25 +1225,21 @@ function planForPlanting(
     !(crop.sprayWindows ?? []).some((w) => w.purpose === 'sidedress-n')
   ) {
     const sidedressRate = 40; // lb-N/acre conservative split application
+    const cands = fertilizerCandidates(
+      productPlugins.fertilizers,
+      seasonSetup.philosophy,
+      'n',
+      seasonSetup.fertilityApproach,
+      held,
+      (f) => ({
+        amount: f.analysis.n > 0 ? Math.ceil(sidedressRate / (f.analysis.n / 100)) : null,
+        unit: 'lb'
+      })
+    );
     const choice = chooseProduct(
-      rankCandidates(
-        fertilizerPreference(
-          productPlugins.fertilizers,
-          seasonSetup.philosophy,
-          'n',
-          seasonSetup.fertilityApproach,
-          held
-        )
-          .map((f) => ({
-            plugin: f,
-            rateAmount: f.analysis.n > 0 ? Math.ceil(sidedressRate / (f.analysis.n / 100)) : null,
-            rateUnit: 'lb'
-          }))
-          .filter(suppliesBudget),
-        acres,
-        stockLeft
-      ),
-      stockLeft
+      rankCandidates(cands.planned, acres, stockLeft),
+      stockLeft,
+      rankCandidates(cands.byHand, acres, stockLeft)
     );
 
     if (!choice.productPluginId) {
@@ -1195,7 +1247,11 @@ function planForPlanting(
         kind: 'no-compliant-product',
         plantingId: planting.id,
         slot: 'sidedress-n',
-        reason: `No ${seasonSetup.philosophy}-compliant high-N fertilizer available for sidedress.`
+        ...(cands.byHand.length > 0
+          ? { reason: BY_HAND_REASON, byHand: true as const }
+          : {
+              reason: `No ${seasonSetup.philosophy}-compliant high-N fertilizer available for sidedress.`
+            })
       });
     }
 
@@ -1243,32 +1299,32 @@ function planForPlanting(
         });
         return;
       }
+      const cands = fertilizerCandidates(
+        productPlugins.fertilizers,
+        seasonSetup.philosophy,
+        'n',
+        seasonSetup.fertilityApproach,
+        held,
+        (f) => ({
+          amount: f.analysis.n > 0 ? Math.ceil(t.nLbPerAcre / (f.analysis.n / 100)) : null,
+          unit: 'lb'
+        })
+      );
       const choice = chooseProduct(
-        rankCandidates(
-          fertilizerPreference(
-            productPlugins.fertilizers,
-            seasonSetup.philosophy,
-            'n',
-            seasonSetup.fertilityApproach,
-            held
-          )
-            .map((f) => ({
-              plugin: f,
-              rateAmount: f.analysis.n > 0 ? Math.ceil(t.nLbPerAcre / (f.analysis.n / 100)) : null,
-              rateUnit: 'lb'
-            }))
-            .filter(suppliesBudget),
-          acres,
-          stockLeft
-        ),
-        stockLeft
+        rankCandidates(cands.planned, acres, stockLeft),
+        stockLeft,
+        rankCandidates(cands.byHand, acres, stockLeft)
       );
       if (!choice.productPluginId) {
         warnings.push({
           kind: 'no-compliant-product',
           plantingId: planting.id,
           slot: 'sidedress-n',
-          reason: `No ${seasonSetup.philosophy}-compliant high-N fertilizer available for topdress.`
+          ...(cands.byHand.length > 0
+            ? { reason: BY_HAND_REASON, byHand: true as const }
+            : {
+                reason: `No ${seasonSetup.philosophy}-compliant high-N fertilizer available for topdress.`
+              })
         });
       }
       const { startMs, endMs } = t.calendar
@@ -1383,6 +1439,7 @@ function planForPlanting(
 interface PurposeCandidates {
   category: 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer';
   candidates: Candidate[];
+  byHand?: Candidate[];
 }
 
 function candidatesForPurpose(
@@ -1415,7 +1472,15 @@ function candidatesForPurpose(
         category: 'fertilizer',
         candidates: fertilizerPreference(pools.fertilizers, philosophy, 'n', 'mixed').map(
           rateCandidate
-        )
+        ),
+        byHand: fertilizerPreference(
+          pools.fertilizers,
+          philosophy,
+          'n',
+          'mixed',
+          new Set(),
+          'not-marked'
+        ).map((f) => ({ ...rateCandidate(f), organicMark: 'not-marked' as const }))
       };
   }
 }

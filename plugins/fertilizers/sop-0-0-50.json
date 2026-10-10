@@ -2,7 +2,7 @@
   "pluginId": "sop-0-0-50",
   "type": "fertilizer",
   "displayName": "Sulfate of Potash / SOP (0-0-50, +18S)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "defaultUnit": "lb",
   "analysis": {
     "n": 0,
@@ -21,10 +21,7 @@
   },
   "notes": "K + S without chloride. For chloride-sensitive crops (potato, tobacco, vegetables, tree fruit). More expensive than MOP.",
   "complianceFlags": {
-    "omriListed": false,
-    "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": false,
-    "transitioningAllowed": false
+    "nonGmoCompliant": true
   },
   "pluginSchemaVersion": "1.1"
 }

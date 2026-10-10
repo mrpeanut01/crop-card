@@ -83,3 +83,13 @@ Three panelists (safety, farmer usability, data provenance) ruled on the judgmen
 | D828-5 | Deadline M-Ps default rate vs the 2024 label              | B, 3-0 | Lower the default from 20 to 10 lb/acre, the lowest per-crop maximum on the 2024 label (soybean; read visually, no text layer), so the default never exceeds the label. 10 stays within the 2015 text quote. |
 
 Re-stamped labels that are scanned or font-encoded, EPA letters, expired supplemental labels and transfers with no label filed under the new number were acknowledged in `apps/web/scripts/source-fingerprints.json` with a checkable reason, after every stored value was compared with the new document.
+
+## M-Pede 2026 label (2026-10-10)
+
+EPA stamped a rewritten M-Pede master label (10163-324) on 2026-10-09, after the #828 list was written. Three panelists (safety, farmer usability, data provenance) ruled on it.
+
+| Id     | Question                                                                                                         | Vote | Outcome                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------ | ---------------------------------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M828-1 | The label now says "DO NOT apply during bloom" under Timing of Application for every crop, with no bee statement | 3-0  | Re-quote from the 2026 label and set `bloomRestriction: prohibited-during-bloom`. `beeToxicity` stays `unknown`, the legacy `pollinatorRisk` hint is removed (a bee-silent label that restricts bloom carries none), and the source note says the label gives no reason and makes no bee claim. Stricter only; no kernel code changed, so `RULES_VERSION` is unchanged. REI 12 h and PHI 0 days are unchanged. |
+
+Cost accepted by the panel: crops that read as in bloom all season (squash, tomatoes, alfalfa) refuse M-Pede once the farmer answers that the block is in bloom, which is what the label now says.

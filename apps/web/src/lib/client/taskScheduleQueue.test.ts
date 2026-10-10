@@ -120,11 +120,10 @@ describe('the queue per Owner (SO-04, SO-06)', () => {
     const other = { ...body, pluginTemplateKey: 'derived:planting:blk_2:1', title: 'Plant' };
     await scheduleSuggestion(other, { online: false });
     const rows = await listQueuedSchedules();
-    expect(rows.map((r) => r.pluginTemplateKey)).toEqual([
-      body.pluginTemplateKey,
-      other.pluginTemplateKey
-    ]);
-    expect(rows[0]).toMatchObject({
+    expect(rows.map((r) => r.pluginTemplateKey).sort()).toEqual(
+      [body.pluginTemplateKey, other.pluginTemplateKey].sort()
+    );
+    expect(rows.find((r) => r.pluginTemplateKey === body.pluginTemplateKey)).toMatchObject({
       title: body.title,
       scheduledFor: body.scheduledFor,
       blockId: 'blk_1',

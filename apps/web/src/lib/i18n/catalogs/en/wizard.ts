@@ -898,7 +898,8 @@ export const enWizard = {
   'inputs.slot.sidedress-other': 'sidedress other',
   'inputs.slot.cover-terminate': 'cover terminate',
   'inputs.slot.pre-plant-fertility': 'pre plant fertility',
-  'inputs.warn.poolReason': 'No {philosophy}-compliant {family} in catalog covers the {slot} slot.',
+  'inputs.warn.poolReason':
+    'No {family} in our library is marked for {philosophy} and fits the {slot} slot.',
   'inputs.opt.onHand': '{name} (on hand)',
   'inputs.opt.some': '{name} (some on hand)',
   'inputs.opt.toBuy': '{name} (to buy)',
@@ -908,9 +909,9 @@ export const enWizard = {
   'inputs.warn.byHand.body':
     'No fertilizer with a sourced organic mark fits. Pick one yourself and ask your certifier.',
   'inputs.warn.thisPlanting': 'this planting',
-  'inputs.warn.noCompliant.title': 'No compliant product for {name}',
+  'inputs.warn.noCompliant.title': 'No product to suggest for {name}',
   'inputs.warn.noCompliant.body':
-    '{reason} — review on /settings/season and /inventory, or relax the philosophy filter.',
+    '{reason} Nothing is planned for this step. Check your growing approach in Settings, Season Setup. You can add a product in Inventory.',
   'inputs.warn.yield.title': 'No fertility planned for {name}',
   'inputs.warn.yield.body':
     'The crop library has no nutrient default for the "{family}" family, so no pre-plant fertility was planned for it. Use your soil test and extension guide to set a rate.',

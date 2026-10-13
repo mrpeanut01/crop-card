@@ -605,9 +605,9 @@ const MAX_OPTIONS = 40;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Orders candidates so an allowed product the farm has always beats one it
- *  would have to buy: enough on hand, then some, then none. Ties keep the
- *  catalog preference order the candidates arrive in. */
+/** Orders candidates: one with no organic condition before one with a
+ *  condition (W842-3), then enough on hand, then some, then none. Ties keep
+ *  the preference order the candidates arrive in. */
 function rankCandidates(
   candidates: ReadonlyArray<Candidate>,
   acres: number,
@@ -635,7 +635,10 @@ function rankCandidates(
     };
   });
   ranked.sort(
-    (a, b) => STOCK_COVERAGE_RANK[a.option.stock] - STOCK_COVERAGE_RANK[b.option.stock] || a.i - b.i
+    (a, b) =>
+      Number(Boolean(a.organicCondition)) - Number(Boolean(b.organicCondition)) ||
+      STOCK_COVERAGE_RANK[a.option.stock] - STOCK_COVERAGE_RANK[b.option.stock] ||
+      a.i - b.i
   );
   return ranked.map(({ i: _i, ...r }) => r);
 }
@@ -1177,7 +1180,7 @@ function planForPlanting(
           ...(cands.byHand.length > 0
             ? { reason: BY_HAND_REASON, byHand: true as const }
             : {
-                reason: `No ${seasonSetup.philosophy}-compliant fertilizer in catalog for ${seasonSetup.fertilityApproach} approach.`
+                reason: `No fertilizer in our library is marked for ${seasonSetup.philosophy} and fits the ${seasonSetup.fertilityApproach} approach.`
               })
         });
       }
@@ -1250,7 +1253,7 @@ function planForPlanting(
         ...(cands.byHand.length > 0
           ? { reason: BY_HAND_REASON, byHand: true as const }
           : {
-              reason: `No ${seasonSetup.philosophy}-compliant high-N fertilizer available for sidedress.`
+              reason: `No high-nitrogen fertilizer in our library is marked for ${seasonSetup.philosophy} for sidedress.`
             })
       });
     }
@@ -1323,7 +1326,7 @@ function planForPlanting(
           ...(cands.byHand.length > 0
             ? { reason: BY_HAND_REASON, byHand: true as const }
             : {
-                reason: `No ${seasonSetup.philosophy}-compliant high-N fertilizer available for topdress.`
+                reason: `No high-nitrogen fertilizer in our library is marked for ${seasonSetup.philosophy} for topdress.`
               })
         });
       }
@@ -1379,7 +1382,7 @@ function planForPlanting(
           kind: 'no-compliant-product',
           plantingId: planting.id,
           slot: 'cover-terminate',
-          reason: `No ${seasonSetup.philosophy}-compliant herbicide for cover-crop termination.`
+          reason: `No herbicide in our library is marked for ${seasonSetup.philosophy} for cover-crop termination.`
         });
       }
     }
@@ -1500,7 +1503,7 @@ function reasonForEmptyPool(
         : slot === 'fungicide'
           ? 'fungicide'
           : 'fertilizer';
-  return `No ${philosophy}-compliant ${family} in catalog covers the ${slot} slot.`;
+  return `No ${family} in our library is marked for ${philosophy} and fits the ${slot} slot.`;
 }
 
 /* ─── Public entrypoint ─────────────────────────────────────────────── */

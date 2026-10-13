@@ -930,7 +930,7 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'inputs.slot.cover-terminate': 'terminar cobertura',
   'inputs.slot.pre-plant-fertility': 'fertilización antes de sembrar',
   'inputs.warn.poolReason':
-    'Ningún {family} compatible con el enfoque {philosophy} en el catálogo cubre la etapa {slot}.',
+    'Ningún {family} de nuestra biblioteca está marcado para el enfoque {philosophy} y sirve para la etapa {slot}.',
   'inputs.opt.onHand': '{name} (en existencia)',
   'inputs.opt.some': '{name} (algo en existencia)',
   'inputs.opt.toBuy': '{name} (por comprar)',
@@ -941,9 +941,9 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'inputs.warn.byHand.body':
     'Ningún fertilizante con marca orgánica respaldada por una fuente sirve aquí. Elige uno tú y pregunta a tu certificador.',
   'inputs.warn.thisPlanting': 'esta siembra',
-  'inputs.warn.noCompliant.title': 'No hay un producto compatible para {name}',
+  'inputs.warn.noCompliant.title': 'No hay producto que sugerir para {name}',
   'inputs.warn.noCompliant.body':
-    '{reason} Revisa /settings/season y /inventory, o flexibiliza el filtro de enfoque.',
+    '{reason} No se planificó nada para este paso. Revisa tu enfoque de cultivo en Configuración, Configuración de temporada. Puedes agregar un producto en Inventario.',
   'inputs.warn.yield.title': 'No se planificó fertilización para {name}',
   'inputs.warn.yield.body':
     'La biblioteca de cultivos no tiene valores de nutrientes predeterminados para la familia "{family}", así que no se planificó fertilización antes de sembrar. Usa tu análisis de suelo y la guía de extensión para fijar una dosis.',

@@ -9,6 +9,12 @@ import {
   traitClaimSourceGaps,
   type LabelSourcePlugin
 } from './pesticideLabelSources';
+import {
+  isProductAllowed,
+  philosophyProductClass,
+  type FilterableInputPlugin
+} from '../season/philosophyFilter';
+import { PHILOSOPHY_VALUES } from '../season/setup';
 import { hracGroupOf } from '$lib/safety/cropFamilyLethality';
 import type { ChemistryClass } from '$lib/safety/types';
 
@@ -320,11 +326,17 @@ describe('pesticide label sources (#640 #661 #716)', () => {
     };
 
     it('refuses an allowed flag with no source', () => {
-      for (const k of ['omriListed', 'certifiedOrganicAllowed', 'transitioningAllowed']) {
+      for (const k of ['omriListed', 'certifiedOrganicAllowed']) {
         expect(
           pesticideLabelSourceGaps([{ ...base, complianceFlags: { [k]: true } }], {})
         ).toHaveLength(1);
       }
+      expect(
+        pesticideLabelSourceGaps([{ ...base, complianceFlags: { transitioningAllowed: true } }], {})
+      ).toEqual([
+        'x: transitioningAllowed true needs certifiedOrganicAllowed or omriListed true (7 CFR 205.202(b))',
+        'x: transitioningAllowed true with no OMRI listing or 7 CFR 205 quote'
+      ]);
       expect(
         pesticideLabelSourceGaps([{ ...base, complianceFlags: { omriListed: false } }], {})
       ).toEqual([]);
@@ -374,6 +386,77 @@ describe('pesticide label sources (#640 #661 #716)', () => {
           complianceFlags: { x: { ...cfr, sourceUrl: 'https://example.com/205' } }
         })
       ).toHaveLength(1);
+    });
+
+    it('transitioningAllowed follows the certified flags (#841, G841-1, G841-3)', () => {
+      const listed = { omriListed: true, sourceUrl: omri, quote: listing };
+      const gaps = (flags: LabelSourcePlugin['complianceFlags'], src: object = cfr) =>
+        pesticideLabelSourceGaps([{ ...base, complianceFlags: flags }], {
+          complianceFlags: { x: src }
+        });
+      const needs =
+        'x: transitioningAllowed true needs certifiedOrganicAllowed or omriListed true (7 CFR 205.202(b))';
+      const beside =
+        'x: transitioningAllowed false beside certifiedOrganicAllowed or omriListed true';
+      expect(gaps({ transitioningAllowed: true })).toEqual([needs]);
+      expect(gaps({ transitioningAllowed: true }, listed)).toEqual([needs]);
+      expect(gaps({ certifiedOrganicAllowed: false, transitioningAllowed: true })).toEqual([needs]);
+      expect(gaps({ certifiedOrganicAllowed: true, transitioningAllowed: false })).toEqual([
+        beside
+      ]);
+      expect(
+        gaps(
+          { omriListed: true, certifiedOrganicAllowed: true, transitioningAllowed: false },
+          listed
+        )
+      ).toEqual([beside]);
+      expect(gaps({ certifiedOrganicAllowed: true })).toEqual([]);
+      expect(gaps({ omriListed: true, certifiedOrganicAllowed: true }, listed)).toEqual([]);
+      expect(gaps({ omriListed: true, transitioningAllowed: true }, listed)).toEqual([]);
+      expect(gaps({ certifiedOrganicAllowed: false, transitioningAllowed: false })).toEqual([]);
+      expect(
+        pesticideLabelSourceGaps(
+          [{ ...base, complianceFlags: { transitioningAllowed: false } }],
+          {}
+        )
+      ).toEqual([]);
+    });
+
+    it('aza-direct and m-pede keep every planner verdict with the flag set true (G841-3)', () => {
+      const byId = new Map(loadPesticides().map((p) => [p.pluginId, p]));
+      for (const id of ['aza-direct', 'm-pede']) {
+        const now = byId.get(id) as unknown as FilterableInputPlugin;
+        expect(now.complianceFlags?.transitioningAllowed).toBe(true);
+        const before = {
+          ...now,
+          complianceFlags: { ...now.complianceFlags, transitioningAllowed: false }
+        } as FilterableInputPlugin;
+        for (const philosophy of PHILOSOPHY_VALUES) {
+          expect(isProductAllowed(now, philosophy)).toBe(isProductAllowed(before, philosophy));
+          expect(philosophyProductClass(now, philosophy)).toBe(
+            philosophyProductClass(before, philosophy)
+          );
+        }
+        expect(isProductAllowed(now, 'organic-transitioning')).toBe(true);
+        expect(isProductAllowed(now, 'certified-organic')).toBe(true);
+      }
+      for (const id of ['regalia', 'serenade-aso']) {
+        expect(byId.has(id)).toBe(true);
+        expect(byId.get(id)?.complianceFlags?.transitioningAllowed).toBeUndefined();
+      }
+    });
+
+    it('no shipped pesticide or fertilizer sets transitioningAllowed against its certified flags', () => {
+      const dir = path.join(REPO_ROOT, 'plugins', 'fertilizers');
+      const fertilizers = readdirSync(dir)
+        .filter((x) => x.endsWith('.json'))
+        .map((f) => JSON.parse(readFileSync(path.join(dir, f), 'utf8')) as LabelSourcePlugin);
+      for (const p of [...loadPesticides(), ...fertilizers]) {
+        const flags = p.complianceFlags;
+        if (flags?.transitioningAllowed === undefined) continue;
+        const certified = flags.certifiedOrganicAllowed === true || flags.omriListed === true;
+        expect(`${p.pluginId}: ${flags.transitioningAllowed}`).toBe(`${p.pluginId}: ${certified}`);
+      }
     });
 
     it('the four OMRI-listed #716 products read as allowed, so they never start the land-transition clock', () => {

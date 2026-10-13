@@ -2,7 +2,7 @@
   "pluginId": "aza-direct",
   "type": "insecticide",
   "displayName": "Aza-Direct (Gowan azadirachtin — OMRI)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "formulation": "EC",
   "epaRegistrationNumber": "71908-1-10163",
   "defaultUnit": "fl-oz",
@@ -33,7 +33,7 @@
     "omriListed": true,
     "certifiedOrganicAllowed": true,
     "nonGmoCompliant": true,
-    "transitioningAllowed": false
+    "transitioningAllowed": true
   },
   "pluginSchemaVersion": "1.1",
   "scoutingThresholds": [

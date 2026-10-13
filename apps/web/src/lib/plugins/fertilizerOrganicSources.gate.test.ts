@@ -56,7 +56,10 @@ describe('fertilizer organic flag sources (#805, #834)', () => {
   });
 
   it('refuses an allowed flag with no source, and omriListed on a 7 CFR 205 quote', () => {
-    const p = { ...base, complianceFlags: { transitioningAllowed: true } };
+    const p = {
+      ...base,
+      complianceFlags: { certifiedOrganicAllowed: true, transitioningAllowed: true }
+    };
     expect(fertilizerOrganicSourceGaps([p], {})).toHaveLength(1);
     expect(fertilizerOrganicSourceGaps([p], { x: cfr })).toEqual([]);
     expect(fertilizerOrganicSourceGaps([p], { x: listing })).toEqual([]);
@@ -66,6 +69,34 @@ describe('fertilizer organic flag sources (#805, #834)', () => {
     expect(
       fertilizerOrganicSourceGaps([p], { x: { ...cfr, sourceUrl: 'https://example.org/' } })
     ).toHaveLength(1);
+  });
+
+  it('transitioningAllowed follows the certified flags (#841, G841-1, G841-3)', () => {
+    const gaps = (flags: LabelSourcePlugin['complianceFlags'], src: object = cfr) =>
+      fertilizerOrganicSourceGaps([{ ...base, complianceFlags: flags }], { x: src });
+    const needs =
+      'x: transitioningAllowed true needs certifiedOrganicAllowed or omriListed true (7 CFR 205.202(b))';
+    const beside =
+      'x: transitioningAllowed false beside certifiedOrganicAllowed or omriListed true';
+    expect(gaps({ transitioningAllowed: true })).toEqual([needs]);
+    expect(gaps({ transitioningAllowed: true }, listing)).toEqual([needs]);
+    expect(
+      fertilizerOrganicSourceGaps(
+        [{ ...base, complianceFlags: { transitioningAllowed: true } }],
+        {}
+      )
+    ).toContain(needs);
+    expect(gaps({ certifiedOrganicAllowed: true, transitioningAllowed: false })).toEqual([beside]);
+    expect(gaps({ omriListed: true, transitioningAllowed: false }, listing)).toEqual([beside]);
+    expect(gaps({ certifiedOrganicAllowed: true })).toEqual([]);
+    expect(gaps({ omriListed: true, certifiedOrganicAllowed: true }, listing)).toEqual([]);
+    expect(gaps({ omriListed: true, transitioningAllowed: true }, listing)).toEqual([]);
+    expect(
+      fertilizerOrganicSourceGaps(
+        [{ ...base, complianceFlags: { transitioningAllowed: false } }],
+        {}
+      )
+    ).toEqual([]);
   });
 
   it('refuses an OMRI name without omriListed, and a source entry for no plugin', () => {

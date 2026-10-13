@@ -14,6 +14,10 @@
  * - `omriListed`, `certifiedOrganicAllowed` or `transitioningAllowed` set to
  *   true needs a `complianceFlags` entry that quotes an OMRI Products List
  *   NOP listing, or (never for `omriListed`) a 7 CFR 205 quote (#779);
+ * - `transitioningAllowed: true` needs `certifiedOrganicAllowed` or
+ *   `omriListed` true beside it, and neither may sit beside an explicit
+ *   `transitioningAllowed: false`: 7 CFR 205.202(b) gives transitional land
+ *   no looser input rule than certified land (#841);
  * - a herbicide default `ratePerAcre` ships only as `rateProvenance:
  *   'label'` with a `rate` entry whose quote states the amount, or as an
  *   explicit `rateProvenance: 'fallback'` (swarm 2026-10-07, #737);
@@ -364,7 +368,27 @@ function isCfr205(s: OrganicSource): boolean {
   );
 }
 
+function transitioningFlagGaps(p: LabelSourcePlugin): string[] {
+  const flags = p.complianceFlags;
+  const allowed = flags?.certifiedOrganicAllowed === true || flags?.omriListed === true;
+  if (flags?.transitioningAllowed === true && !allowed) {
+    return [
+      `${p.pluginId}: transitioningAllowed true needs certifiedOrganicAllowed or omriListed true (7 CFR 205.202(b))`
+    ];
+  }
+  if (flags?.transitioningAllowed === false && allowed) {
+    return [
+      `${p.pluginId}: transitioningAllowed false beside certifiedOrganicAllowed or omriListed true`
+    ];
+  }
+  return [];
+}
+
 function organicFlagGaps(p: LabelSourcePlugin, sources: LabelSources): string[] {
+  return [...transitioningFlagGaps(p), ...organicFlagSourceGaps(p, sources)];
+}
+
+function organicFlagSourceGaps(p: LabelSourcePlugin, sources: LabelSources): string[] {
   const set = ALLOWED_ORGANIC_FLAGS.filter((k) => p.complianceFlags?.[k] === true);
   if (set.length === 0) return [];
   const s = sources.complianceFlags?.[p.pluginId] as OrganicSource | undefined;

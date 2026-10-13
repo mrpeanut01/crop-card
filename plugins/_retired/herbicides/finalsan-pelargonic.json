@@ -23,8 +23,7 @@
   "complianceFlags": {
     "omriListed": false,
     "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": false,
-    "transitioningAllowed": true
+    "certifiedOrganicAllowed": false
   },
   "notes": "W. Neudorff fatty-acid contact herbicide. Faster knockdown than acetic acid products. Apply in full sun at 70+ F. chemistryClass tag is nominal."
 }

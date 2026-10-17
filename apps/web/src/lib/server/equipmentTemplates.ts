@@ -595,6 +595,35 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     description: 'Hose-reel traveler for pasture, hay, and pre-plant water-up. 200–400 gpm.',
     spec: { gpm: '200–400', hoseFt: 1000 }
   },
+  // Phase 37E: automatic waterers. Set the schedule and the beds on the
+  // equipment page; each run then counts as water given.
+  {
+    templateId: 'irrigation-drip-timer',
+    type: 'irrigation',
+    category: 'Drip timer',
+    label: 'Drip line on a hose timer',
+    description:
+      'Drip line or emitters on a hose-end timer. Set its days, start time and minutes, and the inches each run gives, so each run counts as watering.',
+    spec: { method: 'drip' }
+  },
+  {
+    templateId: 'irrigation-soaker-timer',
+    type: 'irrigation',
+    category: 'Soaker hose timer',
+    label: 'Soaker hose on a hose timer',
+    description:
+      'Soaker hose on a hose-end timer. Set its days, start time and minutes, and the inches each run gives, so each run counts as watering.',
+    spec: { method: 'soaker' }
+  },
+  {
+    templateId: 'irrigation-sprinkler-timer',
+    type: 'irrigation',
+    category: 'Sprinkler timer',
+    label: 'Sprinkler on a hose timer',
+    description:
+      'Sprinkler on a hose-end timer. Set its days, start time and minutes, and the inches each run gives, so each run counts as watering.',
+    spec: { method: 'sprinkler' }
+  },
 
   // ─── Other ──────────────────────────────────────────────────────────────
   {

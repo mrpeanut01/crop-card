@@ -26,3 +26,29 @@ export const WATER_TARGET_MAX_IN = 5;
 export function waterTargetKey(fieldId: string): string {
   return `water_target_in_week.${fieldId}`;
 }
+
+/** Phase 37E (R-11): a forecast this hot by day and by night adds "check
+ *  pots today" on container Areas. Each number needs a quoted entry under
+ *  `potHeatHighF` / `potHeatLowF`; while either is null the line never shows. */
+export const POT_HEAT_HIGH_F: number | null = null;
+export const POT_HEAT_LOW_F: number | null = null;
+
+export interface PotHeatThresholds {
+  highF: number | null;
+  lowF: number | null;
+}
+
+export const POT_HEAT_THRESHOLDS: PotHeatThresholds = {
+  highF: POT_HEAT_HIGH_F,
+  lowF: POT_HEAT_LOW_F
+};
+
+/** True when the next day's forecast high and low are both above the
+ *  sourced thresholds; false whenever a threshold is not sourced. */
+export function potHeatApplies(
+  forecast: { highF: number; lowF: number },
+  thresholds: PotHeatThresholds = POT_HEAT_THRESHOLDS
+): boolean {
+  if (thresholds.highF === null || thresholds.lowF === null) return false;
+  return forecast.highF > thresholds.highF && forecast.lowF > thresholds.lowF;
+}

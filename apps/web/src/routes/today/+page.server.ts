@@ -353,6 +353,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       timeZone: careTimeZone,
       locale: locals?.locale,
       isOwner,
+      equipment,
+      canRecord: !!locals.user && locals.user.role !== 'inspector',
       // Phase 32F (F4-8): the Monday card, from rows already read here.
       digest: todayDigestInput({
         openPrimaries: allOpenPrimaries,
@@ -366,18 +368,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       plantings: blocks.flatMap((b) =>
         b.plantings.map((p) => {
           const rec = registry.get(p.cropPluginId);
-          const family =
-            rec && rec.plugin.type === 'crop'
-              ? ((rec.plugin as CropPlugin).cropFamily ?? null)
-              : null;
+          const crop = rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : null;
           return {
             id: p.id,
             blockId: b.id,
             fieldId: b.fieldId ?? null,
             cropPluginId: p.cropPluginId,
-            cropFamily: family,
+            cropFamily: crop?.cropFamily ?? null,
             status: p.status ?? 'active',
-            plantingDate: p.plantingDate
+            plantingDate: p.plantingDate,
+            waterNeed: crop?.waterNeed ?? null,
+            cropName: crop?.displayName
           };
         })
       )

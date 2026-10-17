@@ -8,12 +8,18 @@
  * skip and water need that coverage. Watering with no known amount can never
  * turn into "water again". Logged watering plus the rain known so far (a
  * lower bound) that reaches the target reads as watered enough (#732).
+ *
+ * Phase 37E: a bed may carry its own target (it defaults to the Area's, and
+ * a bed target below the Area's can never turn "water" into "skip", R-10),
+ * a water need that only adds words, and automatic waterer runs as logs
+ * tagged `manual` (R-12). An indoor Area reads unknown, like a greenhouse.
  */
 
 import { HOUR_MS } from './leafWet';
 import type { RainHour } from './metarRain';
 import { GALLONS_PER_SQFT_INCH } from './waterSources';
 import type { ProtectionKind } from '$lib/climate/protection';
+import type { BedNeedLine } from './waterNeed';
 
 export const WINDOW_HOURS = 168;
 export const MAX_STATION_MILES = 10;
@@ -24,7 +30,7 @@ export const MAX_GAUGE_IN = 15;
 
 export type WaterVerdict = 'skip' | 'water' | 'ok' | 'unknown';
 export type UnknownReason =
-  'greenhouse' | 'no-target' | 'rain-unknown' | 'amount-not-logged' | 'covered';
+  'greenhouse' | 'no-target' | 'rain-unknown' | 'amount-not-logged' | 'covered' | 'indoors';
 
 export interface GaugeReading {
   readAtMs: number;
@@ -43,6 +49,10 @@ export interface WaterLog {
   inches: number | null;
   gallons: number | null;
   durationMin: number | null;
+  /** `manual` for a hand log or a waterer's scheduled run (R-12). */
+  provenance?: 'manual' | 'data';
+  /** Set when the log is an automatic waterer's scheduled run. */
+  timer?: { equipmentId: string; label: string } | null;
 }
 
 export interface BedInput {
@@ -51,6 +61,12 @@ export interface BedInput {
   sqFt: number | null;
   /** The rain-shedding cover on the bed now, if any (E4-9). */
   rainCover: ProtectionKind | null;
+  /** The bed's own target; unset uses the Area's (R-10). */
+  target?: WaterTarget | null;
+  /** The bed's water need from its crops (37E); words only. */
+  needLine?: BedNeedLine;
+  /** Plugin ids of the crops the need line names. */
+  needCropPluginIds?: readonly string[];
 }
 
 export interface WaterTarget {
@@ -73,6 +89,8 @@ export interface WaterBalanceInput {
   gauges: readonly GaugePeriod[];
   logs: readonly WaterLog[];
   beds: readonly BedInput[];
+  /** An indoor Area (a windowsill of pots): rain never reaches it (R-11). */
+  indoors?: boolean;
 }
 
 export interface BedVerdict {
@@ -87,7 +105,13 @@ export interface BedVerdict {
   /** The latest unknown-amount log was in gallons, but the Area or bed has
    *  no size to turn gallons into inches. */
   unknownLogNeedsSize: boolean;
+  /** The waterer whose run is the latest unknown-amount log, if it is one. */
+  unknownLogTimer: string | null;
   coverKind: ProtectionKind | null;
+  needLine: BedNeedLine;
+  needCropPluginIds: readonly string[];
+  /** A `water` verdict on a bed whose crops like it dry (R-10). */
+  checkSoilFirst: boolean;
 }
 
 export interface RainSummary {
@@ -227,19 +251,12 @@ function bedVerdict(
   rain: RainSummary,
   startMs: number
 ): BedVerdict {
-  const base = {
-    bedId: bed.id,
-    bedName: bed.name,
-    shortIn: null,
-    wateredIn: 0,
-    unknownLogAtMs: null,
-    unknownLogNeedsSize: false,
-    coverKind: bed.rainCover
-  };
+  const base = emptyBed(bed);
   if (bed.rainCover) return { ...base, verdict: 'unknown', reason: 'covered' };
   let wateredIn = 0;
   let unknownLogAtMs: number | null = null;
   let unknownLogNeedsSize = false;
+  let unknownLogTimer: string | null = null;
   for (const log of input.logs) {
     if (log.occurredAtMs < startMs || log.occurredAtMs > input.nowMs) continue;
     if (log.blockId !== null && log.blockId !== bed.id) continue;
@@ -249,22 +266,25 @@ function bedVerdict(
       if (unknownLogAtMs === null || log.occurredAtMs >= unknownLogAtMs) {
         unknownLogAtMs = log.occurredAtMs;
         unknownLogNeedsSize = log.gallons !== null && Number.isFinite(log.gallons);
+        unknownLogTimer = log.timer?.label ?? null;
       }
     } else {
       wateredIn += inches;
     }
   }
   wateredIn = round2(wateredIn);
-  const withLogs = { ...base, wateredIn, unknownLogAtMs, unknownLogNeedsSize };
-  if (!input.target) return { ...withLogs, verdict: 'unknown', reason: 'no-target' };
-  const target = input.target.inches;
+  const withLogs = { ...base, wateredIn, unknownLogAtMs, unknownLogNeedsSize, unknownLogTimer };
+  const bedTarget = bed.target !== undefined ? bed.target : input.target;
+  if (!bedTarget) return { ...withLogs, verdict: 'unknown', reason: 'no-target' };
+  const target = bedTarget.inches;
+  const skipAt = Math.max(target, input.target?.inches ?? target);
   if (!rain.trusted) {
     if (wateredIn > 0 && rain.inches + wateredIn >= target) {
       return { ...withLogs, verdict: 'ok', reason: null };
     }
     return { ...withLogs, verdict: 'unknown', reason: 'rain-unknown' };
   }
-  if (rain.inches >= target) return { ...withLogs, verdict: 'skip', reason: null };
+  if (rain.inches >= skipAt) return { ...withLogs, verdict: 'skip', reason: null };
   if (unknownLogAtMs !== null) {
     return { ...withLogs, verdict: 'unknown', reason: 'amount-not-logged' };
   }
@@ -274,7 +294,24 @@ function bedVerdict(
     ...withLogs,
     verdict: 'water',
     reason: null,
-    shortIn: Math.max(0.1, round1(target - total))
+    shortIn: Math.max(0.1, round1(target - total)),
+    checkSoilFirst: bed.needLine === 'low'
+  };
+}
+
+function emptyBed(b: BedInput) {
+  return {
+    bedId: b.id,
+    bedName: b.name,
+    shortIn: null,
+    wateredIn: 0,
+    unknownLogAtMs: null,
+    unknownLogNeedsSize: false,
+    unknownLogTimer: null,
+    coverKind: b.rainCover,
+    needLine: b.needLine ?? null,
+    needCropPluginIds: b.needCropPluginIds ?? [],
+    checkSoilFirst: false
   };
 }
 
@@ -301,23 +338,14 @@ export function waterBalance(input: WaterBalanceInput): WaterBalance {
     target: input.target
   } as const;
 
-  if (input.areaKind === 'greenhouse') {
+  if (input.areaKind === 'greenhouse' || input.indoors) {
+    const reason: UnknownReason = input.areaKind === 'greenhouse' ? 'greenhouse' : 'indoors';
     return {
       ...common,
       verdict: 'unknown',
-      reason: 'greenhouse',
+      reason,
       shortIn: null,
-      perBed: input.beds.map((b) => ({
-        bedId: b.id,
-        bedName: b.name,
-        verdict: 'unknown',
-        reason: 'greenhouse',
-        shortIn: null,
-        wateredIn: 0,
-        unknownLogAtMs: null,
-        unknownLogNeedsSize: false,
-        coverKind: b.rainCover
-      }))
+      perBed: input.beds.map((b) => ({ ...emptyBed(b), verdict: 'unknown', reason }))
     };
   }
 

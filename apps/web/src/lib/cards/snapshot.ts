@@ -7,6 +7,7 @@
  * render as the same day in every time zone; moments are epoch ms.
  */
 
+import type { SnapshotWaterer } from '$lib/irrigation/snapshot';
 import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
 import type { MapFeatureView } from '$lib/farm/mapFeatures';
@@ -570,6 +571,9 @@ export interface FarmSnapshot {
   /** #593 orchard calendars and stage marks. Absent on bundles saved before
    *  it and on farms with no tree fruit, grape or blueberry plantings. */
   orchard?: SnapshotOrchard;
+  /** Phase 37E automatic waterers: schedule and targets. Absent when the
+   *  farm has none and on bundles saved before it. */
+  waterers?: SnapshotWaterer[];
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

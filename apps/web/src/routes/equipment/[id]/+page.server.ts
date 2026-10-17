@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { getEquipment, listEquipmentLog } from '$lib/db/equipment';
 import { canMutate } from '$lib/server/session';
 import { templateCategoryFor } from '$lib/server/equipmentTemplates';
+import { watererPageData } from '$lib/server/watererPage';
 
 export const load: PageServerLoad = ({ params, locals }) => {
   if (!params.id) throw error(400, 'id required');
@@ -13,6 +14,7 @@ export const load: PageServerLoad = ({ params, locals }) => {
     templateCategory: templateCategoryFor(equipment.spec, locals?.locale),
     log: listEquipmentLog(params.id, { limit: 100 }),
     canEdit: !!locals.user && canMutate(locals.user.role),
-    canRename: locals.user?.role === 'owner'
+    canRename: locals.user?.role === 'owner',
+    waterer: equipment.type === 'irrigation' ? watererPageData(equipment) : null
   };
 };

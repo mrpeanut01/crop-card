@@ -725,6 +725,76 @@ describe('stock (C-34)', () => {
   });
 });
 
+describe('dose unit spelling (shared normalizeUnitName)', () => {
+  it('takes "fl oz" and "FLOZ" off a fl-oz bottle, and a ml dose off a ml bottle as before', async () => {
+    await runWithTenantAsync(seedOwner(), async () => {
+      const { groupId } = await flock();
+      const flOz = createStockItem({
+        category: 'animal-health',
+        displayName: 'Ounce wormer',
+        defaultUnit: 'fl-oz'
+      });
+      receiveLot({ stockItemId: flOz.id, receivedQuantity: 16, unit: 'fl-oz' });
+      for (const doseUnit of ['fl oz', 'FLOZ']) {
+        const res = await health({
+          subjectType: 'group',
+          subjectId: groupId,
+          kind: 'deworm',
+          stockItemId: flOz.id,
+          dose: 1,
+          doseUnit,
+          administeredAt: Date.now()
+        });
+        expect(res.status).toBe(201);
+        expect(
+          (res.body.warnings ?? []).filter((w: { code: string }) => w.code.startsWith('STOCK'))
+        ).toEqual([]);
+      }
+      expect(
+        listMovementsForItem(flOz.id)
+          .filter((mv) => mv.reason === 'animal-treatment')
+          .map((mv) => mv.delta)
+      ).toEqual([-1, -1]);
+
+      const ml = createStockItem({
+        category: 'animal-health',
+        displayName: 'Millilitre wormer',
+        defaultUnit: 'ml'
+      });
+      receiveLot({ stockItemId: ml.id, receivedQuantity: 100, unit: 'ml' });
+      for (const doseUnit of ['ml', ' mL ', 'ML']) {
+        const res = await health({
+          subjectType: 'group',
+          subjectId: groupId,
+          kind: 'deworm',
+          stockItemId: ml.id,
+          dose: 5,
+          doseUnit,
+          administeredAt: Date.now()
+        });
+        expect(res.status).toBe(201);
+      }
+      expect(
+        listMovementsForItem(ml.id)
+          .filter((mv) => mv.reason === 'animal-treatment')
+          .map((mv) => mv.delta)
+      ).toEqual([-5, -5, -5]);
+
+      const unknown = await health({
+        subjectType: 'group',
+        subjectId: groupId,
+        kind: 'deworm',
+        stockItemId: ml.id,
+        dose: 5,
+        doseUnit: 'cc',
+        administeredAt: Date.now()
+      });
+      expect(unknown.status).toBe(201);
+      expect(unknown.body.warnings[0].code).toBe('STOCK_NOT_DEDUCTED');
+    });
+  });
+});
+
 describe('stock unit and lot (#648, #745)', () => {
   it('says to add a unit when a dose has none, and takes the lot from the bottle', async () => {
     await runWithTenantAsync(seedOwner(), async () => {

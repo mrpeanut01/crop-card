@@ -5,10 +5,10 @@ import { organicInputClass } from '../organic/inputCompliance';
 import {
   LABEL_SOURCED_CLASSES,
   pesticideLabelSourceGaps,
-  statesAmount,
   traitClaimSourceGaps,
   type LabelSourcePlugin
 } from './pesticideLabelSources';
+import { statesAmount } from './quoteNumbers';
 import {
   isProductAllowed,
   philosophyProductClass,

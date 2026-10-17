@@ -34,6 +34,9 @@
  *   capped at most once per plugin (#820).
  */
 
+import { pplsBaseStem } from '../../../scripts/lib/pplsFile.mjs';
+import { statesAmount, statesNumber, statesPhiDays } from './quoteNumbers';
+
 export const LABEL_SOURCED_CLASSES: Readonly<Record<string, number>> = { thiocarbamate: 15 };
 
 export interface LabelSourcePlugin {
@@ -85,55 +88,6 @@ export interface LabelSources {
   seasonCapByCrop?: Record<string, unknown>;
 }
 
-function statesNumber(quote: unknown, n: number): boolean {
-  return typeof quote === 'string' && new RegExp(`(^|[^0-9.])${n}([^0-9]|$)`).test(quote);
-}
-
-const WEEK_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-
-/** A PHI quote states its days as a number, as whole weeks ("three weeks
- *  prior to harvest" for 21), or a 0-day PHI as the label's "day of harvest"
- *  wording ("May be applied the day of harvest."). */
-export function statesPhiDays(quote: unknown, n: number): boolean {
-  if (statesNumber(quote, n)) return true;
-  if (typeof quote !== 'string') return false;
-  if (n > 0 && n % 7 === 0) {
-    const w = n / 7;
-    const forms = [String(w), ...(w <= WEEK_WORDS.length ? [WEEK_WORDS[w - 1]] : [])];
-    if (forms.some((f) => new RegExp(`(^|[^0-9a-z])${f}[ -]weeks?\\b`, 'i').test(quote)))
-      return true;
-  }
-  return (
-    n === 0 &&
-    /\b(the|up to(?: and including)?(?: the)?)(?: \.\.\.)? day(?: \.\.\.)? of(?: \.\.\.)? harvest\b/i.test(
-      quote
-    )
-  );
-}
-
-const FRACTIONS: Record<string, readonly string[]> = {
-  '0.25': ['1/4', '¼'],
-  '0.5': ['1/2', '½'],
-  '0.75': ['3/4', '¾']
-};
-
-/** A quote states an amount as a decimal or, for quarters and halves, as a
- *  label fraction ("½ pint", "1 1/2 pints"). */
-export function statesAmount(quote: unknown, n: number): boolean {
-  if (typeof quote !== 'string') return false;
-  if (statesNumber(quote, n)) return true;
-  const whole = Math.floor(n);
-  const frac = FRACTIONS[String(Math.round((n - whole) * 100) / 100)];
-  if (!frac) return false;
-  return frac.some((f) => {
-    const forms = whole === 0 ? [f] : [`${whole} ${f}`, `${whole}${f}`];
-    return forms.some((form) => {
-      const esc = form.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
-      return new RegExp(`(^|[^0-9/])${esc}([^0-9/]|$)`).test(quote);
-    });
-  });
-}
-
 function normalizeSpace(s: string): string {
   return s.replace(/\s+/g, ' ').trim();
 }
@@ -148,12 +102,6 @@ export interface TraitClaimPlugin {
   epaRegistrationNumber?: string;
   activeIngredients?: ReadonlyArray<{ chemistryClass?: string }>;
   traitGatedSafeFor?: ReadonlyArray<{ cropPluginId: string; requiresTraits: string[] }>;
-}
-
-/** "100-1182" as the PPLS file stem "000100-01182". */
-function pplsStem(reg: string): string | null {
-  const m = /^(\d+)-(\d+)$/.exec(reg);
-  return m ? `${m[1].padStart(6, '0')}-${m[2].padStart(5, '0')}` : null;
 }
 
 /**
@@ -184,7 +132,7 @@ export function traitClaimSourceGaps(
         gaps.push(`${key}: trait claim has no label source`);
         continue;
       }
-      const stem = p.epaRegistrationNumber ? pplsStem(p.epaRegistrationNumber) : null;
+      const stem = p.epaRegistrationNumber ? pplsBaseStem(p.epaRegistrationNumber) : null;
       const ppls = `https://www3.epa.gov/pesticides/chem_search/ppls/${stem}-`;
       if (!hasUrl(entry) || !stem || !String(entry.sourceUrl).startsWith(ppls)) {
         gaps.push(`${key}: source is not the product's own PPLS label`);

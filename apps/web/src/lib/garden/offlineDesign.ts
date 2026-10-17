@@ -9,7 +9,21 @@ import { isDesignable } from '$lib/farm/areaKinds';
 import { rotationLookbackForFamily } from '$lib/plugins/familyDefaults';
 import type { DesignerPageData } from './api';
 import { designFromSnapshot } from './design';
+import { snapshotLifecycle } from '$lib/cards/build/lifecycle';
+import type { LifecycleDetail } from './lifecycleHere';
 import type { BedHistoryEntry } from './types';
+
+function lifecycleFromSnapshot(
+  snapshot: FarmSnapshot,
+  pluginIds: string[]
+): Record<string, LifecycleDetail> {
+  const out: Record<string, LifecycleDetail> = {};
+  for (const id of pluginIds) {
+    const v = snapshotLifecycle(snapshot, id);
+    if (v) out[id] = v;
+  }
+  return out;
+}
 
 export function designerDataFromSnapshot(
   snapshot: FarmSnapshot,
@@ -59,6 +73,10 @@ export function designerDataFromSnapshot(
     role: opts.role,
     seasons: [opts.seasonYear],
     activeYear: opts.seasonYear,
+    lifecycle: lifecycleFromSnapshot(
+      snapshot,
+      catalog.map((c) => c.pluginId)
+    ),
     offline: true
   };
 }

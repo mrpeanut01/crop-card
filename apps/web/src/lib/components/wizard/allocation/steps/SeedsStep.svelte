@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LifecycleLine from '$lib/components/garden/LifecycleLine.svelte';
   import { getWizardContext, planningTotal } from '../wizardState.svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import A_InventoryAddFlow from '$lib/components/inventory/A_InventoryAddFlow.svelte';
@@ -367,6 +368,9 @@
                   >
                   {#if s.shortName && s.shortName !== s.displayName}
                     <span class="seed-name-sub">{s.displayName}</span>
+                  {/if}
+                  {#if w.lifecycleFor(s.cropPluginId)}
+                    <LifecycleLine verdict={w.lifecycleFor(s.cropPluginId)!} compact />
                   {/if}
                 </label>
               </td>

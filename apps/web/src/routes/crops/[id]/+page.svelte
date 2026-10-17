@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
+  import LifecycleLine from '$lib/components/garden/LifecycleLine.svelte';
   import TypicalTimingNote from '$lib/components/tasks/TypicalTimingNote.svelte';
   import { isTypicalTimingEvent, isTypicalTimingTask } from '$lib/schedule/typicalTiming';
   import { fmt as prefsFmt } from '$lib/prefsState.svelte';
@@ -147,6 +148,7 @@
           date: fmtDay(data.crop.plantingDate)
         })}{:else}· {tr('crops.plannedNoDate')}{/if}
     </p>
+    {#if data.lifecycle}<LifecycleLine verdict={data.lifecycle} />{/if}
   </div>
   <div class="status-row">
     <span class="status status-{data.crop.status}">{statusLabel(data.crop.status)}</span>

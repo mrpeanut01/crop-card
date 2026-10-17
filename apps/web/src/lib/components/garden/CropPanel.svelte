@@ -4,6 +4,7 @@
   import type { GardenCrop } from '$lib/garden/types';
   import { getDesigner, type CropChoice } from './designerState.svelte';
   import { familyName } from './format';
+  import LifecycleLine from './LifecycleLine.svelte';
 
   const d = getDesigner();
   const tr = $derived(d.tr);
@@ -321,6 +322,9 @@
                     })
                   : tr('garden.crop.daysUnknown')} · {spacingText(c)}
               </span>
+              {#if d.lifecycle[c.pluginId]}
+                <LifecycleLine verdict={d.lifecycle[c.pluginId]} compact />
+              {/if}
             </button>
           </li>
         {/each}

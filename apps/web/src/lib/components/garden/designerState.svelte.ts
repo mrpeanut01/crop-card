@@ -88,6 +88,7 @@ import {
   stageLabel,
   ymd
 } from './format';
+import type { LifecycleDetail } from '$lib/garden/lifecycleHere';
 import { createT, type MessageKey, type Translator } from '$lib/i18n';
 import { plantingInGround } from '$lib/garden/inGround';
 import { isEditConflictBody, type EditConflictBody, type EditFootprint } from '$lib/edits/conflict';
@@ -150,6 +151,8 @@ export interface DesignerInit {
   initialDateMs?: number | null;
   initialBedId?: string | null;
   fetch?: typeof fetch;
+  /** Phase 37B lifecycle verdicts for the herbs in the catalog. */
+  lifecycle?: Record<string, LifecycleDetail>;
 }
 
 /** Occupancy for every planting, each on its own bed's frost dates. */
@@ -283,6 +286,7 @@ export class DesignerState {
   companions: CompanionPlugin[];
   lookbackByFamily: Record<string, number>;
   recipes: BedRecipePlugin[];
+  lifecycle: Record<string, LifecycleDetail>;
   readonly roleCanEdit: boolean;
   readonly fetcher: typeof fetch;
 
@@ -391,6 +395,7 @@ export class DesignerState {
     this.companions = init.companions as CompanionPlugin[];
     this.lookbackByFamily = init.lookbackByFamily;
     this.recipes = init.recipes ?? [];
+    this.lifecycle = init.lifecycle ?? {};
     this.roleCanEdit = init.canEdit;
     this.fetcher = init.fetch ?? ((...args) => fetch(...args));
     this.nowMs = init.nowMs ?? Date.now();

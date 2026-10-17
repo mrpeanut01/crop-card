@@ -29,6 +29,7 @@ import {
 import { formatFeet, formatInches } from './size';
 import { seedingFacts } from './seeding';
 import { careGuideHref, careLinkLabel, treeSizeSection } from './careGuide';
+import { lifecycleFact } from './lifecycle';
 import { formatCalendarDate, ymdInZone } from '$lib/prefs';
 import { isPerennialFamily } from '$lib/plugins/familyDefaults';
 import { cropDisplayName } from '$lib/i18n/cropName';
@@ -247,6 +248,9 @@ export function buildPlantingCard(
       provenance: src
     });
   }
+
+  const lifecycle = lifecycleFact(snapshot, p.cropPluginId, opts);
+  if (lifecycle) facts.push(lifecycle);
 
   const window =
     p.harvestWindow !== undefined

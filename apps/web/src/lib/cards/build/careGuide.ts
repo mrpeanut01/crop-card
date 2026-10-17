@@ -28,6 +28,7 @@ import {
 } from './common';
 import { formatFeet, formatInches } from './size';
 import { seedingFacts } from './seeding';
+import { lifecycleFact } from './lifecycle';
 import { plantingSowMethod, spacingModel, type SowMethod } from '$lib/plan/spacingModel';
 import { seedAmountLine } from '$lib/plan/seedAmountText';
 import { familyCareTips, type CareTip, type FamilyCareTips } from './careTips';
@@ -155,6 +156,8 @@ export function buildCareGuideCard(
       provenance: 'plugin'
     });
   }
+  const lifecycle = lifecycleFact(snapshot, cropPluginId, opts);
+  if (lifecycle) facts.push(lifecycle);
   if (guide?.seedDepthIn) {
     facts.push({
       label: tr('cards.fact.seedDepth'),

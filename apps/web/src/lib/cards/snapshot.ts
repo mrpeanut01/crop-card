@@ -570,6 +570,15 @@ export interface FarmSnapshot {
   /** #593 orchard calendars and stage marks. Absent on bundles saved before
    *  it and on farms with no tree fruit, grape or blueberry plantings. */
   orchard?: SnapshotOrchard;
+  /** Phase 37B: each herb's own lifecycle and coldest zone, keyed by plugin
+   *  id, for the lifecycle line on Planting and Care Guide cards. Absent on
+   *  bundles saved before it and on farms with no herbs. */
+  herbLifecycle?: Record<string, SnapshotHerbLifecycle>;
+}
+
+export interface SnapshotHerbLifecycle {
+  lifecycle?: 'annual' | 'biennial' | 'perennial';
+  winterHardyToZone?: string;
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

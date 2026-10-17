@@ -39,6 +39,7 @@ import type {
   Step
 } from './types';
 import type { SetupArea } from '$lib/setup/types';
+import type { LifecycleDetail } from '$lib/garden/lifecycleHere';
 
 export interface EstablishmentAnswer {
   establishment: 'direct-seed' | 'transplant' | null;
@@ -446,6 +447,12 @@ export class AllocationWizardState {
   spacingFor(cropPluginId: string | null | undefined): SpacingModel {
     if (!cropPluginId) return { kind: 'unknown' };
     return spacingModel({ plantingGuide: this.props.plantingGuides[cropPluginId] });
+  }
+
+  /** Phase 37B: the lifecycle verdict of a herb in the catalog. */
+  lifecycleFor(cropPluginId: string | null | undefined): LifecycleDetail | undefined {
+    if (!cropPluginId) return undefined;
+    return this.props.cropCatalog?.find((c) => c.pluginId === cropPluginId)?.lifecycle;
   }
 
   isAreaCrop(cropPluginId: string | null | undefined): boolean {

@@ -29,6 +29,7 @@ import {
   type SnapshotStockItem
 } from '$lib/cards/snapshot';
 import { farmZone } from '$lib/climate/zoneSettings.server';
+import { herbLifecycleSnapshotPart } from './lifecycleSnapshot';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { loadEmergencyContacts } from '$lib/farm/emergencyContacts.server';
 import { listAreas } from '$lib/db/areas';
@@ -623,7 +624,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     soilTests: latestSoilTestsPerBlock(listSoilTests(), labReportForSoilTests()),
     ...(await animalSnapshotPart(windowNow, opts.locale)),
     carryover: snapshotCarryover(await loadCarryoverLines(windowNow)),
-    ...(orchard ? { orchard } : {})
+    ...(orchard ? { orchard } : {}),
+    ...herbLifecycleSnapshotPart(Object.keys(cropPlugins).map((id) => registry.get(id)?.plugin))
   };
 }
 

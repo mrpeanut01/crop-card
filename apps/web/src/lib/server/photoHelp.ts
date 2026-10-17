@@ -24,6 +24,8 @@ import {
   growerFacingText,
   topicFor
 } from '$lib/journal/photoHelp';
+import { parseMarks, readMarksAnswer } from '$lib/journal/marks';
+import { drawingTopic, pruneDrawingFor } from '$lib/journal/pruneDrawing';
 import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
 import { t, type MessageKey } from '$lib/i18n';
 import { aiLimitOf, recordFallback, tryAiWithGuard } from './aiDegrade';
@@ -39,6 +41,8 @@ export interface PhotoHelpRequest {
   question: PhotoQuestion;
   text: string;
   photo: string | null;
+  /** Phase 37F: ask Claude to place marks on the photo. */
+  wantMarks?: boolean;
 }
 
 export interface PhotoHelpResponse {
@@ -49,6 +53,10 @@ export interface PhotoHelpResponse {
   entry: JournalEntry;
   /** Set when the farm's AI allowance stopped the call, for the upgrade nudge. */
   aiLimit?: AiLimit | null;
+  /** Where the marks came from when they were asked for: `ai` when they
+   *  passed `parseMarks`, `fallback` when Claude's were refused or Claude
+   *  was off. Null when no marks were asked for. */
+  marksProvenance?: 'ai' | 'fallback' | null;
 }
 
 type Why = FallbackReason | 'quota' | 'invalid' | 'spray';
@@ -116,13 +124,20 @@ export function careAnswerSections(
   return careSectionsFor(sections, topicFor(question, text));
 }
 
+function careLines(plugin: SnapshotCropPlugin | null, harvest: boolean): string[] {
+  return (plugin?.careTasks ?? [])
+    .filter((t) => (t.crop === 'harvest') === harvest)
+    .map((t) => (t.body ? `${t.title}: ${t.body}` : t.title));
+}
+
 export function promptInputFor(
   crop: Crop,
   plugin: SnapshotCropPlugin | null,
   question: string,
   now: number,
   sprayTerms?: readonly string[],
-  hasPhoto = true
+  hasPhoto = true,
+  wantMarks = false
 ): PhotoHelpPromptInput {
   const days = crop.plantingDate !== null ? Math.floor((now - crop.plantingDate) / DAY_MS) : null;
   return {
@@ -131,14 +146,51 @@ export function promptInputFor(
     plantingDate: crop.plantingDate !== null ? isoDay(crop.plantingDate) : null,
     daysSincePlanting: days !== null && days >= 0 ? days : null,
     daysToMaturity: plugin?.daysToMaturity ?? null,
-    harvestIndicators: filterSprayAdviceItems(plugin?.harvestIndicators ?? [], sprayTerms),
-    careTasks: filterSprayAdviceItems(
-      (plugin?.careTasks ?? []).map((t) => (t.body ? `${t.title}: ${t.body}` : t.title)),
+    harvestIndicators: filterSprayAdviceItems(
+      [...careLines(plugin, true), ...(plugin?.harvestIndicators ?? [])],
       sprayTerms
     ),
+    careTasks: filterSprayAdviceItems(careLines(plugin, false), sprayTerms),
     notes: plugin?.notes ? growerFacingText(plugin.notes, sprayTerms) || null : null,
     question,
-    hasPhoto
+    hasPhoto,
+    ...(wantMarks ? { wantMarks } : {})
+  };
+}
+
+interface MarkedAnswer {
+  steps: string[];
+  text: string;
+  removed: boolean;
+  usable: boolean;
+  marks: JournalAnswer['marks'];
+}
+
+/** Claude's marks answer through the spray filter and `parseMarks`. A step
+ *  the filter drops shifts the numbering, so the marks go with it. */
+export function markedAnswer(raw: string, sprayTerms?: readonly string[]): MarkedAnswer | null {
+  const read = readMarksAnswer(raw);
+  if (!read) return null;
+  const kept: string[] = [];
+  let removed = false;
+  let before = 0;
+  let after = 0;
+  for (const step of read.steps) {
+    const plain = plainAnswer(step);
+    const f = filterSprayAdvice(plain, sprayTerms);
+    before += answerSentences(plain).length;
+    after += answerSentences(f.text).length;
+    if (f.removed) removed = true;
+    if (f.text.trim()) kept.push(f.text.trim());
+  }
+  const usable = kept.length > 0 && !(removed && after * 2 < before);
+  const parsed = removed ? null : parseMarks(read.marks, sprayTerms);
+  return {
+    steps: kept,
+    text: kept.join(' '),
+    removed,
+    usable,
+    marks: parsed?.ok ? parsed.marks : undefined
   };
 }
 
@@ -152,27 +204,35 @@ export async function answerPhotoHelp(args: {
   /** The viewer's language for the banner message only; the saved
    *  journal entry and the prompt stay English. */
   locale?: string | null;
+  /** Runs the journal insert; the route passes `writeRecord` so an offline
+   *  retry with the same client record id never saves twice (R-23). */
+  write?: <T>(fn: () => T) => T;
 }): Promise<PhotoHelpResponse> {
   const { userId, crop, plugin, req, sprayTerms } = args;
   const now = args.now ?? Date.now();
   const asked = questionText(req.question, req.text);
   const careSections = careAnswerSections(plugin, req.question, req.text, sprayTerms);
+  const wantMarks = req.wantMarks === true && !!req.photo;
+  const drawing = drawingTopic(topicFor(req.question, req.text)) ? pruneDrawingFor(plugin) : null;
+  const write = args.write ?? (<T>(fn: () => T) => fn());
 
   const stored: StoredPhotoRef | null = req.photo
     ? await storePhoto('journal-photo', req.photo, { title: 'Journal photo', uploadedBy: userId })
     : null;
   const save = (answer: JournalAnswer, provenance: 'ai' | 'fallback') =>
-    insertJournalEntry({
-      cropId: crop.id,
-      blockId: crop.blockId,
-      createdBy: userId,
-      kind: 'photo_help',
-      text: asked,
-      photoRef: stored && 'inline' in stored ? stored.inline : null,
-      photoDocumentId: stored && 'documentId' in stored ? stored.documentId : null,
-      answer,
-      provenance
-    });
+    write(() =>
+      insertJournalEntry({
+        cropId: crop.id,
+        blockId: crop.blockId,
+        createdBy: userId,
+        kind: 'photo_help',
+        text: asked,
+        photoRef: stored && 'inline' in stored ? stored.inline : null,
+        photoDocumentId: stored && 'documentId' in stored ? stored.documentId : null,
+        answer,
+        provenance
+      })
+    );
 
   const fallback = (
     why: Why,
@@ -185,7 +245,9 @@ export async function answerPhotoHelp(args: {
       text: '',
       source: 'fallback',
       sections: careSections,
-      sprayRedirect
+      sprayRedirect,
+      ...(wantMarks ? { marksProvenance: 'fallback' as const } : {}),
+      ...(drawing ? { drawing } : {})
     };
     return {
       provenance: 'fallback',
@@ -193,7 +255,8 @@ export async function answerPhotoHelp(args: {
       message: photoHelpMessage(why, !!req.photo, limit, args.locale),
       answer,
       entry: save(answer, 'fallback'),
-      aiLimit: limit
+      aiLimit: limit,
+      marksProvenance: wantMarks ? 'fallback' : null
     };
   };
 
@@ -206,7 +269,7 @@ export async function answerPhotoHelp(args: {
       timeoutMs: PHOTO_HELP_TIMEOUT_MS,
       prompt: (signal) =>
         askPhotoHelp(
-          promptInputFor(crop, plugin, asked, now, sprayTerms, !!req.photo),
+          promptInputFor(crop, plugin, asked, now, sprayTerms, !!req.photo, wantMarks),
           req.photo,
           signal
         )
@@ -220,11 +283,18 @@ export async function answerPhotoHelp(args: {
     }
 
     const { meta } = tried.value;
+    const marked = wantMarks ? markedAnswer(tried.value.text, sprayTerms) : null;
     const text = plainAnswer(tried.value.text);
-    const filtered = filterSprayAdvice(text, sprayTerms);
+    const filtered = marked
+      ? { text: marked.text, removed: marked.removed }
+      : filterSprayAdvice(text, sprayTerms);
     const mostlySpray =
       filtered.removed && answerSentences(filtered.text).length * 2 < answerSentences(text).length;
-    const usable = filtered.text.trim().length > 0 && !mostlySpray;
+    const usable = marked
+      ? marked.usable
+      : filtered.text.trim().length > 0 && !mostlySpray && !(wantMarks && text.includes('{'));
+    const marks = marked?.marks;
+    const marksRefused = wantMarks && !marks;
     try {
       recordCall({
         userId,
@@ -235,7 +305,13 @@ export async function answerPhotoHelp(args: {
         outputTokens: meta.outputTokens,
         usdEstimate: meta.usdEstimate,
         success: usable,
-        errorClass: usable ? (filtered.removed ? 'spray-advice-removed' : undefined) : 'unusable',
+        errorClass: usable
+          ? filtered.removed
+            ? 'spray-advice-removed'
+            : marksRefused
+              ? 'marks-refused'
+              : undefined
+          : 'unusable',
         provenance: usable ? 'ai' : 'fallback'
       });
     } catch (err) {
@@ -248,14 +324,22 @@ export async function answerPhotoHelp(args: {
       text: filtered.text,
       source: 'ai',
       sections: [],
-      sprayRedirect: filtered.removed
+      sprayRedirect: filtered.removed,
+      ...(marked ? { steps: marked.steps } : {}),
+      ...(marks ? { marks } : {}),
+      ...(wantMarks ? { marksProvenance: marks ? ('ai' as const) : ('fallback' as const) } : {})
     };
+    const notes = [
+      filtered.removed ? SPRAY_REDIRECT : null,
+      marksRefused ? t(args.locale, 'herbsf.marks.refused') : null
+    ].filter((n): n is string => !!n);
     return {
       provenance: 'ai',
       fallbackReason: null,
-      message: filtered.removed ? SPRAY_REDIRECT : null,
+      message: notes.length ? notes.join(' ') : null,
       answer,
-      entry: save(answer, 'ai')
+      entry: save(answer, 'ai'),
+      marksProvenance: wantMarks ? (marks ? 'ai' : 'fallback') : null
     };
   } catch (err) {
     if (stored && 'documentId' in stored) await discardPhoto(stored.documentId, userId);

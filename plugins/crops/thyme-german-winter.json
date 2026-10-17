@@ -41,5 +41,13 @@
   "agronomy": {
     "lifecycle": "perennial"
   },
-  "winterHardyToZone": "5a"
+  "winterHardyToZone": "5a",
+  "careTasks": [
+    {
+      "key": "renew-in-spring",
+      "topic": "prune",
+      "title": "As thyme gets older, it can become woody and should be renewed every few years by cutting it back severely in the spring."
+    }
+  ],
+  "growthHabit": "woody"
 }

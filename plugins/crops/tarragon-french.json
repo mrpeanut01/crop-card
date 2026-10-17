@@ -42,5 +42,17 @@
       "suitability": "good"
     }
   ],
-  "winterHardyToZone": "3a"
+  "winterHardyToZone": "3a",
+  "careTasks": [
+    {
+      "key": "cut-back-in-spring",
+      "topic": "prune",
+      "title": "Cut back plants in the spring just as growth resumes."
+    },
+    {
+      "key": "harvest-tips",
+      "topic": "harvest",
+      "title": "Young stem tips and leaves can be harvested as needed throughout the season."
+    }
+  ]
 }

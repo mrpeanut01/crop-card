@@ -25,6 +25,10 @@
     topicFor
   } from '$lib/journal/photoHelp';
   import type { PhotoHelpTarget } from '$lib/journal/targets';
+  import { drawingCaption, drawingTopic } from '$lib/journal/pruneDrawing';
+  import PhotoMarks from '$lib/components/journal/PhotoMarks.svelte';
+  import PruneDrawing from '$lib/components/journal/PruneDrawing.svelte';
+  import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
   import { PhotoHeicError, PhotoTooLargeError, resizePhoto } from '$lib/client/photoResize';
   import type { QueuedJournalRow } from '$lib/client/journalQueue';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
@@ -70,6 +74,15 @@
     message: string | null;
     queued: boolean;
     aiLimit?: AiLimit | null;
+    /** The photo as sent, so marks and the drawing can show beside it. */
+    photo: string | null;
+  }
+
+  function newRecordId(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return `ph-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
   }
   let shown = $state<Shown | null>(null);
 
@@ -202,33 +215,47 @@
     }));
   }
 
-  async function queueEntry(kind: 'note' | 'photo_help', text: string, withPhoto: string | null) {
+  async function queueEntry(
+    kind: 'note' | 'photo_help',
+    text: string,
+    withPhoto: string | null,
+    recordId?: string
+  ) {
     if (!cropId) return;
     const { queueJournalEntry } = await import('$lib/client/journalQueue');
-    await queueJournalEntry({ cropId, kind, text, photo: withPhoto });
+    await queueJournalEntry({ cropId, kind, text, photo: withPhoto }, recordId);
     await refreshQueued();
   }
 
-  async function answerOffline(q: PhotoQuestion, text: string) {
+  /** No signal: the question saves as a manual journal entry through the
+   *  queue under the same record id the online try used, so a request that
+   *  did reach the server is never saved twice (R-23). */
+  async function answerOffline(q: PhotoQuestion, text: string, recordId: string) {
     const asked = questionText(q, text);
     const hadPhoto = !!photo;
-    await queueEntry('photo_help', asked, photo);
+    const sentPhoto = photo;
+    await queueEntry('photo_help', asked, photo, recordId);
     photo = null;
     chip = null;
     typed = '';
     const spray = asksForSprayAdvice(asked, sprayTerms);
     const saved = hadPhoto ? tr('cardsui.photo.savedWithPhoto') : tr('cardsui.photo.savedQuestion');
+    const drawing = drawingTopic(topicFor(q, text)) ? target?.drawing : null;
     shown = {
       answer: {
         question: q,
         text: '',
         source: 'fallback',
         sections: careFallback(q, text),
-        sprayRedirect: spray
+        sprayRedirect: spray,
+        ...(drawing ? { drawing } : {})
       },
       provenance: 'fallback',
-      message: `${spray ? `${SPRAY_REDIRECT} ` : ''}${tr('cardsui.photo.noSignal')} ${saved}`,
-      queued: true
+      message: `${spray ? `${SPRAY_REDIRECT} ` : ''}${tr('cardsui.photo.noSignal')} ${saved}${
+        hadPhoto ? ` ${tr('herbsf.marks.askOnline')}` : ''
+      }`,
+      queued: true,
+      photo: sentPhoto
     };
   }
 
@@ -240,20 +267,22 @@
     const q = question;
     const askedFor = cropId;
     const text = chip ? typed : typed.trim();
+    const recordId = newRecordId();
+    const sentPhoto = photo;
     try {
       if (!online()) {
-        await answerOffline(q, text);
+        await answerOffline(q, text, recordId);
         return;
       }
       let res: Response;
       try {
         res = await fetch(`/api/plantings/${encodeURIComponent(cropId)}/photo-help`, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ question: q, text, photo })
+          headers: { 'content-type': 'application/json', [CLIENT_RECORD_HEADER]: recordId },
+          body: JSON.stringify({ question: q, text, photo, wantMarks: !!photo })
         });
       } catch {
-        await answerOffline(q, text);
+        await answerOffline(q, text, recordId);
         return;
       }
       const body = (await res.json().catch(() => ({}))) as {
@@ -263,7 +292,15 @@
         message?: string | null;
         entry?: JournalEntry;
         aiLimit?: AiLimit | null;
+        duplicate?: boolean;
       };
+      if (res.ok && body.duplicate) {
+        photo = null;
+        chip = null;
+        typed = '';
+        await loadJournal();
+        return;
+      }
       if (!res.ok || !body.answer || !body.provenance) {
         askError = body.error ?? tr('cardsui.photo.failed');
         return;
@@ -273,7 +310,8 @@
         provenance: body.provenance,
         message: body.message ?? null,
         queued: false,
-        aiLimit: body.aiLimit ?? null
+        aiLimit: body.aiLimit ?? null,
+        photo: sentPhoto
       };
       if (body.entry && askedFor === cropId) entries = [body.entry, ...entries];
       photo = null;
@@ -418,9 +456,21 @@
           {#if shown.message}<p class="message">{shown.message}</p>{/if}
           <AiLimitNudge limit={shown.aiLimit} {isOwner} />
           {#if shown.queued}<QueuedBadge />{/if}
-          {#if shown.answer.text}
+          {#if shown.answer.marks?.length && shown.photo}
+            <PhotoMarks
+              src={shown.photo}
+              marks={shown.answer.marks}
+              steps={shown.answer.steps ?? []}
+            />
+          {:else if shown.answer.text}
             <p class="ai-text">{shown.answer.text}</p>
             <Provenance source="ai" />
+          {/if}
+          {#if shown.answer.source === 'ai' && shown.answer.marksProvenance === 'fallback'}
+            <p class="hint" data-testid="marks-refused">
+              {tr('herbsf.marks.refused')}
+              <Provenance source="fallback" compact />
+            </p>
           {/if}
           {#each shown.answer.sections as raw (raw.title)}
             {@const s = careSectionForDisplay(raw, page.data?.locale)}
@@ -438,6 +488,13 @@
               </ul>
             </section>
           {/each}
+          {#if shown.answer.drawing}
+            <PruneDrawing
+              drawing={shown.answer.drawing}
+              caption={drawingCaption(shown.answer.sections, page.data?.locale)}
+              photo={shown.photo}
+            />
+          {/if}
           {#if shown.answer.sprayRedirect}
             <a class="btn ghost" href="/spray">{tr('cardsui.photo.openSpray')}</a>
           {/if}
@@ -495,7 +552,13 @@
                 <span class="when">{formatInstant(e.createdAt, prefs, 'datetime')}</span>
                 <Provenance source={PROV_BY_ENTRY[e.provenance]} compact />
               </div>
-              {#if e.hasPhoto && cropId}
+              {#if e.hasPhoto && cropId && e.answer?.marks?.length}
+                <PhotoMarks
+                  src={journalPhotoUrl(cropId, e.id)}
+                  marks={e.answer.marks}
+                  steps={e.answer.steps ?? []}
+                />
+              {:else if e.hasPhoto && cropId}
                 <img
                   class="thumb"
                   src={journalPhotoUrl(cropId, e.id)}
@@ -506,7 +569,7 @@
                 />
               {/if}
               {#if e.text}<p>{e.text}</p>{/if}
-              {#if e.answer?.text}
+              {#if e.answer?.text && !e.answer.marks?.length}
                 <p class="ai-text">{e.answer.text}</p>
               {:else if e.answer?.sections.length}
                 <p class="hint">
@@ -514,6 +577,9 @@
                     title: careSectionForDisplay(e.answer.sections[0], page.data?.locale).title
                   })}
                 </p>
+              {/if}
+              {#if e.answer?.source === 'ai' && e.answer.marksProvenance === 'fallback'}
+                <p class="hint">{tr('herbsf.marks.refused')}</p>
               {/if}
               {#if isOwner}
                 {#if confirmDelete === e.id}

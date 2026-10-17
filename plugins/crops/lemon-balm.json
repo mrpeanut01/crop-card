@@ -46,5 +46,17 @@
       "suitability": "good"
     }
   ],
-  "winterHardyToZone": "3a"
+  "winterHardyToZone": "3a",
+  "careTasks": [
+    {
+      "key": "prune-flower-stalks",
+      "topic": "prune",
+      "title": "To prevent spreading, prune flowering stalks before they have a chance to set seed."
+    },
+    {
+      "key": "harvest-before-flowering",
+      "topic": "harvest",
+      "title": "Stems can be cut as needed anytime during the season preferably before flowering."
+    }
+  ]
 }

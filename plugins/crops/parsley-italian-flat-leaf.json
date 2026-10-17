@@ -35,5 +35,12 @@
   ],
   "agronomy": {
     "lifecycle": "biennial"
-  }
+  },
+  "careTasks": [
+    {
+      "key": "harvest-when-large",
+      "topic": "harvest",
+      "title": "Parsley can be cut any time after it has become large enough."
+    }
+  ]
 }

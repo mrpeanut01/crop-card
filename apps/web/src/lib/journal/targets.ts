@@ -4,11 +4,14 @@ import { parseCardKey, type CardModel } from '$lib/cards/model';
 import type { FarmSnapshot } from '$lib/cards/snapshot';
 import { isDesignable } from '$lib/farm/areaKinds';
 import { t } from '$lib/i18n';
+import { pruneDrawingFor, type PruneDrawingId } from './pruneDrawing';
 
 export interface PhotoHelpTarget {
   cropId: string;
   label: string;
   careGuide: CardModel | null;
+  /** The growth-habit drawing for an offline Care Guide answer (37F). */
+  drawing: PruneDrawingId | null;
 }
 
 /** The plantings "Ask about a photo" can be about for one card: the
@@ -42,7 +45,8 @@ export function photoHelpTargets(
       label: [name || t(locale, 'cards.planting.kicker'), block && blockDisplayName(block, locale)]
         .filter(Boolean)
         .join(' · '),
-      careGuide: buildCareGuideCard(snapshot, p.cropPluginId, options)
+      careGuide: buildCareGuideCard(snapshot, p.cropPluginId, options),
+      drawing: pruneDrawingFor(snapshot.cropPlugins[p.cropPluginId])
     };
   });
 }

@@ -32,5 +32,17 @@
     "beeAttractive": true
   },
   "archetype": "cut-and-come-again-leafy",
-  "winterHardyToZone": "8a"
+  "winterHardyToZone": "8a",
+  "careTasks": [
+    {
+      "key": "prune-for-form",
+      "topic": "prune",
+      "title": "They benefit from occasional pruning or frequent harvest to maintain a nice form."
+    },
+    {
+      "key": "harvest-leaves",
+      "topic": "harvest",
+      "title": "Harvest leaves as needed throughout the season."
+    }
+  ]
 }

@@ -34,5 +34,22 @@
     "beeAttractive": true
   },
   "archetype": "cut-and-come-again-leafy",
-  "winterHardyToZone": "3a"
+  "winterHardyToZone": "3a",
+  "careTasks": [
+    {
+      "key": "cut-back-in-season",
+      "topic": "prune",
+      "title": "Cutting back the plants during the season also helps to maintain a more compact and neater looking plant."
+    },
+    {
+      "key": "cut-back-in-spring",
+      "topic": "prune",
+      "title": "Cut back plants in the spring just as growth resumes."
+    },
+    {
+      "key": "harvest-in-bloom",
+      "topic": "harvest",
+      "title": "The flavor and aroma of catnip is at its peak when the plant is in full bloom."
+    }
+  ]
 }

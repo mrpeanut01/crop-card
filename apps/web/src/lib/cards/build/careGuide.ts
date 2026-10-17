@@ -18,6 +18,7 @@ import type {
 import { t, type MessageKey } from '$lib/i18n';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import { seasonalRowText } from '$lib/i18n/seasonalTaskText';
+import { cropCareText } from '$lib/journal/cropCareTasks';
 import {
   blockDisplayName,
   daysText,
@@ -78,8 +79,12 @@ export function treeSizeSection(
 }
 
 function careTaskLine(t: SnapshotCareTask, pluginId: string, locale?: string | null): string {
-  const title = seasonalRowText(pluginId, t.key, 'title', t.title, locale).trim();
-  const body = t.body && seasonalRowText(pluginId, t.key, 'body', t.body, locale).trim();
+  const text = (part: 'title' | 'body', shown: string) =>
+    t.crop
+      ? cropCareText(pluginId, t.key, part, shown, locale)
+      : seasonalRowText(pluginId, t.key, part, shown, locale);
+  const title = text('title', t.title).trim();
+  const body = t.body && text('body', t.body).trim();
   if (!body) return title;
   return /[.!?]$/.test(title) ? `${title} ${body}` : `${title}. ${body}`;
 }
@@ -113,19 +118,21 @@ export function careGuideSections(
   };
   fromTips(CARE_SECTION.water, family?.water);
   fromTips(CARE_SECTION.feed, family?.feed);
-  const tasks = filterSprayAdviceItems(
-    (plugin.careTasks ?? []).map((c) => careTaskLine(c, plugin.pluginId, locale)).filter(Boolean),
-    sprayTerms
-  );
+  const lines = (rows: readonly SnapshotCareTask[]) =>
+    filterSprayAdviceItems(
+      rows.map((c) => careTaskLine(c, plugin.pluginId, locale)).filter(Boolean),
+      sprayTerms
+    );
+  const tasks = lines((plugin.careTasks ?? []).filter((c) => c.crop !== 'harvest'));
   if (tasks.length) {
     sections.push({ title: CARE_SECTION.prune, items: tasks, provenance: 'plugin' });
   } else {
     fromTips(CARE_SECTION.prune, family?.prune);
   }
-  const cues = filterSprayAdviceItems(
-    plugin.harvestIndicators?.filter((s) => s.trim()) ?? [],
-    sprayTerms
-  );
+  const cues = [
+    ...lines((plugin.careTasks ?? []).filter((c) => c.crop === 'harvest')),
+    ...filterSprayAdviceItems(plugin.harvestIndicators?.filter((s) => s.trim()) ?? [], sprayTerms)
+  ];
   if (cues.length) sections.push({ title: CARE_SECTION.harvest, items: cues, provenance: 'plugin' });
   fromTips(CARE_SECTION.problems, family?.problems);
   const notes = plugin.notes ? growerFacingText(plugin.notes, sprayTerms) : '';

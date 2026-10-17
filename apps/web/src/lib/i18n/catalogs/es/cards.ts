@@ -482,8 +482,6 @@ export const esCards: Partial<Record<MessageKey, string>> = {
     'Evita la tierra empapada. La humedad constante favorece la pudrición de la raíz.',
   'cards.tip.herb-culinary.feed.0':
     'Fertiliza con moderación. Un suelo pobre da un sabor más intenso.',
-  'cards.tip.herb-culinary.prune.0':
-    'Despunta los tallos de albahaca conforme se alargan para que la planta quede tupida y compacta.',
   'cards.tip.herb-culinary.problems.0': 'Crecimiento delgado y alargado: le falta luz.',
   'cards.tip.small-fruit.water.1':
     'Un acolchado de 2 a 3 pulgadas alrededor de los arándanos mantiene la humedad del suelo más pareja.',

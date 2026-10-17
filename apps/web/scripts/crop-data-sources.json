@@ -1131,6 +1131,30 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Allium schoenoprasum (Chives, Flowering Onion, Wild Chives)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "careTasks.remove-flowers": {
+      "url": "https://extension.illinois.edu/herbs/chives",
+      "publisher": "University of Illinois Extension, Herbs: Chives",
+      "date": "accessed 2026-10-17",
+      "quote": "Chives can self-sow and overtake a garden unless flowers are removed before they fade."
+    },
+    "careTasks.harvest-through-season": {
+      "url": "https://extension.illinois.edu/herbs/chives",
+      "publisher": "University of Illinois Extension, Herbs: Chives",
+      "date": "accessed 2026-10-17",
+      "quote": "Harvest chives throughout the season to prevent the leaves from becoming tough and to encourage formation of new bulblets."
+    },
+    "careTasks.cut-near-base": {
+      "url": "https://extension.illinois.edu/herbs/chives",
+      "publisher": "University of Illinois Extension, Herbs: Chives",
+      "date": "accessed 2026-10-17",
+      "quote": "Cut leaves toward the base about one inch above the soil."
+    },
+    "growthHabit": {
+      "url": "https://extension.illinois.edu/herbs/chives",
+      "publisher": "University of Illinois Extension, Herbs: Chives",
+      "date": "accessed 2026-10-17",
+      "quote": "They grow in clumps from underground bulbs and produce round, hollow leaves that are much finer than onion."
     }
   },
   "clover-red-mammoth": {
@@ -1454,6 +1478,12 @@
       "date": "Publication Date October 11, 2019; accessed 2026-10-17",
       "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Dill Anethum graveolens | Grow from seed sown in early spring. Sun or partial shade.\"",
       "note": "Illinois Extension (Dill) and NC State Plant Toolbox (Anethum graveolens) agree: annual."
+    },
+    "careTasks.harvest-foliage": {
+      "url": "https://extension.illinois.edu/herbs/dill",
+      "publisher": "University of Illinois Extension, Herbs: Dill",
+      "date": "accessed 2026-10-17",
+      "quote": "Foliage can be cut at any time and used fresh, or it can be dried for later use."
     }
   },
   "edamame-midori-giant": {
@@ -1561,6 +1591,12 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "Illinois Extension, Herb Gardening | Fennel: \"One that is treated like a bulb type vegetable (Florence fennel or Finocchio – Foeniculum vulgare var. dulce).\"; \"Growing: Annual Both forms of fennel are grown from seed.\"",
       "note": "Sources disagree: NC State Plant Toolbox (Foeniculum vulgare, with Florence Fennel among its common names) lists Life Cycle Perennial, zones 4a-9b. The bulb fennel this plugin grows is lifted whole in its first season, so the source on bulb fennel is kept."
+    },
+    "careTasks.harvest-bulb": {
+      "url": "https://extension.illinois.edu/herbs/fennel",
+      "publisher": "University of Illinois Extension, Herbs: Fennel",
+      "date": "accessed 2026-10-17",
+      "quote": "Florence fennel can be harvested when the “bulbs” are about the size of tennis balls by digging the “bulb” and cutting off the root and cutting back the top."
     }
   },
   "garlic-german-extra-hardy": {
@@ -2098,6 +2134,24 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Mentha spicata (Garden Mint, Lamb Mint, Mint, Spearmint)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "careTasks.remove-flower-spikes": {
+      "url": "https://extension.illinois.edu/herbs/mint",
+      "publisher": "University of Illinois Extension, Herbs: Mint",
+      "date": "accessed 2026-10-17",
+      "quote": "In order to maintain the flavor of the leaves, flower spikes should be removed as they appear."
+    },
+    "careTasks.harvest-often": {
+      "url": "https://extension.illinois.edu/herbs/mint",
+      "publisher": "University of Illinois Extension, Herbs: Mint",
+      "date": "accessed 2026-10-17",
+      "quote": "Leaves can be harvested as needed but the more frequently the stems are cut the more new growth is produced."
+    },
+    "careTasks.harvest-for-drying": {
+      "url": "https://extension.illinois.edu/herbs/mint",
+      "publisher": "University of Illinois Extension, Herbs: Mint",
+      "date": "accessed 2026-10-17",
+      "quote": "Leaves that are to be dried are best taken just as the flowers begin to appear."
     }
   },
   "mustard-greens-southern-giant-curled": {
@@ -2445,6 +2499,18 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "Illinois Extension, Herb Gardening | Greek Oregano: \"Greek oregano is the one to plant.\" ... \"True oregano is marginally hardy in zone 5.\"",
       "note": "Sources disagree; the warmest is stored (R-5). NC State Plant Toolbox, Origanum vulgare subsp. hirtum, lists USDA Plant Hardiness Zone 4a to 8b (coldest 4a)."
+    },
+    "careTasks.harvest-before-flower": {
+      "url": "https://extension.illinois.edu/herbs/oregano",
+      "publisher": "University of Illinois Extension, Herbs: Oregano",
+      "date": "accessed 2026-10-17",
+      "quote": "Harvesting can begin just before the plants are ready to flower."
+    },
+    "careTasks.leave-leaf-pairs": {
+      "url": "https://extension.illinois.edu/herbs/oregano",
+      "publisher": "University of Illinois Extension, Herbs: Oregano",
+      "date": "accessed 2026-10-17",
+      "quote": "Remove the stem tips leaving 4 to 6 pairs of leaves on the plant in order for it to produce side shoots for additional harvesting."
     }
   },
   "ornamental-corn-earth-tones-dent-raw-untreated-non-gmo": {
@@ -2525,6 +2591,12 @@
       "date": "Publication Date October 11, 2019; accessed 2026-10-17",
       "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Parsley Petroselinum spp | Grow from seed started in early spring. Slow to germinate. Sun. Biennial.\"",
       "note": "Listed in the Annuals table with the hint \"Biennial\"; Illinois Extension (Parsley, \"Growing: Biennial\") and NC State Plant Toolbox (Petroselinum crispum, Life Cycle Biennial) agree. The leaf harvest is the first year."
+    },
+    "careTasks.harvest-when-large": {
+      "url": "https://extension.illinois.edu/herbs/parsley",
+      "publisher": "University of Illinois Extension, Herbs: Parsley",
+      "date": "accessed 2026-10-17",
+      "quote": "Parsley can be cut any time after it has become large enough."
     }
   },
   "parsnip-hollow-crown": {
@@ -3066,6 +3138,24 @@
       "date": "Revised: June 2026; accessed 2026-10-17",
       "quote": "Wisconsin Horticulture, Rosemary: \"Because it is winter hardy only to zone 8a, rosemary is generally only grown as a potted plant in Wisconsin.\"",
       "note": "Illinois Extension (\"zone 8 and above\") and NC State Plant Toolbox (Salvia rosmarinus, 8a to 10b) agree. The cultivar Tuscan Blue is listed on the page with no zone of its own; Arp and Madeline Hill are hardier and are other cultivars."
+    },
+    "careTasks.prune-compact": {
+      "url": "https://extension.illinois.edu/herbs/rosemary",
+      "publisher": "University of Illinois Extension, Herbs: Rosemary",
+      "date": "accessed 2026-10-17",
+      "quote": "Pruning the plants will encourage a tight compact habit."
+    },
+    "careTasks.harvest-tips": {
+      "url": "https://extension.illinois.edu/herbs/rosemary",
+      "publisher": "University of Illinois Extension, Herbs: Rosemary",
+      "date": "accessed 2026-10-17",
+      "quote": "The tender tips and foliage can be cut as needed throughout the growing season."
+    },
+    "growthHabit": {
+      "url": "https://extension.illinois.edu/herbs/rosemary",
+      "publisher": "University of Illinois Extension, Herbs: Rosemary",
+      "date": "accessed 2026-10-17",
+      "quote": "Occasionally, longer, woody stems can be harvested and used as skewers for kabobs."
     }
   },
   "sage-broadleaf": {
@@ -3103,6 +3193,30 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Salvia officinalis (Common Sage, Culinary Sage, Garden Sage, Sage)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
       "note": "Coldest zone listed. Illinois Extension says Golden, Purple and Tricolor sage are not dependably hardy in zone 5; those are other cultivars, not broadleaf sage."
+    },
+    "careTasks.prune-in-spring": {
+      "url": "https://extension.illinois.edu/herbs/sage",
+      "publisher": "University of Illinois Extension, Herbs: Sage",
+      "date": "accessed 2026-10-17",
+      "quote": "Prune plants back in the spring just as new growth resumes."
+    },
+    "careTasks.harvest-leaves": {
+      "url": "https://extension.illinois.edu/herbs/sage",
+      "publisher": "University of Illinois Extension, Herbs: Sage",
+      "date": "accessed 2026-10-17",
+      "quote": "Leaves can be harvested through the season as needed."
+    },
+    "careTasks.cut-for-drying": {
+      "url": "https://extension.illinois.edu/herbs/sage",
+      "publisher": "University of Illinois Extension, Herbs: Sage",
+      "date": "accessed 2026-10-17",
+      "quote": "Cut 6-8 inch long stems for drying."
+    },
+    "growthHabit": {
+      "url": "https://extension.illinois.edu/herbs/sage",
+      "publisher": "University of Illinois Extension, Herbs: Sage",
+      "date": "accessed 2026-10-17",
+      "quote": "As plants age, they become woody and benefit from being replaced in order to maintain quality foliage for culinary use."
     }
   },
   "scallion-evergreen-bunching": {
@@ -3718,6 +3832,18 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Thymus vulgaris (Common Thyme, Garden Thyme, German Thyme, Thyme)\"; \"USDA Plant Hardiness Zone: 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "careTasks.renew-in-spring": {
+      "url": "https://extension.illinois.edu/herbs/thyme",
+      "publisher": "University of Illinois Extension, Herbs: Thyme",
+      "date": "accessed 2026-10-17",
+      "quote": "As thyme gets older, it can become woody and should be renewed every few years by cutting it back severely in the spring."
+    },
+    "growthHabit": {
+      "url": "https://extension.illinois.edu/herbs/thyme",
+      "publisher": "University of Illinois Extension, Herbs: Thyme",
+      "date": "accessed 2026-10-17",
+      "quote": "Stems are stiff and woody and leaves are small, oval and gray-green in color."
     }
   },
   "tomatillo-de-milpa": {
@@ -6402,6 +6528,24 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Nepeta cataria (Catmint, Catnip, Catswort)\"; \"USDA Plant Hardiness Zone: 3a, 3b, 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "careTasks.cut-back-in-season": {
+      "url": "https://extension.illinois.edu/herbs/catnip",
+      "publisher": "University of Illinois Extension, Herbs: Catnip",
+      "date": "accessed 2026-10-17",
+      "quote": "Cutting back the plants during the season also helps to maintain a more compact and neater looking plant."
+    },
+    "careTasks.cut-back-in-spring": {
+      "url": "https://extension.illinois.edu/herbs/catnip",
+      "publisher": "University of Illinois Extension, Herbs: Catnip",
+      "date": "accessed 2026-10-17",
+      "quote": "Cut back plants in the spring just as growth resumes."
+    },
+    "careTasks.harvest-in-bloom": {
+      "url": "https://extension.illinois.edu/herbs/catnip",
+      "publisher": "University of Illinois Extension, Herbs: Catnip",
+      "date": "accessed 2026-10-17",
+      "quote": "The flavor and aroma of catnip is at its peak when the plant is in full bloom."
     }
   },
   "chamomile-german": {
@@ -6491,6 +6635,24 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Lavandula angustifolia (Common Lavender, English Lavender, Lavender, Narrow-Leaved Lavender)\"; \"USDA Plant Hardiness Zone: 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
       "note": "Coldest zone listed for the species; the page lists Munstead among its cultivars. No other fetched source states a zone."
+    },
+    "careTasks.no-fall-cutback": {
+      "url": "https://extension.illinois.edu/herbs/lavender",
+      "publisher": "University of Illinois Extension, Herbs: Lavender",
+      "date": "accessed 2026-10-17",
+      "quote": "Do not cut back plants in the fall."
+    },
+    "careTasks.prune-after-new-growth": {
+      "url": "https://extension.illinois.edu/herbs/lavender",
+      "publisher": "University of Illinois Extension, Herbs: Lavender",
+      "date": "accessed 2026-10-17",
+      "quote": "Wait until some new growth starts to appear in the spring before doing any pruning."
+    },
+    "careTasks.harvest-as-flowers-open": {
+      "url": "https://extension.illinois.edu/herbs/lavender",
+      "publisher": "University of Illinois Extension, Herbs: Lavender",
+      "date": "accessed 2026-10-17",
+      "quote": "Cut stems of lavender just as the flowers start to open."
     }
   },
   "marjoram-sweet": {
@@ -6514,6 +6676,24 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "Illinois Extension, Herb Gardening | Sweet Marjoram: \"Sweet marjoram is an annual with a low, spreading growth habit.\" | \"Growing: Very Tender Perennial/Annual\"",
       "note": "NC State Plant Toolbox (Origanum majorana) lists Life Cycle \"Annual / Perennial\" with zones 9a-10b. Both sources name annual; the stored annual stays."
+    },
+    "careTasks.prune-at-six-inches": {
+      "url": "https://extension.illinois.edu/herbs/marjoram-sweet",
+      "publisher": "University of Illinois Extension, Herbs: Marjoram, Sweet",
+      "date": "accessed 2026-10-17",
+      "quote": "Sweet marjoram tends to be a low spreading plant that benefits from being pruned back when it is 6-8 inches tall to encourage a bushy growth habit."
+    },
+    "careTasks.harvest-at-tips": {
+      "url": "https://extension.illinois.edu/herbs/marjoram-sweet",
+      "publisher": "University of Illinois Extension, Herbs: Marjoram, Sweet",
+      "date": "accessed 2026-10-17",
+      "quote": "Harvest marjoram when ball-like tips appear at the ends of the stems."
+    },
+    "careTasks.cut-back-at-bloom": {
+      "url": "https://extension.illinois.edu/herbs/marjoram-sweet",
+      "publisher": "University of Illinois Extension, Herbs: Marjoram, Sweet",
+      "date": "accessed 2026-10-17",
+      "quote": "When the plant starts to bloom, cut plants back close to the ground to stimulate a new flush of growth."
     }
   },
   "stevia-sweetleaf": {
@@ -6574,6 +6754,12 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Satureja hortensis (Cimbru, Savory, Summer Savory)\"; \"Summer Savory is an edible, annual flowering herb, and with a culinary, medicinal, aromatic and decorative value.\"",
       "note": "Illinois Extension (Summer Savory, \"Growing: Annual\") agrees."
+    },
+    "careTasks.harvest-at-buds": {
+      "url": "https://extension.illinois.edu/herbs/savory-summer",
+      "publisher": "University of Illinois Extension, Herbs: Savory: Summer",
+      "date": "accessed 2026-10-17",
+      "quote": "Cut leafy tops when plants start to show buds."
     }
   },
   "tarragon-french": {
@@ -6617,6 +6803,18 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Artemisia dracunculus (Dragon Plant, Dragon Sagewort, Estragon, Herbaceous Sagewort, Pinon Wormwood, Silky Wormwood, Tarragon, Wild Tarragon)\"; \"USDA Plant Hardiness Zone: 3a, 3b, 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
       "note": "Coldest zone listed for the species, which the page says is the wild tarragon that culinary varieties come from (A. dracunculus 'Sativa' is French Tarragon). No fetched source gives French tarragon its own zone; recheck when one is found."
+    },
+    "careTasks.cut-back-in-spring": {
+      "url": "https://extension.illinois.edu/herbs/tarragon-french",
+      "publisher": "University of Illinois Extension, Herbs: Tarragon: French",
+      "date": "accessed 2026-10-17",
+      "quote": "Cut back plants in the spring just as growth resumes."
+    },
+    "careTasks.harvest-tips": {
+      "url": "https://extension.illinois.edu/herbs/tarragon-french",
+      "publisher": "University of Illinois Extension, Herbs: Tarragon: French",
+      "date": "accessed 2026-10-17",
+      "quote": "Young stem tips and leaves can be harvested as needed throughout the season."
     }
   },
   "arugula-astro": {
@@ -6672,6 +6870,12 @@
       "date": "Publication Date October 11, 2019; accessed 2026-10-17",
       "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Chervil Anthriscus cerefolium | Sow in early spring. Partial shade.\"",
       "note": "Illinois Extension (Chervil) agrees: annual. NC State Plant Toolbox lists Life Cycle \"Annual / Biennial\"."
+    },
+    "careTasks.harvest-open-leaves": {
+      "url": "https://extension.illinois.edu/herbs/chervil",
+      "publisher": "University of Illinois Extension, Herbs: Chervil",
+      "date": "accessed 2026-10-17",
+      "quote": "Harvest leaves when they are fully open but still tender."
     }
   },
   "endive-frisee": {
@@ -6736,6 +6940,12 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Levisticum officinale (Bladder seed, Garden Lovage, Lovage, Maggi plant)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "careTasks.harvest-young-leaves": {
+      "url": "https://extension.illinois.edu/herbs/lovage",
+      "publisher": "University of Illinois Extension, Herbs: Lovage",
+      "date": "accessed 2026-10-17",
+      "quote": "Harvest young leaves as they are more tender."
     }
   },
   "mache-corn-salad": {
@@ -6909,6 +7119,12 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "Illinois Extension, Herb Gardening | Fennel: \"One that is treated like a bulb type vegetable (Florence fennel or Finocchio – Foeniculum vulgare var. dulce).\"; \"Growing: Annual Both forms of fennel are grown from seed.\"",
       "note": "Sources disagree: NC State Plant Toolbox (Foeniculum vulgare, with Florence Fennel among its common names) lists Life Cycle Perennial, zones 4a-9b. The bulb fennel this plugin grows is lifted whole in its first season, so the source on bulb fennel is kept."
+    },
+    "careTasks.harvest-bulb": {
+      "url": "https://extension.illinois.edu/herbs/fennel",
+      "publisher": "University of Illinois Extension, Herbs: Fennel",
+      "date": "accessed 2026-10-17",
+      "quote": "Florence fennel can be harvested when the “bulbs” are about the size of tennis balls by digging the “bulb” and cutting off the root and cutting back the top."
     }
   },
   "barley-hulless-streaker": {
@@ -7746,6 +7962,18 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Melissa officinalis (Balm, Balm Leaf, Balm Mint, Common Balm, Dropsywort, Honey Balm, Lemon Balm\"; \"USDA Plant Hardiness Zone: 3a, 3b, 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "careTasks.prune-flower-stalks": {
+      "url": "https://extension.illinois.edu/herbs/lemon-balm",
+      "publisher": "University of Illinois Extension, Herbs: Lemon Balm",
+      "date": "accessed 2026-10-17",
+      "quote": "To prevent spreading, prune flowering stalks before they have a chance to set seed."
+    },
+    "careTasks.harvest-before-flowering": {
+      "url": "https://extension.illinois.edu/herbs/lemon-balm",
+      "publisher": "University of Illinois Extension, Herbs: Lemon Balm",
+      "date": "accessed 2026-10-17",
+      "quote": "Stems can be cut as needed anytime during the season preferably before flowering."
     }
   },
   "lemon-verbena": {
@@ -7769,6 +7997,18 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Aloysia citriodora (Lemon Beebrush, Lemon Verbena)\"; \"USDA Plant Hardiness Zone: 8a, 8b, 9a, 9b, 10a, 10b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "careTasks.prune-for-form": {
+      "url": "https://extension.illinois.edu/herbs/lemon-verbena",
+      "publisher": "University of Illinois Extension, Herbs: Lemon Verbena",
+      "date": "accessed 2026-10-17",
+      "quote": "They benefit from occasional pruning or frequent harvest to maintain a nice form."
+    },
+    "careTasks.harvest-leaves": {
+      "url": "https://extension.illinois.edu/herbs/lemon-verbena",
+      "publisher": "University of Illinois Extension, Herbs: Lemon Verbena",
+      "date": "accessed 2026-10-17",
+      "quote": "Harvest leaves as needed throughout the season."
     }
   },
   "cosmos-double-click": {
@@ -7966,6 +8206,25 @@
       "date": "Publication Date October 11, 2019; accessed 2026-10-17",
       "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Basil Ocimum basilicum | Grow from seed. Sun.\"",
       "note": "Illinois Extension (Basil) agrees: \"It is a tender annual\". NC State Plant Toolbox lists Life Cycle \"Annual / Perennial\" with zones 10a-10b only; stored as annual. The source names the species or the crop type; the cultivar takes the crop-type value (#591 ruling Q3)."
+    },
+    "careTasks.pinch-stems": {
+      "url": "https://extension.umd.edu/resource/basil",
+      "publisher": "University of Maryland Extension",
+      "date": "2026-02-25",
+      "quote": "Pinch stems as they lengthen to promote bushy, compact growth.",
+      "note": "Phase 37F: moved from the family tip herb-culinary.prune.0 (care-tips-sources.json), whose source is the UMD basil page and names basil only. The care task is the quote word for word."
+    },
+    "careTasks.pinch-flower-buds": {
+      "url": "https://extension.illinois.edu/herbs/basil",
+      "publisher": "University of Illinois Extension, Herbs: Basil",
+      "date": "accessed 2026-10-17",
+      "quote": "Basil flower buds should be removed by pinching as soon as you see them form."
+    },
+    "careTasks.harvest-leaves": {
+      "url": "https://extension.illinois.edu/herbs/basil",
+      "publisher": "University of Illinois Extension, Herbs: Basil",
+      "date": "accessed 2026-10-17",
+      "quote": "Limited harvesting of the leaves can start on young plants and as they get larger, individual leaves as well as tips of the plants can be harvested."
     }
   },
   "cilantro-santo": {

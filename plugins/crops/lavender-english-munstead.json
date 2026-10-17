@@ -40,5 +40,22 @@
       "suitability": "good"
     }
   ],
-  "winterHardyToZone": "5a"
+  "winterHardyToZone": "5a",
+  "careTasks": [
+    {
+      "key": "no-fall-cutback",
+      "topic": "prune",
+      "title": "Do not cut back plants in the fall."
+    },
+    {
+      "key": "prune-after-new-growth",
+      "topic": "prune",
+      "title": "Wait until some new growth starts to appear in the spring before doing any pruning."
+    },
+    {
+      "key": "harvest-as-flowers-open",
+      "topic": "harvest",
+      "title": "Cut stems of lavender just as the flowers start to open."
+    }
+  ]
 }

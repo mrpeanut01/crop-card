@@ -34,5 +34,12 @@
   ],
   "agronomy": {
     "lifecycle": "annual"
-  }
+  },
+  "careTasks": [
+    {
+      "key": "harvest-foliage",
+      "topic": "harvest",
+      "title": "Foliage can be cut at any time and used fresh, or it can be dried for later use."
+    }
+  ]
 }

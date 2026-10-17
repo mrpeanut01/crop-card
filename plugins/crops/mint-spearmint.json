@@ -41,5 +41,22 @@
   "agronomy": {
     "lifecycle": "perennial"
   },
-  "winterHardyToZone": "4a"
+  "winterHardyToZone": "4a",
+  "careTasks": [
+    {
+      "key": "remove-flower-spikes",
+      "topic": "prune",
+      "title": "In order to maintain the flavor of the leaves, flower spikes should be removed as they appear."
+    },
+    {
+      "key": "harvest-often",
+      "topic": "harvest",
+      "title": "Leaves can be harvested as needed but the more frequently the stems are cut the more new growth is produced."
+    },
+    {
+      "key": "harvest-for-drying",
+      "topic": "harvest",
+      "title": "Leaves that are to be dried are best taken just as the flowers begin to appear."
+    }
+  ]
 }

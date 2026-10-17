@@ -33,5 +33,23 @@
   "agronomy": {
     "lifecycle": "perennial"
   },
-  "winterHardyToZone": "4a"
+  "winterHardyToZone": "4a",
+  "careTasks": [
+    {
+      "key": "prune-in-spring",
+      "topic": "prune",
+      "title": "Prune plants back in the spring just as new growth resumes."
+    },
+    {
+      "key": "harvest-leaves",
+      "topic": "harvest",
+      "title": "Leaves can be harvested through the season as needed."
+    },
+    {
+      "key": "cut-for-drying",
+      "topic": "harvest",
+      "title": "Cut 6-8 inch long stems for drying."
+    }
+  ],
+  "growthHabit": "woody"
 }

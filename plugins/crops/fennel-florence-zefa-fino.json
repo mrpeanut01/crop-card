@@ -9,12 +9,8 @@
     "max": 90
   },
   "defaultRowSpacingInches": 18,
-  "plantingGuide": {
-  },
-  "harvestIndicators": [
-    "Bulb 3–4 in across",
-    "Pre-bolt"
-  ],
+  "plantingGuide": {},
+  "harvestIndicators": ["Bulb 3–4 in across", "Pre-bolt"],
   "notes": "Bulbing fennel — cool-season; bolts in heat. Plant late summer for fall harvest.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -25,5 +21,12 @@
   "archetype": "cut-and-come-again-leafy",
   "agronomy": {
     "lifecycle": "annual"
-  }
+  },
+  "careTasks": [
+    {
+      "key": "harvest-bulb",
+      "topic": "harvest",
+      "title": "Florence fennel can be harvested when the “bulbs” are about the size of tennis balls by digging the “bulb” and cutting off the root and cutting back the top."
+    }
+  ]
 }

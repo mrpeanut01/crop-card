@@ -262,6 +262,8 @@ export interface SnapshotCropPlugin {
   treeSizeClasses?: SnapshotTreeSizeClass[];
   /** The plugin's pruning and thinning steps (never its spray tasks). */
   careTasks?: SnapshotCareTask[];
+  /** Phase 37F: sourced growth habit for the photo help drawing. */
+  growthHabit?: 'woody' | 'clumping';
 }
 
 export interface SnapshotTreeSizeClass {
@@ -275,6 +277,9 @@ export interface SnapshotCareTask {
   key?: string;
   title: string;
   body?: string;
+  /** Phase 37F: set on the crop's own sourced `careTasks` rows (not
+   *  seasonal rows); `harvest` rows show under Harvest cues. */
+  crop?: 'prune' | 'harvest';
 }
 
 /** Month-day strings (`MM-DD`). `cautious` holds the 90%-sure dates, which

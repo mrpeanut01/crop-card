@@ -971,6 +971,28 @@ export const harvestCadenceSchema = z.strictObject({
   from: z.literal("first-cut"),
 });
 export type HarvestCadence = z.infer<typeof harvestCadenceSchema>;
+// Phase 37F: crop-level care steps and the growth habit the photo help
+// drawing follows. Each care task needs a source under `careTasks.<key>` in
+// apps/web/scripts/crop-data-sources.json whose quote holds its title and
+// body word for word; a growth habit needs a source under `growthHabit`
+// whose quote names it. Shown in the Care Guide above the family tips.
+export const CROP_CARE_TASK_TOPICS = ["prune", "harvest"] as const;
+export const cropCareTaskSchema = z.strictObject({
+  key: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
+  topic: z.enum(CROP_CARE_TASK_TOPICS),
+  title: z.string().trim().min(1).max(200),
+  body: z.string().trim().min(1).max(400).optional(),
+});
+export type CropCareTask = z.infer<typeof cropCareTaskSchema>;
+export const cropCareTasksSchema = z
+  .array(cropCareTaskSchema)
+  .min(1)
+  .max(12)
+  .refine((rows) => new Set(rows.map((r) => r.key)).size === rows.length, {
+    message: "careTasks keys must be unique",
+  });
+export const GROWTH_HABITS = ["woody", "clumping"] as const;
+export type GrowthHabit = (typeof GROWTH_HABITS)[number];
 
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
@@ -1165,6 +1187,11 @@ export const cropPluginSchema = pluginBase.extend({
     .string()
     .regex(/^(1[0-3]|[1-9])[ab]?$/)
     .optional(),
+  // Phase 37F
+  /** Sourced prune and harvest steps for this crop (Care Guide). */
+  careTasks: cropCareTasksSchema.optional(),
+  /** Sourced growth habit for the photo help drawing. */
+  growthHabit: z.enum(GROWTH_HABITS).optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

@@ -42,5 +42,18 @@
   "agronomy": {
     "lifecycle": "perennial"
   },
-  "winterHardyToZone": "8a"
+  "winterHardyToZone": "8a",
+  "careTasks": [
+    {
+      "key": "prune-compact",
+      "topic": "prune",
+      "title": "Pruning the plants will encourage a tight compact habit."
+    },
+    {
+      "key": "harvest-tips",
+      "topic": "harvest",
+      "title": "The tender tips and foliage can be cut as needed throughout the growing season."
+    }
+  ],
+  "growthHabit": "woody"
 }

@@ -24,9 +24,7 @@
     "rotationLookbackYears": 0
   },
   "notes": "Annual cousin of winter savory. Peppery thyme-like flavor classic with beans. Easy direct-sow herb.",
-  "harvestIndicators": [
-    "Tender tips at 6 to 10 inches before flowering"
-  ],
+  "harvestIndicators": ["Tender tips at 6 to 10 inches before flowering"],
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
     "daysFromPlantingMin": 60,
@@ -38,6 +36,13 @@
     {
       "method": "dry",
       "suitability": "good"
+    }
+  ],
+  "careTasks": [
+    {
+      "key": "harvest-at-buds",
+      "topic": "harvest",
+      "title": "Cut leafy tops when plants start to show buds."
     }
   ]
 }

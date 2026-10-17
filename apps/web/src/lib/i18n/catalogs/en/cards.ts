@@ -469,8 +469,6 @@ export const enCards = {
     'Plant in blocks of short rows, not one long row, so the ears fill out.',
   'cards.tip.herb-culinary.water.0': 'Avoid soggy soil. Constant moisture encourages root rot.',
   'cards.tip.herb-culinary.feed.0': 'Go easy on feeding. Lean soil gives stronger flavor.',
-  'cards.tip.herb-culinary.prune.0':
-    'Pinch basil stems as they lengthen to keep the plant bushy and compact.',
   'cards.tip.herb-culinary.problems.0': 'Thin, spindly growth: not enough light.',
   'cards.tip.small-fruit.water.1':
     'A 2 to 3 inch mulch around blueberries keeps soil moisture more even.',

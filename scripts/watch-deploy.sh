@@ -10,6 +10,10 @@
 # "Live" means production's /api/health reports this commit (or a newer main
 # commit that contains it) as `version`,
 # not that a workflow went green. Needs `gh auth login` and curl.
+#
+# Every GitHub call goes through `gh api` (REST), never GraphQL (`gh pr view`,
+# `gh run list`, `gh run watch`), so it also runs from Claude Code cloud
+# sessions, where GraphQL answers 403.
 
 set -euo pipefail
 
@@ -24,13 +28,13 @@ if [[ "$ARG" =~ ^[0-9]{1,6}$ ]]; then
   PR="$ARG"
   log "waiting for PR #${PR} to merge"
   while :; do
-    read -r STATE MERGE_SHA < <(gh pr view "$PR" --repo "$REPO" \
-      --json state,mergeCommit -q '"\(.state) \(.mergeCommit.oid // "-")"')
+    read -r STATE MERGE_SHA < <(gh api "repos/${REPO}/pulls/${PR}" \
+      -q '"\(if .merged then "MERGED" elif .state == "closed" then "CLOSED" else "OPEN" end) \(.merge_commit_sha // "-")"')
     [ "$STATE" = MERGED ] && { SHA="$MERGE_SHA"; break; }
     [ "$STATE" = CLOSED ] && { log "PR #${PR} was closed without merging"; exit 1; }
     sleep 20
   done
-  TITLE="$(gh pr view "$PR" --repo "$REPO" --json title -q .title)"
+  TITLE="$(gh api "repos/${REPO}/pulls/${PR}" -q .title)"
 elif [ -n "$ARG" ]; then
   SHA="$(gh api "repos/${REPO}/commits/${ARG}" -q .sha)"
 else
@@ -38,7 +42,7 @@ else
 fi
 if [ -z "$PR" ]; then
   PR="$(gh api "repos/${REPO}/commits/${SHA}/pulls" -q '.[0].number // empty' 2>/dev/null || true)"
-  [ -n "$PR" ] && TITLE="$(gh pr view "$PR" --repo "$REPO" --json title -q .title)"
+  [ -n "$PR" ] && TITLE="$(gh api "repos/${REPO}/pulls/${PR}" -q .title)"
 fi
 SHORT="${SHA::7}"
 log "commit ${SHORT}${PR:+ (PR #${PR})}"
@@ -47,14 +51,23 @@ log "commit ${SHORT}${PR:+ (PR #${PR})}"
 follow() { # workflow-file event
   local id=""
   for _ in $(seq 1 60); do
-    id="$(gh run list --repo "$REPO" --workflow "$1" --event "$2" --limit 20 \
-      --json databaseId,headSha -q "[.[] | select(.headSha == \"${SHA}\")][0].databaseId // empty")"
+    id="$(gh api "repos/${REPO}/actions/workflows/$1/runs?branch=main&event=$2&head_sha=${SHA}&per_page=20" \
+      -q "[.workflow_runs[] | select(.head_sha == \"${SHA}\")][0].id // empty")"
     [ -n "$id" ] && break
     sleep 10
   done
   [ -n "$id" ] || { log "no $1 run for ${SHORT} after 10 minutes"; return 1; }
   log "following $1 run ${id}"
-  gh run watch "$id" --repo "$REPO" --exit-status --interval 20 >/dev/null ||
+  # Same as `gh run watch --exit-status --interval 20`: poll until the run
+  # completes, and fail on any conclusion but success (failure, cancelled by a
+  # newer push, timed out).
+  local st=""
+  while :; do
+    st="$(gh api "repos/${REPO}/actions/runs/${id}" -q '"\(.status) \(.conclusion // "-")"')"
+    [ "${st%% *}" = completed ] && break
+    sleep 20
+  done
+  [ "${st#* }" = success ] ||
     { log "$1 failed: https://github.com/${REPO}/actions/runs/${id}"; return 1; }
 }
 
@@ -88,9 +101,8 @@ for _ in $(seq 1 90); do # 30 minutes
   LIVE="$(curl -fsS --max-time 90 "${ORIGIN%/}/api/health" 2>/dev/null |
     sed -n 's/.*"version":"\([^"]*\)".*/\1/p' || true)"
   if [ -n "$LIVE" ] && contains "$LIVE"; then break; fi
-  FAILED="$(gh run list --repo "$REPO" --workflow deploy.yml --limit 10 \
-    --json databaseId,conclusion,createdAt \
-    -q "[.[] | select(.createdAt >= \"${CI_DONE}\" and (.conclusion == \"failure\" or .conclusion == \"timed_out\"))][0].databaseId // empty")"
+  FAILED="$(gh api "repos/${REPO}/actions/workflows/deploy.yml/runs?per_page=10" \
+    -q "[.workflow_runs[] | select(.created_at >= \"${CI_DONE}\" and (.conclusion == \"failure\" or .conclusion == \"timed_out\"))][0].id // empty")"
   if [ -n "$FAILED" ]; then
     log "a deploy failed while waiting: https://github.com/${REPO}/actions/runs/${FAILED}"
     exit 1

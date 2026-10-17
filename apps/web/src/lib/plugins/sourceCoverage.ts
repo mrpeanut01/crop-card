@@ -17,6 +17,7 @@ import {
 import { SEEDING_RATE_KEYS } from './schemas';
 import { calendarWindowFromWords } from '../plan/calendarWords';
 import { numberPattern, statesDays, statesInches } from './quoteNumbers';
+import { quoteNamesCrop } from '../garden/herbQuoteNames';
 import type {
   ForageHazard,
   ForageHazardKind,
@@ -179,6 +180,7 @@ export function cropFactPaths(c: CropPlugin): string[] {
       if (!paths.includes(key)) paths.push(key);
     }
   }
+  paths.push(...herbHarvestFactPaths(c)); // Phase 37C
   return paths;
 }
 
@@ -919,6 +921,142 @@ export function forageHazardGaps(
   for (const [id, reason] of Object.entries(exclusions)) {
     if (!mapped.has(id)) gaps.push(`${id}: excluded but not named in any crop entry`);
     if (reason.trim().length <= 10) gaps.push(`${id}: exclusion reason is too short`);
+  }
+  return gaps;
+}
+
+// ─── Phase 37C: preserving and harvest cadence ─────────────────────────
+
+/** Phase 37C: the source keys for a crop's `preserving` entries and its
+ *  `harvestCadence`; an infuse entry also needs its food-safety line. */
+export function herbHarvestFactPaths(
+  c: Pick<CropPlugin, 'preserving' | 'harvestCadence'>
+): string[] {
+  const paths: string[] = [];
+  for (const p of c.preserving ?? []) {
+    paths.push(`preserving.${p.method}`);
+    if (p.method === 'infuse') paths.push('preserving.infuse.safety');
+  }
+  if (c.harvestCadence) paths.push('harvestCadence');
+  return paths;
+}
+
+type PreservingMethodKey = NonNullable<CropPlugin['preserving']>[number]['method'];
+
+const FREEZE_DRY_WORDS = /\bfreeze[- ]?dr(?:y|ied|ies|ying|ier)\b|\blyophili[sz]/gi;
+
+/** The quote names the method. "Freeze-dried" names freeze-dry only, never
+ *  dry or freeze. */
+const PRESERVING_METHOD_WORDS: Record<Exclude<PreservingMethodKey, 'freeze-dry'>, RegExp> = {
+  fresh: /\bfresh\b/i,
+  dry: /\bdr(?:y|ied|ies|ying)\b/i,
+  freeze: /\bfr(?:eez(?:e|es|ing)|oz(?:en)?)\b/i,
+  infuse:
+    /\binfus(?:e|ed|es|ing|ion)\b|\bin (?:olive )?oil\b|\b(?:herb|herbal|flavou?red) (?:oils?|vinegars?)\b/i
+};
+
+/** Qualifying words a source uses when a method works only fairly well, or
+ *  poorly. A `good` entry needs none. */
+const SUITABILITY_WORDS: Record<'fair' | 'poor', RegExp> = {
+  fair: /\b(?:fairly|moderately|somewhat|less|not as (?:well|good)|loses? some|some of (?:the|its) (?:flavou?r|aroma|colou?r)|acceptable)\b/i,
+  poor: /\b(?:poor(?:ly)?|does not|do not|don't|doesn't|not recommended|not suitable|unsuitable|loses? (?:most|much)|best (?:used )?fresh|turns? (?:black|brown))\b/i
+};
+
+function namesMethod(quote: string, method: PreservingMethodKey): boolean {
+  if (method === 'freeze-dry') return new RegExp(FREEZE_DRY_WORDS.source, 'i').test(quote);
+  const rest =
+    method === 'dry' || method === 'freeze' ? quote.replace(FREEZE_DRY_WORDS, ' ') : quote;
+  return PRESERVING_METHOD_WORDS[method].test(rest);
+}
+
+/** Phase 37C: each `preserving.<method>` quote comes from an extension or
+ *  government page, names the method and the crop, and for `fair` or `poor`
+ *  carries the source's qualifying words. An infuse entry needs a note (the
+ *  line the app shows) and a `preserving.infuse.safety` quote from a .edu
+ *  food-safety page (NCHFP is one) that names botulism. Returns "pluginId:
+ *  problem" lines; a missing source is `checkSources`' report. */
+export function preservingQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'preserving'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    for (const p of c.preserving ?? []) {
+      const key = `preserving.${p.method}`;
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
+      if (entry.success) {
+        const quote = entry.data.quote;
+        if (!isAllowedSpacingSource(entry.data.url)) {
+          gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+        }
+        if (!namesMethod(quote, p.method)) {
+          gaps.push(`${c.pluginId}: ${key} quote does not name the method`);
+        }
+        if (!quoteNamesCrop(quote, c)) {
+          gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
+        }
+        if (p.suitability !== 'good' && !SUITABILITY_WORDS[p.suitability].test(quote)) {
+          gaps.push(`${c.pluginId}: ${key} quote has no words that say ${p.suitability}`);
+        }
+      }
+      if (p.method !== 'infuse') continue;
+      if (!p.note) gaps.push(`${c.pluginId}: preserving.infuse needs a note with the safety line`);
+      const safety = sourceEntrySchema.safeParse(sources[c.pluginId]?.['preserving.infuse.safety']);
+      if (!safety.success) continue;
+      let host = '';
+      try {
+        host = new URL(safety.data.url).hostname.toLowerCase();
+      } catch {
+        host = '';
+      }
+      if (!host.endsWith('.edu')) {
+        gaps.push(`${c.pluginId}: preserving.infuse.safety source is not a .edu food-safety page`);
+      }
+      if (!/\bbotulism\b|\bbotulinum\b/i.test(safety.data.quote)) {
+        gaps.push(`${c.pluginId}: preserving.infuse.safety quote does not name botulism`);
+      }
+    }
+  }
+  return gaps;
+}
+
+const CADENCE_INTERVAL_WORDS =
+  /\bevery\b|\bbetween (?:cuts|cuttings|harvests|clippings|pickings)\b|\bapart\b|\bintervals?\b|\bagain (?:in|after)\b/i;
+const VAGUE_INTERVAL_WORDS =
+  /\b(?:a few|several|a couple of|couple of|a couple)\s+(?:days|weeks)\b/i;
+
+/** Phase 37C: a `harvestCadence` quote comes from an extension or
+ *  government page, names the crop, states both ends of the interval as
+ *  days or whole weeks and says it is the time between cuts. "A few weeks"
+ *  never counts. */
+export function harvestCadenceQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'harvestCadence'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    const cadence = c.harvestCadence;
+    if (!cadence) continue;
+    const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.harvestCadence);
+    if (!entry.success) continue;
+    const quote = entry.data.quote;
+    if (!isAllowedSpacingSource(entry.data.url)) {
+      gaps.push(`${c.pluginId}: harvestCadence source is not an extension or government page`);
+    }
+    if (!quoteNamesCrop(quote, c)) {
+      gaps.push(`${c.pluginId}: harvestCadence quote does not name the crop`);
+    }
+    if (!CADENCE_INTERVAL_WORDS.test(quote)) {
+      gaps.push(`${c.pluginId}: harvestCadence quote does not say it is the time between cuts`);
+    }
+    const { min, max } = cadence.everyDays;
+    if (!(statesDays(quote, min) && statesDays(quote, max))) {
+      gaps.push(
+        VAGUE_INTERVAL_WORDS.test(quote)
+          ? `${c.pluginId}: harvestCadence quote gives no number ("a few weeks" never counts)`
+          : `${c.pluginId}: harvestCadence quote does not state ${min}-${max} days`
+      );
+    }
   }
   return gaps;
 }

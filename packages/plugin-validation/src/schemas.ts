@@ -933,6 +933,45 @@ export const nitrogenNeedSchema = z
   .max(3);
 export type NitrogenNeed = z.infer<typeof nitrogenNeedSchema>;
 
+// Phase 37C: how an herb keeps and how often it can be cut. Each entry needs
+// a source under `preserving.<method>` (and `preserving.infuse.safety` for
+// infuse) or `harvestCadence` in apps/web/scripts/crop-data-sources.json.
+// The method list equals PRESERVING_METHODS in apps/web/src/lib/garden/preserving.ts.
+export const CROP_PRESERVING_METHODS = [
+  "fresh",
+  "dry",
+  "freeze",
+  "freeze-dry",
+  "infuse",
+] as const;
+export const CROP_PRESERVING_SUITABILITY = ["good", "fair", "poor"] as const;
+
+export const preservingSchema = z
+  .array(
+    z.strictObject({
+      method: z.enum(CROP_PRESERVING_METHODS),
+      suitability: z.enum(CROP_PRESERVING_SUITABILITY),
+      note: z.string().trim().min(1).max(300).optional(),
+    }),
+  )
+  .min(1)
+  .max(CROP_PRESERVING_METHODS.length)
+  .refine((rows) => new Set(rows.map((r) => r.method)).size === rows.length, {
+    message: "one preserving entry per method",
+  });
+export type CropPreserving = z.infer<typeof preservingSchema>[number];
+
+export const harvestCadenceSchema = z.strictObject({
+  everyDays: z
+    .strictObject({
+      min: z.number().int().min(1).max(120),
+      max: z.number().int().min(1).max(120),
+    })
+    .refine((v) => v.min <= v.max, { message: "min must be ≤ max" }),
+  from: z.literal("first-cut"),
+});
+export type HarvestCadence = z.infer<typeof harvestCadenceSchema>;
+
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
   cropFamily: z.preprocess(
@@ -1117,6 +1156,9 @@ export const cropPluginSchema = pluginBase.extend({
   nitrogenNeedLbPerAcre: nitrogenNeedSchema.optional(),
   /** #686: sourced yearly harvest period for a perennial. */
   harvestSeason: harvestSeasonSchema.optional(),
+  // Phase 37C
+  preserving: preservingSchema.optional(),
+  harvestCadence: harvestCadenceSchema.optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

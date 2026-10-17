@@ -55,7 +55,7 @@ describe('lifecycleHere', () => {
   });
 
   it('tags an unsourced annual fallback and a sourced one plugin', () => {
-    const plugin = { pluginId: 'dill-mammoth', agronomy: { lifecycle: 'annual' } };
+    const plugin = { pluginId: 'test-herb-annual', agronomy: { lifecycle: 'annual' } };
     expect(lifecycleHere(plugin, null)).toMatchObject({
       lifecycle: 'annual',
       provenance: 'fallback',
@@ -64,7 +64,7 @@ describe('lifecycleHere', () => {
     expect(lifecycleLine(lifecycleHere(plugin, null))).toBe(
       'One season. Not yet checked against a source.'
     );
-    const v = lifecycleHere(plugin, null, { 'dill-mammoth': { lifecycle: 'annual' } });
+    const v = lifecycleHere(plugin, null, { 'test-herb-annual': { lifecycle: 'annual' } });
     expect(v).toMatchObject({ lifecycle: 'annual', provenance: 'plugin', sourced: true });
     expect(lifecycleLine(v)).toBe('One season.');
   });
@@ -95,7 +95,7 @@ describe('lifecycleHere', () => {
   });
 
   it('a perennial with no sourced crop zone is unknown and names the typed zone', () => {
-    const v = lifecycleHere(rosemary(), farm('7b', 'manual'));
+    const v = lifecycleHere(rosemary(), farm('7b', 'manual'), {});
     expect(v).toMatchObject({
       lifecycle: 'unknown',
       reason: 'no-crop-zone',

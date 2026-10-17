@@ -2,7 +2,7 @@
   "pluginId": "mint-spearmint",
   "type": "crop",
   "displayName": "Mint — Spearmint",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 60,
@@ -25,5 +25,9 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "4a"
 }

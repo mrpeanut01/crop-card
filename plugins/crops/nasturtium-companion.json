@@ -2,7 +2,7 @@
   "pluginId": "nasturtium-companion",
   "type": "crop",
   "displayName": "Nasturtium",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "broadleaf-companion",
   "daysToMaturity": {
     "min": 50,
@@ -25,5 +25,8 @@
     "daysFromPlantingMax": 120,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "agronomy": {
+    "lifecycle": "annual"
+  }
 }

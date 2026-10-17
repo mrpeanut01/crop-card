@@ -10,7 +10,39 @@ export interface SourcedLifecycle {
   winterHardyToZone?: string;
 }
 
-export const SOURCED_LIFECYCLES: Readonly<Record<string, SourcedLifecycle>> = Object.freeze({});
+export const SOURCED_LIFECYCLES: Readonly<Record<string, SourcedLifecycle>> = Object.freeze({
+  'basil-genovese': { lifecycle: 'annual' },
+  'chives-common': { lifecycle: 'perennial', winterHardyToZone: '4a' },
+  'mint-spearmint': { lifecycle: 'perennial', winterHardyToZone: '4a' },
+  'oregano-greek': { lifecycle: 'perennial', winterHardyToZone: '5' },
+  'rosemary-tuscan-blue': { lifecycle: 'perennial', winterHardyToZone: '8a' },
+  'sage-broadleaf': { lifecycle: 'perennial', winterHardyToZone: '4a' },
+  'thyme-german-winter': { lifecycle: 'perennial', winterHardyToZone: '5a' },
+  'anise-hyssop': { lifecycle: 'perennial', winterHardyToZone: '4a' },
+  'bergamot-monarda': { lifecycle: 'perennial', winterHardyToZone: '4a' },
+  'catnip-common': { lifecycle: 'perennial', winterHardyToZone: '3a' },
+  'hyssop-officinalis': { lifecycle: 'perennial', winterHardyToZone: '4a' },
+  'lavender-english-munstead': { lifecycle: 'perennial', winterHardyToZone: '5a' },
+  'lemon-balm': { lifecycle: 'perennial', winterHardyToZone: '3a' },
+  'lemon-verbena': { lifecycle: 'perennial', winterHardyToZone: '8a' },
+  'marjoram-sweet': { lifecycle: 'annual' },
+  'mountain-mint': { lifecycle: 'perennial', winterHardyToZone: '4a' },
+  'perilla-shiso-green': { lifecycle: 'annual' },
+  'stevia-sweetleaf': { lifecycle: 'perennial', winterHardyToZone: '10a' },
+  'summer-savory': { lifecycle: 'annual' },
+  'tarragon-french': { lifecycle: 'perennial', winterHardyToZone: '3a' },
+  'tulsi-holy-basil-rama': { lifecycle: 'annual' },
+  'parsley-italian-flat-leaf': { lifecycle: 'biennial' },
+  'cilantro-santo': { lifecycle: 'annual' },
+  'dill-mammoth': { lifecycle: 'annual' },
+  chervil: { lifecycle: 'annual' },
+  'fennel-bulb-perfection': { lifecycle: 'annual' },
+  'fennel-florence-zefa-fino': { lifecycle: 'annual' },
+  lovage: { lifecycle: 'perennial', winterHardyToZone: '4a' },
+  'chamomile-german': { lifecycle: 'annual' },
+  'calendula-resina': { lifecycle: 'annual' },
+  'nasturtium-companion': { lifecycle: 'annual' }
+});
 
 /** The names a lifecycle or zone quote may use for each herb: common names
  *  and the botanical name. Matched case-insensitively on word boundaries. */

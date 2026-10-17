@@ -151,4 +151,32 @@ describe('winterHardyToZoneQuoteGaps', () => {
   it('leaves a missing source to checkSources', () => {
     expect(winterHardyToZoneQuoteGaps([herb], {})).toEqual([]);
   });
+
+  it('asks a perennial herb with no zone for a reason, and refuses one beside a zone', () => {
+    const noZone = { pluginId: herb.pluginId, agronomy: herb.agronomy };
+    expect(winterHardyToZoneQuoteGaps([noZone], {})).toEqual([
+      'rosemary-tuscan-blue: perennial with no winterHardyToZone and no winterHardyToZone.notRecorded reason'
+    ]);
+    expect(
+      winterHardyToZoneQuoteGaps([noZone], {
+        [herb.pluginId]: { 'winterHardyToZone.notRecorded': REASON }
+      })
+    ).toEqual([]);
+    expect(
+      winterHardyToZoneQuoteGaps([herb], {
+        [herb.pluginId]: {
+          winterHardyToZone: source('Rosemary is hardy in zones 8 to 10.'),
+          'winterHardyToZone.notRecorded': REASON
+        }
+      })
+    ).toEqual([
+      'rosemary-tuscan-blue: winterHardyToZone is set; drop winterHardyToZone.notRecorded'
+    ]);
+    expect(
+      winterHardyToZoneQuoteGaps(
+        [{ pluginId: 'basil-genovese', agronomy: { lifecycle: 'annual' } }],
+        {}
+      )
+    ).toEqual([]);
+  });
 });

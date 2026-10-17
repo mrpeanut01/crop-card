@@ -2,7 +2,7 @@
   "pluginId": "lemon-balm",
   "type": "crop",
   "displayName": "Lemon Balm (Melissa officinalis)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -31,5 +31,6 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "winterHardyToZone": "3a"
 }

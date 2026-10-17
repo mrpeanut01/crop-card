@@ -2,7 +2,7 @@
   "pluginId": "sage-broadleaf",
   "type": "crop",
   "displayName": "Sage — Broadleaf (Salvia officinalis)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
@@ -25,5 +25,9 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "4a"
 }

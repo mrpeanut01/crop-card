@@ -935,9 +935,15 @@ export function forageHazardGaps(
 /** Why a herb's lifecycle has no quote yet: `{ reason }` under
  *  `lifecycle.notRecorded`. */
 export const LIFECYCLE_NOT_RECORDED_KEY = 'lifecycle.notRecorded';
+/** Why a perennial herb has no `winterHardyToZone` yet. */
+export const ZONE_NOT_RECORDED_KEY = 'winterHardyToZone.notRecorded';
 
-function notRecordedReason(sources: SourceMap, pluginId: string): string | null {
-  const entry = sources[pluginId]?.[LIFECYCLE_NOT_RECORDED_KEY] as { reason?: unknown } | undefined;
+function notRecordedReason(
+  sources: SourceMap,
+  pluginId: string,
+  key: string = LIFECYCLE_NOT_RECORDED_KEY
+): string | null {
+  const entry = sources[pluginId]?.[key] as { reason?: unknown } | undefined;
   return typeof entry?.reason === 'string' && entry.reason.trim().length > 10 ? entry.reason : null;
 }
 
@@ -989,16 +995,27 @@ export function lifecycleQuoteGaps(
 
 /** A listed herb's `winterHardyToZone` is on a perennial and its quote,
  *  from an extension or government page, names the crop, says "zone" and
- *  states the stored number (and letter when stored). A missing source is
- *  reported by `checkSources` over `cropFactPaths`. */
+ *  states the stored number (and letter when stored). A perennial herb with
+ *  no zone needs a `winterHardyToZone.notRecorded` reason. A missing source
+ *  is reported by `checkSources` over `cropFactPaths`. */
 export function winterHardyToZoneQuoteGaps(
   crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'agronomy' | 'winterHardyToZone'>>,
   sources: SourceMap
 ): string[] {
   const gaps: string[] = [];
   for (const c of crops) {
+    if (!isHerbGardenCrop(c.pluginId)) continue;
     const zone = c.winterHardyToZone;
-    if (!zone || !isHerbGardenCrop(c.pluginId)) continue;
+    const reason = notRecordedReason(sources, c.pluginId, ZONE_NOT_RECORDED_KEY);
+    if (!zone) {
+      if (c.agronomy?.lifecycle === 'perennial' && !reason) {
+        gaps.push(
+          `${c.pluginId}: perennial with no winterHardyToZone and no ${ZONE_NOT_RECORDED_KEY} reason`
+        );
+      }
+      continue;
+    }
+    if (reason) gaps.push(`${c.pluginId}: winterHardyToZone is set; drop ${ZONE_NOT_RECORDED_KEY}`);
     if (c.agronomy?.lifecycle !== 'perennial') {
       gaps.push(`${c.pluginId}: winterHardyToZone on a crop that is not a perennial`);
     }

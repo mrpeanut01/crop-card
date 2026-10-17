@@ -2,7 +2,7 @@
   "pluginId": "chives-common",
   "type": "crop",
   "displayName": "Chives — Common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 60,
@@ -39,5 +39,9 @@
       ],
       "severity": "toxic"
     }
-  ]
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "4a"
 }

@@ -1,4 +1,4 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
 import { lookupByPlaintext, touchCredential } from '$lib/server/appCreds';
 import { readAdminSession } from '$lib/server/adminSession';
 import { ensureBootstrapped } from '$lib/server/bootstrap';
@@ -47,7 +47,9 @@ export const handle: Handle = async ({ event, resolve }) => {
     const intranetReadAllowed = mode === 'intranet' && event.request.method === 'GET';
     if (!intranetReadAllowed) {
       return new Response(
-        JSON.stringify({ error: 'authentication required: send Authorization: Bearer ccm_…' }),
+        JSON.stringify({
+          error: 'authentication required: send Authorization: Bearer ccm_…'
+        }),
         { status: 401, headers: { 'content-type': 'application/json' } }
       );
     }
@@ -73,19 +75,25 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 
 /** Structured server-error visibility — never opaque "Internal error". */
-export const handleError: HandleServerError = ({ error, event, status, message }) => {
+export const handleError: HandleServerError = (input) => {
+  const { error, event } = input;
+  const known = input.kind === 'unknown' ? null : input.error;
+  const status = known && 'status' in known ? known.status : input.kind === 'app' ? undefined : 500;
+  const message = known?.message ?? 'Internal Error';
   const errId = crypto.randomUUID();
   console.error(
     JSON.stringify({
       tag: 'server-error',
+      kind: input.kind,
       errId,
       route: event.route.id,
       method: event.request.method,
       url: event.url.pathname,
       status,
       message,
-      stack: error instanceof Error ? error.stack : String(error)
+      stack:
+        error instanceof Error ? error.stack : input.kind === 'unknown' ? String(error) : undefined
     })
   );
-  return { message, errId } as App.Error;
+  return { errId };
 };

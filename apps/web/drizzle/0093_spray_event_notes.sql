@@ -1,0 +1,1 @@
+ALTER TABLE `spray_events` ADD `notes` text;

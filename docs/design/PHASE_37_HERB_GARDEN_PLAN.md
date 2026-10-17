@@ -1,0 +1,121 @@
+# Phase 37: a simple herb garden for someone who has never gardened
+
+Started 2026-10-17. Phase 37 makes CropCard useful to a novice with a small herb garden: a few beds or pots by the kitchen, no sprayer, no tractor, and no idea what to cut. The farm persona keeps everything it has; nothing here switches off a record, an export or a safety step. The CLAUDE.md invariants bind it, above all invariant 7 (AI assists, never gates; every pre-populated value carries a provenance tag and the no-key path works end to end), invariant 6 (tenant isolation) and invariant 9 (every new string ships in English and Spanish). No safety rule changes are planned, so `RULES_VERSION` stays 0.7.11. Every agronomy value a cluster adds needs a quoted .edu or .gov source in the matching `apps/web/scripts/*-sources.json` file and a gate test, as the crop data rules in CLAUDE.md require; a value with no source ships as "not known" and never as a guess.
+
+## The journey this phase builds
+
+1. **Begin.** A new owner says they want an herb garden. A short conversation, driven by Claude when a key is on and by a plain form when it is not, asks what they like to cook and eat, why they want the garden, how much time and sun they have, and what they want to do with the harvest (fresh use, drying, freezing, freeze-drying, pesto, vinegars and oils, canning). The answers become a saved **garden brief** and a shortlist of herbs from the shipped library, each with the reason it was picked.
+2. **Plan.** The shortlist flows into the existing garden designer and planning wizard. Each herb says whether it is an annual, a biennial, or a perennial here, in the farm's hardiness zone, or a tender perennial that must come indoors or be grown as an annual. The plan shows, week by week, what the chosen herbs give and when, set against the brief's goals, so a person who wants a year of dried oregano and summer pesto can see whether the plan delivers it.
+3. **Grow.** The calendar says when to do what for each herb: pinch, cut back, divide, bring in before frost, start again. Rain, logged watering and temperatures feed a watering verdict per bed in real time, and an automatic waterer on a timer counts as water given. Watering advice knows that thyme wants it dry and basil does not.
+4. **Prune and harvest.** A photo of the plant comes back with marks drawn over it: cut here, pinch here, harvest these, leave that. With no key, the same question gets the Care Guide's sourced steps and a line drawing for the crop's growth habit.
+5. **Preserve.** Harvests record how the herb was kept (dried, frozen, freeze-dried, canned, infused, fresh), and a pantry view shows progress against the brief's storage goals and suggests the next cut when a goal is short.
+
+## Clusters
+
+Six clusters run in parallel in isolated worktrees and integrate on one branch. Each owns its files; the shared files every cluster touches are listed under "Cross-cluster contracts" with the rule for touching them.
+
+### 37A Garden brief: the beginner's Q&A
+
+**Goal.** A saved, structured brief per Owner, filled by a conversation or a form, that the rest of the phase reads.
+
+- **Where it starts.** A new `herbs` growing tile on onboarding screen 2 ("A few herbs by the kitchen"), which seeds one undrawn starter Area of kind `garden` named "Herb garden" and routes the owner to the brief. Also reachable any time at `/plan/brief`, from the Getting Started card ("Tell us about your garden") and the /plan setup nudges when the profile is `garden` and no brief is saved. Owners write; helpers and inspectors read.
+- **The questions** (the form's fixed set, in this order): why the garden (cooking, tea, pollinators and looks, gifts, saving money, learning with children); what they cook (a cuisine multi-pick: Italian, Mexican, Thai and Vietnamese, French, Middle Eastern, Indian, tea and drinks); herbs they already know they want (type-ahead over the crop library, limited to the `herb-culinary` family plus a ruled list of edible-flower and tea plants); herbs they never use; how much time a week (under an hour, one to two hours, more); how much sun the spot gets (full, half day, shade); where it grows (ground beds, raised beds, pots, a windowsill); what to do with the harvest (fresh only, dry, freeze, freeze-dry, pesto and sauces, vinegars and oils, canning and jelly), with a rough target per method in plain words ("enough dried oregano for the year", "a dozen pesto portions"). Every answer has an "I'm not sure" option.
+- **AI mode.** `POST /api/garden/brief/chat` goes through `aiTry()` and `aiGuard` under a new endpoint `garden-brief` (daily caps ruled by the panel). Claude gets the answers so far, the farm's zone, frost dates and Area kinds, and the herb library's ids, names and lifecycle data, and returns `{ reply, followUp?: Question, shortlist: [{ cropPluginId, because }] }` in a strict JSON shape. The server validates every `cropPluginId` against the registry and drops unknown ids, caps the shortlist at 12, and runs every sentence through the existing spray-advice guard (`lib/journal/photoHelp.ts` `normalizeQuestion` and its phrase list), so the brief never carries a pesticide recommendation. Conversation turns are capped at 8; the form stays visible beside the chat so the owner can answer directly at any point. The shortlist is tagged `ai`.
+- **No-key mode.** The same form, then a pure, deterministic shortlist in `lib/garden/brief/shortlist.ts`: a cuisine-to-herb table and a goal-to-herb table built only from the library's `cropFamily`, lifecycle, sun and storage data (37B and 37C), tagged `fallback`; herbs the owner typed are tagged `manual`. The result page is byte-identical in layout to the AI result.
+- **Storage.** Owner setting `garden_brief` (JSON, Zod schema `lib/garden/brief/schema.ts`, client-safe, in OpenAPI), each answer with its provenance, plus `garden_brief_updated_at`. No new table. The brief is in the GDPR export (owner only) and the farm wipe. The offline card snapshot carries the brief's shortlist and goals for the Planting and Area cards (37C reads them).
+- **Hand-off.** "Plan these herbs" opens the planning wizard with the shortlist pre-picked (seed lots are not required; the wizard's "Quantity not set, will size to bed" path from Wave 1 already covers a crop with no seed), or the garden designer with the shortlist in its crop picker, in both cases with the lifecycle line from 37B on each row.
+- **Tests.** Zod schema and shortlist unit tests, the guard phrase list against every shortlist sentence (property test), an endpoint test for unknown ids and over-long shortlists, the fixture Claude answer for the e2e spec (`lib/server/aiFixture/claude.ts`), and `garden-brief.spec.ts` for both modes.
+
+### 37B Annual, biennial or perennial here: lifecycle and hardiness data
+
+**Goal.** Every herb plugin says what it is, and the app says what that means on this farm.
+
+- **Plugin data.** `agronomy.lifecycle` (`annual | biennial | perennial`) on every `herb-culinary` plugin, and a new optional `hardiness: { minZone: string }` (a USDA half-zone such as `7a`) for perennials, each quoted in `crop-data-sources.json` under `lifecycle` and `hardiness.minZone` (a `cropFactPaths` entry and a `lifecycleQuoteGaps` check in `lib/plugins/sourceCoverage.ts`: the quote must state the lifecycle word, or the zone number, for that crop). Biennials (parsley, caraway) are recorded as biennial with the note that the leaf harvest is first-year. Where no .edu or .gov source states a value, the field stays empty and the app says "not known".
+- **The verdict.** Pure, client-safe `lib/garden/lifecycleHere.ts`: `lifecycleHere(plugin, farmZone)` returns `perennial-here | tender-perennial | annual | biennial | unknown` with provenance (`plugin` when both the lifecycle and the zone comparison come from data, `manual` when the farm's zone is the owner's typed override, `fallback` when the farm has no zone or the crop has no `minZone`). A perennial with `minZone` warmer than the farm's zone is `tender-perennial`; with no farm zone or no `minZone`, a perennial reads `unknown` with the sentence "Perennial in warm zones; this farm's zone is not known." The comparison reads `lib/climate/zone.ts` (`parseZone`, zone order) and never the USDA map wording.
+- **Where it shows.** The brief shortlist (37A), the wizard's crop picker and Review step, the garden designer's crop list, the Planting card, the Care Guide card, `/crops/[id]` and the offline snapshot (`FARM_SNAPSHOT_VERSION` bump, one for the whole phase, see contracts). Wording: "Comes back every year here", "Comes back in zones 8 and warmer; here, bring it in or grow it as an annual", "One season", "Two years; harvest leaves the first year".
+- **Side effect for the calendar.** `tender-perennial` adds one engine event in 37D ("Bring indoors or take cuttings") keyed to the first fall frost; nothing else changes in the engine.
+- **Tests.** Gate tests for the two source keys, `lifecycleHere` unit and fast-check tests over every zone pair, a test that every shipped `herb-culinary` plugin has a lifecycle or a `lifecycle.notRecorded` reason in the sources file, and Spanish for every sentence.
+
+### 37C Harvest schedule against goals, and the pantry
+
+**Goal.** The plan says what the garden will give and when, against the brief's storage goals, and harvests record how they were kept.
+
+- **Preserving data.** New optional `preserving: [{ method, suitability: 'good' | 'fair' | 'poor', note? }]` on crop plugins, methods `fresh | dry | freeze | freeze-dry | pesto | infuse | can`, each quoted under `preserving.<method>` in `crop-data-sources.json` (the quote names the method and the crop; a `preservingQuoteGaps` gate). Only herbs with a source get entries; the rest show "No preserving guidance yet".
+- **Harvest cadence.** Optional `harvestCadence: { everyDays: { min, max }, from: 'first-cut' }` for cut-and-come-again herbs, sourced the same way (`harvestCadence` key, the quote states the interval). With no cadence the schedule shows the crop's first harvest window only.
+- **The schedule view.** `lib/garden/harvestSchedule.ts` (pure) builds, for a set of plantings, a week-by-week list of expected cuts from the first harvest window (the existing calendar engine's harvest event) and the cadence until the first fall frost (annuals and tender perennials) or the end of the season (hardy perennials), and sets it against the brief's goals: each goal gets `on-track | short | not-known` from whether at least one planting of a suitable crop (preserving suitability `good` or `fair` for the goal's method) has a cut inside the goal's season. No yield numbers: the app never claims "N jars" unless a sourced per-plant figure exists, and none is planned. Shown as a "What you'll harvest" panel on the wizard Review step, the garden designer's List view and `/plan/calendar`, with the goal lines on the Planting card.
+- **Pantry.** `kept` dispositions gain an optional `preservedAs` (the same method enum) through a nullable column on `harvest_dispositions` (migration 0090), in the disposition schema, the "Where did it go?" sheet, the harvest record card, the GDPR export (1.7.0) and the organic pack's harvest CSV (a new last column, so the certifier pack's README states it). `/plan/pantry` (owners and helpers read, owners and helpers record, inspectors read) lists this season's kept harvests by crop and method against the brief's goals and offers "Schedule the next cut" (a `derived:pantry-cut:*` task through the existing `POST /api/tasks` path), and the offline Planting card carries the same progress lines from the snapshot.
+- **Timing hint.** A single sourced line per method where a source exists (for drying, cut before bloom) as a `CardFact.note` on the harvest task, never a new task kind.
+- **Tests.** Gate tests, schedule unit and fast-check tests (a goal is never `on-track` without a suitable cut), the disposition migration and schema tests, cross-tenant coverage of the new column through the existing disposition fixture, and `pantry.spec.ts`.
+
+### 37D When to do what: the herb calendar and temperatures
+
+**Goal.** A novice opens the calendar and sees the next thing to do for each herb, with the reason and the source.
+
+- **Seasonal rows.** `seasonalTasks` rows on the herb plugins for pinching, cutting back, dividing, mulching, bringing indoors and restarting (basil pinch, mint cut-back, chive division, rosemary and bay before frost, cilantro successions in heat), each sentence quoted under `seasonalTasks.<rowKey>` and every number gated by `seasonalTaskNumberGaps`. Rows never name a product (the existing wording gate refuses it). Every row has Spanish in `catalogs/{en,es}/seasonal.ts` through the existing `seasonalTaskText` path.
+- **Frost-keyed events.** The calendar engine gets one new event kind, `bring-indoors`, generated for `tender-perennial` plantings (37B) 14 days before the farm's first fall frost (the lead days are a ruled constant, shown as `fallback` with "Typical timing. Adjust to your farm."), and `restart` for annual herbs whose brief goal is a continuous fresh supply, from the existing succession interval. No new kernel reads.
+- **Temperatures.** A tenant-scoped `temperature_readings` table (migration 0091: `owner_id`, `field_id` nullable, `read_at`, `high_f`, `low_f`, `source: 'manual' | 'sensor'`, in the cross-tenant test, the farm wipe and the export) with `POST`/`GET /api/temperature` (owners and helpers; a routed `temperature` offline queue kind). A manual reading wins over the NWS hour for that Area in the frost push and in the degree-day totals already computed by `lib/server/degreeDays.server.ts` (a reading replaces the station day as `manual`; gaps stay gaps). /today's conditions sheet gets a "Log a reading" row beside the rain gauge.
+- **The /today line.** The advice hook (`lib/today/advice.ts`) gains an `herb-care` provider: the next seasonal row due within 7 days for an herb planting, at most two cards, below watering. No new /today queries beyond the one the provider already makes for tasks; the cap test in `tests/integration/today-query-budget.test.ts` stays at 68.
+- **Tests.** Source gates, engine event tests (frost in both hemispheres of the year through `frostSeason.ts`), the temperature table's cross-tenant and queue tests, the query-budget test, `herb-calendar.spec.ts`.
+
+### 37E Watering that knows the plant, and automatic waterers
+
+**Goal.** Real-time watering advice per bed from rain, temperature and the crop, and timers that count as water given.
+
+- **Crop water need.** Optional `waterNeed: 'low' | 'medium' | 'high'` on crop plugins, sourced (`waterNeed` key; the quote says the crop prefers dry, moderate or moist soil). The Area's weekly target (`water-sources.json`, owner override) becomes a per-bed target: the Area target scaled by the ruled factor for the bed's crops (low 0.5, medium 1, high 1.25 as the panel confirms or changes, each factor a sourced or ruled constant shown as `fallback`), the highest need in a shared bed winning, so a bed of thyme and sage reads "skip" sooner than a bed of basil and mint. `waterBalance.ts` takes the per-bed target; its verdict rules (E4-1 to E4-10) do not change.
+- **Heat and pots.** A forecast high at or above a ruled threshold adds a non-blocking "check pots today" line for Areas whose brief says pots, tagged `fallback` and sourced in `water-sources.json`; a new `details.container: true` flag on `garden` Areas (no new Area kind) marks pots, set from the brief or the Area form.
+- **Automatic waterers.** A new equipment type `waterer` (`lib/server/equipmentTemplates.ts`: drip timer, soaker timer, sprinkler timer) with a `schedule` in its spec: days of the week, start time in the farm's zone, minutes, method, and either inches per run or gallons per minute (owner-typed, `manual`), linked to one or more Areas or beds through the equipment's existing block binding. `lib/irrigation/schedule.ts` (pure) expands the schedule into runs inside the 168-hour window; `waterBalance` counts each run as a `WaterLog` with `provenance: 'data'` and the amount known only when the spec gives inches or gallons, so an unknown amount still reads "amount not logged" as today. Runs in the future are display only (the same rule as forecast rain). The owner marks a skipped run ("It didn't run", "I turned it off for the rain") through `POST /api/irrigation/skips` (tenant-scoped `irrigation_skips` in migration 0092, in the cross-tenant test), and /today's watering card says "Your timer gives 0.4 in tomorrow; the week is at 1.1 in already, skip it" with a one-tap skip. No device integration: the app never talks to a timer.
+- **Tests.** Gate tests, `schedule.ts` fast-check over DST changes and the week boundary, water balance tests with timer runs and skips, equipment template tests, cross-tenant tests for the new table, `waterer.spec.ts`.
+
+### 37F Pruning and harvest help with a marked-up photo
+
+**Goal.** "Where do I cut?" answered on the photo itself.
+
+- **Marks.** `POST /api/plantings/[id]/photo-help` takes `wantMarks: true`; with a key, Claude vision answers in a strict JSON shape `{ steps: string[], marks: [{ kind: 'cut' | 'pinch' | 'harvest' | 'leave' | 'problem', x, y, w?, h?, label }] }` with coordinates normalized to 0 to 1 of the photo as sent. The server (`lib/journal/marks.ts`, pure) refuses the whole mark set on any coordinate out of range, more than 12 marks, an empty label or a label that fails the spray-advice guard, and the answer falls back to steps only (`provenance: 'ai'` for the steps, `fallback` for the missing marks with the line "Claude could not place marks on this photo"). The photo is never edited or re-encoded for the answer; the marks are drawn by the client as an SVG overlay (`components/journal/PhotoMarks.svelte`, 48dp tap targets on each mark, a legend, and a print layout with numbered marks). The journal entry stores the marks with the answer (JSON in the existing answer column; no migration), and the saved entry renders the same overlay later and offline.
+- **No key.** The Care Guide's prune or harvest section plus a growth-habit line drawing (static SVG per archetype under `static/prune/`, five drawings: cut-and-come-again leafy, woody perennial herb, clumping herb, vining, tree) with sourced captions ("Cut just above a pair of leaves"), tagged `fallback`. The drawing is advice; the photo is shown unmarked beside it.
+- **Herb tips.** Sourced `prune` and `harvest` Care Guide tips for the common herbs by crop (a crop-level override above the family tips in `careTips.ts`: basil, mint, rosemary, thyme, oregano, sage, chives, parsley, cilantro, dill, lavender), each in `care-tips-sources.json` with the `shipped` text the gate checks.
+- **Guard.** The existing spray-advice guard stays the one guard; marks of kind `problem` may name a symptom and never a product. A test runs the 41 bypass phrasings against the mark labels path.
+- **Offline.** A marks question queues through the existing `journal` queue kind; the answer arrives on replay. The fixture Claude returns a canned mark set for the e2e spec.
+- **Tests.** `marks.ts` unit and fast-check tests, the guard test, component tests for the overlay (coordinates follow the rendered image size on resize), the Care Guide gate, `photo-marks.spec.ts`.
+
+## Cross-cluster contracts
+
+- **C-1 Catalog files.** Each cluster adds exactly one catalog area file pair, `catalogs/en/herbs<X>.ts` and `catalogs/es/herbs<X>.ts` with keys prefixed `herbs<x>.` (`herbsa.`, `herbsb.`, ...), merged by `en.ts` / `es.ts` with one import line each. Seasonal rows (37D) use the existing `seasonal.` prefix in `seasonal.ts`. No cluster edits another cluster's catalog file.
+- **C-2 Crop schema.** 37B adds `hardiness`, 37C adds `preserving` and `harvestCadence`, 37E adds `waterNeed`, all optional, each in its own block of `schemas.ts` with a one-line marker comment naming the cluster, and `pnpm gen:schemas` is run once at integration. `cropFactPaths` entries are added in the same way.
+- **C-3 Sources file.** `crop-data-sources.json` entries are added under each plugin id with the cluster's own keys; two clusters may touch the same plugin object. Integration merges by key. A key used by two clusters is a defect.
+- **C-4 Migrations.** 37C takes 0090, 37D 0091, 37E 0092. Each cluster writes its migration against the current journal; integration re-points snapshots in number order and runs `pnpm db:generate` to check the newest snapshot (the rule in CLAUDE.md "Migration numbering"). Dexie: 37D adds the `temperature` queue kind; no Dexie version bump is expected (queue kinds are data).
+- **C-5 Snapshot.** One `FARM_SNAPSHOT_VERSION` bump for the phase, done at integration; clusters add their fields as optional and write builders that tolerate their absence.
+- **C-6 Advice providers.** 37D and 37E each add one provider to the /today advice hook and run the query-budget test; integration runs it once more with both.
+- **C-7 AI endpoints.** 37A adds `garden-brief` and 37F reuses `photo-help`; every call goes through `aiTry()` and `aiGuard`, degrades through `aiDegrade`, and has a fixture answer in `lib/server/aiFixture/claude.ts` under the existing double gate.
+- **C-8 Guard.** The spray-advice guard in `lib/journal/photoHelp.ts` is the one guard; 37A and 37F call it and never copy it.
+- **C-9 Roles.** Owners write the brief, the equipment schedule, the Area container flag and the per-bed targets; helpers record harvests, dispositions, temperatures, timer skips and photo questions; inspectors read. Every mutation is gated at the API layer.
+- **C-10 Demo farm.** Willow Run gets a four-bed herb garden with a brief, two perennial and three annual herbs, a drip timer and a few kept dispositions, so every new screen shows on the demo. 37A owns the brief seed, 37C the dispositions, 37E the timer; the seeder change is integrated last.
+- **C-11 Style.** No em dashes in copy; every number in prose stays out of translated sentences where it can be a parameter; Spanish ships in the same commit as the English and is marked for the proofreader.
+
+## Open questions for the panel
+
+- Q-1. Should the brief start as a third onboarding screen for the `garden` profile, or only as a tile that routes to `/plan/brief` after onboarding? (37A)
+- Q-2. Daily caps for `garden-brief` on Free, Grower and Farm, and whether it draws on the planning budget or the general AI budget. (37A)
+- Q-3. Which plants beyond `herb-culinary` the brief's type-ahead offers (edible flowers, tea plants, strawberries in pots). (37A)
+- Q-4. The zone comparison when the farm zone is an owner override: trust it as `manual`, or show both. (37B)
+- Q-5. Whether `hardiness.minZone` uses half-zones (`7a`) or whole zones. (37B)
+- Q-6. The preserving method list, and whether `pesto` is a method or a `freeze` sub-case. (37C)
+- Q-7. Whether the goal status needs a third state for "a cut exists but the method is `fair`". (37C)
+- Q-8. The `bring-indoors` lead days before first frost, and whether it is one constant or per crop. (37D)
+- Q-9. Whether a manual temperature reading replaces the station hour for that whole day in degree-day totals, or only informs the frost push. (37D)
+- Q-10. The water-need factors (0.5 / 1 / 1.25) and the rule in a shared bed (highest need wins, or a warning). (37E)
+- Q-11. The heat threshold for the pots line, and whether it needs a source or is a product ruling. (37E)
+- Q-12. Whether a timer run with no amount counts as `amount-not-logged` (today's behaviour for a hand watering with no amount) or as an unknown that blocks "water" verdicts. (37E)
+- Q-13. The mark limit (12) and whether `problem` marks are allowed at all in the first release. (37F)
+- Q-14. Whether marks are stored with the journal entry or recomputed, and whether the print layout is in scope. (37F)
+- Q-15. Which cluster owns the demo farm seeder change, and whether it lands with the phase or after. (all)
+
+## 37 rulings
+
+Filled by the panel before development starts; see the table below.
+
+| id | ruling | vote |
+| --- | --- | --- |
+
+## As built
+
+Filled per cluster at integration.

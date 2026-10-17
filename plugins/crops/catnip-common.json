@@ -52,5 +52,15 @@
       "topic": "harvest",
       "title": "The flavor and aroma of catnip is at its peak when the plant is in full bloom."
     }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "spring-cut-back",
+      "kind": "pruning",
+      "dayOfYear": 95,
+      "windowDays": 21,
+      "title": "Cut back catnip in spring",
+      "body": "Cut the plants back in spring just as growth starts, and divide old plants that look untidy."
+    }
   ]
 }

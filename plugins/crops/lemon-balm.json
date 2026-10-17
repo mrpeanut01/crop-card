@@ -59,5 +59,23 @@
       "topic": "harvest",
       "title": "Stems can be cut as needed anytime during the season preferably before flowering."
     }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "cut-back",
+      "kind": "pruning",
+      "dayOfYear": 180,
+      "windowDays": 30,
+      "title": "Cut back lemon balm",
+      "body": "Cut the plants back to about half their height for fresh new growth, then water to help them recover."
+    },
+    {
+      "key": "thin-midsummer",
+      "kind": "pruning",
+      "dayOfYear": 196,
+      "windowDays": 21,
+      "title": "Thin lemon balm in mid-summer",
+      "body": "Cut out some stems to let air through, and cut off flower stalks before they set seed."
+    }
   ]
 }

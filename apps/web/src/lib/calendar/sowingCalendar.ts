@@ -10,13 +10,16 @@
 import type { CalendarEventKind } from './engine';
 import { shortDaySpans, type ShortDays } from './persephone';
 
-export type SowingBarKind = 'indoor-sow' | 'transplant' | 'direct-sow' | 'window';
+export type SowingBarKind =
+  'indoor-sow' | 'transplant' | 'direct-sow' | 'window' | 'bring-indoors' | 'restart';
 
 export const SOWING_BAR_LABEL: Record<SowingBarKind, string> = {
   'indoor-sow': 'Sow indoors',
   transplant: 'Transplant',
   'direct-sow': 'Direct sow',
-  window: 'Window'
+  window: 'Window',
+  'bring-indoors': 'Bring indoors',
+  restart: 'Sow again'
 };
 
 export interface SowingBar {
@@ -26,6 +29,9 @@ export interface SowingBar {
   /** Done and on record (solid), or planned (dashed). */
   recorded: boolean;
   label: string;
+  /** Phase 37D: placed by a ruled lead or family interval, shown with
+   *  "Typical timing. Adjust to your farm." (OP-22). */
+  typical?: true;
 }
 
 /** Per-bed frost after covers. Structurally a subset of E2's `EffectiveFrost`. */
@@ -94,7 +100,8 @@ export interface SowingCalendarInput {
   toMs: number;
   /** Plantings in the Season view's row order. */
   plantings: readonly SowingPlantingIn[];
-  /** Engine events built with `EventContext.seedStart`. */
+  /** Engine events built with `EventContext.seedStart` (and, for herbs,
+   *  `EventContext.herb`). */
   events: readonly SowingEventIn[];
   /** Planting window of each undated plan, by planting id. */
   windows: Readonly<Record<string, { startMs: number; endMs: number }>>;
@@ -118,6 +125,9 @@ const SEED_KINDS: ReadonlySet<CalendarEventKind> = new Set([
   'transplant',
   'direct-sow'
 ]);
+
+/** Phase 37D herb events the calendar draws as planned bars. */
+export const HERB_BAR_KINDS: ReadonlySet<CalendarEventKind> = new Set(['bring-indoors', 'restart']);
 
 function rowNote(frost: RowFrost | undefined): RowNote | null {
   if (!frost) return null;
@@ -151,7 +161,19 @@ export function buildSowingCalendar(input: SowingCalendarInput): SowingCalendar 
     const planted =
       p.status !== 'planned' && p.plantingDate !== null && p.plantingDate <= input.now;
     for (const e of input.events) {
-      if (e.cropId !== p.id || !SEED_KINDS.has(e.kind)) continue;
+      if (e.cropId !== p.id) continue;
+      if (HERB_BAR_KINDS.has(e.kind)) {
+        bars.push({
+          kind: e.kind as 'bring-indoors' | 'restart',
+          startMs: e.startMs,
+          endMs: Math.max(e.startMs, e.endMs),
+          recorded: false,
+          label: e.title,
+          ...(e.detail?.typicalTiming === true ? { typical: true as const } : {})
+        });
+        continue;
+      }
+      if (!SEED_KINDS.has(e.kind)) continue;
       const kind = e.kind as Exclude<SowingBarKind, 'window'>;
       const recorded = kind === 'indoor-sow' ? e.detail?.recorded === true : planted;
       bars.push({

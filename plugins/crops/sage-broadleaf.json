@@ -51,5 +51,15 @@
       "title": "Cut 6-8 inch long stems for drying."
     }
   ],
-  "growthHabit": "woody"
+  "growthHabit": "woody",
+  "seasonalTasks": [
+    {
+      "key": "spring-prune",
+      "kind": "pruning",
+      "dayOfYear": 95,
+      "windowDays": 21,
+      "title": "Prune sage in spring",
+      "body": "Prune the plants back in spring just as new growth starts."
+    }
+  ]
 }

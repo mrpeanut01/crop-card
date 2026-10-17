@@ -24,9 +24,7 @@
     "rotationLookbackYears": 0
   },
   "notes": "Tender perennial, grown as annual outside zone 9. Sweeter and milder than Greek oregano. Strong drying herb.",
-  "harvestIndicators": [
-    "Tight knot-like buds about to open, strongest oil"
-  ],
+  "harvestIndicators": ["Tight knot-like buds about to open, strongest oil"],
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
     "daysFromPlantingMin": 60,
@@ -49,6 +47,16 @@
       "key": "cut-back-at-bloom",
       "topic": "harvest",
       "title": "When the plant starts to bloom, cut plants back close to the ground to stimulate a new flush of growth."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "prune-back",
+      "kind": "pruning",
+      "daysAfterPlanting": 30,
+      "windowDays": 21,
+      "title": "Prune back sweet marjoram",
+      "body": "When the plants are 6 to 8 inches tall, prune them back for bushier growth."
     }
   ]
 }

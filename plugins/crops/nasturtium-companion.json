@@ -28,5 +28,15 @@
   "archetype": "cut-and-come-again-leafy",
   "agronomy": {
     "lifecycle": "annual"
-  }
+  },
+  "seasonalTasks": [
+    {
+      "key": "summer-cut-back",
+      "kind": "pruning",
+      "dayOfYear": 200,
+      "windowDays": 30,
+      "title": "Cut back leggy nasturtiums",
+      "body": "If the plants decline or get leggy in summer, cut them back lightly for new growth the rest of the season."
+    }
+  ]
 }

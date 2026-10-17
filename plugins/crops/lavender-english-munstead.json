@@ -58,5 +58,15 @@
       "topic": "harvest",
       "title": "Cut stems of lavender just as the flowers start to open."
     }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "spring-prune",
+      "kind": "pruning",
+      "dayOfYear": 100,
+      "windowDays": 30,
+      "title": "Prune lavender in spring",
+      "body": "Wait until new growth starts in spring before pruning. Do not cut the plants back in the fall."
+    }
   ]
 }

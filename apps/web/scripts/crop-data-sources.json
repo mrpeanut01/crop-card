@@ -1155,6 +1155,20 @@
       "publisher": "University of Illinois Extension, Herbs: Chives",
       "date": "accessed 2026-10-17",
       "quote": "They grow in clumps from underground bulbs and produce round, hollow leaves that are much finer than onion."
+    },
+    "seasonalTasks.divide": {
+      "url": "https://extension.illinois.edu/herbs/chives",
+      "publisher": "University of Illinois Extension (Herbs: \"Chives\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Chives are most commonly propagated by dividing the clumps in early spring. Clumps should contain about 4-6 bulbs. They can also be grown from seed sown in spring. Seed may be slow to germinate and take 4-6 weeks to produce transplants. Plants grown from seed will produce variations in leaf texture and size. To keep plantings vigorous and from becoming overcrowded, divide plants every 2-3 years.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "seasonalTasks.remove-flowers": {
+      "url": "https://extension.illinois.edu/herbs/chives",
+      "publisher": "University of Illinois Extension (Herbs: \"Chives\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Chives can self-sow and overtake a garden unless flowers are removed before they fade.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "clover-red-mammoth": {
@@ -1491,6 +1505,13 @@
       "date": "2026-10-17",
       "quote": "Dill performs best in a full sun location in moist, well-drained soil.",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist, well-drained\"); words only, never a target factor (R-10)."
+    },
+    "seasonalTasks.sow-again": {
+      "url": "https://extension.illinois.edu/herbs/dill",
+      "publisher": "University of Illinois Extension (Herbs: \"Dill\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "To insure a fresh supply of dill leaves, make successive sowing of dill every two weeks through the growing season as plants decline soon after they start to flower (bolt).",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "edamame-midori-giant": {
@@ -2173,6 +2194,20 @@
       "date": "2026-10-17",
       "quote": "Spearmint grows best in a somewhat moist soil and full sun to part shade.",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"somewhat moist\"); words only, never a target factor (R-10). The Illinois mint page states no water need."
+    },
+    "seasonalTasks.remove-flower-spikes": {
+      "url": "https://extension.illinois.edu/herbs/mint",
+      "publisher": "University of Illinois Extension (Herbs: \"Mint\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "This technique does not always prove successful and mints can move away from the container and become invasive. To keep plants vigorous, it suggested that they be divided every 3-4 years. In order to maintain the flavor of the leaves, flower spikes should be removed as they appear.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "seasonalTasks.divide": {
+      "url": "https://extension.illinois.edu/herbs/mint",
+      "publisher": "University of Illinois Extension (Herbs: \"Mint\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "This technique does not always prove successful and mints can move away from the container and become invasive. To keep plants vigorous, it suggested that they be divided every 3-4 years. In order to maintain the flavor of the leaves, flower spikes should be removed as they appear.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "mustard-greens-southern-giant-curled": {
@@ -2234,6 +2269,13 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "Illinois Extension, Herb Gardening | Nasturtium: \"Nasturtium is both a decorative garden annual as well as a useful culinary herb.\" | \"Growing: Annual\"",
       "note": "NC State Plant Toolbox (Tropaeolum majus) agrees: annual."
+    },
+    "seasonalTasks.summer-cut-back": {
+      "url": "https://extension.illinois.edu/herbs/nasturtium",
+      "publisher": "University of Illinois Extension (Herbs: \"Nasturtium\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Because nasturtium does not transplant well, it is suggested to directly sow seeds into the garden after danger of frost is past. Keep seed bed moist. Germination of seed can be enhanced by soaking seeds overnight in water prior to planting. For the tastiest leaves, keep plants well watered as this helps to moderate the spiciness of the leaves and flowers. Heat stressed plants often produce leaves and flowers that may be more pungent than most people prefer. If plants show signs of decline or become leggy during the summer, cut them back lightly and they will produce new growth for the remainder of the season.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "oats-cover-spring": {
@@ -2532,6 +2574,13 @@
       "publisher": "University of Illinois Extension, Herbs: Oregano",
       "date": "accessed 2026-10-17",
       "quote": "Remove the stem tips leaving 4 to 6 pairs of leaves on the plant in order for it to produce side shoots for additional harvesting."
+    },
+    "seasonalTasks.winter-mulch": {
+      "url": "https://extension.illinois.edu/herbs/oregano",
+      "publisher": "University of Illinois Extension (Herbs: \"Oregano\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "True oregano is marginally hardy in zone 5. Many of the really desirable types are treated as tender perennials and may need to be brought indoors for the winter. To help insure winter survival a winter mulch of evergreen boughs or straw applied in November or December after the soil has frozen is helpful. This is then removed as growth resumes in the spring.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "ornamental-corn-earth-tones-dent-raw-untreated-non-gmo": {
@@ -2625,6 +2674,13 @@
       "date": "2026-10-17",
       "quote": "Parsley prefers a moderately rich, moist, well-drained soil and will grow in a partially shaded area.",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist, well-drained\"); words only, never a target factor (R-10). \"Moderately\" qualifies the richness, not the moisture."
+    },
+    "seasonalTasks.pot-for-winter": {
+      "url": "https://extension.illinois.edu/herbs/parsley",
+      "publisher": "University of Illinois Extension (Herbs: \"Parsley\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Parsley can be grown indoors over the winter. After digging parsley plants in the fall, pot them using a prepared potting media. They grow best if given high light and a cool growing location.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "parsnip-hollow-crown": {
@@ -3245,6 +3301,13 @@
       "publisher": "University of Illinois Extension, Herbs: Sage",
       "date": "accessed 2026-10-17",
       "quote": "As plants age, they become woody and benefit from being replaced in order to maintain quality foliage for culinary use."
+    },
+    "seasonalTasks.spring-prune": {
+      "url": "https://extension.illinois.edu/herbs/sage",
+      "publisher": "University of Illinois Extension (Herbs: \"Sage\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Sage can be grown from seeds or cuttings. Cuttings are preferred as seeds may take several years to produce harvestable plants. As plants age, they become woody and benefit from being replaced in order to maintain quality foliage for culinary use. Prune plants back in the spring just as new growth resumes.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "scallion-evergreen-bunching": {
@@ -3872,6 +3935,13 @@
       "publisher": "University of Illinois Extension, Herbs: Thyme",
       "date": "accessed 2026-10-17",
       "quote": "Stems are stiff and woody and leaves are small, oval and gray-green in color."
+    },
+    "seasonalTasks.renew-cut-back": {
+      "url": "https://extension.illinois.edu/herbs/thyme",
+      "publisher": "University of Illinois Extension (Herbs: \"Thyme\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "While thyme can be grown from seed, it is much easier to grow it from divisions or cuttings. As thyme gets older, it can become woody and should be renewed every few years by cutting it back severely in the spring. This will encourage the production of young, tender stems.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "tomatillo-de-milpa": {
@@ -6581,6 +6651,13 @@
       "date": "2026-10-17",
       "quote": "Catnip prefers a full sun location in soil that is moist but well-drained.",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist but well-drained\"); words only, never a target factor (R-10)."
+    },
+    "seasonalTasks.spring-cut-back": {
+      "url": "https://extension.illinois.edu/herbs/catnip",
+      "publisher": "University of Illinois Extension (Herbs: \"Catnip\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Catnip prefers a full sun location in soil that is moist but well-drained. It will also tolerate light shade. It can be grown from seed, stem tip cuttings or divisions. As plants age, they can become unsightly so regular division is suggested. Cutting back the plants during the season also helps to maintain a more compact and neater looking plant. Cut back plants in the spring just as growth resumes.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "chamomile-german": {
@@ -6702,6 +6779,13 @@
       "date": "2026-10-17",
       "quote": "Lavender grows best in rocky, dry, sunny places that have abundant lime in the soil.",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"rocky, dry\"); words only, never a target factor (R-10). Agrees with the Illinois page."
+    },
+    "seasonalTasks.spring-prune": {
+      "url": "https://extension.illinois.edu/herbs/lavender",
+      "publisher": "University of Illinois Extension (Herbs: \"Lavender\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Lavender also likes to be mulched with inorganic mulches such as rock or pea gravel. This helps keep the crown dry and prevents excess moisture form causing foliage diseases. Do not cut back plants in the fall. Wait until some new growth starts to appear in the spring before doing any pruning.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "marjoram-sweet": {
@@ -6743,6 +6827,13 @@
       "publisher": "University of Illinois Extension, Herbs: Marjoram, Sweet",
       "date": "accessed 2026-10-17",
       "quote": "When the plant starts to bloom, cut plants back close to the ground to stimulate a new flush of growth."
+    },
+    "seasonalTasks.prune-back": {
+      "url": "https://extension.illinois.edu/herbs/marjoram-sweet",
+      "publisher": "University of Illinois Extension (Herbs: \"Marjoram, Sweet\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Sweet marjoram is easily grown from seed or cuttings. It prefers a full sun location and requires a well-drained soil. Sweet marjoram tends to be a low spreading plant that benefits from being pruned back when it is 6-8 inches tall to encourage a bushy growth habit.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "stevia-sweetleaf": {
@@ -6864,6 +6955,20 @@
       "publisher": "University of Illinois Extension, Herbs: Tarragon: French",
       "date": "accessed 2026-10-17",
       "quote": "Young stem tips and leaves can be harvested as needed throughout the season."
+    },
+    "seasonalTasks.spring-cut-back": {
+      "url": "https://extension.illinois.edu/herbs/tarragon-french",
+      "publisher": "University of Illinois Extension (Herbs: \"Tarragon: French\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Tarragon will not tolerate poorly drained soils especially over the winter as this will lead to plants not overwintering successfully. Plants benefit from division every 3-4 years to keep the planting vigorous and productive. Cut back plants in the spring just as growth resumes. Leaving the tops stand over the winter helps to improve overwintering chances.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "seasonalTasks.divide": {
+      "url": "https://extension.illinois.edu/herbs/tarragon-french",
+      "publisher": "University of Illinois Extension (Herbs: \"Tarragon: French\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Tarragon will not tolerate poorly drained soils especially over the winter as this will lead to plants not overwintering successfully. Plants benefit from division every 3-4 years to keep the planting vigorous and productive. Cut back plants in the spring just as growth resumes. Leaving the tops stand over the winter helps to improve overwintering chances.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "arugula-astro": {
@@ -6925,6 +7030,13 @@
       "publisher": "University of Illinois Extension, Herbs: Chervil",
       "date": "accessed 2026-10-17",
       "quote": "Harvest leaves when they are fully open but still tender."
+    },
+    "seasonalTasks.sow-again": {
+      "url": "https://extension.illinois.edu/herbs/chervil",
+      "publisher": "University of Illinois Extension (Herbs: \"Chervil\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Because chervil goes to flower readily (bolts), it is suggested to make successive sowings of seed through the season at 3-4 week intervals to insure a continuous supply of fresh leaves.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "endive-frisee": {
@@ -8044,6 +8156,20 @@
       "date": "2026-10-17",
       "quote": "Lemon balm can be grown in full sun to partial shade in soils that are moist but well drained.",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist but well drained\"); words only, never a target factor (R-10)."
+    },
+    "seasonalTasks.cut-back": {
+      "url": "https://extension.illinois.edu/herbs/lemon-balm",
+      "publisher": "University of Illinois Extension (Herbs: \"Lemon Balm\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Lemon balm can also be cut back to about one-half its height to encourage fresh, vigorous new growth. Watering after this heavy pruning helps the plant recover quicker.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "seasonalTasks.thin-midsummer": {
+      "url": "https://extension.illinois.edu/herbs/lemon-balm",
+      "publisher": "University of Illinois Extension (Herbs: \"Lemon Balm\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "While mint can spread rapidly by underground stems, lemon balm spreads by setting lots of seed and can, if allowed to go unchecked start to overtake the garden. To prevent spreading, prune flowering stalks before they have a chance to set seed. To keep plants vigorous, thin plants out in mid-summer by cutting out stems to open up the plant to better air circulation.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "lemon-verbena": {
@@ -8309,6 +8435,13 @@
       "date": "2026-10-17",
       "quote": "Plant basil in a full sun location, where it receives 6 or more hours of direct sun daily in summer. The soil should be moist but well-drained.",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist but well-drained\"); words only, never a target factor (R-10). Agrees with the Illinois page."
+    },
+    "seasonalTasks.pinch-flower-buds": {
+      "url": "https://extension.illinois.edu/herbs/basil",
+      "publisher": "University of Illinois Extension (Herbs: \"Basil\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Limited harvesting of the leaves can start on young plants and as they get larger, individual leaves as well as tips of the plants can be harvested. Pinching the tips of stems encourages a bushy plant and more leaf growth resulting in a round plant full of aromatic basil. Basil flower buds should be removed by pinching as soon as you see them form. Leaving them on the plant will affect the flavor of the leaves.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "cilantro-santo": {
@@ -8324,6 +8457,13 @@
       "date": "Publication Date October 11, 2019; accessed 2026-10-17",
       "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Cilantro, coriander Coriandrum sativum | Grow from seed. Sow in spring in sun or partial shade.\"",
       "note": "Illinois Extension (Cilantro) and NC State Plant Toolbox (Coriandrum sativum) agree: annual."
+    },
+    "seasonalTasks.sow-again": {
+      "url": "https://extension.illinois.edu/herbs/cilantro",
+      "publisher": "University of Illinois Extension (Herbs: \"Cilantro\")",
+      "date": "Accessed 2026-10-17",
+      "quote": "Cilantro prefers a full sun location and average, well-drained garden soil. It is easily grown from seed that is directly sown in the garden after danger of frost is past. It is difficult to transplant because of its tap root. It has a very short useful garden life and it has a tendency to go to seed (bolt). It is best to make successive sowings every 3-4 weeks to insure a continuous supply of fresh leaves.",
+      "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "lemongrass-east-indian": {

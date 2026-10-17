@@ -42,5 +42,15 @@
       "topic": "harvest",
       "title": "Foliage can be cut at any time and used fresh, or it can be dried for later use."
     }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "sow-again",
+      "kind": "cultural",
+      "daysAfterPlanting": 14,
+      "windowDays": 7,
+      "title": "Sow dill again",
+      "body": "Sow again every two weeks for fresh leaves, since plants decline soon after they flower."
+    }
   ]
 }

@@ -571,7 +571,9 @@
     'companion-trigger': 'today.event.companion',
     emergence: 'today.event.emergence',
     'stage-window': 'today.event.stage',
-    'shade-window': 'today.event.shade'
+    'shade-window': 'today.event.shade',
+    'bring-indoors': 'herbsd.kind.bringIndoors',
+    restart: 'herbsd.kind.restart'
   };
 
   const SPAN_KEY = {
@@ -602,6 +604,8 @@
       case 'companion-trigger':
       case 'planting':
       case 'seasonal-task':
+      case 'bring-indoors':
+      case 'restart':
         return { href: `/plan#block-${e.blockId}`, label: 'today.cta.blockPlan' };
       case 'harvest-window':
       case 'curing-progress':

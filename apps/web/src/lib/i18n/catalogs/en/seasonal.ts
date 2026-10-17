@@ -68,5 +68,65 @@ export const enSeasonal = {
     'Mulch goes between rows for weed suppression + frost-cloth base.',
   'seasonal.strawberry-jewel.frost-watch.title': 'Bloom frost watch',
   'seasonal.strawberry-jewel.frost-watch.body':
-    'Open blossoms are damaged at 30 °F. Cover rows on frost nights. Overhead irrigation protects only while water runs continuously until temperatures rise above freezing; stopping too early can do more damage than not irrigating.'
+    'Open blossoms are damaged at 30 °F. Cover rows on frost nights. Overhead irrigation protects only while water runs continuously until temperatures rise above freezing; stopping too early can do more damage than not irrigating.',
+  'seasonal.basil-genovese.pinch-flower-buds.title': 'Pinch off basil flower buds',
+  'seasonal.basil-genovese.pinch-flower-buds.body':
+    'Pinch stem tips for a bushier plant, and pinch off flower buds as soon as you see them. Left on, buds change the flavor of the leaves.',
+  'seasonal.mint-spearmint.remove-flower-spikes.title': 'Remove mint flower spikes',
+  'seasonal.mint-spearmint.remove-flower-spikes.body':
+    "Remove flower spikes as they appear to keep the leaves' flavor.",
+  'seasonal.mint-spearmint.divide.title': 'Divide mint if it is crowded',
+  'seasonal.mint-spearmint.divide.body':
+    'Divide the plants every 3 to 4 years to keep them vigorous.',
+  'seasonal.chives-common.divide.title': 'Divide chive clumps',
+  'seasonal.chives-common.divide.body':
+    'In early spring, divide the clumps every 2 to 3 years to keep plants vigorous and uncrowded.',
+  'seasonal.chives-common.remove-flowers.title': 'Remove chive flowers before they fade',
+  'seasonal.chives-common.remove-flowers.body':
+    'Cut off the flowers before they fade, or chives self-sow and spread through the garden.',
+  'seasonal.cilantro-santo.sow-again.title': 'Sow cilantro again',
+  'seasonal.cilantro-santo.sow-again.body':
+    'Sow again every 3 to 4 weeks for a steady supply of fresh leaves. Cilantro goes to seed quickly.',
+  'seasonal.dill-mammoth.sow-again.title': 'Sow dill again',
+  'seasonal.dill-mammoth.sow-again.body':
+    'Sow again every two weeks for fresh leaves, since plants decline soon after they flower.',
+  'seasonal.chervil.sow-again.title': 'Sow chervil again',
+  'seasonal.chervil.sow-again.body':
+    'Sow again every 3 to 4 weeks for fresh leaves, since chervil flowers quickly.',
+  'seasonal.oregano-greek.winter-mulch.title': 'Mulch oregano for winter',
+  'seasonal.oregano-greek.winter-mulch.body':
+    'In November or December, after the soil has frozen, cover the plants with straw or evergreen boughs. Take it off as growth starts in spring.',
+  'seasonal.lavender-english-munstead.spring-prune.title': 'Prune lavender in spring',
+  'seasonal.lavender-english-munstead.spring-prune.body':
+    'Wait until new growth starts in spring before pruning. Do not cut the plants back in the fall.',
+  'seasonal.thyme-german-winter.renew-cut-back.title': 'Cut back woody thyme',
+  'seasonal.thyme-german-winter.renew-cut-back.body':
+    'When thyme gets woody, cut it back hard in spring, every few years, for young tender stems.',
+  'seasonal.lemon-balm.cut-back.title': 'Cut back lemon balm',
+  'seasonal.lemon-balm.cut-back.body':
+    'Cut the plants back to about half their height for fresh new growth, then water to help them recover.',
+  'seasonal.lemon-balm.thin-midsummer.title': 'Thin lemon balm in mid-summer',
+  'seasonal.lemon-balm.thin-midsummer.body':
+    'Cut out some stems to let air through, and cut off flower stalks before they set seed.',
+  'seasonal.sage-broadleaf.spring-prune.title': 'Prune sage in spring',
+  'seasonal.sage-broadleaf.spring-prune.body':
+    'Prune the plants back in spring just as new growth starts.',
+  'seasonal.parsley-italian-flat-leaf.pot-for-winter.title': 'Pot up parsley for winter',
+  'seasonal.parsley-italian-flat-leaf.pot-for-winter.body':
+    'In fall, dig a few plants and pot them to grow indoors over the winter in a bright, cool spot.',
+  'seasonal.catnip-common.spring-cut-back.title': 'Cut back catnip in spring',
+  'seasonal.catnip-common.spring-cut-back.body':
+    'Cut the plants back in spring just as growth starts, and divide old plants that look untidy.',
+  'seasonal.tarragon-french.spring-cut-back.title': 'Cut back tarragon in spring',
+  'seasonal.tarragon-french.spring-cut-back.body':
+    'Leave the tops standing over winter, then cut the plants back in spring just as growth starts.',
+  'seasonal.tarragon-french.divide.title': 'Divide tarragon every few years',
+  'seasonal.tarragon-french.divide.body':
+    'Divide the plants every 3 to 4 years to keep the planting vigorous and productive.',
+  'seasonal.marjoram-sweet.prune-back.title': 'Prune back sweet marjoram',
+  'seasonal.marjoram-sweet.prune-back.body':
+    'When the plants are 6 to 8 inches tall, prune them back for bushier growth.',
+  'seasonal.nasturtium-companion.summer-cut-back.title': 'Cut back leggy nasturtiums',
+  'seasonal.nasturtium-companion.summer-cut-back.body':
+    'If the plants decline or get leggy in summer, cut them back lightly for new growth the rest of the season.'
 } as const;

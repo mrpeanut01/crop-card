@@ -41,5 +41,15 @@
       "topic": "harvest",
       "title": "Remove the stem tips leaving 4 to 6 pairs of leaves on the plant in order for it to produce side shoots for additional harvesting."
     }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "winter-mulch",
+      "kind": "cultural",
+      "dayOfYear": 320,
+      "windowDays": 30,
+      "title": "Mulch oregano for winter",
+      "body": "In November or December, after the soil has frozen, cover the plants with straw or evergreen boughs. Take it off as growth starts in spring."
+    }
   ]
 }

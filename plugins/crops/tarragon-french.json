@@ -54,5 +54,23 @@
       "topic": "harvest",
       "title": "Young stem tips and leaves can be harvested as needed throughout the season."
     }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "spring-cut-back",
+      "kind": "pruning",
+      "dayOfYear": 95,
+      "windowDays": 21,
+      "title": "Cut back tarragon in spring",
+      "body": "Leave the tops standing over winter, then cut the plants back in spring just as growth starts."
+    },
+    {
+      "key": "divide",
+      "kind": "cultural",
+      "dayOfYear": 90,
+      "windowDays": 21,
+      "title": "Divide tarragon every few years",
+      "body": "Divide the plants every 3 to 4 years to keep the planting vigorous and productive."
+    }
   ]
 }

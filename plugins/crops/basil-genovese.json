@@ -56,5 +56,15 @@
   ],
   "agronomy": {
     "lifecycle": "annual"
-  }
+  },
+  "seasonalTasks": [
+    {
+      "key": "pinch-flower-buds",
+      "kind": "pruning",
+      "daysAfterPlanting": 30,
+      "windowDays": 60,
+      "title": "Pinch off basil flower buds",
+      "body": "Pinch stem tips for a bushier plant, and pinch off flower buds as soon as you see them. Left on, buds change the flavor of the leaves."
+    }
+  ]
 }

@@ -59,5 +59,23 @@
       "topic": "harvest",
       "title": "Leaves that are to be dried are best taken just as the flowers begin to appear."
     }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "remove-flower-spikes",
+      "kind": "pruning",
+      "dayOfYear": 170,
+      "windowDays": 45,
+      "title": "Remove mint flower spikes",
+      "body": "Remove flower spikes as they appear to keep the leaves' flavor."
+    },
+    {
+      "key": "divide",
+      "kind": "cultural",
+      "dayOfYear": 90,
+      "windowDays": 21,
+      "title": "Divide mint if it is crowded",
+      "body": "Divide the plants every 3 to 4 years to keep them vigorous."
+    }
   ]
 }

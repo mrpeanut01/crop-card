@@ -29,5 +29,15 @@
   ],
   "agronomy": {
     "lifecycle": "annual"
-  }
+  },
+  "seasonalTasks": [
+    {
+      "key": "sow-again",
+      "kind": "cultural",
+      "daysAfterPlanting": 21,
+      "windowDays": 7,
+      "title": "Sow cilantro again",
+      "body": "Sow again every 3 to 4 weeks for a steady supply of fresh leaves. Cilantro goes to seed quickly."
+    }
+  ]
 }

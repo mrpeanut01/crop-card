@@ -49,5 +49,15 @@
       "title": "As thyme gets older, it can become woody and should be renewed every few years by cutting it back severely in the spring."
     }
   ],
-  "growthHabit": "woody"
+  "growthHabit": "woody",
+  "seasonalTasks": [
+    {
+      "key": "renew-cut-back",
+      "kind": "pruning",
+      "dayOfYear": 90,
+      "windowDays": 30,
+      "title": "Cut back woody thyme",
+      "body": "When thyme gets woody, cut it back hard in spring, every few years, for young tender stems."
+    }
+  ]
 }

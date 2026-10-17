@@ -158,7 +158,7 @@
     max-width: 100%;
     height: auto;
     border-radius: var(--radius-input);
-    border: 1px solid var(--color-divider);
+    outline: 1px solid var(--color-divider);
   }
   .overlay {
     position: absolute;

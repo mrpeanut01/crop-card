@@ -163,6 +163,7 @@ export function cropFactPaths(c: CropPlugin): string[] {
   for (const row of c.treeSizeClasses ?? []) paths.push(`treeSizeClasses.${row.sizeClass}`);
   if (c.nitrogenNeedLbPerAcre) paths.push('nitrogenNeedLbPerAcre');
   if (c.harvestSeason) paths.push('harvestSeason');
+  if (c.waterNeed) paths.push('waterNeed'); // Phase 37E
   for (const [, key] of rowSpacingFields(c)) if (!paths.includes(key)) paths.push(key);
   if (guide.inRowSpacingIn !== undefined) paths.push('inRowSpacingIn');
   if (c.fertility) {
@@ -919,6 +920,117 @@ export function forageHazardGaps(
   for (const [id, reason] of Object.entries(exclusions)) {
     if (!mapped.has(id)) gaps.push(`${id}: excluded but not named in any crop entry`);
     if (reason.trim().length <= 10) gaps.push(`${id}: exclusion reason is too short`);
+  }
+  return gaps;
+}
+
+// ─── Phase 37E: watering need ───────────────────────────────────────────
+
+/** The fixed phrases a `waterNeed` quote is read through. Longer phrases are
+ *  matched first and blanked out, so "moderately moist soil" reads medium
+ *  and never also high. */
+export const WATER_NEED_PHRASES: Readonly<Record<'low' | 'medium' | 'high', readonly string[]>> = {
+  low: [
+    'dry soil',
+    'drier soil',
+    'dry side',
+    'dry conditions',
+    'drought tolerant',
+    'drought-tolerant',
+    'tolerates drought',
+    'tolerant of drought',
+    'allow the soil to dry',
+    'let the soil dry'
+  ],
+  medium: [
+    'moderate moisture',
+    'moderate water',
+    'moderately moist',
+    'average moisture',
+    'medium moisture'
+  ],
+  high: [
+    'moist soil',
+    'evenly moist',
+    'consistently moist',
+    'constantly moist',
+    'keep the soil moist',
+    'plenty of water',
+    'abundant moisture',
+    'wet soil'
+  ]
+};
+
+/** The water need a quote states, or null when it states none or more than
+ *  one. */
+export function waterNeedOfQuote(quote: string): 'low' | 'medium' | 'high' | null {
+  let text = ` ${quote.toLowerCase().replace(/\s+/g, ' ')} `;
+  const phrases = (Object.entries(WATER_NEED_PHRASES) as Array<[string, readonly string[]]>)
+    .flatMap(([need, list]) => list.map((p) => ({ need, p })))
+    .sort((a, b) => b.p.length - a.p.length);
+  const found = new Set<string>();
+  for (const { need, p } of phrases) {
+    const re = new RegExp(`(?<![a-z])${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z])`, 'g');
+    if (re.test(text)) {
+      found.add(need);
+      text = text.replace(re, ' ');
+    }
+  }
+  return found.size === 1 ? ([...found][0] as 'low' | 'medium' | 'high') : null;
+}
+
+/** Words of the crop's display name a quote may name it by ("Basil — Genovese"
+ *  gives basil and genovese). */
+export function cropNameWords(displayName: string): string[] {
+  const base = displayName.split(/[—–(,]/)[0] ?? displayName;
+  const words = base
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter((w) => w.length >= 4);
+  return words.length ? words : [base.toLowerCase().trim()].filter(Boolean);
+}
+
+/** #37E: every counted `waterNeed` source (`waterNeed` and any
+ *  `waterNeed.<n>`) comes from an extension or government page, names the
+ *  crop and states one need through `WATER_NEED_PHRASES` equal to the stored
+ *  value. A second counted source that maps to a different value means the
+ *  field must stay empty. Returns "pluginId: problem" lines. */
+export function waterNeedQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'waterNeed'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    const own = sources[c.pluginId] ?? {};
+    const keys = Object.keys(own).filter((k) => k === 'waterNeed' || k.startsWith('waterNeed.'));
+    if (!c.waterNeed && keys.length === 0) continue;
+    const values = new Set<string>();
+    for (const key of keys) {
+      const entry = sourceEntrySchema.safeParse(own[key]);
+      if (!entry.success) {
+        gaps.push(`${c.pluginId}: ${key} source is not a valid entry`);
+        continue;
+      }
+      if (!isAllowedSpacingSource(entry.data.url)) {
+        gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+      }
+      const quote = entry.data.quote.toLowerCase();
+      if (!cropNameWords(c.displayName).some((w) => quote.includes(w))) {
+        gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
+      }
+      const need = waterNeedOfQuote(entry.data.quote);
+      if (need === null) {
+        gaps.push(`${c.pluginId}: ${key} quote states no single dry, moderate or moist need`);
+        continue;
+      }
+      values.add(need);
+      if (c.waterNeed && need !== c.waterNeed) {
+        gaps.push(`${c.pluginId}: ${key} quote reads ${need}, not ${c.waterNeed}`);
+      }
+    }
+    if (c.waterNeed && values.size > 1) {
+      gaps.push(`${c.pluginId}: waterNeed sources disagree; leave the field empty`);
+    }
   }
   return gaps;
 }

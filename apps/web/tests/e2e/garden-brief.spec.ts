@@ -44,7 +44,7 @@ test.describe('garden brief', () => {
 
     await page.goto('/onboarding');
     await page.getByText('A few herbs by the kitchen', { exact: true }).click();
-    await page.getByRole('button', { name: /Take me to Today/ }).click();
+    await page.getByRole('button', { name: /Start my garden brief/ }).click();
     await expect(page).toHaveURL(/\/plan\/brief$/, { timeout: 15_000 });
 
     const fields = (await (await page.request.get('/api/fields')).json()) as

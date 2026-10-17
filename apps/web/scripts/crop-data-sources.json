@@ -1226,6 +1226,27 @@
       "date": "January 20, 2026 (PDF creation date; 2026 edition)",
       "quote": "\"Weeds that germinate with the crop but are controlled in a timely fashion (four to five weeks after planting) will also not impact final yields. This POST herbicide approach relies on effective and timely postemergence weed control.\"; \"Callisto can be applied postemergence at 3 fl oz/A to corn up to 30 inches tall (8-leaf stage).\"",
       "note": "Timing sentence from p. 5-29; the Callisto sentence is the Table 5.19 postemergence comment (p. 5-76). Four to five weeks is stored as 28 to 35 days after planting."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn, Field Corn",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
+      "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
+      "note": "#739, owner ruling N739-5 (2026-10-17). Same VCE sentence as nitrogenNeedLbPerAcre and as grain sorghum's fertility.preplant. Lower end of the N range (#591 ruling Q1, as N739-1)."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn, Field Corn",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
+      "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
+      "note": "#739, owner ruling N739-5 (2026-10-17). Same VCE sentence as nitrogenNeedLbPerAcre and as grain sorghum's fertility.preplant. Lower end of the P2O5 range (#591 ruling Q1, as N739-1)."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn, Field Corn",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
+      "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
+      "note": "#739, owner ruling N739-5 (2026-10-17). Same VCE sentence as nitrogenNeedLbPerAcre and as grain sorghum's fertility.preplant. Lower end of the K2O range (#591 ruling Q1, as N739-1)."
     }
   },
   "corn-sweet-bodacious": {
@@ -6871,6 +6892,27 @@
       "date": "2026",
       "quote": "\"Weeds that germinate with the crop but are controlled in a timely fashion (four to five weeks after planting) will also not impact final yields. This POST herbicide approach relies on effective and timely postemergence weed control.\"; Table 5.21: \"Glyphosate products | Up to 30 inches tall (V8 stage) | 30 – 48 inches tall | Apply to Roundup Ready hybrids only.\"",
       "note": "Four to five weeks = 28-35 days. Only planned for a crop plugin carrying glyphosate-tolerant-rr2 through a label traitGatedSafeFor claim (#720 ruling R720-1)."
+    },
+    "fertility.preplant.nLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn, Field Corn",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
+      "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
+      "note": "#739, owner ruling N739-5 (2026-10-17). Same VCE sentence as nitrogenNeedLbPerAcre and as grain sorghum's fertility.preplant. Lower end of the N range (#591 ruling Q1, as N739-1)."
+    },
+    "fertility.preplant.p2o5LbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn, Field Corn",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
+      "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
+      "note": "#739, owner ruling N739-5 (2026-10-17). Same VCE sentence as nitrogenNeedLbPerAcre and as grain sorghum's fertility.preplant. Lower end of the P2O5 range (#591 ruling Q1, as N739-1)."
+    },
+    "fertility.preplant.k2oLbPerAcre": {
+      "url": "https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/424/424-100/spes-299-A.pdf",
+      "publisher": "Virginia Cooperative Extension, Agronomy Handbook 2023 (424-100), Part I, Corn, Field Corn",
+      "date": "December 15, 2023 (accessed 2026-10-08), printed page 17",
+      "quote": "Fertilizer For grain, 125-150 lbs N. Apply 40-60 lbs P2O5 and 40-60 lbs K2O at medium soil test levels.",
+      "note": "#739, owner ruling N739-5 (2026-10-17). Same VCE sentence as nitrogenNeedLbPerAcre and as grain sorghum's fertility.preplant. Lower end of the K2O range (#591 ruling Q1, as N739-1)."
     }
   },
   "corn-bloody-butcher": {

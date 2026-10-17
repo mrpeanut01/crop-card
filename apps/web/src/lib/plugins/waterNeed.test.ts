@@ -3,7 +3,7 @@ import { cropPluginSchema } from './schemas';
 import {
   cropFactPaths,
   cropNameWords,
-  quoteNamesCrop,
+  quoteNamesCropName,
   waterNeedOfQuote,
   waterNeedQuoteGaps,
   type SourceMap
@@ -52,12 +52,12 @@ describe('cropNameWords', () => {
 
   it('never names a crop by a generic first word', () => {
     expect(
-      quoteNamesCrop('Summer squash likes moist soil.', 'Summer Savory (Satureja hortensis)')
+      quoteNamesCropName('Summer squash likes moist soil.', 'Summer Savory (Satureja hortensis)')
     ).toBe(false);
     expect(
-      quoteNamesCrop('Summer savory tolerates drought.', 'Summer Savory (Satureja hortensis)')
+      quoteNamesCropName('Summer savory tolerates drought.', 'Summer Savory (Satureja hortensis)')
     ).toBe(true);
-    expect(quoteNamesCrop('Green beans need moist soil.', 'Perilla Green Shiso')).toBe(false);
+    expect(quoteNamesCropName('Green beans need moist soil.', 'Perilla Green Shiso')).toBe(false);
   });
 });
 

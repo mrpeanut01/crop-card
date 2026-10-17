@@ -1339,7 +1339,7 @@ export function cropNameWords(displayName: string): string[] {
 }
 
 /** True when the quote names the crop by one of `cropNameWords`. */
-export function quoteNamesCrop(quote: string, displayName: string): boolean {
+export function quoteNamesCropName(quote: string, displayName: string): boolean {
   const q = quote.toLowerCase();
   return cropNameWords(displayName).some((w) =>
     new RegExp(`(?<![a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(q)
@@ -1370,7 +1370,7 @@ export function waterNeedQuoteGaps(
       if (!isAllowedSpacingSource(entry.data.url)) {
         gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
       }
-      if (!quoteNamesCrop(entry.data.quote, c.displayName)) {
+      if (!quoteNamesCropName(entry.data.quote, c.displayName)) {
         gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
       }
       const need = waterNeedOfQuote(entry.data.quote);

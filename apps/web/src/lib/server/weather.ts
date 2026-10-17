@@ -68,6 +68,12 @@ export interface NwsForecastResponse {
 
 export const NWS_FETCH_TIMEOUT_MS = 8000;
 
+/** `WEATHER_FEEDS=off` makes every NWS and NCEI request fail fast so the
+ *  fallback paths run; the e2e servers set it so specs never read live weather. */
+export function weatherFeedsOff(env: Record<string, string | undefined> = process.env): boolean {
+  return env.WEATHER_FEEDS === 'off';
+}
+
 /** URLs followed out of a /points response are only trusted when they stay
  *  on api.weather.gov over https (SSRF guard). */
 export function isNwsUrl(url: unknown): url is string {
@@ -78,6 +84,7 @@ export async function nwsFetch<T>(url: string, init: { signal?: AbortSignal } = 
   if (!isNwsUrl(url)) {
     throw new WeatherFetchError(`Refusing non-NWS URL: ${String(url).slice(0, 200)}`);
   }
+  if (weatherFeedsOff()) throw new WeatherFetchError(`Weather feeds are off (${url})`);
   let res: Response;
   try {
     res = await fetch(url, {

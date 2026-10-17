@@ -11,7 +11,14 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import papa from 'papaparse';
 import type { PluginRegistry } from '$lib/plugins';
 
-const m = vi.hoisted(() => ({ ownerId: '', registry: null as unknown }));
+const m = vi.hoisted(() => ({ ownerId: '', registry: null as unknown, docs: [] as unknown[] }));
+
+vi.mock('$lib/server/pdf', () => ({
+  renderPdf: async (doc: unknown) => {
+    m.docs.push(doc);
+    return Buffer.from('%PDF');
+  }
+}));
 
 vi.mock('$lib/server/registry', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./registry')>();
@@ -41,13 +48,11 @@ import { createBlock } from '$lib/db/blocks';
 import { getSprayEvent, insertSprayEvent } from '$lib/db/sprayEvents';
 import { DEFAULT_PREFS } from '$lib/prefs';
 import { getBaseRegistry } from './registry';
-import {
-  activeHerbicideReEntryRestrictions,
-  herbicideReEntryClearAtFor,
-  longestHerbicideReiHours
-} from './herbicideReEntry';
+import { activeHerbicideReEntryRestrictions, herbicideReEntryClearAtFor } from './herbicideReEntry';
+import { longestHerbicideReiHours } from '$lib/spray/herbicideReEntry';
 import { buildRecordCards } from './recordCards';
 import { GET as usdaCsv } from '../../routes/api/spray/records/export.usda.csv/+server';
+import { GET as vdacsPdf } from '../../routes/api/records/export.vdacs.pdf/+server';
 
 const HOUR = 3_600_000;
 const FIXTURE_ID = 'test-herbicide-rei-fixture';
@@ -226,5 +231,73 @@ describe('herbicide REI on records (#640)', () => {
     expect(rows.find((r) => r.product_name === 'REI fixture herbicide')?.rei_hours).toBe('12');
     const plain = rows.find((r) => r.product_name !== 'REI fixture herbicide');
     expect(plain?.rei_hours).toBe('');
+  });
+});
+
+async function usdaRows(ownerId: string): Promise<Array<Record<string, string>>> {
+  m.ownerId = ownerId;
+  const res = await runWithTenantAsync(ownerId, async () =>
+    usdaCsv({ locals: {}, url: new URL('http://localhost/x') } as never)
+  );
+  const body = (await res.text())
+    .split(/\r?\n/)
+    .filter((l) => !l.startsWith('#'))
+    .join('\n');
+  return papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true }).data;
+}
+
+async function vdacsReiCells(ownerId: string): Promise<string[]> {
+  m.ownerId = ownerId;
+  m.docs.length = 0;
+  await runWithTenantAsync(ownerId, async () =>
+    vdacsPdf({ locals: {}, url: new URL('http://localhost/x') } as never)
+  );
+  const content = (m.docs[0] as { doc: { content: Array<{ table?: { body: unknown[][] } }> } }).doc
+    .content;
+  const body = content.find((c) => c.table)?.table?.body ?? [];
+  const header = (body[0] as Array<{ text: string }>).map((c) => c.text);
+  const col = header.indexOf('REI');
+  return body
+    .slice(1)
+    .filter((r) => (r[1] as { text: string }).text === 'spray')
+    .map((r) => String(r[col]));
+}
+
+function cardReiHours(ownerId: string, id: string): number | null {
+  const ev = runWithTenant(ownerId, () => getSprayEvent(id))!;
+  const clearAt = herbicideReEntryClearAtFor(registry, ev);
+  return clearAt === null ? null : Math.round((clearAt - ev.occurredAt) / HOUR);
+}
+
+describe('herbicide REI in the compliance exports matches the record card (#815)', () => {
+  it('uses the library REI when it is longer than the stored clear time', async () => {
+    const farm = seedFarm('export-stored-short');
+    const at = NOW - 3 * HOUR;
+    const ev = spray(farm, [FIXTURE_ID], at, at + 6 * HOUR);
+    expect(cardReiHours(farm.ownerId, ev.id)).toBe(12);
+    const rows = await usdaRows(farm.ownerId);
+    expect(rows.map((r) => r.rei_hours)).toEqual(['12']);
+    expect(await vdacsReiCells(farm.ownerId)).toEqual(['12 h']);
+  });
+
+  it('keeps a stored clear time longer than the library value', async () => {
+    const farm = seedFarm('export-stored-long');
+    const at = NOW - 3 * HOUR;
+    const ev = spray(farm, [FIXTURE_ID], at, at + 48 * HOUR);
+    expect(cardReiHours(farm.ownerId, ev.id)).toBe(48);
+    expect((await usdaRows(farm.ownerId)).map((r) => r.rei_hours)).toEqual(['48']);
+    expect(await vdacsReiCells(farm.ownerId)).toEqual(['48 h']);
+  });
+
+  it('is unchanged with no stored time, and blank when a product has no REI', async () => {
+    const farm = seedFarm('export-library');
+    const full = spray(farm, [FIXTURE_ID], NOW - 3 * HOUR);
+    const partial = spray(farm, [FIXTURE_ID, NO_REI_ID], NOW - 2 * HOUR);
+    expect(cardReiHours(farm.ownerId, full.id)).toBe(12);
+    expect(cardReiHours(farm.ownerId, partial.id)).toBeNull();
+    const rows = await usdaRows(farm.ownerId);
+    expect(rows.filter((r) => r.rei_hours === '12')).toHaveLength(1);
+    expect(rows.filter((r) => r.rei_hours === '')).toHaveLength(2);
+    expect((await vdacsReiCells(farm.ownerId)).sort()).toEqual(['12 h', 'Not on file']);
   });
 });

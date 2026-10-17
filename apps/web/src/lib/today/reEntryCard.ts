@@ -29,27 +29,6 @@ export interface ReEntryCardItem {
   clearAt: number | null;
 }
 
-const longestByRegistry = new WeakMap<object, number>();
-
-function validHours(h: unknown): h is number {
-  return typeof h === 'number' && Number.isFinite(h) && h >= 0;
-}
-
-/** The longest REI any herbicide, insecticide or fungicide in the library
- *  has on file, in hours. */
-export function longestLibraryReiHours(registry: RegistryView): number {
-  const hit = longestByRegistry.get(registry);
-  if (hit !== undefined) return hit;
-  let longest = 0;
-  for (const r of registry.all()) {
-    const p = r.plugin as { type: string; reEntryIntervalHours?: unknown };
-    if (p.type !== 'herbicide' && p.type !== 'insecticide' && p.type !== 'fungicide') continue;
-    if (validHours(p.reEntryIntervalHours)) longest = Math.max(longest, p.reEntryIntervalHours);
-  }
-  longestByRegistry.set(registry, longest);
-  return longest;
-}
-
 /** Where the /today spray read starts: the start of the year, or earlier
  *  when the longest REI in the library reaches back past it. */
 export function reEntryReadStart(yearStart: number, now: number, longestHours: number): number {

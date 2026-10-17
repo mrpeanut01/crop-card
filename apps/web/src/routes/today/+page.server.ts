@@ -58,11 +58,8 @@ import { loadTodayAdvice } from '$lib/server/todayAdvice.server';
 import type { TodayAdviceCard } from '$lib/today/advice';
 import { careCards, careCloseFormData } from '$lib/server/careView';
 import { todayDigestInput } from '$lib/digest/todayInput';
-import {
-  activeReEntryItems,
-  longestLibraryReiHours,
-  reEntryReadStart
-} from '$lib/today/reEntryCard';
+import { activeReEntryItems, reEntryReadStart } from '$lib/today/reEntryCard';
+import { longestLibraryReiHours } from '$lib/spray/herbicideReEntry';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;

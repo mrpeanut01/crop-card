@@ -50,6 +50,7 @@ import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { getRegistry } from '$lib/server/registry';
+import { herbicideReEntryClearAtFor } from '$lib/server/herbicideReEntry';
 import { RULES_VERSION } from '$lib/safety/version';
 import { requireUser } from '$lib/server/auth';
 import { db } from '$lib/db/client';
@@ -70,6 +71,7 @@ import {
   lockedNow,
   recordedTarget,
   reiHoursFor,
+  reiHoursFromClearAt,
   reiText
 } from '$lib/records/exportFacts';
 
@@ -239,6 +241,8 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
         })
       )
     );
+  const herbicideReiFor = (ev: Parameters<typeof herbicideReEntryClearAtFor>[1]) =>
+    reiText(reiHoursFromClearAt(ev.occurredAt, herbicideReEntryClearAtFor(registry, ev)));
   const farmName = ownerNameOf(user.activeOwnerId);
   const generatedAt = new Date();
   const generatedDay = localDay(generatedAt, prefs);
@@ -318,7 +322,7 @@ async function exportPdf(event: RequestEvent): Promise<Response> {
       totalLine: totalAppliedLine(sprayNames, blockAcresById.get(ev.blockId)),
       cropLine: cropFor(ev.blockId, ev.cropId),
       targetLine: 'Not recorded',
-      reiLine: reiFor(ev, ev.products)
+      reiLine: herbicideReiFor(ev)
     });
   }
   for (const ev of insecticides) {

@@ -2,12 +2,9 @@ import type { PluginRegistry } from '$lib/plugins';
 import { sprayEventsForReEntry, type SprayEvent } from '$lib/db/sprayEvents';
 import {
   herbicideReEntryFor,
-  herbicideReiHoursOf,
   longestHerbicideReiHours,
   reEntryActive
 } from '$lib/spray/herbicideReEntry';
-
-export { herbicideReEntryFor, herbicideReiHoursOf, longestHerbicideReiHours };
 
 const HOUR_MS = 60 * 60 * 1000;
 

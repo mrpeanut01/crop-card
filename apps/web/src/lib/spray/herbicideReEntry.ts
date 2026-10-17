@@ -18,7 +18,7 @@ export interface TankReEntry {
   complete: boolean;
 }
 
-function validHours(h: unknown): h is number {
+export function validHours(h: unknown): h is number {
   return typeof h === 'number' && Number.isFinite(h) && h >= 0;
 }
 
@@ -89,14 +89,36 @@ export function herbicideReiHoursOf(registry: RegistryView, pluginId: string): n
   return validHours(h) ? h : undefined;
 }
 
-export function longestHerbicideReiHours(registry: RegistryView): number {
+export type ReiPluginType = 'herbicide' | 'insecticide' | 'fungicide';
+
+const ALL_REI_TYPES: ReadonlyArray<ReiPluginType> = ['herbicide', 'insecticide', 'fungicide'];
+
+const longestAllByRegistry = new WeakMap<object, number>();
+
+/** The longest REI any library plugin of the given types (default: every
+ *  herbicide, insecticide and fungicide) has on file, in hours; 0 when none
+ *  has one. Only the default lookup is cached per registry. */
+export function longestLibraryReiHours(
+  registry: RegistryView,
+  types?: ReadonlyArray<ReiPluginType>
+): number {
+  if (types === undefined) {
+    const hit = longestAllByRegistry.get(registry);
+    if (hit !== undefined) return hit;
+  }
+  const wanted = types ?? ALL_REI_TYPES;
   let longest = 0;
   for (const r of registry.all()) {
-    if (r.plugin.type !== 'herbicide') continue;
-    const h = herbicideReiHoursOf(registry, r.plugin.pluginId);
-    if (h !== undefined) longest = Math.max(longest, h);
+    const p = r.plugin as { type: string; reEntryIntervalHours?: unknown };
+    if (!wanted.includes(p.type as ReiPluginType)) continue;
+    if (validHours(p.reEntryIntervalHours)) longest = Math.max(longest, p.reEntryIntervalHours);
   }
+  if (types === undefined) longestAllByRegistry.set(registry, longest);
   return longest;
+}
+
+export function longestHerbicideReiHours(registry: RegistryView): number {
+  return longestLibraryReiHours(registry, ['herbicide']);
 }
 
 /** One herbicide spray record's re-entry window, from its stored clear time

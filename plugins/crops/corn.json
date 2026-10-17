@@ -2,7 +2,7 @@
   "pluginId": "corn",
   "type": "crop",
   "displayName": "Corn (Field)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "corn",
   "daysToMaturity": {
     "min": 100,
@@ -86,5 +86,12 @@
       "min": 125,
       "max": 150
     }
-  ]
+  ],
+  "fertility": {
+    "preplant": {
+      "nLbPerAcre": 125,
+      "p2o5LbPerAcre": 40,
+      "k2oLbPerAcre": 40
+    }
+  }
 }

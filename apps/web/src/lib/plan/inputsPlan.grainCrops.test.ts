@@ -305,7 +305,7 @@ describe('#720 field corn, soybean, sorghum and wheat in the inputs plan', () =>
   });
 });
 
-describe('#739 rulings N739-1 to N739-4: a sourced N need feeds the inputs plan', () => {
+describe('#739 rulings N739-1 to N739-5: a sourced N need feeds the inputs plan', () => {
   const library = readdirSync(path.join(PLUGINS, 'crops'))
     .filter((f) => f.endsWith('.json'))
     .map((f) =>
@@ -315,31 +315,55 @@ describe('#739 rulings N739-1 to N739-4: a sourced N need feeds the inputs plan'
     .map((r) => r.data as CropPlugin);
   const needOnly = library.filter((c) => c.nitrogenNeedLbPerAcre && !c.fertility);
 
-  it('corn plans the low end of its VCE N need, tagged data, with P and K typical', () => {
+  it('corn plans its VCE fertility block: N, P and K all sourced, no sidedress (N739-5)', () => {
     for (const id of ['corn', 'corn-feed-dent-pioneer']) {
-      const budget = fertilityBudgetFor(crop(id))!;
+      const c = crop(id);
+      expect(c.fertility?.topdressN, id).toBeUndefined();
+      const budget = fertilityBudgetFor(c)!;
       expect(budget, id).toMatchObject({
         n: 125,
-        p: 45,
-        k: 35,
+        p: 40,
+        k: 40,
         sourced: true,
-        provenance: { n: 'data', p: 'fallback', k: 'fallback' },
-        nitrogenNeed: { min: 125, max: 150 }
+        provenance: { n: 'data', p: 'data', k: 'data' }
       });
+      expect(budget.nitrogenNeed, id).toBeUndefined();
       const apps = plan([id], MAY_1).applications;
       const fert = apps.find((a) => a.slot === 'pre-plant-fertility')!;
       expect(fert.budgetProvenance, id).toBe('data');
-      expect(fert.nutrientProvenance, id).toEqual({ n: 'data', p: 'fallback', k: 'fallback' });
-      expect(fert.nitrogenNeed, id).toEqual({ min: 125, max: 150 });
-      expect(fert.rationale, id).toMatch(/N 125 lb\/ac, P₂O₅ 45 lb\/ac, K₂O 35 lb\/ac/);
-      expect(fert.rationale, id).toMatch(
-        /N from the extension N need, lower end; P₂O₅ and K₂O typical estimate, not from a source/
-      );
+      expect(fert.nutrientProvenance, id).toEqual({ n: 'data', p: 'data', k: 'data' });
+      expect(fert.nitrogenNeed, id).toBeUndefined();
+      expect(fert.rationale, id).toMatch(/N 125 lb\/ac, P₂O₅ 40 lb\/ac, K₂O 40 lb\/ac/);
+      expect(fert.rationale, id).toMatch(/extension budget/);
+      expect(fert.rationale, id).not.toMatch(/not from a source/);
       expect(
         apps.some((a) => a.slot === 'sidedress-n'),
         `${id}: no unsourced sidedress on top of a sourced season total`
       ).toBe(false);
     }
+  });
+
+  it('a need-only crop plans the low end of its N need, tagged data, with P and K typical', () => {
+    const c = needOnlyCorn();
+    const budget = fertilityBudgetFor(c)!;
+    expect(budget).toMatchObject({
+      n: 125,
+      p: 45,
+      k: 35,
+      sourced: true,
+      provenance: { n: 'data', p: 'fallback', k: 'fallback' },
+      nitrogenNeed: { min: 125, max: 150 }
+    });
+    const apps = planOne(c).applications;
+    const fert = apps.find((a) => a.slot === 'pre-plant-fertility')!;
+    expect(fert.budgetProvenance).toBe('data');
+    expect(fert.nutrientProvenance).toEqual({ n: 'data', p: 'fallback', k: 'fallback' });
+    expect(fert.nitrogenNeed).toEqual({ min: 125, max: 150 });
+    expect(fert.rationale).toMatch(/N 125 lb\/ac, P₂O₅ 45 lb\/ac, K₂O 35 lb\/ac/);
+    expect(fert.rationale).toMatch(
+      /N from the extension N need, lower end; P₂O₅ and K₂O typical estimate, not from a source/
+    );
+    expect(apps.some((a) => a.slot === 'sidedress-n')).toBe(false);
   });
 
   it('a crop with a fertility block keeps its own budget and topdress', () => {
@@ -369,9 +393,12 @@ describe('#739 rulings N739-1 to N739-4: a sourced N need feeds the inputs plan'
     expect(fert.nitrogenNeed).toBeUndefined();
   });
 
-  it('the /fertility N need row and the inputs plan agree for every need-only crop', () => {
-    expect(needOnly.map((c) => c.pluginId).sort()).toEqual(['corn', 'corn-feed-dent-pioneer']);
-    for (const c of needOnly) {
+  it('the /fertility N need row and the inputs plan agree for a need-only crop', () => {
+    expect(
+      needOnly.map((c) => c.pluginId),
+      'no shipped crop is need-only since N739-5; the check runs on a fixture'
+    ).toEqual([]);
+    for (const c of [...needOnly, needOnlyCorn()]) {
       const [row] = nitrogenNeedRows(
         [{ cropPluginId: c.pluginId, plantingDate: MAY_1 }],
         2026,
@@ -402,6 +429,12 @@ describe('#739 rulings N739-1 to N739-4: a sourced N need feeds the inputs plan'
       expect(planned, c.pluginId).toBeLessThanOrEqual(total.max);
     }
   });
+
+  // Corn without its fertility block: the need-only path of N739-1, which no
+  // shipped crop takes since N739-5 gave corn a sourced block.
+  function needOnlyCorn(): CropPlugin {
+    return { ...crop('corn'), pluginId: 'corn-need-only', fertility: undefined };
+  }
 
   function planOne(c: CropPlugin) {
     const input: InputsPlanInput = {

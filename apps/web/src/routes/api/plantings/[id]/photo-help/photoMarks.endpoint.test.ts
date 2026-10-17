@@ -214,9 +214,9 @@ describe('photo help with marks (37F)', () => {
       {
         title: 'Stake and prune',
         items: [
+          'Pinch off basil flower buds. Pinch stem tips for a bushier plant, and pinch off flower buds as soon as you see them. Left on, buds change the flavor of the leaves.',
           'Pinch stems as they lengthen to promote bushy, compact growth.',
-          'Basil flower buds should be removed by pinching as soon as you see them form.',
-          'Pinch off basil flower buds. Pinch stem tips for a bushier plant, and pinch off flower buds as soon as you see them. Left on, buds change the flavor of the leaves.'
+          'Basil flower buds should be removed by pinching as soon as you see them form.'
         ],
         provenance: 'plugin'
       }

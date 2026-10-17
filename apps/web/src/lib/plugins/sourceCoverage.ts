@@ -17,7 +17,6 @@ import {
 import { SEEDING_RATE_KEYS } from './schemas';
 import { calendarWindowFromWords } from '../plan/calendarWords';
 import { numberPattern, statesDays, statesInches } from './quoteNumbers';
-import { isHerbGardenCrop } from '../garden/herbs';
 import { quoteNamesCrop } from '../garden/herbQuoteNames';
 import { isHerbGardenCrop } from '$lib/garden/herbs';
 import {

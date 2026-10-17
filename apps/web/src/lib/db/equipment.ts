@@ -346,11 +346,6 @@ export function equipmentLastActiveBefore(beforeMs: number): Map<string, number>
   return new Map(rows);
 }
 
-/** Ids of this Owner's equipment with any log entry before `beforeMs`. */
-export function equipmentIdsActiveBefore(beforeMs: number): Set<string> {
-  return new Set(equipmentLastActiveBefore(beforeMs).keys());
-}
-
 export function listEquipmentLog(
   equipmentId: string,
   opts?: { kind?: EquipmentLogKind; limit?: number }

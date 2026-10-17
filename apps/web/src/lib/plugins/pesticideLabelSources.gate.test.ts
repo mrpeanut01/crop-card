@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { organicInputClass } from '../organic/inputCompliance';
 import {
+  fertilizerOrganicSourceGaps,
   LABEL_SOURCED_CLASSES,
   pesticideLabelSourceGaps,
   statesAmount,
@@ -388,40 +389,6 @@ describe('pesticide label sources (#640 #661 #716)', () => {
       ).toHaveLength(1);
     });
 
-    it('transitioningAllowed follows the certified flags (#841, G841-1, G841-3)', () => {
-      const listed = { omriListed: true, sourceUrl: omri, quote: listing };
-      const gaps = (flags: LabelSourcePlugin['complianceFlags'], src: object = cfr) =>
-        pesticideLabelSourceGaps([{ ...base, complianceFlags: flags }], {
-          complianceFlags: { x: src }
-        });
-      const needs =
-        'x: transitioningAllowed true needs certifiedOrganicAllowed or omriListed true (7 CFR 205.202(b))';
-      const beside =
-        'x: transitioningAllowed false beside certifiedOrganicAllowed or omriListed true';
-      expect(gaps({ transitioningAllowed: true })).toEqual([needs]);
-      expect(gaps({ transitioningAllowed: true }, listed)).toEqual([needs]);
-      expect(gaps({ certifiedOrganicAllowed: false, transitioningAllowed: true })).toEqual([needs]);
-      expect(gaps({ certifiedOrganicAllowed: true, transitioningAllowed: false })).toEqual([
-        beside
-      ]);
-      expect(
-        gaps(
-          { omriListed: true, certifiedOrganicAllowed: true, transitioningAllowed: false },
-          listed
-        )
-      ).toEqual([beside]);
-      expect(gaps({ certifiedOrganicAllowed: true })).toEqual([]);
-      expect(gaps({ omriListed: true, certifiedOrganicAllowed: true }, listed)).toEqual([]);
-      expect(gaps({ omriListed: true, transitioningAllowed: true }, listed)).toEqual([]);
-      expect(gaps({ certifiedOrganicAllowed: false, transitioningAllowed: false })).toEqual([]);
-      expect(
-        pesticideLabelSourceGaps(
-          [{ ...base, complianceFlags: { transitioningAllowed: false } }],
-          {}
-        )
-      ).toEqual([]);
-    });
-
     it('aza-direct and m-pede keep every planner verdict with the flag set true (G841-3)', () => {
       const byId = new Map(loadPesticides().map((p) => [p.pluginId, p]));
       for (const id of ['aza-direct', 'm-pede']) {
@@ -677,6 +644,113 @@ describe('pesticide label sources (#640 #661 #716)', () => {
         'x: season cap names popcorn, which is not a crop plugin'
       ]);
     });
+  });
+});
+
+describe('transitioningAllowed follows the certified flags (#841, G841-1, G841-3)', () => {
+  type Flags = LabelSourcePlugin['complianceFlags'];
+  const needs =
+    'x: transitioningAllowed true needs certifiedOrganicAllowed or omriListed true (7 CFR 205.202(b))';
+  const beside = 'x: transitioningAllowed false beside certifiedOrganicAllowed or omriListed true';
+  const cfrSource = {
+    basis: '7 CFR 205',
+    citation: '7 CFR 205.601(j)(2)',
+    sourceUrl: 'https://www.ecfr.gov/current/title-7/section-205.601',
+    quote: '(2) Elemental sulfur.'
+  };
+  const listingSource = {
+    omriListed: true,
+    sourceUrl: 'https://www.omri.org/omri-search?query=X',
+    quote: 'X Granular | X Co. | abc-1234 | NOP | Allowed | expires 2027-06-01'
+  };
+  const entryPoints: {
+    name: string;
+    gaps: (flags: Flags, src: object | null) => string[];
+  }[] = [
+    {
+      name: 'pesticide',
+      gaps: (flags, src) =>
+        pesticideLabelSourceGaps(
+          [{ pluginId: 'x', type: 'herbicide', displayName: 'X', complianceFlags: flags }],
+          src ? { complianceFlags: { x: src } } : {}
+        )
+    },
+    {
+      name: 'fertilizer',
+      gaps: (flags, src) =>
+        fertilizerOrganicSourceGaps(
+          [{ pluginId: 'x', type: 'fertilizer', displayName: 'X', complianceFlags: flags }],
+          src ? { x: src } : {}
+        )
+    }
+  ];
+  const cases: {
+    flags: Flags;
+    src: 'cfr' | 'listing' | 'none';
+    expected: string[];
+    match: 'equal' | 'contain';
+    only?: 'pesticide';
+  }[] = [
+    { flags: { transitioningAllowed: true }, src: 'cfr', expected: [needs], match: 'equal' },
+    { flags: { transitioningAllowed: true }, src: 'listing', expected: [needs], match: 'equal' },
+    { flags: { transitioningAllowed: true }, src: 'none', expected: [needs], match: 'contain' },
+    {
+      flags: { certifiedOrganicAllowed: false, transitioningAllowed: true },
+      src: 'cfr',
+      expected: [needs],
+      match: 'contain'
+    },
+    {
+      flags: { certifiedOrganicAllowed: true, transitioningAllowed: false },
+      src: 'cfr',
+      expected: [beside],
+      match: 'equal'
+    },
+    {
+      flags: { omriListed: true, transitioningAllowed: false },
+      src: 'listing',
+      expected: [beside],
+      match: 'equal'
+    },
+    {
+      flags: { omriListed: true, certifiedOrganicAllowed: true, transitioningAllowed: false },
+      src: 'listing',
+      expected: [beside],
+      match: 'equal'
+    },
+    { flags: { certifiedOrganicAllowed: true }, src: 'cfr', expected: [], match: 'equal' },
+    {
+      flags: { omriListed: true, certifiedOrganicAllowed: true },
+      src: 'listing',
+      expected: [],
+      match: 'equal'
+    },
+    {
+      flags: { omriListed: true, transitioningAllowed: true },
+      src: 'listing',
+      expected: [],
+      match: 'equal'
+    },
+    {
+      flags: { certifiedOrganicAllowed: false, transitioningAllowed: false },
+      src: 'cfr',
+      expected: [],
+      match: 'equal',
+      only: 'pesticide'
+    },
+    { flags: { transitioningAllowed: false }, src: 'none', expected: [], match: 'equal' }
+  ];
+
+  describe.each(entryPoints)('$name', ({ name, gaps }) => {
+    it.each(cases.filter((c) => !c.only || c.only === name))(
+      '$flags with $src source',
+      ({ flags, src, expected, match }) => {
+        const source = src === 'cfr' ? cfrSource : src === 'listing' ? listingSource : null;
+        const got = gaps(flags, source);
+        if (match === 'equal') expect(got).toEqual(expected);
+        else for (const e of expected) expect(got).toContain(e);
+      }
+    );
   });
 });
 

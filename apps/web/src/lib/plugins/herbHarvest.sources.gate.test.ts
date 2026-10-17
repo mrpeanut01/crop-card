@@ -67,6 +67,15 @@ describe('Phase 37C shipped library', () => {
       for (const key of Object.keys(entries)) {
         if (!key.startsWith('preserving.') && key !== 'harvestCadence') continue;
         const c = byId.get(id);
+        if (key.endsWith('.notRecorded')) {
+          const method = key.slice('preserving.'.length, -'.notRecorded'.length);
+          expect((entries[key] as { note?: string }).note, `${id} ${key}`).toMatch(/disagree/);
+          expect(
+            c?.preserving?.some((p) => p.method === method),
+            `${id} ${key} is recorded as empty but the plugin has it`
+          ).toBeFalsy();
+          continue;
+        }
         expect(c, `${id} ${key}`).toBeDefined();
         expect(herbHarvestFactPaths(c!), `${id} ${key}`).toContain(key);
       }
@@ -162,6 +171,15 @@ describe('preservingQuoteGaps', () => {
         map
       )
     ).toEqual(['basil-genovese: preserving.freeze quote has no words that say fair']);
+  });
+
+  it('reads "will mold if not dried quickly" as fair', () => {
+    const map = {
+      'basil-genovese': {
+        'preserving.dry': src('Basil and the mints will mold if not dried quickly.')
+      }
+    };
+    expect(preservingQuoteGaps([crop([{ method: 'dry', suitability: 'fair' }])], map)).toEqual([]);
   });
 
   it('infuse needs a note and a .edu safety quote that names botulism', () => {

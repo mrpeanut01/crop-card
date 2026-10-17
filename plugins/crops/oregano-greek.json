@@ -2,7 +2,7 @@
   "pluginId": "oregano-greek",
   "type": "crop",
   "displayName": "Oregano — Greek (Origanum vulgare hirtum)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
@@ -21,5 +21,12 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes."
+    }
+  ]
 }

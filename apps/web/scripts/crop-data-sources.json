@@ -1110,6 +1110,13 @@
       "date": "Updated: April 29, 2024 (accessed 2026-10-06)",
       "quote": "UMD Extension, Chives: \"Leave 12\" between rows and plants.\"",
       "note": "Lower end of the between-row figure (#591 ruling Q1). Also read: https://class.ucanr.edu/sites/default/files/2011-05/91525.pdf (12 in (Row), overlaps)."
+    },
+    "preserving.freeze": {
+      "url": "https://ohioline.osu.edu/factsheet/HYG-5360",
+      "publisher": "Ohio State University Extension, HYG-5360 Food Preservation: Preserving Herbs, Freezing and Drying",
+      "date": "Jul 23, 2026 (accessed 2026-10-17)",
+      "quote": "Best Herbs for Freezing: basil cilantro parsley dill chives mint",
+      "note": "Penn State agrees (\"Freezing works well for herbs like ... chives\")."
     }
   },
   "clover-red-mammoth": {
@@ -1412,6 +1419,20 @@
       "date": "Last revised February 5, 2010 (accessed 2026-10-06)",
       "quote": "OSU Oregon Vegetables, Dill: \"Seeds are sown to allow for a final stand of plants 6-10 inches apart in rows 2-3 feet apart.\"",
       "note": "Commercial page; its variety list includes Mammoth. UCCE Orange Co. table lists dill with the Row and Plants cells blank; VCE 426-420 12\" is a single \"Plant spacing\" column (no row axis). Lower end of the between-row figure, feet converted to inches (#591 ruling Q1)."
+    },
+    "preserving.dry": {
+      "url": "https://content.ces.ncsu.edu/harvesting-and-preserving-herbs-for-the-home-gardener",
+      "publisher": "NC State Extension, Horticulture Information Leaflet: Harvesting and Preserving Herbs for the Home Gardener",
+      "date": "Reviewed/Revised Dec. 13, 2024 (accessed 2026-10-17)",
+      "quote": "Sage, thyme, summer savory, dill, and parsley are easy to dry. Basil, tarragon, and mints may mold and discolor if not dried quickly.",
+      "note": "OSU HYG-5360 (\"Drying is used for more delicate herbs like dill\") and Illinois Extension (\"it can be dried for later use\") agree."
+    },
+    "preserving.freeze": {
+      "url": "https://extension.psu.edu/freezing-herbs",
+      "publisher": "Penn State Extension, Freezing Herbs",
+      "date": "Updated July 22, 2025 (accessed 2026-10-17)",
+      "quote": "Freezing works well for herbs like parsley, dill, basil, chives lemon balm, mint or tarragon.",
+      "note": "OSU HYG-5360 lists dill under \"Best Herbs for Freezing\"."
     }
   },
   "edamame-midori-giant": {
@@ -2015,6 +2036,26 @@
       "date": "no date printed (file path 2011-05) (accessed 2026-10-06)",
       "quote": "UCCE Orange County Master Gardeners, Use and Culture of Culinary Herbs table (Spacing in inches (cm): Row | Plants): \"Spacing in inches (cm) Height Row Plants Propagation Cultural Hints Uses\"; \"spearmint (Mentha spicata) 18 (45) 24 (60) 18 (45)\"",
       "note": "UMD spearmint page says \"Space plants 18 inches apart\" (no row axis, not used); VCE 426-420 Mints 18\" single \"Plant spacing\" column (not used). Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "preserving.fresh": {
+      "url": "https://extension.illinois.edu/herbs/mint",
+      "publisher": "University of Illinois Extension, Herbs: Mint",
+      "date": "undated page (accessed 2026-10-17)",
+      "quote": "Bunches of mint in a glass of water will keep fresh for 3-7 days or can be stored in the refrigerator, dry and wrapped in plastic for a week."
+    },
+    "preserving.dry": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-17)",
+      "quote": "Tender-Leaf Herbs — Basil, oregano, tarragon, lemon balm and the mints have a high moisture content and will mold if not dried quickly.",
+      "note": "NC State agrees: \"Basil, tarragon, and mints may mold and discolor if not dried quickly.\""
+    },
+    "preserving.freeze": {
+      "url": "https://extension.psu.edu/freezing-herbs",
+      "publisher": "Penn State Extension, Freezing Herbs",
+      "date": "Updated July 22, 2025 (accessed 2026-10-17)",
+      "quote": "Freezing works well for herbs like parsley, dill, basil, chives lemon balm, mint or tarragon.",
+      "note": "OSU HYG-5360 lists mint under \"Best Herbs for Freezing\"."
     }
   },
   "mustard-greens-southern-giant-curled": {
@@ -2321,6 +2362,26 @@
       "date": "no date printed (file path 2011-05) (accessed 2026-10-06)",
       "quote": "UCCE Orange County Master Gardeners, Use and Culture of Culinary Herbs table (Spacing in inches (cm): Row | Plants): \"Spacing in inches (cm) Height Row Plants Propagation Cultural Hints Uses\"; \"oregano (marjoram, wild marjoram) (Origanum vulgare) 24 (60) 18 (45) 9 (22.5)\"",
       "note": "Greek oregano is O. vulgare subsp. hirtum; table row is O. vulgare (species level). UMD oregano page says \"Thin plants 10-12” apart\" (no row axis); VCE 426-420 9\" single \"Plant spacing\" column (not used). Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "preserving.infuse": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "December 17, 2024 (accessed 2026-10-17)",
+      "quote": "Researchers from the University of Idaho (see “References” section) developed a safe method to acidify garlic, basil, oregano, or rosemary to a pH of 4.2 or less within 24 hr. This method, if followed properly, allows you to store your infused oils at room temperature."
+    },
+    "preserving.infuse.safety": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "December 17, 2024 (accessed 2026-10-17)",
+      "quote": "Oils provide an anaerobic environment, and when combined with low-acid food matrices such as garlic and herbs, this provides the perfect conditions for specific bacteria to thrive. Clostridium botulinum specifically is of concern in infused oils.",
+      "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
+    },
+    "preserving.dry.notRecorded": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-17)",
+      "quote": "Tender-Leaf Herbs — Basil, oregano, tarragon, lemon balm and the mints have a high moisture content and will mold if not dried quickly.",
+      "note": "Sources disagree on how well oregano dries, so dry stays empty: OSU HYG-5360 lists oregano under \"Best Herbs for Drying\", while NCHFP (this quote) groups it with the tender-leaf herbs that will mold if not dried quickly."
     }
   },
   "ornamental-corn-earth-tones-dent-raw-untreated-non-gmo": {
@@ -2374,6 +2435,26 @@
       "date": "2026 (accessed 2026-10-06)",
       "quote": "VCE 456-420 / SPES-776, F. Parsley, Seeding and Spacing: \"Use 12-18 inch spacing between rows. Drill parsley seeds at a rate of 20 -40 lb/A, with plants spaced 1 -2 inches apart in each row.\"",
       "note": "PDF at https://www.pubs.ext.vt.edu/content/dam/pubs_ext_vt_edu/456/456-420/SPES-776.pdf. Generic parsley (commercial); UC table notes types include flat leaved (Italian). Lower end of the between-row figure (#591 ruling Q1). Also read: https://class.ucanr.edu/sites/default/files/2011-05/91525.pdf (18 in (Row), overlaps); https://agresearch.montana.edu/warc/research_current/research_past/herbsandoils/parsley.html (1.5 ft (research trial plot layout, Montana State Univ. WARC, not a recommendation; text), overlaps)."
+    },
+    "preserving.fresh": {
+      "url": "https://extension.illinois.edu/herbs/parsley",
+      "publisher": "University of Illinois Extension, Herbs: Parsley",
+      "date": "undated page (accessed 2026-10-17)",
+      "quote": "Parsley can be cut any time after it has become large enough. Leaves can be used fresh or dried."
+    },
+    "preserving.dry": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-17)",
+      "quote": "Less Tender Herbs — The more sturdy herbs such as rosemary, sage, thyme, summer savory and parsley are the easiest to dry without a dehydrator.",
+      "note": "NC State and Illinois Extension agree."
+    },
+    "preserving.freeze": {
+      "url": "https://ohioline.osu.edu/factsheet/HYG-5360",
+      "publisher": "Ohio State University Extension, HYG-5360 Food Preservation: Preserving Herbs, Freezing and Drying",
+      "date": "Jul 23, 2026 (accessed 2026-10-17)",
+      "quote": "Best Herbs for Freezing: basil cilantro parsley dill chives mint",
+      "note": "Penn State (\"Freezing works well for herbs like parsley ...\") and Illinois Extension (\"Parsley can also be frozen for later use.\") agree."
     }
   },
   "parsnip-hollow-crown": {
@@ -2874,6 +2955,33 @@
       "date": "no date printed (file path 2011-05) (accessed 2026-10-06)",
       "quote": "UCCE Orange County Master Gardeners, Use and Culture of Culinary Herbs table (Spacing in inches (cm): Row | Plants): \"Spacing in inches (cm) Height Row Plants Propagation Cultural Hints Uses\"; \"rosemary (Rosmarinus officinalis) 3‐6 ft (90‐180) 18 (45) 12 (30)\"",
       "note": "Generic rosemary; Tuscan Blue is an upright cultivar. VCE 426-420 12-36\" single \"Plant spacing\" column (not used). Lower end of the between-row figure (#591 ruling Q1)."
+    },
+    "preserving.dry": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-17)",
+      "quote": "Less Tender Herbs — The more sturdy herbs such as rosemary, sage, thyme, summer savory and parsley are the easiest to dry without a dehydrator.",
+      "note": "OSU HYG-5360 lists rosemary under \"Best Herbs for Drying\"."
+    },
+    "preserving.freeze": {
+      "url": "https://extension.psu.edu/freezing-herbs",
+      "publisher": "Penn State Extension, Freezing Herbs",
+      "date": "Updated July 22, 2025 (accessed 2026-10-17)",
+      "quote": "Rosemary and thyme can also be frozen on the stem.",
+      "note": "OSU HYG-5360 agrees: \"freezing is used for more hearty herbs such as thyme and rosemary.\""
+    },
+    "preserving.infuse": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "December 17, 2024 (accessed 2026-10-17)",
+      "quote": "Researchers from the University of Idaho (see “References” section) developed a safe method to acidify garlic, basil, oregano, or rosemary to a pH of 4.2 or less within 24 hr. This method, if followed properly, allows you to store your infused oils at room temperature."
+    },
+    "preserving.infuse.safety": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "December 17, 2024 (accessed 2026-10-17)",
+      "quote": "Oils provide an anaerobic environment, and when combined with low-acid food matrices such as garlic and herbs, this provides the perfect conditions for specific bacteria to thrive. Clostridium botulinum specifically is of concern in infused oils.",
+      "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
     }
   },
   "sage-broadleaf": {
@@ -2890,6 +2998,13 @@
       "date": "no date printed (file path 2011-05) (accessed 2026-10-06)",
       "quote": "UCCE Orange County Master Gardeners, Use and Culture of Culinary Herbs table (Spacing in inches (cm): Row | Plants): \"Spacing in inches (cm) Height Row Plants Propagation Cultural Hints Uses\"; \"sage (Salvia officinalis) 18 (45) 24 (60) 12 (30)\"",
       "note": "Montana State WARC trial plots used 18 in rows (a trial layout, not a recommendation); does not overlap 24 in. UMD sage page \"Space plants 2-2 ½ “apart\" (no row axis, evident typo). VCE 426-420 12\" single \"Plant spacing\" column (not used). Lower end of the between-row figure (#591 ruling Q1). Also read: https://agresearch.montana.edu/warc/research_current/research_past/herbsandoils/sage.html (18 in (research trial plot layout, Montana State Univ. WARC, not a recommendation; text), not counted)."
+    },
+    "preserving.dry": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-17)",
+      "quote": "Less Tender Herbs — The more sturdy herbs such as rosemary, sage, thyme, summer savory and parsley are the easiest to dry without a dehydrator.",
+      "note": "OSU HYG-5360 and NC State (\"Sage ... easy to dry\") agree."
     }
   },
   "scallion-evergreen-bunching": {
@@ -3471,6 +3586,26 @@
       "date": "no date printed (file path 2011-05) (accessed 2026-10-06)",
       "quote": "UCCE Orange County Master Gardeners, Use and Culture of Culinary Herbs table (Spacing in inches (cm): Row | Plants): \"Spacing in inches (cm) Height Row Plants Propagation Cultural Hints Uses\"; \"thyme (Thymus vulgaris) 8‐12 (20‐30) 18 (45) 12 (30)\"",
       "note": "German Winter is a Thymus vulgaris cultivar. UMD thyme \"Thin plants 8-12” apart\" (no row axis); VCE 426-420 12\" single \"Plant spacing\" column (not used). Lower end of the between-row figure (#591 ruling Q1). Also read: https://agresearch.montana.edu/warc/research_current/research_past/herbsandoils/thyme.html (18 in (research trial plot layout, Montana State Univ. WARC, not a recommendation; text), overlaps)."
+    },
+    "preserving.fresh": {
+      "url": "https://extension.illinois.edu/herbs/thyme",
+      "publisher": "University of Illinois Extension, Herbs: Thyme",
+      "date": "undated page (accessed 2026-10-17)",
+      "quote": "Thyme can be used either fresh or dry."
+    },
+    "preserving.dry": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-17)",
+      "quote": "Less Tender Herbs — The more sturdy herbs such as rosemary, sage, thyme, summer savory and parsley are the easiest to dry without a dehydrator.",
+      "note": "OSU HYG-5360 and NC State (\"thyme ... easy to dry\") agree."
+    },
+    "preserving.freeze": {
+      "url": "https://extension.psu.edu/freezing-herbs",
+      "publisher": "Penn State Extension, Freezing Herbs",
+      "date": "Updated July 22, 2025 (accessed 2026-10-17)",
+      "quote": "Rosemary and thyme can also be frozen on the stem.",
+      "note": "OSU HYG-5360 agrees: \"freezing is used for more hearty herbs such as thyme and rosemary.\""
     }
   },
   "tomatillo-de-milpa": {
@@ -6189,6 +6324,13 @@
       "date": "2024 (PDF: \"Produced by Virginia Cooperative Extension, Virginia Tech, 2024\", VT/1220/426-420; accessed 2026-10-06)",
       "quote": "VCE 426-420, Herb Culture and Use, Perennials table (Common name Scientific name | Height | Plant spacing | Cultural hints | Uses): \"Height | Plant spacing\"; \"Lavender Lavendula spp. | 24” | 18”\"",
       "note": "VCE 426-420 column is \"Plant spacing\" (spacing between plants; the table names no row axis). Generic lavender applied to English Munstead."
+    },
+    "preserving.dry": {
+      "url": "https://ohioline.osu.edu/factsheet/HYG-5360",
+      "publisher": "Ohio State University Extension, HYG-5360 Food Preservation: Preserving Herbs, Freezing and Drying",
+      "date": "Jul 23, 2026 (accessed 2026-10-17)",
+      "quote": "Best Herbs for Drying: rosemary thyme oregano sage lavender",
+      "note": "Illinois Extension agrees: \"Hang in small bunches in a cool, dry, dark well-ventilated area to dry.\""
     }
   },
   "marjoram-sweet": {
@@ -6237,6 +6379,13 @@
       "date": "not printed (file path 2011-05; accessed 2026-10-06)",
       "quote": "UC Master Gardeners of Orange County, Use and Culture of Culinary Herbs (Spacing in inches (cm): Height | Row | Plants): \"Spacing in inches (cm) Height Row Plants\"; \"savory, summer (Satureja hortensis) 18 (45) 18 (45) 18 (45)\"",
       "note": "Columns Height | Row | Plants; Plants = 18. Not in VCE 426-420; UMD savory URLs 404; Illinois summer savory gives none; Montana State WARC savory is a research plot (8.7 in) and does not count."
+    },
+    "preserving.dry": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-17)",
+      "quote": "Less Tender Herbs — The more sturdy herbs such as rosemary, sage, thyme, summer savory and parsley are the easiest to dry without a dehydrator.",
+      "note": "NC State agrees (\"summer savory ... easy to dry\")."
     }
   },
   "tarragon-french": {
@@ -6253,6 +6402,19 @@
       "date": "2024 (PDF: \"Produced by Virginia Cooperative Extension, Virginia Tech, 2024\", VT/1220/426-420; accessed 2026-10-06)",
       "quote": "VCE 426-420, Herb Culture and Use, Perennials table (Common name Scientific name | Height | Plant spacing | Cultural hints | Uses): \"Height | Plant spacing\"; \"French tarragon Artemesia dracunulus | 24” | 24”\"",
       "note": "VCE 426-420 column is \"Plant spacing\" (spacing between plants; the table names no row axis)."
+    },
+    "preserving.dry": {
+      "url": "https://content.ces.ncsu.edu/harvesting-and-preserving-herbs-for-the-home-gardener",
+      "publisher": "NC State Extension, Horticulture Information Leaflet: Harvesting and Preserving Herbs for the Home Gardener",
+      "date": "Reviewed/Revised Dec. 13, 2024 (accessed 2026-10-17)",
+      "quote": "Sage, thyme, summer savory, dill, and parsley are easy to dry. Basil, tarragon, and mints may mold and discolor if not dried quickly.",
+      "note": "NCHFP agrees: tarragon will mold if not dried quickly."
+    },
+    "preserving.freeze": {
+      "url": "https://extension.psu.edu/freezing-herbs",
+      "publisher": "Penn State Extension, Freezing Herbs",
+      "date": "Updated July 22, 2025 (accessed 2026-10-17)",
+      "quote": "Freezing works well for herbs like parsley, dill, basil, chives lemon balm, mint or tarragon."
     }
   },
   "arugula-astro": {
@@ -7294,6 +7456,26 @@
       "date": "2024 (PDF: \"Produced by Virginia Cooperative Extension, Virginia Tech, 2024\", VT/1220/426-420; accessed 2026-10-06)",
       "quote": "VCE 426-420, Herb Culture and Use, Perennials table (Common name Scientific name | Height | Plant spacing | Cultural hints | Uses): \"Height | Plant spacing\"; \"Lemon balm Melissa officinalis | 24-48” | 18-24”\"",
       "note": "VCE 426-420 column is \"Plant spacing\" (spacing between plants; the table names no row axis)."
+    },
+    "preserving.fresh": {
+      "url": "https://extension.illinois.edu/herbs/lemon-balm",
+      "publisher": "University of Illinois Extension, Herbs: Lemon Balm",
+      "date": "undated page (accessed 2026-10-17)",
+      "quote": "While fresh lemon balm is superior to dried, cut stems can be bundled, hung in a warm, dark, well ventilated location to dry."
+    },
+    "preserving.dry": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-17)",
+      "quote": "Tender-Leaf Herbs — Basil, oregano, tarragon, lemon balm and the mints have a high moisture content and will mold if not dried quickly.",
+      "note": "Illinois Extension agrees that drying works but is second best: \"While fresh lemon balm is superior to dried ...\""
+    },
+    "preserving.freeze": {
+      "url": "https://extension.psu.edu/freezing-herbs",
+      "publisher": "Penn State Extension, Freezing Herbs",
+      "date": "Updated July 22, 2025 (accessed 2026-10-17)",
+      "quote": "Freezing works well for herbs like parsley, dill, basil, chives lemon balm, mint or tarragon.",
+      "note": "Illinois Extension agrees: \"Leaves can also be frozen for later use.\""
     }
   },
   "lemon-verbena": {
@@ -7458,6 +7640,49 @@
       "date": "2026",
       "quote": "\"Make residual soil-applied herbicide applications as close to planting as possible and postemergence applications three to four weeks after planting, when weeds are 4 inches in height or less.\"; Table 5.54, Glyphosate: \"Apply over-the-top to glyphosate-resistant (Roundup Ready) soybean varieties only.\" \"Treat in-crop from soybean emergence through full flowering of soybeans.\"",
       "note": "Three to four weeks = 21-28 days. Only planned for a crop plugin carrying glyphosate-tolerant-rr2 through a label traitGatedSafeFor claim (#720 ruling R720-1)."
+    }
+  },
+  "basil-genovese": {
+    "preserving.fresh": {
+      "url": "https://extension.umn.edu/vegetables/growing-basil",
+      "publisher": "University of Minnesota Extension, Growing basil",
+      "date": "Reviewed in 2026 (accessed 2026-10-17)",
+      "quote": "One of the easiest and most popular culinary herbs to grow is the common or sweet basil, Ocimum basilicum . A member of the mint family (Lamiaceae), it is native to southern Asia and islands of the South Pacific. This tender annual is popular for its aromatic leaves, used fresh or dried."
+    },
+    "preserving.freeze": {
+      "url": "https://extension.umn.edu/vegetables/growing-basil",
+      "publisher": "University of Minnesota Extension, Growing basil",
+      "date": "Reviewed in 2026 (accessed 2026-10-17)",
+      "quote": "Freezing is another method of preserving basil and usually results in a product with a flavor more like fresh basil.",
+      "note": "Agrees with OSU HYG-5360 (\"Best Herbs for Freezing: basil ...\") and Penn State (\"Freezing works well for herbs like ... basil\")."
+    },
+    "preserving.infuse": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "December 17, 2024 (accessed 2026-10-17)",
+      "quote": "Researchers from the University of Idaho (see “References” section) developed a safe method to acidify garlic, basil, oregano, or rosemary to a pH of 4.2 or less within 24 hr. This method, if followed properly, allows you to store your infused oils at room temperature."
+    },
+    "preserving.infuse.safety": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "December 17, 2024 (accessed 2026-10-17)",
+      "quote": "Oils provide an anaerobic environment, and when combined with low-acid food matrices such as garlic and herbs, this provides the perfect conditions for specific bacteria to thrive. Clostridium botulinum specifically is of concern in infused oils.",
+      "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
+    },
+    "preserving.dry.notRecorded": {
+      "url": "https://extension.umn.edu/vegetables/growing-basil",
+      "publisher": "University of Minnesota Extension, Growing basil",
+      "date": "Reviewed in 2026 (accessed 2026-10-17)",
+      "quote": "Basil leaves turn an unpleasant brown color when air-dried. Freezing is a better method.",
+      "note": "Sources disagree on how well basil dries, so dry stays empty: Illinois Extension says \"Basil is easily dried for storing and future use\"; NCHFP and NC State say basil will (or may) mold if not dried quickly; UMN (this quote) says the leaves turn brown when air-dried."
+    }
+  },
+  "cilantro-santo": {
+    "preserving.freeze": {
+      "url": "https://ohioline.osu.edu/factsheet/HYG-5360",
+      "publisher": "Ohio State University Extension, HYG-5360 Food Preservation: Preserving Herbs, Freezing and Drying",
+      "date": "Jul 23, 2026 (accessed 2026-10-17)",
+      "quote": "Best Herbs for Freezing: basil cilantro parsley dill chives mint"
     }
   }
 }

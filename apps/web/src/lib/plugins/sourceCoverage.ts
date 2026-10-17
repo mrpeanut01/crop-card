@@ -958,7 +958,7 @@ const PRESERVING_METHOD_WORDS: Record<Exclude<PreservingMethodKey, 'freeze-dry'>
 /** Qualifying words a source uses when a method works only fairly well, or
  *  poorly. A `good` entry needs none. */
 const SUITABILITY_WORDS: Record<'fair' | 'poor', RegExp> = {
-  fair: /\b(?:fairly|moderately|somewhat|less|not as (?:well|good)|loses? some|some of (?:the|its) (?:flavou?r|aroma|colou?r)|acceptable)\b/i,
+  fair: /\b(?:fairly|moderately|somewhat|less|(?:will|may) mold|not as (?:well|good)|loses? some|some of (?:the|its) (?:flavou?r|aroma|colou?r)|acceptable)\b/i,
   poor: /\b(?:poor(?:ly)?|does not|do not|don't|doesn't|not recommended|not suitable|unsuitable|loses? (?:most|much)|best (?:used )?fresh|turns? (?:black|brown))\b/i
 };
 

@@ -224,6 +224,17 @@ describe('#720 field corn, soybean, sorghum and wheat in the inputs plan', () =>
     }
   });
 
+  it('a planting inside the topdress window gets the rest of that window, not next year', () => {
+    const feb20 = Date.UTC(2026, 1, 20);
+    const td = plan(['barley-grain-thoroughbred'], feb20).applications.filter(
+      (a) => a.slot === 'sidedress-n'
+    );
+    expect(td).toHaveLength(1);
+    expect(td[0].windowStartMs).toBe(feb20);
+    expect(td[0].applicationDateMs).toBe(feb20);
+    expect(td[0].windowEndMs).toBe(Date.UTC(2026, 2, 10));
+  });
+
   it('a stage topdress on a crop without that stage warns and plans nothing', () => {
     const wheat = crop('wheat-soft-red-winter');
     const noTable = {

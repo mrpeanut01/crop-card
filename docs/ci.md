@@ -14,6 +14,8 @@ These jobs run in parallel and usually finish in a few minutes. Branch protectio
 | validate-bicep           | The Azure template still builds                                                                                                                                  |
 | dependency review        | A PR can't add a dependency with a known high-severity advisory. Runs once the Dependency graph is enabled and the repo variable `DEPENDENCY_REVIEW=true` is set |
 
+The e2e servers run with `WEATHER_FEEDS=off`, so no spec depends on the live NWS or NCEI weather; a spec that needs a forecast routes `/api/weather/**` itself.
+
 A new push to the same PR cancels the run already in progress.
 
 ## After merge and weekly (`security.yml`)

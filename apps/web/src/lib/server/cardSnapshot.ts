@@ -57,6 +57,7 @@ import { labReportForSoilTests, type SoilTestLabReport } from '$lib/db/documents
 import { listStockItems } from '$lib/db/stock';
 import { dbChangeMarker } from '$lib/db/requestMemo';
 import { requireOwnerId } from '$lib/db/tenant';
+import { cropCareTasksOf } from '$lib/journal/cropCareTasks';
 import type { CropPlugin, Plugin } from '$lib/plugins/schemas';
 import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
@@ -201,6 +202,7 @@ export function careTasksOf(p: CropPlugin): SnapshotCareTask[] {
       t.body ? { key: t.key, title: t.title, body: t.body } : { key: t.key, title: t.title }
     );
   }
+  out.push(...cropCareTasksOf(p));
   return out;
 }
 
@@ -233,7 +235,8 @@ export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
     harvestIndicators: p.harvestIndicators,
     notes: p.notes,
     ...(p.treeSizeClasses ? { treeSizeClasses: p.treeSizeClasses } : {}),
-    ...(careTasks.length ? { careTasks } : {})
+    ...(careTasks.length ? { careTasks } : {}),
+    ...(p.growthHabit ? { growthHabit: p.growthHabit } : {})
   };
 }
 

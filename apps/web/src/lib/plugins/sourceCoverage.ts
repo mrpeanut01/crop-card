@@ -163,6 +163,8 @@ export function cropFactPaths(c: CropPlugin): string[] {
   for (const row of c.treeSizeClasses ?? []) paths.push(`treeSizeClasses.${row.sizeClass}`);
   if (c.nitrogenNeedLbPerAcre) paths.push('nitrogenNeedLbPerAcre');
   if (c.harvestSeason) paths.push('harvestSeason');
+  for (const t of c.careTasks ?? []) paths.push(`careTasks.${t.key}`); // Phase 37F
+  if (c.growthHabit) paths.push('growthHabit'); // Phase 37F
   for (const [, key] of rowSpacingFields(c)) if (!paths.includes(key)) paths.push(key);
   if (guide.inRowSpacingIn !== undefined) paths.push('inRowSpacingIn');
   if (c.fertility) {
@@ -919,6 +921,59 @@ export function forageHazardGaps(
   for (const [id, reason] of Object.entries(exclusions)) {
     if (!mapped.has(id)) gaps.push(`${id}: excluded but not named in any crop entry`);
     if (reason.trim().length <= 10) gaps.push(`${id}: exclusion reason is too short`);
+  }
+  return gaps;
+}
+
+/** Phase 37F: quotes compare word for word, ignoring only spacing and
+ *  typographic quote marks. */
+function plainQuoteText(s: string): string {
+  return s
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const GROWTH_HABIT_WORDS: Record<'woody' | 'clumping', RegExp> = {
+  woody: /\bwoody\b/i,
+  clumping: /\bclump(s|ing)?\b/i
+};
+
+/** Phase 37F (R-20): a crop's care task is quoted from an extension or
+ *  government page, and its title and body each appear in the quote word
+ *  for word; a growth habit's quote names it ("woody", "clump"). Returns
+ *  "pluginId: problem" lines; missing entries are `checkSources`' job. */
+export function cropCareQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'careTasks' | 'growthHabit'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    for (const task of c.careTasks ?? []) {
+      const key = `careTasks.${task.key}`;
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
+      if (!entry.success) continue;
+      if (!isAllowedSpacingSource(entry.data.url)) {
+        gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+      }
+      const quote = plainQuoteText(entry.data.quote);
+      for (const part of [task.title, task.body]) {
+        if (part !== undefined && !quote.includes(plainQuoteText(part))) {
+          gaps.push(`${c.pluginId}: ${key} text is not in its quote word for word`);
+        }
+      }
+    }
+    if (c.growthHabit) {
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.growthHabit);
+      if (!entry.success) continue;
+      if (!isAllowedSpacingSource(entry.data.url)) {
+        gaps.push(`${c.pluginId}: growthHabit source is not an extension or government page`);
+      }
+      if (!GROWTH_HABIT_WORDS[c.growthHabit].test(entry.data.quote)) {
+        gaps.push(`${c.pluginId}: growthHabit quote does not name ${c.growthHabit}`);
+      }
+    }
   }
   return gaps;
 }

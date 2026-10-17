@@ -1,6 +1,8 @@
 /** Client-safe planting journal types shared by the repo, the endpoints and
  *  the photo-help panel. */
 
+import type { PruneDrawingId } from './pruneDrawing';
+
 export const JOURNAL_KINDS = ['note', 'photo_help', 'observation'] as const;
 export type JournalKind = (typeof JOURNAL_KINDS)[number];
 
@@ -48,6 +50,14 @@ export interface JournalAnswer {
   sprayRedirect: boolean;
   /** Marks drawn over the photo, stored with the answer (R-14). */
   marks?: PhotoMark[];
+  /** Claude's numbered steps when marks were asked for; mark n goes with
+   *  step n. `text` holds the same steps joined. */
+  steps?: string[];
+  /** `ai` when Claude's marks passed `parseMarks`, `fallback` when they were
+   *  asked for and refused (the answer then has steps only). */
+  marksProvenance?: 'ai' | 'fallback';
+  /** The growth-habit line drawing shown beside a Care Guide answer. */
+  drawing?: PruneDrawingId;
 }
 
 export interface JournalEntry {

@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { allCareTips } from './careTips';
-import { careTipIneligibility, careTipSourceProblems, type CareTipSourceMap } from './careTipsSources';
+import {
+  careTipIneligibility,
+  careTipSourceProblems,
+  staleGrandfatheredTips,
+  type CareTipSourceMap
+} from './careTipsSources';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../../..');
 const sources = JSON.parse(
@@ -24,6 +29,46 @@ describe('D5 Care Guide source gate (real files)', () => {
 
   it('ships tips in every section the Care Guide shows', () => {
     expect(allCareTips().length).toBeGreaterThan(40);
+  });
+
+  it('keeps the partly grandfather list to tips that still ship partly', () => {
+    expect(staleGrandfatheredTips(allCareTips(), sources)).toEqual([]);
+  });
+
+  it('no longer shows the basil pinch tip on every herb (R-20)', () => {
+    expect(allCareTips().some((t) => t.id === 'herb-culinary.prune.0')).toBe(false);
+  });
+});
+
+describe('Phase 37F tip rules', () => {
+  const tip = { id: 'herb-culinary.prune.9', text: 'Mulch helps hold soil moisture.' };
+
+  it('refuses a new tip on a partly verdict but keeps a grandfathered one', () => {
+    const entry = { ...good, verdict: 'partly', shipped: tip.text };
+    expect(careTipSourceProblems([tip], { [tip.id]: entry })).toEqual([
+      'herb-culinary.prune.9: a new tip needs a supported verdict'
+    ]);
+    expect(careTipSourceProblems([tip], { [tip.id]: entry }, new Set([tip.id]))).toEqual([]);
+  });
+
+  it('refuses a source off an extension or government host', () => {
+    for (const url of ['https://www.seedcompany.com/basil', 'https://example.org/x', 'not a url']) {
+      expect(
+        careTipSourceProblems([tip], { [tip.id]: { ...good, url, shipped: tip.text } })
+      ).toEqual(['herb-culinary.prune.9: source is not an extension or government page']);
+    }
+    expect(
+      careTipSourceProblems([tip], {
+        [tip.id]: { ...good, url: 'https://www.ars.usda.gov/x', shipped: tip.text }
+      })
+    ).toEqual([]);
+  });
+
+  it('reports a grandfathered id that stopped shipping partly', () => {
+    expect(
+      staleGrandfatheredTips([tip], { [tip.id]: { ...good, shipped: tip.text } }, new Set([tip.id]))
+    ).toEqual([tip.id]);
+    expect(staleGrandfatheredTips([], {}, new Set(['gone.0']))).toEqual(['gone.0']);
   });
 });
 

@@ -39,7 +39,9 @@ describe('fixture dispatch table', () => {
 
   it('answers through the matching module, which throws until a cluster fills it', () => {
     expect(() => fixtureAnswerText(ask(GARDEN_BRIEF_FIXTURE_MARKER))).toThrow(FixtureNoAnswerError);
-    expect(() => fixtureMessage(ask(PHOTO_MARKS_FIXTURE_MARKER))).toThrow(FixtureNoAnswerError);
+    expect(
+      JSON.parse(fixtureMessage(ask(PHOTO_MARKS_FIXTURE_MARKER)).content[0].text).marks
+    ).toHaveLength(3);
     expect(() => fixtureAnswerText(ask('no marker here'))).toThrow(FixtureNoAnswerError);
   });
 

@@ -406,6 +406,15 @@
       "note": "Planned the first February 1 to March 10 after planting (#720 ruling R720-2: \"February\" is the whole month, \"early March\" March 1-10)."
     }
   },
+  "basil-genovese": {
+    "careTasks.pinch-stems": {
+      "url": "https://extension.umd.edu/resource/basil",
+      "publisher": "University of Maryland Extension",
+      "date": "2026-02-25",
+      "quote": "Pinch stems as they lengthen to promote bushy, compact growth.",
+      "note": "Phase 37F: moved from the family tip herb-culinary.prune.0 (care-tips-sources.json), whose source is the UMD basil page and names basil only. The care task is the quote word for word."
+    }
+  },
   "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed": {
     "inRowSpacingIn": {
       "url": "https://www.pubs.ext.vt.edu/426/426-331/426-331.html",

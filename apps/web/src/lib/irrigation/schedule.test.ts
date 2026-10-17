@@ -34,16 +34,20 @@ function wall(ms: number, timeZone: string) {
 
 /** Every quarter hour in the window (start times and every zone offset
  *  here are whole quarter hours) whose wall clock reads the start time on a
- *  scheduled day; a repeated hour keeps its first instant. */
+ *  scheduled day; a repeated hour keeps its first instant, even when that
+ *  first instant falls just before the window opens (the scan starts two
+ *  hours early so a window cut between the two 01:00s of a fall-back night
+ *  sees the same run set as the whole week). */
 function bruteForce(days: number[], start: string, fromMs: number, toMs: number, tz: string) {
   const out: number[] = [];
   const step = 15 * 60_000;
-  for (let t = Math.ceil(fromMs / step) * step; t < toMs; t += step) {
+  let prev: number | undefined;
+  for (let t = Math.ceil((fromMs - 2 * HOUR) / step) * step; t < toMs; t += step) {
     const w = wall(t, tz);
     if (w.hhmm !== start || !days.includes(w.weekday)) continue;
-    const prev = out[out.length - 1];
     if (prev !== undefined && t - prev < 2 * HOUR) continue;
-    out.push(t);
+    prev = t;
+    if (t >= fromMs) out.push(t);
   }
   return out;
 }
@@ -115,6 +119,17 @@ describe('expandRuns', () => {
       { fromMs: from, toMs: from + WEEK, timeZone: NY }
     );
     expect(later).toEqual(all.slice(3));
+  });
+
+  it('a window that opens between the two 01:00s of a fall-back night has no run (earlier instant wins)', () => {
+    const LA = 'America/Los_Angeles';
+    const from = 1793521020000; // 2026-11-01 01:17 PDT, 43 min before 01:00 PST
+    const runs = expandRuns(
+      { days: [0], start: '01:00' },
+      { fromMs: from, toMs: from + WEEK, timeZone: LA }
+    );
+    expect(runs).toEqual(bruteForce([0], '01:00', from, from + WEEK, LA));
+    expect(runs.some((r) => wall(r, LA).hhmm === '01:00' && r < from + DAY)).toBe(false);
   });
 
   it('matches a quarter-hour scan across DST changes and the week boundary', () => {

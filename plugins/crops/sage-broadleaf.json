@@ -2,7 +2,7 @@
   "pluginId": "sage-broadleaf",
   "type": "crop",
   "displayName": "Sage — Broadleaf (Salvia officinalis)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
@@ -25,5 +25,23 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "prune-in-spring",
+      "topic": "prune",
+      "title": "Prune plants back in the spring just as new growth resumes."
+    },
+    {
+      "key": "harvest-leaves",
+      "topic": "harvest",
+      "title": "Leaves can be harvested through the season as needed."
+    },
+    {
+      "key": "cut-for-drying",
+      "topic": "harvest",
+      "title": "Cut 6-8 inch long stems for drying."
+    }
+  ],
+  "growthHabit": "woody"
 }

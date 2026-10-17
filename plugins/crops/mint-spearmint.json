@@ -2,7 +2,7 @@
   "pluginId": "mint-spearmint",
   "type": "crop",
   "displayName": "Mint — Spearmint",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 60,
@@ -25,5 +25,22 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "remove-flower-spikes",
+      "topic": "prune",
+      "title": "In order to maintain the flavor of the leaves, flower spikes should be removed as they appear."
+    },
+    {
+      "key": "harvest-often",
+      "topic": "harvest",
+      "title": "Leaves can be harvested as needed but the more frequently the stems are cut the more new growth is produced."
+    },
+    {
+      "key": "harvest-for-drying",
+      "topic": "harvest",
+      "title": "Leaves that are to be dried are best taken just as the flowers begin to appear."
+    }
+  ]
 }

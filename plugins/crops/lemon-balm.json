@@ -2,7 +2,7 @@
   "pluginId": "lemon-balm",
   "type": "crop",
   "displayName": "Lemon Balm (Melissa officinalis)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -31,5 +31,17 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "prune-flower-stalks",
+      "topic": "prune",
+      "title": "To prevent spreading, prune flowering stalks before they have a chance to set seed."
+    },
+    {
+      "key": "harvest-before-flowering",
+      "topic": "harvest",
+      "title": "Stems can be cut as needed anytime during the season preferably before flowering."
+    }
+  ]
 }

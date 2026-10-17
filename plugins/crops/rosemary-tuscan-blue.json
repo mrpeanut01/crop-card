@@ -2,7 +2,7 @@
   "pluginId": "rosemary-tuscan-blue",
   "type": "crop",
   "displayName": "Rosemary — Tuscan Blue",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 365,
@@ -25,5 +25,18 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "prune-compact",
+      "topic": "prune",
+      "title": "Pruning the plants will encourage a tight compact habit."
+    },
+    {
+      "key": "harvest-tips",
+      "topic": "harvest",
+      "title": "The tender tips and foliage can be cut as needed throughout the growing season."
+    }
+  ],
+  "growthHabit": "woody"
 }

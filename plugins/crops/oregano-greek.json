@@ -2,15 +2,14 @@
   "pluginId": "oregano-greek",
   "type": "crop",
   "displayName": "Oregano — Greek (Origanum vulgare hirtum)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
     "max": 120
   },
   "defaultRowSpacingInches": 18,
-  "plantingGuide": {
-  },
+  "plantingGuide": {},
   "harvestIndicators": [
     "Pre-flower harvest for peak essential oils"
   ],
@@ -21,5 +20,17 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "harvest-before-flower",
+      "topic": "harvest",
+      "title": "Harvesting can begin just before the plants are ready to flower."
+    },
+    {
+      "key": "leave-leaf-pairs",
+      "topic": "harvest",
+      "title": "Remove the stem tips leaving 4 to 6 pairs of leaves on the plant in order for it to produce side shoots for additional harvesting."
+    }
+  ]
 }

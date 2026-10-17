@@ -2,7 +2,7 @@
   "pluginId": "summer-savory",
   "type": "crop",
   "displayName": "Summer Savory (Satureja hortensis)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -33,5 +33,12 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "harvest-at-buds",
+      "topic": "harvest",
+      "title": "Cut leafy tops when plants start to show buds."
+    }
+  ]
 }

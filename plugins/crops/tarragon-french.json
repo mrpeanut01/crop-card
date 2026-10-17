@@ -2,7 +2,7 @@
   "pluginId": "tarragon-french",
   "type": "crop",
   "displayName": "Tarragon French (Artemisia dracunculus sativa)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -33,5 +33,17 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "cut-back-in-spring",
+      "topic": "prune",
+      "title": "Cut back plants in the spring just as growth resumes."
+    },
+    {
+      "key": "harvest-tips",
+      "topic": "harvest",
+      "title": "Young stem tips and leaves can be harvested as needed throughout the season."
+    }
+  ]
 }

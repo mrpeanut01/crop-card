@@ -2,15 +2,14 @@
   "pluginId": "dill-mammoth",
   "type": "crop",
   "displayName": "Dill — Mammoth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "apiaceae",
   "daysToMaturity": {
     "min": 50,
     "max": 70
   },
   "defaultRowSpacingInches": 24,
-  "plantingGuide": {
-  },
+  "plantingGuide": {},
   "harvestIndicators": [
     "Foliage cut as needed",
     "Seed heads at full bloom→drying"
@@ -22,5 +21,12 @@
     "daysFromPlantingMax": 90,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "harvest-foliage",
+      "topic": "harvest",
+      "title": "Foliage can be cut at any time and used fresh, or it can be dried for later use."
+    }
+  ]
 }

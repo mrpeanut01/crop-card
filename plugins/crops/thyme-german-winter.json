@@ -2,7 +2,7 @@
   "pluginId": "thyme-german-winter",
   "type": "crop",
   "displayName": "Thyme — German Winter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
@@ -25,5 +25,13 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "renew-in-spring",
+      "topic": "prune",
+      "title": "As thyme gets older, it can become woody and should be renewed every few years by cutting it back severely in the spring."
+    }
+  ],
+  "growthHabit": "woody"
 }

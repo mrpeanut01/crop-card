@@ -2,7 +2,7 @@
   "pluginId": "lovage",
   "type": "crop",
   "displayName": "Lovage (Levisticum officinale)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "apiaceae",
   "preHarvestIntervalDays": 1,
@@ -33,5 +33,12 @@
     "daysFromPlantingMax": 90,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "harvest-young-leaves",
+      "topic": "harvest",
+      "title": "Harvest young leaves as they are more tender."
+    }
+  ]
 }

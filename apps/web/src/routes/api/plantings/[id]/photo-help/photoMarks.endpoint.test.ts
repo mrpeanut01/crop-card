@@ -213,7 +213,10 @@ describe('photo help with marks (37F)', () => {
     expect(body.answer.sections).toEqual([
       {
         title: 'Stake and prune',
-        items: ['Pinch stems as they lengthen to promote bushy, compact growth.'],
+        items: [
+          'Pinch stems as they lengthen to promote bushy, compact growth.',
+          'Basil flower buds should be removed by pinching as soon as you see them form.'
+        ],
         provenance: 'plugin'
       }
     ]);

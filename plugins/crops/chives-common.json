@@ -2,7 +2,7 @@
   "pluginId": "chives-common",
   "type": "crop",
   "displayName": "Chives — Common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 60,
@@ -39,5 +39,23 @@
       ],
       "severity": "toxic"
     }
-  ]
+  ],
+  "careTasks": [
+    {
+      "key": "remove-flowers",
+      "topic": "prune",
+      "title": "Chives can self-sow and overtake a garden unless flowers are removed before they fade."
+    },
+    {
+      "key": "harvest-through-season",
+      "topic": "harvest",
+      "title": "Harvest chives throughout the season to prevent the leaves from becoming tough and to encourage formation of new bulblets."
+    },
+    {
+      "key": "cut-near-base",
+      "topic": "harvest",
+      "title": "Cut leaves toward the base about one inch above the soil."
+    }
+  ],
+  "growthHabit": "clumping"
 }

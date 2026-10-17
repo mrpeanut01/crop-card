@@ -13,6 +13,7 @@ import type { MapFeatureView } from '$lib/farm/mapFeatures';
 import type { Footprint, SpacingPattern } from '$lib/farm/footprint';
 import type { AudienceChoice } from '$lib/orchard/calendar';
 import type { OrchardCalendarView } from '$lib/orchard/calendarView';
+import type { SnapshotGardenBrief } from '$lib/garden/brief/schema';
 import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
 /** 2 since 32D: animals, flocks, care plans and precomputed holds.
@@ -570,6 +571,9 @@ export interface FarmSnapshot {
   /** #593 orchard calendars and stage marks. Absent on bundles saved before
    *  it and on farms with no tree fruit, grape or blueberry plantings. */
   orchard?: SnapshotOrchard;
+  /** Phase 37A garden brief goals and shortlist ids. Absent before 37A and
+   *  on farms with no saved brief. */
+  brief?: SnapshotGardenBrief;
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

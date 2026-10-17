@@ -45,6 +45,7 @@ import {
   shadeSourceSection,
   soilTestSection
 } from './accountExportSections';
+import { gardenBriefExportSection } from './garden/briefStore';
 
 export async function buildAccountExport(event: RequestEvent): Promise<Record<string, unknown>> {
   const user = requireUser(event);
@@ -252,6 +253,7 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
     ...recordSections(user),
     ...phase33Sections(user),
     ...phase37Sections(),
+    gardenBrief: gardenBriefExportSection(user),
     documents: documentSection(user),
     apiTokens,
     relatedDownloads: {

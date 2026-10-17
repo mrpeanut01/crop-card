@@ -102,7 +102,8 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         unit: parsed.data.unit,
         occurredAt,
         recipient: parsed.data.recipient?.trim() || null,
-        soldAsOrganic
+        soldAsOrganic,
+        preservedAs: parsed.data.kind === 'kept' ? (parsed.data.preservedAs ?? null) : null
       },
       { createdBy: user.id, clientRecordId, now }
     )

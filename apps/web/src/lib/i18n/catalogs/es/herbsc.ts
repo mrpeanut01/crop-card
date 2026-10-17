@@ -1,5 +1,105 @@
 import type { MessageKey } from '../en';
 
+/** Phase 37C. Drafted with the English; not yet seen by the proofreader. */
 export const esHerbsc: Partial<Record<MessageKey, string>> = {
-  'herbsc.title': 'Lo que cosecharás'
+  'herbsc.title': 'Lo que cosecharás',
+
+  'herbsc.method.fresh': 'Fresco',
+  'herbsc.method.dry': 'Secado',
+  'herbsc.method.freeze': 'Congelado',
+  'herbsc.method.freezeDry': 'Liofilizado',
+  'herbsc.method.infuse': 'En infusión',
+  'herbsc.methodLower.fresh': 'usado fresco',
+  'herbsc.methodLower.dry': 'secado',
+  'herbsc.methodLower.freeze': 'congelado',
+  'herbsc.methodLower.freezeDry': 'liofilizado',
+  'herbsc.methodLower.infuse': 'en infusión',
+  'herbsc.method.notSaid': 'Sin indicar',
+
+  'herbsc.disp.keptAs': ', {method}',
+  'herbsc.disp.howKept': '¿Cómo se guardó?',
+  'herbsc.disp.err.preservedKind': 'Solo una cosecha guardada puede decir cómo se guardó.',
+
+  'herbsc.goal.fresh': 'Uso fresco',
+  'herbsc.goal.dry': 'Secado',
+  'herbsc.goal.freeze': 'Congelado',
+  'herbsc.goal.freezeDry': 'Liofilizado',
+  'herbsc.goal.pesto': 'Pesto y salsas',
+  'herbsc.goal.infuse': 'Vinagres y aceites',
+  'herbsc.goal.canOrJelly': 'Conservas y jaleas',
+  'herbsc.status.onTrack': 'Va bien',
+  'herbsc.status.short': 'Falta',
+  'herbsc.status.notKnown': 'No se sabe',
+  'herbsc.goalLine': '{goal}: {status}. {reason}',
+  'herbsc.goalLineTarget': '{line} Tu meta: {target}',
+  'herbsc.reason.good.fresh': '{crop} da cortes frescos esta temporada.',
+  'herbsc.reason.good.dry': '{crop} se seca bien.',
+  'herbsc.reason.good.freeze': '{crop} se congela bien.',
+  'herbsc.reason.good.freezeDry': '{crop} se liofiliza bien.',
+  'herbsc.reason.good.infuse': '{crop} sirve bien para infusiones.',
+  'herbsc.reason.fair.fresh': '{crop} es solo regular usado fresco.',
+  'herbsc.reason.fair.dry': '{crop} se seca bastante bien.',
+  'herbsc.reason.fair.freeze': '{crop} se congela bastante bien.',
+  'herbsc.reason.fair.freezeDry': '{crop} se liofiliza bastante bien.',
+  'herbsc.reason.fair.infuse': '{crop} sirve bastante bien para infusiones.',
+  'herbsc.reason.needsRecipe': 'Los datos de la planta no lo pueden decir; usa una receta probada.',
+  'herbsc.reason.noData': 'Todavía no hay guía de conservación para lo que plantaste.',
+  'herbsc.reason.onlyPoor': 'Lo que plantaste no se conserva bien de esta manera.',
+  'herbsc.reason.noCut':
+    'No se espera ningún corte esta temporada de una hierba que se conserve así.',
+  'herbsc.reason.nothingPlanted': 'Todavía no hay nada plantado que se conserve así.',
+
+  'herbsc.sched.empty': 'Todavía no se esperan cosechas esta temporada.',
+  'herbsc.sched.week': 'Semana del {date}',
+  'herbsc.sched.window': 'Primera cosecha',
+  'herbsc.sched.again': 'Cortar otra vez',
+  'herbsc.sched.firstOnly':
+    'Solo la primera cosecha. Todavía no se sabe cada cuánto se puede volver a cortar.',
+  'herbsc.sched.endsFrost': 'Los cortes terminan con la primera helada de otoño.',
+  'herbsc.sched.endsSeason': 'Los cortes siguen hasta el final de la temporada.',
+  'herbsc.sched.noAmounts': 'No se sabe cuánto da cada corte, así que no se muestran cantidades.',
+  'herbsc.sched.loading': 'Cargando el plan de cosecha…',
+  'herbsc.sched.unavailable': 'El plan de cosecha necesita conexión.',
+  'herbsc.sched.range': 'Del {from} al {to}',
+
+  'herbsc.preserve.none': 'Todavía no hay guía de conservación',
+  'herbsc.preserve.infuseSafety': 'Todavía no hay una fuente de seguridad',
+
+  'herbsc.pantry.kicker': 'Plan',
+  'herbsc.pantry.title': 'Despensa',
+  'herbsc.pantry.lede':
+    'Lo que guardaste de la cosecha de esta temporada y cómo va frente a tu plan de huerto.',
+  'herbsc.pantry.season': 'Temporada {year}',
+  'herbsc.pantry.kept': 'Guardado esta temporada',
+  'herbsc.pantry.keptEmpty':
+    'Todavía no has guardado nada esta temporada. Después de una cosecha, abre "¿A dónde fue?" y elige Guardado.',
+  'herbsc.pantry.total': '{qty} {unit}',
+  'herbsc.pantry.goals': 'Tus metas de cosecha',
+  'herbsc.pantry.noBrief':
+    'Todavía no hay un plan de huerto, así que no hay metas con qué comparar.',
+  'herbsc.pantry.herbs': 'Tus hierbas',
+  'herbsc.pantry.noHerbs':
+    'Todavía no hay hierbas plantadas. Planea un huerto de hierbas para ver lo que dará.',
+  'herbsc.pantry.planLink': 'Planear tu huerto',
+  'herbsc.pantry.harvestLink': 'Registrar una cosecha',
+  'herbsc.pantry.nextCut': 'Próximo corte: semana del {date}',
+  'herbsc.pantry.noNextCut': 'No se espera ningún corte el resto de la temporada.',
+  'herbsc.pantry.scheduleCut': 'Programar el próximo corte',
+  'herbsc.pantry.scheduled': 'Programado para el {date}.',
+  'herbsc.pantry.alreadyScheduled': 'Ese corte ya está en tu lista de tareas.',
+  'herbsc.pantry.scheduleFailed': 'No se pudo programar. Inténtalo de nuevo.',
+  'herbsc.pantry.readOnly':
+    'Los inspectores pueden ver la despensa, pero no pueden programar cortes.',
+  'herbsc.pantry.keepsBy': 'Se conserva',
+  'herbsc.task.title': 'Cortar {crop}',
+  'herbsc.task.body': 'El próximo corte para tu despensa, según tu plan de cosecha.',
+
+  'herbsc.err.badQuery': 'No se entendió esa solicitud del plan de cosecha.',
+  'herbsc.err.noArea': 'Esa área no existe en esta finca.',
+  'herbsc.pantry.noGoals': 'Tu plan de huerto todavía no tiene metas de cosecha.',
+  'herbsc.pantry.docTitle': 'Despensa',
+  'herbsc.suit.good': '{method}: se conserva bien',
+  'herbsc.suit.fair': '{method}: bastante bien',
+  'herbsc.suit.poor': '{method}: mal',
+  'herbsc.card.goals': 'Metas de cosecha'
 };

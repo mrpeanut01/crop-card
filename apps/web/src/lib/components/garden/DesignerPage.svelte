@@ -8,6 +8,7 @@
   import DesignerCanvas from '$lib/components/garden/DesignerCanvas.svelte';
   import DesignerToolbar from '$lib/components/garden/DesignerToolbar.svelte';
   import DesignerListView from '$lib/components/garden/DesignerListView.svelte';
+  import HarvestSchedulePanel from '$lib/components/garden/HarvestSchedulePanel.svelte';
   import CropPanel from '$lib/components/garden/CropPanel.svelte';
   import BedInspector from '$lib/components/garden/BedInspector.svelte';
   import PlantingEstablishment from '$lib/components/garden/PlantingEstablishment.svelte';
@@ -456,6 +457,7 @@
     <div class="layout list">
       <div class="main">
         <DesignerListView oncustom={() => (customOpen = true)} />
+        <HarvestSchedulePanel areaId={d.canvas.areaId} showGoals={false} />
       </div>
       <aside class="side">
         <CropPanel />

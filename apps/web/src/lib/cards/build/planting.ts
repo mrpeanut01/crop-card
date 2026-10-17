@@ -37,6 +37,7 @@ import { snapshotSplitFor, splitLine } from './split';
 import { plantingSowMethod, spacingModel, SQFT_PER_ACRE } from '$lib/plan/spacingModel';
 import { seedAmountLine } from '$lib/plan/seedAmountText';
 import type { SnapshotBlock } from '../snapshot';
+import { plantingGoalLines } from '$lib/garden/pantrySnapshot';
 
 const MAX_UPCOMING = 3;
 
@@ -353,6 +354,22 @@ export function buildPlantingCard(
     snapshot.sprayTerms
   );
   if (cues.length) sections.push({ title: tr('cards.section.harvestCues'), items: cues });
+  const goalLines = plantingGoalLines(
+    snapshot.pantry,
+    p.cropPluginId,
+    (id) =>
+      cropDisplayName(id, snapshot.cropPlugins[id]?.displayName ?? id, opts.prefs.locale),
+    loc
+  );
+  if (goalLines.length) {
+    sections.push({
+      title: tr('herbsc.card.goals'),
+      items: goalLines,
+      provenance: snapshot.pantry?.goals.some((g) => g.provenance === 'plugin')
+        ? 'plugin'
+        : 'fallback'
+    });
+  }
 
   const provenance: CardProvenance[] = facts
     .filter((f): f is CardFact & { provenance: ProvenanceSource } => !!f.provenance)

@@ -30,6 +30,7 @@ function setup(
         occurredAt,
         recipient: 'Ann',
         soldAsOrganic: null,
+        preservedAs: null,
         ledgerEntryId: null,
         sale: null,
         locked: false,
@@ -76,5 +77,38 @@ describe('DispositionPanel money link (#733, #718)', () => {
   it('never shows it to a helper', () => {
     setup(Date.now() - HOUR, { cropId: 'crop-1', isOwner: false });
     expect(screen.queryByRole('link', { name: 'Also record the money' })).toBeNull();
+  });
+});
+
+describe('DispositionPanel how it was kept (37C)', () => {
+  it('asks how a kept harvest was kept and sends the method', async () => {
+    const fetchMock = setup(Date.now() - HOUR);
+    expect(screen.queryByTestId('preserved-as')).toBeNull();
+    await fireEvent.click(screen.getByRole('button', { name: 'Kept' }));
+    const group = screen.getByTestId('preserved-as');
+    expect(group.getAttribute('aria-label')).toBe('How was it kept?');
+    await fireEvent.click(screen.getByRole('button', { name: 'Dried' }));
+    await fireEvent.input(screen.getByLabelText('How much'), { target: { value: '2' } });
+    await fireEvent.input(screen.getByLabelText('Unit'), { target: { value: 'bunch' } });
+    await fireEvent.submit(screen.getByTestId('disposition-form'));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('/api/harvest/h1/dispositions');
+    const body = JSON.parse(String(init.body));
+    expect(body.kind).toBe('kept');
+    expect(body.preservedAs).toBe('dry');
+  });
+
+  it('never sends a method for a sale', async () => {
+    const fetchMock = setup(Date.now() - HOUR);
+    await fireEvent.click(screen.getByRole('button', { name: 'Kept' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Frozen' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Sold' }));
+    expect(screen.queryByTestId('preserved-as')).toBeNull();
+    await fireEvent.input(screen.getByLabelText('How much'), { target: { value: '2' } });
+    await fireEvent.submit(screen.getByTestId('disposition-form'));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(String(init.body)).preservedAs).toBeNull();
   });
 });

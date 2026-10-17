@@ -6,6 +6,8 @@ import { zonedDayStartMs } from '$lib/exports/dateRange';
 import { ymdInZone } from '$lib/prefs';
 import { dispositionKindLabel, type HarvestDispositionKind } from './apiSchemas';
 import { t } from '$lib/i18n';
+import type { PreservingMethod } from '$lib/garden/preserving';
+import { preservedAsSuffix } from '$lib/garden/pantryText';
 
 export const DISPOSITION_FUTURE_SLACK_MS = 5 * 60 * 1000;
 
@@ -18,6 +20,8 @@ export interface DispositionView {
   occurredAt: number;
   recipient: string | null;
   soldAsOrganic: boolean | null;
+  /** Phase 37C: how a kept harvest was kept; null when not said. */
+  preservedAs: PreservingMethod | null;
   /** Owners only; null for everyone else (F2-1). */
   ledgerEntryId: string | null;
   /** Owners only: whether the linked sale is still in the ledger. */
@@ -84,7 +88,9 @@ export function overQuantityNotice(
 
 /** One line per disposition, for the record card and the panel list. */
 export function dispositionLine(
-  d: Pick<DispositionView, 'kind' | 'quantity' | 'unit' | 'recipient' | 'soldAsOrganic'>,
+  d: Pick<DispositionView, 'kind' | 'quantity' | 'unit' | 'recipient' | 'soldAsOrganic'> & {
+    preservedAs?: PreservingMethod | null;
+  },
   dateText: string,
   locale?: string | null
 ): string {
@@ -96,11 +102,14 @@ export function dispositionLine(
       : d.kind === 'sold' && d.soldAsOrganic === false
         ? t(locale, 'harvestui.disp.line.notSoldOrganic')
         : '';
-  return t(locale, 'harvestui.disp.line', {
+  const line = t(locale, 'harvestui.disp.line', {
     kind: dispositionKindLabel(d.kind, locale),
     qty,
     to,
     date: dateText,
     organic
   });
+  return d.kind === 'kept' && d.preservedAs
+    ? line + preservedAsSuffix(d.preservedAs, locale)
+    : line;
 }

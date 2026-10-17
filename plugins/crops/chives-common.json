@@ -2,7 +2,7 @@
   "pluginId": "chives-common",
   "type": "crop",
   "displayName": "Chives — Common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 60,
@@ -38,6 +38,12 @@
         "whole-plant"
       ],
       "severity": "toxic"
+    }
+  ],
+  "preserving": [
+    {
+      "method": "freeze",
+      "suitability": "good"
     }
   ]
 }

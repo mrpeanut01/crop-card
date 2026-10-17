@@ -108,7 +108,13 @@ export const PATCH: RequestHandler = async (event) => {
         : kind === 'sold'
           ? existing.soldAsOrganic
           : null;
-    const merged = { kind, recipient, soldAsOrganic };
+    const preservedAs =
+      fields.preservedAs !== undefined
+        ? fields.preservedAs
+        : kind === 'kept'
+          ? existing.preservedAs
+          : null;
+    const merged = { kind, recipient, soldAsOrganic, preservedAs };
     const bad = dispositionProblem(merged);
     if (bad)
       return problem(
@@ -144,7 +150,8 @@ export const PATCH: RequestHandler = async (event) => {
       unit: fields.unit,
       occurredAt: fields.occurredAt,
       recipient,
-      soldAsOrganic
+      soldAsOrganic,
+      preservedAs
     });
   }
 

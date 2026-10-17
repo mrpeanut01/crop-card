@@ -651,3 +651,66 @@ describe('harvest record card (B-36)', () => {
     expect(section?.provenance).toBe('manual');
   });
 });
+
+describe('how a kept harvest was kept (37C)', () => {
+  it('stores preservedAs on a kept row and shows it on the record card', async () => {
+    const farm = seedFarm('kept-as');
+    const kept = await add(
+      farm,
+      { kind: 'kept', quantity: 2, unit: 'bunch', preservedAs: 'dry' },
+      { role: 'helper' }
+    );
+    expect(kept.status).toBe(201);
+    expect(kept.body.disposition.preservedAs).toBe('dry');
+    const listed = await call(
+      LIST,
+      { ownerId: farm.ownerId, role: 'inspector' },
+      `/api/harvest/${farm.harvestId}/dispositions`,
+      'GET',
+      { params: { id: farm.harvestId } }
+    );
+    expect(listed.body.dispositions[0].preservedAs).toBe('dry');
+    const out = await runWithTenantAsync(farm.ownerId, () =>
+      buildRecordCards('harvest', farm.harvestId, { prefs: DEFAULT_PREFS, origin: null })
+    );
+    const section = out?.cards[0]?.sections.find((s) => s.title === 'Where it went');
+    expect(section?.items[0]).toMatch(/^Kept 2 bunch on .*, dried$/);
+  });
+
+  it('refuses a method on anything but kept, and stores null when none is given', async () => {
+    const farm = seedFarm('kept-as-kind');
+    const sold = await add(farm, { kind: 'sold', quantity: 1, unit: 'lb', preservedAs: 'dry' });
+    expect(sold.status).toBe(400);
+    expect(sold.body.message).toBe('Only a kept harvest can say how it was kept.');
+    const bad = await add(farm, { kind: 'kept', quantity: 1, unit: 'lb', preservedAs: 'pickle' });
+    expect(bad.status).toBe(400);
+    const plain = await add(farm, { kind: 'kept', quantity: 1, unit: 'lb' });
+    expect(plain.body.disposition.preservedAs).toBeNull();
+  });
+
+  it('PATCH sets and clears it, and changing the kind away from kept drops it', async () => {
+    const farm = seedFarm('kept-as-patch');
+    const { body } = await add(farm, { kind: 'kept', quantity: 3, unit: 'bunch' });
+    const id = body.disposition.id as string;
+    const set = await edit(farm, id, { preservedAs: 'freeze' }, { role: 'helper' });
+    expect(set.status).toBe(200);
+    expect(set.body.disposition.preservedAs).toBe('freeze');
+    const wrong = await edit(farm, id, { kind: 'sold', preservedAs: 'freeze' });
+    expect(wrong.status).toBe(400);
+    const moved = await edit(farm, id, { kind: 'donated' });
+    expect(moved.status).toBe(200);
+    expect(moved.body.disposition.preservedAs).toBeNull();
+    const stored = runWithTenant(farm.ownerId, () => getHarvestDisposition(id));
+    expect(stored?.preservedAs).toBeNull();
+  });
+
+  it('never reads another farm', async () => {
+    const a = seedFarm('kept-as-a');
+    const b = seedFarm('kept-as-b');
+    const { body } = await add(a, { kind: 'kept', quantity: 1, unit: 'lb', preservedAs: 'dry' });
+    const id = body.disposition.id as string;
+    const other = await edit(b, id, { preservedAs: 'freeze' });
+    expect(other.status).toBe(404);
+    expect(runWithTenant(a.ownerId, () => getHarvestDisposition(id))?.preservedAs).toBe('dry');
+  });
+});

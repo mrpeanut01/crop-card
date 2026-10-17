@@ -6,10 +6,14 @@
  * by "or" or "to" span from the first part's start to the last part's end.
  */
 
-export interface MonthDay {
-  month: number;
-  day: number;
-}
+import type { MonthDay } from '../plugins/schemas';
+import {
+  projectMonthDayWindow,
+  type MonthDayWindow,
+  type MonthDayWindowBasis
+} from '../calendar/monthDayWindow';
+
+const PLANNER_WINDOW_BASIS: MonthDayWindowBasis = { zone: 'utc', end: 'startOfDay' };
 
 const MONTHS = [
   'january',
@@ -58,16 +62,12 @@ export function calendarWindowFromWords(words: string): { start: MonthDay; end: 
  *  in (from `afterMs`), else the next window to start. UTC epoch ms at the
  *  start of each day. */
 export function nextCalendarWindow(
-  window: { start: MonthDay; end: MonthDay },
+  window: MonthDayWindow,
   afterMs: number
 ): { startMs: number; endMs: number } {
-  const crosses =
-    window.end.month < window.start.month ||
-    (window.end.month === window.start.month && window.end.day < window.start.day);
   const year = new Date(afterMs).getUTCFullYear();
   for (let y = year - 1; ; y++) {
-    const startMs = Date.UTC(y, window.start.month - 1, window.start.day);
-    const endMs = Date.UTC(crosses ? y + 1 : y, window.end.month - 1, window.end.day);
+    const { startMs, endMs } = projectMonthDayWindow(window, y, PLANNER_WINDOW_BASIS);
     if (afterMs > endMs) continue;
     return { startMs: Math.max(startMs, afterMs), endMs };
   }

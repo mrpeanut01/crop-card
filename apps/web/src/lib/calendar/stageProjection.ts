@@ -19,6 +19,9 @@ import type {
   HarvestTarget
 } from '$lib/plugins/schemas';
 import type { PerennialStageTemplate } from '$lib/plugins/growthStageTemplates';
+import { projectMonthDayWindow, type MonthDayWindowBasis } from './monthDayWindow';
+
+const HARVEST_SEASON_BASIS: MonthDayWindowBasis = { zone: 'local', end: 'endOfDay' };
 
 export interface ProjectedStage {
   code: string;
@@ -166,11 +169,7 @@ export function projectHarvestSeason(
   season: HarvestSeason,
   year: number
 ): { startMs: number; endMs: number } {
-  const { start, end } = season;
-  const wraps = end.month < start.month || (end.month === start.month && end.day < start.day);
-  const startMs = new Date(year, start.month - 1, start.day).getTime();
-  const endMs = new Date(wraps ? year + 1 : year, end.month - 1, end.day + 1).getTime() - 1;
-  return { startMs, endMs };
+  return projectMonthDayWindow(season, year, HARVEST_SEASON_BASIS);
 }
 
 function dayOfYearToMs(year: number, dayOfYear: number): number {

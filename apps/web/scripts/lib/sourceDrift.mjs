@@ -10,6 +10,7 @@
  */
 
 import { createHash } from 'node:crypto';
+import { parsePplsFile } from './pplsFile.mjs';
 
 export const ISSUE_TITLE = 'Label and source drift';
 export const ISSUE_LABEL = 'needs-research';
@@ -76,13 +77,9 @@ export function classifyUrl(url) {
     return { kind: 'other' };
   }
   const host = u.hostname.toLowerCase();
-  const ppls = /\/ppls\/(\d{6})-(\d{5})(?:-(\d{5}))?-(\d{8})\.pdf$/i.exec(u.pathname);
+  const ppls = parsePplsFile(u.pathname);
   if (host.endsWith('epa.gov') && ppls) {
-    const regNo = [ppls[1], ppls[2], ppls[3]]
-      .filter(Boolean)
-      .map((p) => String(Number(p)))
-      .join('-');
-    return { kind: 'ppls', regNo, labelDate: isoDate(ppls[4]) };
+    return { kind: 'ppls', regNo: ppls.registration, labelDate: ppls.stamped };
   }
   if (host.endsWith('omri.org')) return { kind: 'omri', query: u.searchParams.get('query') };
   if (host.endsWith('ecfr.gov')) {

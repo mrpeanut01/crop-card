@@ -8,6 +8,7 @@
  */
 
 import { t } from '$lib/i18n';
+import { parsePplsFile } from '../../../scripts/lib/pplsFile.mjs';
 
 export interface EarlierLabel {
   /** The registration the label was filed under, e.g. "66330-276". */
@@ -21,21 +22,13 @@ export interface LabelSourceRef {
   docDate?: unknown;
 }
 
-const PPLS_FILE = /\/ppls\/(\d+)-(\d+)-(\d{8})\.pdf$/i;
-
 /** The registration and stamp date a PPLS label URL names, or null for any
- *  other URL. */
+ *  other URL. A distributor file gives its base registration. */
 export function pplsLabelRegistration(
   url: unknown
 ): { registration: string; stamped: string } | null {
-  if (typeof url !== 'string') return null;
-  const m = PPLS_FILE.exec(url.trim().split(/[?#]/)[0]);
-  if (!m) return null;
-  const [, company, product, date] = m;
-  return {
-    registration: `${Number(company)}-${Number(product)}`,
-    stamped: `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`
-  };
+  const file = parsePplsFile(url);
+  return file ? { registration: file.base, stamped: file.stamped } : null;
 }
 
 /** Company and product number of a registration, leading zeros dropped. A

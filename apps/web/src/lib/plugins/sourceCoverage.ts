@@ -16,6 +16,7 @@ import {
 } from '$lib/forage/hazardSources';
 import { SEEDING_RATE_KEYS } from './schemas';
 import { calendarWindowFromWords } from '../plan/calendarWords';
+import { numberPattern, statesDays, statesInches } from './quoteNumbers';
 import type {
   ForageHazard,
   ForageHazardKind,
@@ -224,34 +225,6 @@ export const UNSOURCED_SPRAY_WINDOW_CROPS: ReadonlySet<string> = new Set([
   'zucchini-black-beauty'
 ]);
 
-const NUMBER_WORDS = [
-  'zero',
-  'one',
-  'two',
-  'three',
-  'four',
-  'five',
-  'six',
-  'seven',
-  'eight',
-  'nine',
-  'ten'
-];
-
-/** A day offset is stated as days ("28 days") or, for whole weeks, as weeks
- *  in digits or words ("four to five weeks", "3-4 weeks"). */
-function statesDays(quote: string, days: number): boolean {
-  if (new RegExp(`(^|[^\\d.])${days}([^\\d]|$)`).test(quote) && /\bdays?\b/i.test(quote)) {
-    return true;
-  }
-  if (days % 7 !== 0 || !/\bweeks?\b/i.test(quote)) return false;
-  const w = days / 7;
-  return (
-    new RegExp(`(^|[^\\d.])${w}([^\\d]|$)`).test(quote) ||
-    (NUMBER_WORDS[w] !== undefined && new RegExp(`\\b${NUMBER_WORDS[w]}\\b`, 'i').test(quote))
-  );
-}
-
 /** #720: every sourced spray window comes from an extension, government or
  *  label page, and its quote states each day offset (a 0 offset from
  *  planting names planting) and, for a stage window, the stage is one of
@@ -371,51 +344,6 @@ export function rowSpacingFields(
  *  other number. */
 export function isTreeCrop(c: Pick<CropPlugin, 'archetype' | 'treeSizeClasses'>): boolean {
   return c.archetype === 'tree-fruit-multi-pick' || (c.treeSizeClasses?.length ?? 0) > 0;
-}
-
-const FEET_WORDS = [
-  'one',
-  'two',
-  'three',
-  'four',
-  'five',
-  'six',
-  'seven',
-  'eight',
-  'nine',
-  'ten',
-  'eleven',
-  'twelve'
-];
-
-/** Fractions sources print instead of decimals ("3/4-1 in", "1½"). */
-const FRACTIONS: Record<string, string[]> = {
-  '.25': ['1/4', '¼'],
-  '.5': ['1/2', '½'],
-  '.75': ['3/4', '¾']
-};
-
-function fractionPatterns(n: number): string[] {
-  const whole = Math.floor(n);
-  const forms = FRACTIONS[String(n - whole).replace(/^0/, '')];
-  if (!forms) return [];
-  return forms.map((f) => (whole === 0 ? f : `${whole}(?:[- ]|\\s)?${f}`));
-}
-
-/** The quote states the figure in inches (as a decimal or a fraction), in
- *  feet, or in feet as a word ("two feet between the rows"). */
-function statesInches(quote: string, inches: number): boolean {
-  const figures = [numberPattern(inches), ...fractionPatterns(inches)];
-  const feet = inches / 12;
-  if (Number.isInteger(feet) || Number.isInteger(feet * 2)) {
-    figures.push(numberPattern(feet), ...fractionPatterns(feet));
-  }
-  if (figures.some((f) => new RegExp(`(^|[^\\d.])${f}([^\\d]|$)`).test(quote))) return true;
-  const word = Number.isInteger(feet) ? FEET_WORDS[feet - 1] : undefined;
-  if (word && new RegExp(`\\b${word}[- ](foot|feet)\\b`, 'i').test(quote)) return true;
-  // #600: inches as a word ("six to twelve-inches apart").
-  const inchWord = Number.isInteger(inches) ? FEET_WORDS[inches - 1] : undefined;
-  return !!inchWord && /\binch/i.test(quote) && new RegExp(`\\b${inchWord}\\b`, 'i').test(quote);
 }
 
 /** #587 / #591: every crop's row spacing (`plantingGuide.rowSpacingIn`,
@@ -627,12 +555,6 @@ export function nitrogenNeedQuoteGaps(
     }
   }
   return gaps;
-}
-
-function numberPattern(n: number): string {
-  const [int, frac] = String(n).split('.');
-  const grouped = int.replace(/\B(?=(\d{3})+$)/g, ',?');
-  return frac ? `${grouped}\\.${frac}` : grouped;
 }
 
 const PURPOSE_WORDS: Record<'smother' | 'green-manure', RegExp> = {

@@ -20,7 +20,7 @@ import {
 import { dbChangeMarker, requestMemo } from './requestMemo';
 import { countPlantings, createBlock, currentPlantingsCutoff, listBlocks } from './blocks';
 import { listCrops } from './crops';
-import { equipmentIdsActiveBefore, equipmentLastActiveBefore } from './equipment';
+import { equipmentLastActiveBefore } from './equipment';
 import { countTasks, listTasks } from './tasks';
 import { plantingsInYear } from '$lib/plan/seasonStart';
 
@@ -183,7 +183,7 @@ describe('listBlocks planting scopes', () => {
   });
 });
 
-describe('equipmentIdsActiveBefore', () => {
+describe('equipmentLastActiveBefore', () => {
   it('equals a scan of the whole log and stays inside the Owner', () => {
     fc.assert(
       fc.property(
@@ -223,7 +223,7 @@ describe('equipmentIdsActiveBefore', () => {
                 .all()
                 .map((r) => r.id)
             );
-            expect(equipmentIdsActiveBefore(before)).toEqual(expected);
+            expect(new Set(equipmentLastActiveBefore(before).keys())).toEqual(expected);
             const lastBefore = new Map<string, number>();
             for (const r of db
               .select({ id: equipmentLog.equipmentId, at: equipmentLog.occurredAt })

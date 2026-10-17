@@ -17,12 +17,15 @@ import { isSelectablePlanningYear } from '$lib/season/planningYear';
 import {
   getOnboardingStatus,
   setFarmAnimals,
+  setFarmHerbs,
   setFarmProfile,
   setOnboardingStatus
 } from '$lib/onboarding/state.server';
 import {
   ANIMAL_OPTIONS,
   GROWING_OPTIONS,
+  afterGrowingLocation,
+  growingOptionKeys,
   farmAnimalsFor,
   parseAnimalChoices,
   parseGrowingChoices,
@@ -79,7 +82,12 @@ export const load: PageServerLoad = ({ locals, url }) => {
     suggestedName: '',
     fallbackCenter: LOUDOUN_DEFAULT_LAT_LON,
     farmName: ownerRow?.name ?? null,
-    options: GROWING_OPTIONS.map((o) => ({ id: o.id, title: o.title, blurb: o.blurb })),
+    options: GROWING_OPTIONS.map((o) => ({
+      id: o.id,
+      title: o.title,
+      blurb: o.blurb,
+      ...growingOptionKeys(o)
+    })),
     animalOptions: ANIMAL_OPTIONS.map((o) => ({ id: o.id, title: o.title, blurb: o.blurb }))
   };
 };
@@ -254,8 +262,9 @@ export const actions: Actions = {
       });
       setFarmProfile(profile);
       if (farmAnimals) setFarmAnimals(farmAnimals);
+      if (choices.includes('herbs')) setFarmHerbs(true);
       setOnboardingStatus('complete');
     });
-    throw redirect(303, '/today');
+    throw redirect(303, afterGrowingLocation(choices));
   }
 };

@@ -14,6 +14,7 @@ import type { Footprint, SpacingPattern } from '$lib/farm/footprint';
 import type { AudienceChoice } from '$lib/orchard/calendar';
 import type { OrchardCalendarView } from '$lib/orchard/calendarView';
 import type { SnapshotPantry } from '$lib/garden/pantrySnapshot';
+import type { SnapshotGardenBrief } from '$lib/garden/brief/schema';
 import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
 /** 2 since 32D: animals, flocks, care plans and precomputed holds.
@@ -577,6 +578,9 @@ export interface FarmSnapshot {
    *  id, for the lifecycle line on Planting and Care Guide cards. Absent on
    *  bundles saved before it and on farms with no herbs. */
   herbLifecycle?: Record<string, SnapshotHerbLifecycle>;
+  /** Phase 37A garden brief goals and shortlist ids. Absent before 37A and
+   *  on farms with no saved brief. */
+  brief?: SnapshotGardenBrief;
 }
 
 export interface SnapshotHerbLifecycle {

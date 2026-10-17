@@ -51,6 +51,8 @@
     wizardPlanId,
     initialChatMessages = [],
     initialStep,
+    preselectSeeds = [],
+    seedlingCrops = [],
     onClose,
     onCommitted,
     onRefreshParent
@@ -88,6 +90,10 @@
      *  downstream steps (schedule / inputs / commit) consume an in-memory
      *  allocation, so only these two can be mounted cold. */
     initialStep?: 'season-setup' | 'allocation';
+    /** Phase 37A (R-27): seed entries picked when the wizard opens, and the
+     *  crops whose "Seed or seedling?" starts on a bought seedling. */
+    preselectSeeds?: string[];
+    seedlingCrops?: string[];
     onClose: () => void;
     onCommitted: () => void;
     /** Optional — refresh parent data WITHOUT closing the wizard. Used by
@@ -140,7 +146,14 @@
           return onRefreshParent;
         }
       },
-      untrack(() => ({ seasonSetup, initialChatMessages, initialStep, emptySeason }))
+      untrack(() => ({
+        seasonSetup,
+        initialChatMessages,
+        initialStep,
+        emptySeason,
+        preselectSeeds,
+        seedlingCrops
+      }))
     )
   );
 

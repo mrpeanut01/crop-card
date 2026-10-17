@@ -8,7 +8,8 @@ import {
   getOnboardingStatus,
   restoreGettingStarted
 } from '$lib/onboarding/state.server';
-import { FARM_ANIMALS_KEY, FARM_PROFILE_KEY } from '$lib/onboarding/profile';
+import { FARM_ANIMALS_KEY, FARM_HERBS_KEY, FARM_PROFILE_KEY } from '$lib/onboarding/profile';
+import { GARDEN_BRIEF_UPDATED_AT_KEY } from '$lib/garden/brief/schema';
 import { ASSISTANT_SKIPPED_SETTING } from '$lib/onboarding/gettingStarted';
 import { loadGettingStartedFacts } from '$lib/onboarding/gettingStarted.server';
 import { getFarmProfile } from '$lib/onboarding/state.server';
@@ -86,6 +87,8 @@ const TODAY_SETTING_KEYS = [
   ONBOARDING_STATUS_KEY,
   FARM_PROFILE_KEY,
   FARM_ANIMALS_KEY,
+  FARM_HERBS_KEY,
+  GARDEN_BRIEF_UPDATED_AT_KEY,
   GETTING_STARTED_DISMISSED_KEY,
   ASSISTANT_SKIPPED_SETTING,
   SETTINGS_KEYS.farmLatLon,

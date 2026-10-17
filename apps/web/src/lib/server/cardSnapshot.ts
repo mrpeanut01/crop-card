@@ -70,6 +70,7 @@ import { listMapFeatureViews } from '$lib/db/mapFeatures';
 import { splitGroupBlockIds } from '$lib/plan/splitGroup';
 import { orchardSnapshotPart } from './orchardSnapshot';
 import { pantrySnapshotPart } from './pantrySnapshot';
+import { gardenBriefSnapshotPart } from './garden/briefStore';
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
@@ -627,7 +628,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     carryover: snapshotCarryover(await loadCarryoverLines(windowNow)),
     ...(orchard ? { orchard } : {}),
     ...(await pantrySnapshotPart(windowNow)),
-    ...herbLifecycleSnapshotPart(Object.keys(cropPlugins).map((id) => registry.get(id)?.plugin))
+    ...herbLifecycleSnapshotPart(Object.keys(cropPlugins).map((id) => registry.get(id)?.plugin)),
+    ...gardenBriefSnapshotPart()
   };
 }
 

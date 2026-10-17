@@ -32,6 +32,7 @@
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { syncCardSnapshot } from '$lib/client/cardSync';
   import type { DesignerPageData } from '$lib/garden/api';
+  import { parseDesignerCrops } from '$lib/garden/brief/handoff';
 
   const { data }: { data: DesignerPageData } = $props();
   const PRINT_SYNC_WAIT_MS = 4000;
@@ -52,7 +53,8 @@
           areaKind: data.areaKind,
           canEdit: data.canEdit,
           initialDateMs: parseYmd(page.url.searchParams.get('on')),
-          initialBedId: page.url.searchParams.get('bed')
+          initialBedId: page.url.searchParams.get('bed'),
+          briefCropIds: parseDesignerCrops(page.url.searchParams.get('crops'))
         })
     )
   );

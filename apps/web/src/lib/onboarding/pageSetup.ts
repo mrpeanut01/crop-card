@@ -11,6 +11,7 @@
  */
 
 import { t } from '$lib/i18n';
+import type { FarmProfile } from './profile';
 
 export interface PlanSetupFacts {
   /** The owner saved a farm location (not the built-in default). */
@@ -23,10 +24,14 @@ export interface PlanSetupFacts {
   /** Any seed in inventory, whatever its quantity. */
   hasSeed: boolean;
   year: number;
+  /** Phase 37A: a garden household with no saved garden brief is asked
+   *  for one. Both default to "no nudge". */
+  profile?: FarmProfile | null;
+  hasGardenBrief?: boolean;
 }
 
 export type PlanSetupGate = 'blocks';
-export type SetupNudgeId = 'location' | 'frost' | 'season' | 'seed';
+export type SetupNudgeId = 'brief' | 'location' | 'frost' | 'season' | 'seed';
 
 /** A question the page can ask in place, in a setup sheet. */
 export type SetupAsk = 'climate' | 'season';
@@ -116,7 +121,19 @@ export function planSetupPrompts(
 ): PageSetupPrompts<PlanSetupGate> {
   const gate: PlanSetupGate | null = f.hasBlocks ? null : 'blocks';
   if (role !== 'owner') return { gate, nudges: [] };
-  const nudges: SetupNudge[] = climateNudges(f, 'plan', locale);
+  const nudges: SetupNudge[] = [];
+  if (f.profile === 'garden' && f.hasGardenBrief === false) {
+    nudges.push(
+      nudge(
+        'brief',
+        t(locale, 'herbsa.nudge.title'),
+        t(locale, 'herbsa.nudge.body'),
+        '/plan/brief',
+        t(locale, 'herbsa.nudge.action')
+      )
+    );
+  }
+  nudges.push(...climateNudges(f, 'plan', locale));
   if (!f.hasSeasonSetup) {
     nudges.push(
       nudge(

@@ -17,6 +17,8 @@ import {
   starterAreasForAnswers,
   GROWING_CHOICES,
   GROWING_OPTIONS,
+  afterGrowingLocation,
+  growingOptionKeys,
   LEGACY_STEP_IDS,
   parseGrowingChoices,
   profileForChoices,
@@ -90,6 +92,7 @@ describe('growing choices', () => {
   it('starter Areas use the same crop-area kinds and names as the setup sheets and map', () => {
     for (const o of GROWING_OPTIONS) {
       expect(CROP_AREA_KINDS).toContain(o.starter.kind);
+      if (o.id === 'herbs') continue;
       expect(AREA_NAME_PLACEHOLDER[o.starter.kind]).toBe(`e.g. ${o.starter.name}`);
     }
   });
@@ -103,10 +106,33 @@ describe('growing choices', () => {
   it('every subset gives one starter per choice and a profile only when non-empty', () => {
     fc.assert(
       fc.property(fc.subarray([...GROWING_CHOICES]), (choices) => {
-        expect(starterAreasFor(choices)).toHaveLength(choices.length);
+        const merged = choices.includes('herbs') && choices.includes('garden') ? 1 : 0;
+        expect(starterAreasFor(choices)).toHaveLength(choices.length - merged);
         expect(profileForChoices(choices) === null).toBe(choices.length === 0);
       })
     );
+  });
+
+  it('the herbs tile seeds one Herb garden, or none beside the garden tile (R-1)', () => {
+    expect(starterAreasFor(['herbs']).map(({ nameKey: _, ...r }) => r)).toEqual([
+      { name: 'Herb garden', kind: 'garden' }
+    ]);
+    expect(starterAreasFor(['herbs'], 'es')[0].name).toBe('Jardín de hierbas');
+    expect(starterAreasFor(['garden', 'herbs']).map((s) => s.name)).toEqual(['Kitchen Garden']);
+    expect(profileForChoices(['herbs'])).toBe('garden');
+    expect(profileForChoices(['herbs', 'hay'])).toBe('mixed');
+    expect(afterGrowingLocation(['herbs'])).toBe('/plan/brief');
+    expect(afterGrowingLocation(['garden', 'herbs'])).toBe('/plan/brief');
+    expect(afterGrowingLocation(['garden'])).toBe('/today');
+    const herbs = GROWING_OPTIONS.find((o) => o.id === 'herbs')!;
+    expect(growingOptionKeys(herbs)).toEqual({
+      titleKey: 'herbsa.onboard.title',
+      blurbKey: 'herbsa.onboard.blurb'
+    });
+    expect(growingOptionKeys(GROWING_OPTIONS[0])).toEqual({
+      titleKey: 'onboard.opt.garden.title',
+      blurbKey: 'onboard.opt.garden.blurb'
+    });
   });
 });
 

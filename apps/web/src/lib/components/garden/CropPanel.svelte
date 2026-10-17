@@ -160,26 +160,36 @@
   const matches = $derived.by(() => {
     const q = query.trim().toLowerCase();
     const recent = new Map(d.recentPluginIds.map((id, i) => [id, i]));
+    const brief = new Map(d.briefPluginIds.map((id, i) => [id, i]));
     return d.catalog
       .map((c) => ({ c, r: rank(c, q) }))
       .filter((m) => m.r >= 0)
       .sort((a, b) => {
         const ra = recent.get(a.c.pluginId) ?? Infinity;
         const rb = recent.get(b.c.pluginId) ?? Infinity;
-        return ra - rb || a.r - b.r || a.c.displayName.localeCompare(b.c.displayName);
+        const ba = brief.get(a.c.pluginId) ?? Infinity;
+        const bb = brief.get(b.c.pluginId) ?? Infinity;
+        return ra - rb || ba - bb || a.r - b.r || a.c.displayName.localeCompare(b.c.displayName);
       })
       .map((m) => m.c);
   });
-  const results = $derived(
-    matches.slice(0, query.trim() || d.recentPluginIds.length ? MAX_RESULTS : 0)
-  );
+  const results = $derived.by(() => {
+    if (!query.trim() && d.briefPluginIds.length) {
+      return matches.filter(
+        (c) => d.recentPluginIds.includes(c.pluginId) || d.briefPluginIds.includes(c.pluginId)
+      );
+    }
+    return matches.slice(0, query.trim() || d.recentPluginIds.length ? MAX_RESULTS : 0);
+  });
 
   const groups = $derived.by(() => {
     const out = new Map<string, GardenCrop[]>();
     for (const c of results) {
       const key = d.recentPluginIds.includes(c.pluginId)
         ? tr('garden.crop.recent')
-        : familyName(c.cropFamily, tr);
+        : d.briefPluginIds.includes(c.pluginId)
+          ? tr('herbsa.designer.fromBrief')
+          : familyName(c.cropFamily, tr);
       const list = out.get(key) ?? [];
       list.push(c);
       out.set(key, list);

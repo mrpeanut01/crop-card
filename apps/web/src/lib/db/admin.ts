@@ -15,11 +15,13 @@
 import { randomUUID } from 'node:crypto';
 import { realNow } from '$lib/server/clock';
 import { type SQL, and, eq, inArray, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
+import { GARDEN_BRIEF_KEY, GARDEN_BRIEF_UPDATED_AT_KEY } from '$lib/garden/brief/schema';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import { plantingInGround } from '$lib/garden/inGround';
 import {
   amendmentBatchInputs,
+  appSettings,
   amendmentBatches,
   amendmentBioassays,
   amendmentDismissals,
@@ -1005,6 +1007,10 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     removed.map_features = del(mapFeatures, isNotNull(mapFeatures.id));
     removed.shade_sources = del(shadeSources, isNotNull(shadeSources.id));
     removed.fields = del(fields, isNotNull(fields.id));
+    removed.garden_brief = del(
+      appSettings,
+      inArray(appSettings.key, [GARDEN_BRIEF_KEY, GARDEN_BRIEF_UPDATED_AT_KEY])
+    );
     // Null out any orphan task.linkedToTaskId references (rare but possible
     // if a partial delete left dangling pointers). Tenant-scoped.
     db.update(tasks)

@@ -3971,7 +3971,9 @@
 {#if showAllocationWizard}
   <AllocationWizard
     initialStep={wizardInitialStep}
-    seedStock={(data.seedStock ?? []).map((s) => ({
+    preselectSeeds={data.briefHandoff?.preselect ?? []}
+    seedlingCrops={data.briefHandoff?.seedlingCrops ?? []}
+    seedStock={[...(data.seedStock ?? []), ...(data.briefHandoff?.extra ?? [])].map((s) => ({
       stockItemId: s.stockItemId,
       displayName: s.displayName,
       shortName: s.shortName,

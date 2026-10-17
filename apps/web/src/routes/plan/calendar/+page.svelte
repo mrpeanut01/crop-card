@@ -10,6 +10,7 @@
   import { periodCardPrintHref } from '$lib/cards/build/calendar';
   import { SHORT_DAY_HOURS, PERSEPHONE_NAME_SOURCED } from '$lib/calendar/persephone';
   import type { RowNote, SowingBar } from '$lib/calendar/sowingCalendar';
+  import TypicalTimingNote from '$lib/components/tasks/TypicalTimingNote.svelte';
 
   const { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -68,8 +69,12 @@
     'indoor-sow': 'plan.cal.bar.indoor-sow',
     transplant: 'plan.cal.bar.transplant',
     'direct-sow': 'plan.cal.bar.direct-sow',
-    window: 'plan.cal.bar.window'
+    window: 'plan.cal.bar.window',
+    'bring-indoors': 'herbsd.bar.bringIndoors',
+    restart: 'herbsd.bar.restart'
   } as const;
+  const hasBar = (kind: SowingBar['kind']) =>
+    cal.rows.some((r) => r.bars.some((b) => b.kind === kind));
   const PROV_KEY = {
     plugin: 'plan.cal.prov.plugin',
     data: 'plan.cal.prov.data',
@@ -265,6 +270,12 @@
                 <li><span class="sw mark hollow"></span>{tr('plan.cal.legend.planned')}</li>
                 <li><span class="sw window"></span>{tr('plan.cal.legend.window')}</li>
                 <li><span class="sw frost"></span>{tr('plan.cal.legend.frost')}</li>
+                {#if hasBar('bring-indoors')}<li>
+                    <span class="sw herb-bring"></span>{tr('herbsd.legend.bringIndoors')}
+                  </li>{/if}
+                {#if hasBar('restart')}<li>
+                    <span class="sw herb-restart"></span>{tr('herbsd.legend.restart')}
+                  </li>{/if}
                 {#if shortSpans.length > 0}<li>
                     <span class="sw short"></span>{shortBandLabel}
                   </li>{/if}
@@ -290,6 +301,10 @@
                   <span class="dates" data-testid="row-dates">
                     {#each row.bars as b, k (k)}<span class="date-line">{barLine(b)}</span>{/each}
                   </span>
+                  {#if row.bars.some((b) => b.typical)}
+                    <span class="typical-line" data-testid="row-typical"><TypicalTimingNote /></span
+                    >
+                  {/if}
                 {/if}
                 {#if row.note}
                   <span class="note" data-testid="row-note">{noteText(row.note, shortDate)}</span>
@@ -649,6 +664,20 @@
   .bar.planned {
     background: transparent;
     border-style: dashed;
+  }
+  .bar[data-kind='bring-indoors'],
+  .sw.herb-bring {
+    border: 2px dashed var(--color-rust, #9a4a2a);
+    background: transparent;
+  }
+  .bar[data-kind='restart'],
+  .sw.herb-restart {
+    border: 2px dashed var(--color-forest);
+    background: transparent;
+  }
+  .typical-line {
+    display: block;
+    margin-top: 2px;
   }
   .bar[data-kind='window'] {
     border: 1.5px dashed var(--color-ink);

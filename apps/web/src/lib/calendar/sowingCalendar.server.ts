@@ -10,6 +10,9 @@ import { loadSeasonView } from '$lib/today/seasonView.server';
 import type { PluginRegistry } from '$lib/plugins';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { eventsForPlanting, type CalendarEvent, type SeedStartFacts } from './engine';
+import { HERB_CALENDAR_SETTING_KEYS, herbContextFor } from './herbCalendarContext';
+import { settingsReader } from '$lib/db/settings';
+import { loadHerbCalendarInputs } from '$lib/server/herbCalendar.server';
 import {
   buildSowingCalendar,
   type FrostLine,
@@ -94,11 +97,11 @@ export function loadSowingCalendar(
   const year = season.year;
   const rows = season.timeline.rows.filter((r) => !r.blockWork);
   const ids = new Set(rows.map((r) => r.plantingId));
-  const crops = new Map(
-    listCrops()
-      .filter((c) => ids.has(c.id))
-      .map((c) => [c.id, c])
-  );
+  const allCrops = listCrops();
+  const crops = new Map(allCrops.filter((c) => ids.has(c.id)).map((c) => [c.id, c]));
+  const herbInputs = loadHerbCalendarInputs(settingsReader(HERB_CALENDAR_SETTING_KEYS));
+  const inSeason = (e: CalendarEvent) =>
+    e.endMs >= season.timeline.fromMs && e.startMs <= season.timeline.toMs;
   const facts = listSeedStartFacts([...ids]);
   const frostByBlock = opts.frostByBlock?.([...new Set(rows.map((r) => r.blockId))], year) ?? {};
 
@@ -126,19 +129,33 @@ export function loadSowingCalendar(
     if (!rec || rec.plugin.type !== 'crop') continue;
     const plugin = rec.plugin as CropPlugin;
     if (crop.plantingDate !== null) {
+      const record = {
+        id: crop.id,
+        blockId: crop.blockId,
+        cropPluginId: crop.cropPluginId,
+        varietyDisplayName: crop.varietyDisplayName,
+        plantingDate: crop.plantingDate
+      };
       events.push(
-        ...eventsForPlanting(
-          {
-            id: crop.id,
-            blockId: crop.blockId,
-            cropPluginId: crop.cropPluginId,
-            varietyDisplayName: crop.varietyDisplayName,
-            plantingDate: crop.plantingDate
-          },
-          plugin,
-          { seedStart: facts.get(crop.id) ?? NO_SEED_START }
-        ).filter(
-          (e) => e.kind === 'indoor-sow' || e.kind === 'transplant' || e.kind === 'direct-sow'
+        ...eventsForPlanting(record, plugin, {
+          seedStart: facts.get(crop.id) ?? NO_SEED_START,
+          herb: herbContextFor(record, plugin, herbInputs),
+          blockPlantings: allCrops
+            .filter((c) => c.blockId === crop.blockId)
+            .map((c) => ({
+              id: c.id,
+              blockId: c.blockId,
+              cropPluginId: c.cropPluginId,
+              varietyDisplayName: c.varietyDisplayName,
+              plantingDate: c.plantingDate
+            })),
+          now
+        }).filter(
+          (e) =>
+            e.kind === 'indoor-sow' ||
+            e.kind === 'transplant' ||
+            e.kind === 'direct-sow' ||
+            ((e.kind === 'bring-indoors' || e.kind === 'restart') && inSeason(e))
         )
       );
       continue;

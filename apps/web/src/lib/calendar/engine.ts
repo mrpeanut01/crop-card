@@ -37,6 +37,7 @@ import {
 import { dayOfYear } from './solar';
 import { formatCalendarDate } from '$lib/prefs';
 import { geojsonCentroid } from '$lib/geo/area';
+import { bringIndoorsEvents, restartEvents, type HerbEventContext } from './herbEvents';
 
 export type CalendarEventKind =
   | 'planting'
@@ -52,7 +53,9 @@ export type CalendarEventKind =
   | 'shade-window'
   | 'indoor-sow'
   | 'transplant'
-  | 'direct-sow';
+  | 'direct-sow'
+  | 'bring-indoors'
+  | 'restart';
 
 /**
  * Kinds only the sowing calendar shows (E3-4). Seed-start tasks already
@@ -134,6 +137,12 @@ export interface EventContext {
    * the current time.
    */
   now?: number;
+  /**
+   * Phase 37D (R-18): the caller's lifecycle verdict, brief goals and frost
+   * dates for an herb planting. When passed, the engine adds `bring-indoors`
+   * and `restart` events.
+   */
+  herb?: HerbEventContext;
 }
 
 /**
@@ -620,6 +629,21 @@ export function eventsForPlanting(
         body: 'Use crop-specific readiness indicators before harvest.',
         detail: { dtmMin: dtm.min, dtmMax: dtm.max }
       });
+    }
+  }
+
+  if (ctx.herb) {
+    const base = {
+      blockId: planting.blockId,
+      cropId: planting.id,
+      cropPluginId: planting.cropPluginId,
+      varietyDisplayName: planting.varietyDisplayName
+    };
+    for (const e of [
+      ...bringIndoorsEvents(planting, ctx.herb, orchardSeasonYears(plant, ctx.now)),
+      ...restartEvents(planting, crop, ctx.herb, ctx.blockPlantings)
+    ]) {
+      events.push({ ...base, ...e });
     }
   }
 

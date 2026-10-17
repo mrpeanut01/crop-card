@@ -4,11 +4,13 @@
  *  `fallback` with "Typical timing. Adjust to your farm.", worked out here at
  *  display time; nothing is stored and no safety logic reads it. */
 
-const TYPICAL_TASK_KEY = /^(?:crop:[^:]+:seasonal:.+|derived:(?:seasonal-task|orchard-task):.*)$/;
+const TYPICAL_TASK_KEY =
+  /^(?:crop:[^:]+:seasonal:.+|derived:(?:seasonal-task|orchard-task|bring-indoors|restart):.*)$/;
 
 /** A task made from a crop seasonal row: materialized (`crop:<id>:seasonal:
  *  <row>`) or scheduled from a /today suggestion (`derived:seasonal-task:`,
- *  `derived:orchard-task:`). */
+ *  `derived:orchard-task:`), or from a Phase 37D herb event
+ *  (`derived:bring-indoors:`, `derived:restart:`, R-8). */
 export function isTypicalTimingTask(task: { pluginTemplateKey?: string | null }): boolean {
   const key = task.pluginTemplateKey;
   return typeof key === 'string' && TYPICAL_TASK_KEY.test(key);

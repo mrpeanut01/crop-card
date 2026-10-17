@@ -10,6 +10,7 @@ import { cropDisplayName, cropDisplayNameByEnglish } from '$lib/i18n/cropName';
 import { seasonalRowText, seasonalTitleWithCrop } from '$lib/i18n/seasonalTaskText';
 import type { CalendarEvent } from './engine';
 import { STAGE_NAME_KEYS } from './stageNames';
+import { herbEventBody, herbEventTitle, isHerbEventKind } from './herbEvents';
 
 const HARVEST_TARGET_KEYS: Record<string, MessageKey> = {
   'Color-break (ship green / counter-ripen)': 'plan.cal.target.colorBreak',
@@ -80,6 +81,10 @@ export function calendarEventTitle(e: TitleEvent, locale?: string | null): strin
   for (const [prefix, key] of PREFIXED) {
     if (e.title === `${prefix}${variety}`) return t(locale, key, { name });
   }
+  const herb = e.detail?.herbEvent;
+  if (isHerbEventKind(herb) && e.title === herbEventTitle(herb, variety)) {
+    return herbEventTitle(herb, name, locale);
+  }
   const taskKey = typeof e.detail?.taskKey === 'string' ? e.detail.taskKey : null;
   if (taskKey && e.cropPluginId) {
     const seasonal = seasonalTitleWithCrop(e.title, locale, {
@@ -118,6 +123,8 @@ export function calendarEventBody(
 ): string | undefined {
   if (!locale || locale === 'en' || e.body === undefined) return e.body;
   if (e.body === HARVEST_READINESS_BODY) return t(locale, 'plan.cal.body.harvestReadiness');
+  const herb = e.detail?.herbEvent;
+  if (isHerbEventKind(herb) && e.body === herbEventBody(herb)) return herbEventBody(herb, locale);
   const taskKey = typeof e.detail?.taskKey === 'string' ? e.detail.taskKey : null;
   return seasonalRowText(e.cropPluginId, taskKey, 'body', e.body, locale);
 }

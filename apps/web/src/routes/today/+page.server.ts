@@ -60,6 +60,8 @@ import { careCards, careCloseFormData } from '$lib/server/careView';
 import { todayDigestInput } from '$lib/digest/todayInput';
 import { activeReEntryItems, reEntryReadStart } from '$lib/today/reEntryCard';
 import { longestLibraryReiHours } from '$lib/spray/herbicideReEntry';
+import { HERB_CALENDAR_SETTING_KEYS, herbContextFor } from '$lib/calendar/herbCalendarContext';
+import { loadHerbCalendarInputs } from '$lib/server/herbCalendar.server';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;
@@ -89,8 +91,7 @@ const TODAY_SETTING_KEYS = [
   GETTING_STARTED_DISMISSED_KEY,
   ASSISTANT_SKIPPED_SETTING,
   SETTINGS_KEYS.farmLatLon,
-  SETTINGS_KEYS.lastFrost,
-  SETTINGS_KEYS.firstFrost
+  ...HERB_CALENDAR_SETTING_KEYS
 ];
 
 function hasBothFrostDates(read: SettingReader): boolean {
@@ -118,6 +119,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const registry = await getRegistry();
   const now = Date.now();
   const blocks = listBlocks({ plantings: 'current', now });
+  const read = settings ?? settingsReader(TODAY_SETTING_KEYS);
+  const herbInputs = loadHerbCalendarInputs(read);
 
   // Calendar-engine derived events — every active planting contributes
   // spray windows / harvest windows / orchard tasks etc. These are the
@@ -131,7 +134,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       allEvents.push(
         ...eventsForPlanting(planting, cropRecord.plugin as CropPlugin, {
           blockPlantings: b.plantings,
-          now
+          now,
+          herb: herbContextFor(planting, cropRecord.plugin as CropPlugin, herbInputs)
         })
       );
     }
@@ -231,7 +235,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   const equipment = listEquipment();
   const sprayers = sprayersFrom(equipment);
-  const read = settings ?? settingsReader(TODAY_SETTING_KEYS);
   const farmLatLon = savedFarmLatLon(read);
   const hasLocation = farmLatLon !== null;
   const farmProfile = getFarmProfile(read);

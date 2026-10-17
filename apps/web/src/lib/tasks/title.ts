@@ -8,12 +8,24 @@ import { seedStartStepOf } from '$lib/schedule/seedStart';
 import { orchardScoutTitleIn } from '$lib/orchard/appLines';
 import { parseScoutTaskKey } from '$lib/orchard/calendar';
 import { isPlantingTaskKey, plantingTaskDisplayTitle } from './plantingTask';
+import { cropDisplayNameByEnglish } from '$lib/i18n/cropName';
+import {
+  herbEventBody,
+  herbEventTitle,
+  herbTitleCrop,
+  type HerbEventKind
+} from '$lib/calendar/herbEvents';
 
 const SOW = /^Sow (.+) indoors$/;
 const HARDEN = /^Start hardening off (.+)$/;
 const TRANSPLANT = /^Transplant (.+?) to (.+)$/;
 const SEASONAL_KEY = /^crop:([^:]+):seasonal:(.+)$/;
 const DERIVED_SEASONAL = /^derived:(seasonal-task|orchard-task):/;
+const DERIVED_HERB = /^derived:(bring-indoors|restart):/;
+
+function herbKindOf(key: string): HerbEventKind | null {
+  return (DERIVED_HERB.exec(key)?.[1] as HerbEventKind | undefined) ?? null;
+}
 
 type TaskText = { title: string; body?: string | null; pluginTemplateKey?: string | null };
 
@@ -43,6 +55,14 @@ export function taskDisplayTitle(task: TaskText, locale?: string | null): string
   const row = SEASONAL_KEY.exec(key);
   if (row) return seasonalRowText(row[1], row[2], 'title', task.title, locale);
   if (DERIVED_SEASONAL.test(key)) return seasonalTitleWithCrop(task.title, locale);
+  const herb = herbKindOf(key);
+  if (herb) {
+    const crop = herbTitleCrop(herb, task.title);
+    if (crop !== null) {
+      return herbEventTitle(herb, cropDisplayNameByEnglish(crop, locale), locale);
+    }
+    return task.title;
+  }
   if (parseScoutTaskKey(key)) return orchardScoutTitleIn(task.title, locale);
   return task.title;
 }
@@ -59,5 +79,7 @@ export function taskDisplayBody<B extends string | null | undefined>(
   const row = SEASONAL_KEY.exec(key);
   if (row) return seasonalRowText(row[1], row[2], 'body', body, locale) as B;
   if (DERIVED_SEASONAL.test(key)) return seasonalTextByEnglish(body, locale) as B;
+  const herb = herbKindOf(key);
+  if (herb && body === herbEventBody(herb)) return herbEventBody(herb, locale) as B;
   return body as B;
 }

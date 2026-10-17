@@ -24,7 +24,7 @@
  */
 
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { apiTokens } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
@@ -148,37 +148,62 @@ export function lookupByPlaintext(plaintext: string): ResolvedApiToken | null {
  * loops. Counter accumulates in memory between flushes so we don't lose
  * the bulk-fetch increments.
  */
-const lastTouchByTokenId = new Map<string, number>();
-const pendingDeltaByTokenId = new Map<string, number>();
+const touchState = new Map<string, { last: number; seen: number; pending: number }>();
 const TOUCH_DEBOUNCE_MS = 60_000;
+export const MAX_TRACKED_TOKENS = 1_000;
+let lastSweepAt = 0;
 
-export function touchToken(id: string): void {
-  pendingDeltaByTokenId.set(id, (pendingDeltaByTokenId.get(id) ?? 0) + 1);
-  const now = Date.now();
-  const last = lastTouchByTokenId.get(id);
-  if (last && now - last < TOUCH_DEBOUNCE_MS) return;
-  lastTouchByTokenId.set(id, now);
-  const delta = pendingDeltaByTokenId.get(id) ?? 0;
-  pendingDeltaByTokenId.set(id, 0);
+function writeTouch(id: string, delta: number, at: number): boolean {
   try {
     unscopedQueryNote(
       'touchToken is keyed by token primary key; safe to update without ownerId guard'
     );
-    const row = db
-      .select({ requestCount: apiTokens.requestCount })
-      .from(apiTokens)
-      .where(eq(apiTokens.id, id))
-      .get();
-    const base = row?.requestCount ?? 0;
     db.update(apiTokens)
-      .set({ lastUsedAt: new Date(now), requestCount: base + delta })
+      .set({ lastUsedAt: new Date(at), requestCount: sql`${apiTokens.requestCount} + ${delta}` })
       .where(eq(apiTokens.id, id))
       .run();
+    return true;
   } catch (err) {
     console.error('[apiTokens] touch failed', err);
-    // Roll the delta back so we don't lose the count on transient failure.
-    pendingDeltaByTokenId.set(id, (pendingDeltaByTokenId.get(id) ?? 0) + delta);
+    return false;
   }
+}
+
+function evict(id: string, force = false): void {
+  const entry = touchState.get(id);
+  if (!entry) return;
+  if (entry.pending > 0 && !writeTouch(id, entry.pending, entry.seen) && !force) return;
+  touchState.delete(id);
+}
+
+function sweep(now: number): void {
+  if (now - lastSweepAt < TOUCH_DEBOUNCE_MS && touchState.size <= MAX_TRACKED_TOKENS) return;
+  lastSweepAt = now;
+  for (const [id, entry] of touchState) {
+    if (now - entry.last >= TOUCH_DEBOUNCE_MS) evict(id);
+  }
+  for (const id of touchState.keys()) {
+    if (touchState.size <= MAX_TRACKED_TOKENS) break;
+    evict(id, true);
+  }
+}
+
+export function touchToken(id: string): void {
+  const now = Date.now();
+  const entry = touchState.get(id);
+  if (entry && now - entry.last < TOUCH_DEBOUNCE_MS) {
+    entry.pending += 1;
+    entry.seen = now;
+    return;
+  }
+  const delta = (entry?.pending ?? 0) + 1;
+  touchState.delete(id);
+  touchState.set(id, { last: now, seen: now, pending: writeTouch(id, delta, now) ? 0 : delta });
+  sweep(now);
+}
+
+export function trackedTokenCount(): number {
+  return touchState.size;
 }
 
 /** List tokens for an Owner — never returns the plaintext (DB doesn't
@@ -196,9 +221,9 @@ export function revokeToken(ownerId: string, tokenId: string): boolean {
     .set({ revokedAt: new Date() })
     .where(and(eq(apiTokens.ownerId, ownerId), eq(apiTokens.id, tokenId)))
     .run();
-  lastTouchByTokenId.delete(tokenId);
-  pendingDeltaByTokenId.delete(tokenId);
-  return r.changes > 0;
+  if (r.changes === 0) return false;
+  evict(tokenId, true);
+  return true;
 }
 
 function rowToSummary(row: typeof apiTokens.$inferSelect): ApiTokenSummary {

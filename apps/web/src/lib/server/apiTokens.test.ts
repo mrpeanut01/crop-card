@@ -6,15 +6,18 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { eq, like } from 'drizzle-orm';
 import {
   generatePlaintext,
   hashToken,
   issueToken,
   listTokensForOwner,
   lookupByPlaintext,
-  revokeToken
+  MAX_TRACKED_TOKENS,
+  revokeToken,
+  touchToken,
+  trackedTokenCount
 } from './apiTokens';
 import { db } from '$lib/db/client';
 import { apiTokens, owners, users, helperAssignments } from '$lib/db/schema';
@@ -153,5 +156,76 @@ describe('listTokensForOwner is tenant-scoped', () => {
     const json = JSON.stringify(summary);
     expect(json).not.toContain(token);
     expect(json).not.toContain(token.slice(4)); // body without prefix
+  });
+});
+
+describe('touchToken bookkeeping', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function requestCount(id: string): number {
+    return db.select().from(apiTokens).where(eq(apiTokens.id, id)).get()!.requestCount;
+  }
+
+  it('revoke flushes the pending count and drops the entry', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-01T12:00:00Z'));
+    const { ownerId, userId } = seedOwnerAndUser();
+    const { id } = issueToken({ ownerId, userId, label: 'revoke-flush' });
+    touchToken(id);
+    touchToken(id);
+    touchToken(id);
+    expect(requestCount(id)).toBe(1);
+    const before = trackedTokenCount();
+    expect(revokeToken(ownerId, id)).toBe(true);
+    expect(requestCount(id)).toBe(3);
+    expect(trackedTokenCount()).toBe(before - 1);
+  });
+
+  it("a refused revoke leaves the other Owner's entry alone", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-01T12:00:00Z'));
+    const a = seedOwnerAndUser();
+    const b = seedOwnerAndUser();
+    const { id } = issueToken({ ownerId: a.ownerId, userId: a.userId, label: 'kept' });
+    touchToken(id);
+    touchToken(id);
+    const before = trackedTokenCount();
+    expect(revokeToken(b.ownerId, id)).toBe(false);
+    expect(trackedTokenCount()).toBe(before);
+    expect(requestCount(id)).toBe(1);
+  });
+
+  it('an idle entry is flushed before it is evicted', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-01T12:00:00Z'));
+    const { ownerId, userId } = seedOwnerAndUser();
+    const { id } = issueToken({ ownerId, userId, label: 'idle' });
+    touchToken(id);
+    touchToken(id);
+    touchToken(id);
+    expect(requestCount(id)).toBe(1);
+    vi.setSystemTime(new Date('2026-10-01T12:02:00Z'));
+    const before = trackedTokenCount();
+    touchToken(`tok_missing_${randomUUID()}`);
+    expect(requestCount(id)).toBe(3);
+    expect(trackedTokenCount()).toBeLessThanOrEqual(before);
+  });
+
+  it('never tracks more than the bound', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-01T13:00:00Z'));
+    const { ownerId, userId } = seedOwnerAndUser();
+    const { id } = issueToken({ ownerId, userId, label: 'crowded-out' });
+    touchToken(id);
+    touchToken(id);
+    for (let i = 0; i < MAX_TRACKED_TOKENS + 50; i++) {
+      touchToken(`tok_missing_${i}_${randomUUID()}`);
+      expect(trackedTokenCount()).toBeLessThanOrEqual(MAX_TRACKED_TOKENS);
+    }
+    expect(requestCount(id)).toBe(2);
+    const ghosts = db.select().from(apiTokens).where(like(apiTokens.id, 'tok_missing_%')).all();
+    expect(ghosts).toHaveLength(0);
   });
 });

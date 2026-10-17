@@ -78,6 +78,12 @@ import {
   type Phase33Table
 } from './phase33.fixtures';
 import {
+  PHASE_37_TABLES,
+  listPhase37Ids,
+  seedPhase37,
+  type Phase37Table
+} from './phase37.fixtures';
+import {
   assertAmendmentBatch,
   assertDocument,
   assertDocumentSubject,
@@ -1702,6 +1708,30 @@ describe('cross-tenant isolation', () => {
         });
       }),
       { numRuns: 20 }
+    );
+  });
+
+  it('every Phase 37 table is owner-scoped: list and read-by-id never cross Owners', () => {
+    const tag = randomUUID().slice(0, 8);
+    seedOwnerRow(OWNER_A);
+    seedOwnerRow(OWNER_B);
+    const a = seedPhase37(OWNER_A, `p37a-${tag}`);
+    const b = seedPhase37(OWNER_B, `p37b-${tag}`);
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...(Object.keys(PHASE_37_TABLES) as Phase37Table[])),
+        fc.boolean(),
+        (table, aIsReader) => {
+          const [reader, mine, theirs] = aIsReader ? [OWNER_A, a, b] : [OWNER_B, b, a];
+          runWithTenant(reader, () => {
+            const seen = listPhase37Ids(table);
+            expect(seen).toContain(mine.rowIds[table]);
+            expect(seen).not.toContain(theirs.rowIds[table]);
+            expect(listPhase37Ids(table, theirs.rowIds[table])).toEqual([]);
+          });
+        }
+      ),
+      { numRuns: 30 }
     );
   });
 

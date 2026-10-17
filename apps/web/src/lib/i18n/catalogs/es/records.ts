@@ -1233,6 +1233,7 @@ export const esRecords: Partial<Record<MessageKey, string>> = {
   'recui.qkind.seedStart': 'Bandeja de semillas',
   'recui.qkind.irrigation': 'Riego',
   'recui.qkind.rainGauge': 'Lectura del pluviómetro',
+  'recui.qkind.irrigationSkip': 'Riego programado omitido',
   'recui.qkind.harvestDisposition': 'A dónde fue una cosecha',
   'recui.qkind.taskSchedule': 'Tarea programada',
   'recui.pending.waiting':

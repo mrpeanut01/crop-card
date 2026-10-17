@@ -72,6 +72,7 @@ describe('#316 — kind → endpoint routing', () => {
       'seed-start': '/api/seed-starts/:id/progress',
       irrigation: '/api/irrigation',
       'rain-gauge': '/api/rain-gauge',
+      'irrigation-skip': '/api/irrigation/skips',
       'harvest-disposition': '/api/harvest/:id/dispositions',
       'time-entry': '/api/tasks/:id/time',
       'task-schedule': '/api/tasks',
@@ -93,7 +94,8 @@ describe('#316 — kind → endpoint routing', () => {
     ['animal-move', '/api/animals/move'],
     ['animal-health', '/api/animals/health/record'],
     ['animal-production', '/api/animals/production/record'],
-    ['task-schedule', '/api/tasks']
+    ['task-schedule', '/api/tasks'],
+    ['irrigation-skip', '/api/irrigation/skips']
   ])('routes kind %s to %s', (kind, endpoint) => {
     expect(endpointForRecord({ kind })).toBe(endpoint);
   });

@@ -44,6 +44,7 @@ import {
   cropEquipment,
   crops,
   equipment,
+  equipmentWaterTargets,
   equipmentLog,
   equipmentState,
   fertilityApplications,
@@ -55,6 +56,7 @@ import {
   grazingAttestations,
   insecticideEvents,
   irrigationEvents,
+  irrigationSkips,
   ledgerEntries,
   ledgerEntryChanges,
   mapFeatureAreas,
@@ -968,6 +970,11 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     removed.block_protections = del(blockProtections, isNotNull(blockProtections.id));
     removed.irrigation_events = del(irrigationEvents, isNotNull(irrigationEvents.id));
     removed.rain_gauge_readings = del(rainGaugeReadings, isNotNull(rainGaugeReadings.id));
+    removed.irrigation_skips = del(irrigationSkips, isNotNull(irrigationSkips.id));
+    removed.equipment_water_targets = del(
+      equipmentWaterTargets,
+      isNotNull(equipmentWaterTargets.id)
+    );
     removed.stock_movements = del(stockMovements, isNotNull(stockMovements.id));
     removed.tasks = del(tasks, isNotNull(tasks.id));
     removed.crop_equipment = del(cropEquipment, isNotNull(cropEquipment.id));

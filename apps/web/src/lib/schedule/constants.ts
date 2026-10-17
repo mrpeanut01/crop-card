@@ -116,7 +116,10 @@ export const DEFAULT_AI_DAILY_QUOTA = {
   'garden-fill': 10,
   /** Photo help on Planting and garden Area Cards (Phase 30G). The Care
    *  Guide answers when the cap is spent. */
-  'photo-help': 10
+  'photo-help': 10,
+  /** Garden brief chat (Phase 37A), one call per turn. A brief is at most 8
+   *  turns and the plain form answers when the cap is spent. */
+  'garden-brief': 8
 } as const;
 
 export type AiEndpointName = keyof typeof DEFAULT_AI_DAILY_QUOTA;

@@ -40,6 +40,7 @@ const KINDS: PendingRecordKind[] = [
   'seed-start',
   'irrigation',
   'rain-gauge',
+  'irrigation-skip',
   'time-entry'
 ];
 

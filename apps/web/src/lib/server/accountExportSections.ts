@@ -7,6 +7,7 @@ import {
   amendmentDismissals,
   documentLinks,
   documents,
+  equipmentWaterTargets,
   forageTests,
   harvestDispositions,
   organicStatusEvents,
@@ -24,6 +25,7 @@ import {
   blockProtections,
   grazingAttestations,
   irrigationEvents,
+  irrigationSkips,
   ledgerEntries,
   ledgerEntryChanges,
   rainGaugeReadings,
@@ -217,19 +219,36 @@ export function phase33Sections(viewer: ExportViewer): {
   amendments: Section<Phase33Groups['amendments']>;
 } {
   const read = readGroup(PHASE_33_TABLE_GROUPS.organic);
+  const dispositions = (read.harvestDispositions as Array<Record<string, unknown>>).map((d) => ({
+    ...d,
+    preservedAs: d.preservedAs ?? null
+  }));
   const organic =
     viewer.role === 'owner'
-      ? read
+      ? { ...read, harvestDispositions: dispositions }
       : {
           ...read,
-          harvestDispositions: (read.harvestDispositions as Array<Record<string, unknown>>).map(
-            (d) => ({ ...d, ledgerEntryId: null })
-          )
+          harvestDispositions: dispositions.map((d) => ({ ...d, ledgerEntryId: null }))
         };
   return {
     organic,
     amendments: readGroup(PHASE_33_TABLE_GROUPS.amendments)
   };
+}
+
+/** Every tenant-scoped Phase 37 table, grouped the way the export file
+ *  shows them. */
+export const PHASE_37_TABLE_GROUPS = {
+  watering: {
+    waterTargets: equipmentWaterTargets,
+    irrigationSkips
+  }
+} as const satisfies Record<string, Record<string, TenantScopedTable>>;
+
+type Phase37Groups = typeof PHASE_37_TABLE_GROUPS;
+
+export function phase37Sections(): { watering: Section<Phase37Groups['watering']> } {
+  return { watering: readGroup(PHASE_37_TABLE_GROUPS.watering) };
 }
 
 const isoOrNull = (d: Date | null) => (d ? d.toISOString() : null);

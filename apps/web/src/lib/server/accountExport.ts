@@ -37,6 +37,7 @@ import {
   documentSection,
   journalPhotoFacts,
   phase33Sections,
+  phase37Sections,
   mapFeatureAreaSection,
   deletedRecordSection,
   mapFeatureSection,
@@ -250,6 +251,7 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
     })),
     ...recordSections(user),
     ...phase33Sections(user),
+    ...phase37Sections(),
     documents: documentSection(user),
     apiTokens,
     relatedDownloads: {

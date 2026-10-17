@@ -19,6 +19,12 @@ import { esApierrB } from './es/apierrB';
 import { esApierrA } from './es/apierrA';
 import { esSeasonal } from './es/seasonal';
 import { esOrchard } from './es/orchard';
+import { esHerbsa } from './es/herbsa';
+import { esHerbsb } from './es/herbsb';
+import { esHerbsc } from './es/herbsc';
+import { esHerbsd } from './es/herbsd';
+import { esHerbse } from './es/herbse';
+import { esHerbsf } from './es/herbsf';
 
 /**
  * Spanish (F5-8). Machine-drafted, then corrected and signed off by the
@@ -49,7 +55,13 @@ export const ES_PARTS: ReadonlyArray<Partial<Record<MessageKey, string>>> = [
   esApierrB,
   esApierrA,
   esSeasonal,
-  esOrchard
+  esOrchard,
+  esHerbsa,
+  esHerbsb,
+  esHerbsc,
+  esHerbsd,
+  esHerbse,
+  esHerbsf
 ];
 
 export const es: Partial<Record<MessageKey, string>> = Object.assign({}, ...ES_PARTS);

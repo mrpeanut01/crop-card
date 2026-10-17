@@ -8,6 +8,7 @@ import {
   herbActionStem,
   herbSeasonalRowSourceGaps,
   seasonalTaskNumberGaps,
+  seasonalTaskWordingProblems,
   type SourceMap
 } from './sourceCoverage';
 import { HERB_PLUGIN_IDS, isHerbGardenCrop } from '$lib/garden/herbs';
@@ -40,19 +41,34 @@ const SOURCE = {
   quote: 'Pinch basil flower buds as they form to keep the plant leafy.'
 };
 
-describe('Phase 37D herb seasonal rows (R-25)', () => {
+describe('Phase 37D herb seasonal rows', () => {
   it('the shipped herb plugins pass the gate (no herb row ships yet)', () => {
     expect(herbSeasonalRowSourceGaps(library.crops(), cropSources, isHerbGardenCrop)).toEqual([]);
     expect(seasonalTaskNumberGaps(library.crops(), cropSources)).toEqual([]);
   });
 
-  it('ships no herb seasonal row until the research pass quotes one', () => {
+  it('the herb rows that ship are the quoted ones, with no spray or label wording', () => {
     const rows = library
       .crops()
       .filter((c) => isHerbGardenCrop(c.pluginId))
       .flatMap((c) => (c.seasonalTasks ?? []).map((r) => `${c.pluginId}:${r.key}`));
-    expect(rows).toEqual([]);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const id of rows) {
+      const [pluginId, key] = id.split(':');
+      expect(cropSources[pluginId]?.[`seasonalTasks.${key}`], id).toBeDefined();
+    }
+    expect(seasonalTaskWordingProblems(library.crops())).toEqual([]);
     expect(HERB_PLUGIN_IDS.length).toBeGreaterThan(0);
+  });
+
+  it('no herb row stands in for the frost-keyed bring-indoors event (R-18)', () => {
+    const rows = library
+      .crops()
+      .filter((c) => isHerbGardenCrop(c.pluginId))
+      .flatMap((c) => c.seasonalTasks ?? []);
+    expect(
+      rows.filter((r) => /indoors|before (the )?frost/i.test(`${r.title} ${r.body ?? ''}`))
+    ).toEqual(rows.filter((r) => r.key === 'pot-for-winter'));
   });
 
   it('refuses a herb row with no source', () => {

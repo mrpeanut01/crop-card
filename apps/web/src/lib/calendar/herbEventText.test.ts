@@ -16,7 +16,7 @@ const bring = {
   endMs: Date.UTC(2026, 9, 15),
   title: herbEventTitle('bring-indoors', 'Rosemary'),
   body: herbEventBody('bring-indoors'),
-  detail: { herbEvent: 'bring-indoors', typicalTiming: true }
+  detail: { herbEvent: 'bring-indoors', provenance: 'data' }
 };
 
 describe('herb event text in the viewer language', () => {
@@ -34,14 +34,14 @@ describe('herb event text in the viewer language', () => {
     expect(calendarEventBody(bring, 'es')).toBe(t('es', 'herbsd.event.bringIndoors.body'));
   });
 
-  it('a task scheduled from the suggestion is typical timing and reads in Spanish', () => {
+  it('a task scheduled from the suggestion reads in Spanish; only restart is typical timing', () => {
     const task = {
       title: bring.title,
       body: bring.body,
       pluginTemplateKey: suggestionTemplateKey(bring)
     };
     expect(task.pluginTemplateKey.startsWith('derived:bring-indoors:')).toBe(true);
-    expect(isTypicalTimingTask(task)).toBe(true);
+    expect(isTypicalTimingTask(task)).toBe(false);
     expect(taskDisplayTitle(task)).toBe(bring.title);
     expect(taskDisplayTitle(task, 'es')).toBe(
       t('es', 'herbsd.event.bringIndoors.title', {
@@ -58,6 +58,7 @@ describe('herb event text in the viewer language', () => {
       t('es', 'herbsd.event.restart.title', { name: cropDisplayNameByEnglish('Chervil', 'es') })
     );
     expect(taskDisplayBody(restart, 'es')).toBe('My own note');
+    expect(isTypicalTimingTask(restart)).toBe(true);
     expect(taskDisplayTitle({ ...restart, title: 'Typed by the owner' }, 'es')).toBe(
       'Typed by the owner'
     );

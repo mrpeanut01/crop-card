@@ -2,7 +2,7 @@
   "pluginId": "marjoram-sweet",
   "type": "crop",
   "displayName": "Marjoram Sweet (Origanum majorana)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -33,5 +33,15 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "prune-back",
+      "kind": "pruning",
+      "daysAfterPlanting": 30,
+      "windowDays": 21,
+      "title": "Prune back sweet marjoram",
+      "body": "When the plants are 6 to 8 inches tall, prune them back for bushier growth."
+    }
+  ]
 }

@@ -27,7 +27,8 @@ const rosemary: CropPlugin = {
   displayName: 'Rosemary — Tuscan Blue',
   version: '1.0.0',
   cropFamily: 'herb-culinary',
-  harvestStyle: 'continuous-leaf',
+  harvestStyle: 'cut-and-come-again',
+  bloomWindow: { continuous: false, beeAttractive: true },
   daysToMaturity: { min: 80, max: 90 }
 } as CropPlugin;
 
@@ -37,7 +38,8 @@ const chervil: CropPlugin = {
   displayName: 'Chervil',
   version: '1.0.0',
   cropFamily: 'apiaceae',
-  harvestStyle: 'continuous-leaf',
+  harvestStyle: 'cut-and-come-again',
+  bloomWindow: { continuous: false, beeAttractive: true },
   agronomy: { lifecycle: 'annual' },
   daysToMaturity: { min: 40, max: 50 }
 } as CropPlugin;
@@ -63,7 +65,7 @@ function ctx(
 describe('bring-indoors (R-8)', () => {
   const plant = Date.UTC(2026, 4, 1);
 
-  it('opens 14 days before the first fall frost and runs to it, tagged fallback', () => {
+  it('opens 14 days before the first fall frost and runs to it, tagged data', () => {
     const events = eventsForPlanting(planting(rosemary, plant), rosemary, {
       now: plant,
       herb: ctx('tender-perennial')
@@ -80,10 +82,10 @@ describe('bring-indoors (R-8)', () => {
       herbEvent: 'bring-indoors',
       leadDays: 14,
       provenance: BRING_INDOORS_LEAD_PROVENANCE,
-      typicalTiming: true
+      sourceKey: 'bringIndoorsLead'
     });
-    expect(BRING_INDOORS_LEAD_PROVENANCE).toBe('fallback');
-    expect(isTypicalTimingEvent(first)).toBe(true);
+    expect(BRING_INDOORS_LEAD_PROVENANCE).toBe('data');
+    expect(isTypicalTimingEvent(first)).toBe(false);
     expect(first.title).toBe('Bring Rosemary indoors or take cuttings');
     expect(first.cropId).toBe('c1');
     expect(first.blockId).toBe('b1');
@@ -213,6 +215,23 @@ describe('restart for a fresh supply', () => {
     ).toEqual([]);
   });
 
+  it('a crop with its own sourced sow-again row gets no family restart', () => {
+    const p = planting(chervil, plant);
+    const withRow = {
+      ...chervil,
+      seasonalTasks: [
+        {
+          key: 'sow-again',
+          kind: 'cultural' as const,
+          daysAfterPlanting: 21,
+          windowDays: 7,
+          title: 'Sow chervil again'
+        }
+      ]
+    };
+    expect(restartEvents(p, withRow, ctx('annual', ['fresh']))).toEqual([]);
+  });
+
   it('nothing once the same herb was sown again in the bed', () => {
     const p = planting(chervil, plant);
     const later = planting(chervil, plant + 10 * DAY, 'c2');
@@ -232,7 +251,7 @@ describe('herb event text', () => {
       'Bring Rosemary indoors or take cuttings'
     );
     expect(herbEventTitle('restart', 'Basil')).toBe('Sow Basil again');
-    expect(herbEventTitle('restart', 'albahaca', 'es')).toBe('Siembre albahaca otra vez');
+    expect(herbEventTitle('restart', 'albahaca', 'es')).toBe('Siembra albahaca otra vez');
     expect(herbEventBody('bring-indoors', 'es')).not.toBe(herbEventBody('bring-indoors'));
     expect(herbTitleCrop('bring-indoors', 'Bring Lemon Verbena indoors or take cuttings')).toBe(
       'Lemon Verbena'

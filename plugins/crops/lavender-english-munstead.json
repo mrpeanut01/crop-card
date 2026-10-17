@@ -2,7 +2,7 @@
   "pluginId": "lavender-english-munstead",
   "type": "crop",
   "displayName": "Lavender English Munstead",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -33,5 +33,15 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "spring-prune",
+      "kind": "pruning",
+      "dayOfYear": 100,
+      "windowDays": 30,
+      "title": "Prune lavender in spring",
+      "body": "Wait until new growth starts in spring before pruning. Do not cut the plants back in the fall."
+    }
+  ]
 }

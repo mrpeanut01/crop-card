@@ -18,10 +18,22 @@ import { successionIntervalDays } from '$lib/schedule/succession';
 const DAY_MS = 86_400_000;
 
 /** R-8: days before the first fall frost to bring a tender perennial in.
- *  One ruled constant, no per-crop value, shown as `fallback` with
- *  "Typical timing. Adjust to your farm." until a quoted source lands. */
+ *  One constant, no per-crop value: the low end of UW-Madison Extension's
+ *  "2 to 3 weeks before the expected first fall frost" (quoted under
+ *  `bringIndoorsLead` in `apps/web/scripts/calendar-sources.json`). */
 export const BRING_INDOORS_LEAD_DAYS = 14;
-export const BRING_INDOORS_LEAD_PROVENANCE = 'fallback' as const;
+export const BRING_INDOORS_LEAD_PROVENANCE = 'data' as const;
+export const BRING_INDOORS_SOURCE = {
+  key: 'bringIndoorsLead',
+  url: 'https://hort.extension.wisc.edu/articles/rosemary/',
+  publisher: 'UW-Madison Extension',
+  weeksFrom: 2,
+  weeksTo: 3
+} as const;
+
+/** The seasonal row key a crop's own sourced succession sowing uses; a
+ *  crop that has one gets no `restart` from the family interval. */
+export const SOW_AGAIN_ROW_KEY = 'sow-again';
 
 /** How long a restart suggestion stays open, as a seasonal row's default
  *  window does. */
@@ -117,7 +129,7 @@ export function bringIndoorsEvents(
         firstFallFrostMs: frostMs,
         leadDays: BRING_INDOORS_LEAD_DAYS,
         provenance: BRING_INDOORS_LEAD_PROVENANCE,
-        typicalTiming: true
+        sourceKey: BRING_INDOORS_SOURCE.key
       }
     });
   }
@@ -136,17 +148,19 @@ function nextFirstFallFrost(ms: number, frost: HerbEventContext['frost']): numbe
  * one suggestion to sow again at the crop family's succession interval
  * after this planting, while that date still comes before the first fall
  * frost. A later planting of the same crop in the block means the owner
- * already sowed again, so it adds nothing.
+ * already sowed again, and a crop with its own sourced `sow-again` row
+ * uses that row, so neither adds anything.
  */
 export function restartEvents(
   planting: Pick<PlantingRecord, 'id' | 'plantingDate' | 'varietyDisplayName' | 'cropPluginId'>,
-  crop: Pick<CropPlugin, 'cropFamily'>,
+  crop: Pick<CropPlugin, 'cropFamily' | 'seasonalTasks'>,
   ctx: HerbEventContext,
   blockPlantings: readonly Pick<PlantingRecord, 'id' | 'plantingDate' | 'cropPluginId'>[] = []
 ): HerbEventOut[] {
   if (planting.plantingDate == null) return [];
   if (ctx.lifecycle !== 'annual' || !isHerbGardenCrop(planting.cropPluginId)) return [];
   if (!wantsFreshSupply(ctx.goals)) return [];
+  if (crop.seasonalTasks?.some((r) => r.key === SOW_AGAIN_ROW_KEY)) return [];
   const intervalDays = successionIntervalDays(crop.cropFamily);
   if (intervalDays <= 0) return [];
   const plant = planting.plantingDate;

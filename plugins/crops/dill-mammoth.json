@@ -2,7 +2,7 @@
   "pluginId": "dill-mammoth",
   "type": "crop",
   "displayName": "Dill — Mammoth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "apiaceae",
   "daysToMaturity": {
     "min": 50,
@@ -22,5 +22,15 @@
     "daysFromPlantingMax": 90,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "sow-again",
+      "kind": "cultural",
+      "daysAfterPlanting": 14,
+      "windowDays": 7,
+      "title": "Sow dill again",
+      "body": "Sow again every two weeks for fresh leaves, since plants decline soon after they flower."
+    }
+  ]
 }

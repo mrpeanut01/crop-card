@@ -2,7 +2,7 @@
   "pluginId": "catnip-common",
   "type": "crop",
   "displayName": "Catnip Common (Nepeta cataria)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -33,5 +33,15 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "spring-cut-back",
+      "kind": "pruning",
+      "dayOfYear": 95,
+      "windowDays": 21,
+      "title": "Cut back catnip in spring",
+      "body": "Cut the plants back in spring just as growth starts, and divide old plants that look untidy."
+    }
+  ]
 }

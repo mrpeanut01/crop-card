@@ -2,7 +2,7 @@
   "pluginId": "sage-broadleaf",
   "type": "crop",
   "displayName": "Sage — Broadleaf (Salvia officinalis)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
@@ -25,5 +25,15 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "spring-prune",
+      "kind": "pruning",
+      "dayOfYear": 95,
+      "windowDays": 21,
+      "title": "Prune sage in spring",
+      "body": "Prune the plants back in spring just as new growth starts."
+    }
+  ]
 }

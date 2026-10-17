@@ -11,6 +11,7 @@
   import { SHORT_DAY_HOURS, PERSEPHONE_NAME_SOURCED } from '$lib/calendar/persephone';
   import type { RowNote, SowingBar } from '$lib/calendar/sowingCalendar';
   import TypicalTimingNote from '$lib/components/tasks/TypicalTimingNote.svelte';
+  import { BRING_INDOORS_SOURCE } from '$lib/calendar/herbEvents';
 
   const { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -301,6 +302,21 @@
                   <span class="dates" data-testid="row-dates">
                     {#each row.bars as b, k (k)}<span class="date-line">{barLine(b)}</span>{/each}
                   </span>
+                  {#if row.bars.some((b) => b.kind === 'bring-indoors')}
+                    <span class="typical-line" data-testid="row-bring-source"
+                      ><Provenance
+                        source="data"
+                        label={BRING_INDOORS_SOURCE.publisher}
+                        long={tr('herbsd.source.bringIndoorsLong')}
+                        compact
+                      />
+                      {tr('herbsd.source.bringIndoors', {
+                        from: BRING_INDOORS_SOURCE.weeksFrom,
+                        to: BRING_INDOORS_SOURCE.weeksTo,
+                        source: BRING_INDOORS_SOURCE.publisher
+                      })}</span
+                    >
+                  {/if}
                   {#if row.bars.some((b) => b.typical)}
                     <span class="typical-line" data-testid="row-typical"><TypicalTimingNote /></span
                     >

@@ -2,7 +2,7 @@
   "pluginId": "tarragon-french",
   "type": "crop",
   "displayName": "Tarragon French (Artemisia dracunculus sativa)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -33,5 +33,23 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "spring-cut-back",
+      "kind": "pruning",
+      "dayOfYear": 95,
+      "windowDays": 21,
+      "title": "Cut back tarragon in spring",
+      "body": "Leave the tops standing over winter, then cut the plants back in spring just as growth starts."
+    },
+    {
+      "key": "divide",
+      "kind": "cultural",
+      "dayOfYear": 90,
+      "windowDays": 21,
+      "title": "Divide tarragon every few years",
+      "body": "Divide the plants every 3 to 4 years to keep the planting vigorous and productive."
+    }
+  ]
 }

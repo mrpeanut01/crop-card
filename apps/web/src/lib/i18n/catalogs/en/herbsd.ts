@@ -13,6 +13,10 @@ export const enHerbsd = {
   'herbsd.bar.restart': 'Sow again',
   'herbsd.legend.bringIndoors': 'Bring indoors before frost',
   'herbsd.legend.restart': 'Sow again',
+  'herbsd.source.bringIndoors':
+    'Bring in {from} to {to} weeks before the first fall frost ({source}).',
+  'herbsd.source.bringIndoorsLong':
+    'UW-Madison Extension says to dig and pot tender herbs before the expected first fall frost.',
   'herbsd.push.bringIn': '{names}: bring it in or cover it.',
   'herbsd.observed.title': 'Last 7 days',
   'herbsd.observed.loading': 'Loading past temperatures…',

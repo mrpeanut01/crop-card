@@ -2,7 +2,7 @@
   "pluginId": "thyme-german-winter",
   "type": "crop",
   "displayName": "Thyme — German Winter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
@@ -25,5 +25,15 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "renew-cut-back",
+      "kind": "pruning",
+      "dayOfYear": 90,
+      "windowDays": 30,
+      "title": "Cut back woody thyme",
+      "body": "When thyme gets woody, cut it back hard in spring, every few years, for young tender stems."
+    }
+  ]
 }

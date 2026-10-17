@@ -5,12 +5,12 @@
  *  display time; nothing is stored and no safety logic reads it. */
 
 const TYPICAL_TASK_KEY =
-  /^(?:crop:[^:]+:seasonal:.+|derived:(?:seasonal-task|orchard-task|bring-indoors|restart):.*)$/;
+  /^(?:crop:[^:]+:seasonal:.+|derived:(?:seasonal-task|orchard-task|restart):.*)$/;
 
 /** A task made from a crop seasonal row: materialized (`crop:<id>:seasonal:
  *  <row>`) or scheduled from a /today suggestion (`derived:seasonal-task:`,
- *  `derived:orchard-task:`), or from a Phase 37D herb event
- *  (`derived:bring-indoors:`, `derived:restart:`, R-8). */
+ *  `derived:orchard-task:`), or from a Phase 37D restart event, which uses
+ *  the family succession interval (`derived:restart:`). */
 export function isTypicalTimingTask(task: { pluginTemplateKey?: string | null }): boolean {
   const key = task.pluginTemplateKey;
   return typeof key === 'string' && TYPICAL_TASK_KEY.test(key);

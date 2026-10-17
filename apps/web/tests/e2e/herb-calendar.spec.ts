@@ -16,9 +16,7 @@ async function post<T>(page: Page, url: string, data: Record<string, unknown>): 
 }
 
 test.describe('herb calendar (37D)', () => {
-  test('a tender perennial herb gets a bring-indoors bar with typical timing', async ({
-    page
-  }) => {
+  test('a tender perennial herb gets a sourced bring-indoors bar', async ({ page }) => {
     await signInNewUser(page, 'herbcal');
     await createOnboardedFarm(page, { growing: ['garden'] });
     const area = await post<{ field: { id: string } }>(page, '/api/fields', {
@@ -56,9 +54,11 @@ test.describe('herb calendar (37D)', () => {
     await expect(row).toBeVisible();
     await expect(row.locator('.bar[data-kind="bring-indoors"]')).toHaveCount(1);
     await expect(row.getByTestId('row-dates')).toContainText('Bring indoors');
-    await expect(row.getByTestId('row-typical')).toContainText(
-      'Typical timing. Adjust to your farm.'
+    await expect(row.getByTestId('row-bring-source')).toContainText(
+      'Bring in 2 to 3 weeks before the first fall frost (UW-Madison Extension).'
     );
+    await expect(row.getByTestId('row-bring-source')).toContainText('UW-Madison Extension');
+    await expect(row.getByTestId('row-typical')).toHaveCount(0);
     await expect(cal.locator('.legend')).toContainText('Bring indoors before frost');
 
     const other = cal.locator(`tr[data-planting-id="${plain.planting.id}"]`);

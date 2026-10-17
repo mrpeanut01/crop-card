@@ -2,7 +2,7 @@
   "pluginId": "chervil",
   "type": "crop",
   "displayName": "Chervil (Anthriscus cerefolium)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "apiaceae",
   "preHarvestIntervalDays": 1,
@@ -33,5 +33,15 @@
     "daysFromPlantingMax": 90,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "sow-again",
+      "kind": "cultural",
+      "daysAfterPlanting": 21,
+      "windowDays": 7,
+      "title": "Sow chervil again",
+      "body": "Sow again every 3 to 4 weeks for fresh leaves, since chervil flowers quickly."
+    }
+  ]
 }

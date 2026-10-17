@@ -22,7 +22,7 @@ const crop = (over: Partial<CropPlugin>) =>
     displayName: 'X',
     version: '1.0.0',
     cropFamily: 'herb-culinary',
-    harvestStyle: 'continuous-leaf',
+    harvestStyle: 'cut-and-come-again',
     ...over
   }) as CropPlugin;
 

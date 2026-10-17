@@ -2,7 +2,7 @@
   "pluginId": "mint-spearmint",
   "type": "crop",
   "displayName": "Mint — Spearmint",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 60,
@@ -25,5 +25,23 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "remove-flower-spikes",
+      "kind": "pruning",
+      "dayOfYear": 170,
+      "windowDays": 45,
+      "title": "Remove mint flower spikes",
+      "body": "Remove flower spikes as they appear to keep the leaves' flavor."
+    },
+    {
+      "key": "divide",
+      "kind": "cultural",
+      "dayOfYear": 90,
+      "windowDays": 21,
+      "title": "Divide mint if it is crowded",
+      "body": "Divide the plants every 3 to 4 years to keep them vigorous."
+    }
+  ]
 }

@@ -323,6 +323,7 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'onboard.searching': 'Buscando…',
   'onboard.step': 'Paso {n} de 2',
   'onboard.takeMe': 'Llévame a Hoy',
+  'onboard.startBrief': 'Empezar mi plan de jardín',
   'onboard.title': 'Configura tu granja · CropCard',
   'onboard.typeCoords': 'Escribir las coordenadas',
   'onboard.useMyLocation': 'Usar mi ubicación',

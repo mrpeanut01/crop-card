@@ -332,7 +332,7 @@
           type="submit"
           disabled={(picked.length === 0 && pickedAnimals.length === 0) || submitting}
         >
-          {tr('onboard.takeMe')}
+          {tr(picked.includes('herbs') ? 'onboard.startBrief' : 'onboard.takeMe')}
           <ArrowRight size={15} aria-hidden="true" />
         </button>
       </div>

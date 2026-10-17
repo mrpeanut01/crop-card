@@ -307,6 +307,7 @@ export const enEntry = {
   'onboard.searching': 'Searching…',
   'onboard.step': 'Step {n} of 2',
   'onboard.takeMe': 'Take me to Today',
+  'onboard.startBrief': 'Start my garden brief',
   'onboard.title': 'Set up your farm · CropCard',
   'onboard.typeCoords': 'Type the coordinates instead',
   'onboard.useMyLocation': 'Use my location',

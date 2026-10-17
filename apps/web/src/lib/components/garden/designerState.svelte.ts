@@ -149,6 +149,8 @@ export interface DesignerInit {
   nowMs?: number;
   initialDateMs?: number | null;
   initialBedId?: string | null;
+  /** Phase 37A: the garden brief's shortlist, listed first in the picker. */
+  briefCropIds?: readonly string[];
   fetch?: typeof fetch;
 }
 
@@ -315,6 +317,8 @@ export class DesignerState {
   preview = $state<{ blockId: string; rect: RectFt } | null>(null);
   ghosts = $state<Array<{ key: string; blockId: string; footprint: Footprint; label: string }>>([]);
   recentPluginIds = $state<string[]>([]);
+  /** Phase 37A: crops from the garden brief (`?crops=`), listed first. */
+  briefPluginIds = $state<string[]>([]);
   /** A crop row being dragged from the crop panel: where the pointer is,
    *  the bed under it and the spot it would land on. */
   cropDrag = $state<CropDrag | null>(null);
@@ -412,6 +416,8 @@ export class DesignerState {
     if (init.initialBedId && init.design.beds.some((b) => b.blockId === init.initialBedId)) {
       this.selectedBedId = init.initialBedId;
     }
+    const inCatalog = new Set(init.catalog.map((c) => c.pluginId));
+    this.briefPluginIds = (init.briefCropIds ?? []).filter((id) => inCatalog.has(id));
   }
 
   /** Marks the start of a write whose confirmation is said later. */

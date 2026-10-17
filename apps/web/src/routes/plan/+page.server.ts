@@ -53,6 +53,9 @@ import { listCrops, type Crop } from '$lib/db/crops';
 import { harvestTargetKey } from '$lib/plan/harvestTargetKey';
 import { frostDatesForYear, frostDatesIsoForYear, hasFarmLatLon } from '$lib/schedule/settings';
 import { planSetupPrompts } from '$lib/onboarding/pageSetup';
+import { getFarmProfile } from '$lib/onboarding/state.server';
+import { hasGardenBrief, loadGardenBrief } from '$lib/server/garden/briefStore';
+import { briefWizardSeeds } from '$lib/garden/brief/handoff';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { getSetting } from '$lib/db/settings';
 import {
@@ -255,6 +258,12 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     seasonSetup,
     lastYearSetup,
     emptySeason: isEmptySeason(blocks, currentYear),
+    // Phase 37A (R-27): /plan?wizard=allocation&brief=1 opens the wizard
+    // with the garden brief's shortlist picked, each as a bought seedling.
+    briefHandoff:
+      canEdit && url.searchParams.get('brief') === '1'
+        ? briefWizardSeeds(loadGardenBrief()?.shortlist ?? [], seedStock, cropCatalog)
+        : null,
     // #475 — setup questions for a farm that finished only part of setup.
     setupLatLon: hasFarmLatLon() ? getFarmLatLon() : null,
     setupPrompts: planSetupPrompts(
@@ -265,7 +274,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         hasSeasonSetup: !!seasonSetup,
         hasBlocks: blocks.length > 0,
         hasSeed: allSeedStock.length > 0,
-        year: currentYear
+        year: currentYear,
+        profile: getFarmProfile(),
+        hasGardenBrief: hasGardenBrief()
       },
       locals.user?.role ?? 'helper',
       locals.locale

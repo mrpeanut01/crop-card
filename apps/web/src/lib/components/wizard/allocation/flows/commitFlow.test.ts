@@ -220,3 +220,29 @@ describe('CommitFlow split lots (R-12, R-18, R-19)', () => {
     expect(commit.body.scoutTasks).toEqual([]);
   });
 });
+
+describe('CommitFlow garden brief hand-off (Phase 37A, R-27)', () => {
+  it('commits a brief placeholder seed as a bought seedling with no seed lot', async () => {
+    const { w, raw } = fakeWizard([
+      {
+        stockItemId: 'brief:basil-genovese',
+        blockId: 'n',
+        cropPluginId: 'basil-genovese',
+        varietyDisplayName: 'Basil',
+        plants: 6
+      }
+    ]);
+    raw.selectedSeeds = new Map([['brief:basil-genovese', 0]]);
+    raw.props.seedStock = [{ stockItemId: 'brief:basil-genovese', defaultUnit: 'count' }];
+    raw.isFillToBed = () => true;
+    raw.establishmentByCrop = {
+      'basil-genovese': { establishment: 'transplant', startIndoors: false, sowIndoorsOn: '' }
+    } as never;
+    await new CommitFlow(w).commit();
+    expect(calls).toHaveLength(1);
+    expect(calls[0].body.stockItemId).toBeUndefined();
+    expect(calls[0].body.cropPluginId).toBe('basil-genovese');
+    expect(calls[0].body.establishment).toBe('transplant');
+    expect(calls[0].body.startIndoors).toBe(false);
+  });
+});

@@ -2,6 +2,7 @@ import { isSavedSowMethod, type SavedSowMethod } from '$lib/plan/spacingModel';
 import type { InputsPlanApplication, InputsPlanScoutTask } from '$lib/plan/inputsPlan';
 import { fmtDateMs } from '../format';
 import { establishmentPayload } from '$lib/schedule/seedStart';
+import { isBriefSeedId } from '$lib/garden/brief/handoff';
 import type { AllocationWizardState } from '../wizardState.svelte';
 import type { AllocationResponse, ScheduledPlanting } from '../types';
 import { apportionLotQuantity, splitGroupIds } from '$lib/plan/splitGroup';
@@ -203,7 +204,7 @@ export class CommitFlow {
               r.plants > 0 && !this.#w.isAreaCrop(r.cropPluginId)
                 ? Math.round(r.plants)
                 : undefined,
-            stockItemId: r.stockItemId,
+            ...(isBriefSeedId(r.stockItemId) ? {} : { stockItemId: r.stockItemId }),
             ...(r.plantingDateMs !== undefined ? { plantingDate: r.plantingDateMs } : {}),
             sourceProvenance: r.sourceProvenance,
             ...(r.splitGroupId ? { splitGroupId: r.splitGroupId } : {}),

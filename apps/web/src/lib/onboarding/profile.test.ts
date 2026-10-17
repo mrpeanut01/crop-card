@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseFarmAnimals,
+  parseFarmHerbs,
   parseFarmProfile,
   profileIncludesFarm,
   profileIncludesGarden,
@@ -43,5 +44,15 @@ describe('farm animals answer', () => {
     expect(usesPetsLayout('farm', ['animals', 'pets'])).toBe(false);
     expect(usesPetsLayout('mixed', ['chickens'])).toBe(false);
     expect(usesPetsLayout(null, [])).toBe(false);
+  });
+});
+
+describe('farm herbs answer (37A)', () => {
+  it('reads only the herbs value', () => {
+    expect(parseFarmHerbs('herbs')).toBe(true);
+    expect(parseFarmHerbs(' herbs ,x')).toBe(true);
+    expect(parseFarmHerbs('')).toBe(false);
+    expect(parseFarmHerbs(undefined)).toBe(false);
+    expect(parseFarmHerbs('herb')).toBe(false);
   });
 });

@@ -11,8 +11,11 @@
 import { deleteSetting, getSetting, setSetting, type SettingReader } from '$lib/db/settings';
 import {
   FARM_ANIMALS_KEY,
+  FARM_HERBS_KEY,
+  FARM_HERBS_VALUE,
   FARM_PROFILE_KEY,
   parseFarmAnimals,
+  parseFarmHerbs,
   parseFarmProfile,
   serializeFarmAnimals,
   type FarmAnimalChoice,
@@ -51,6 +54,16 @@ export function setFarmAnimals(choices: readonly FarmAnimalChoice[]): void {
   const value = serializeFarmAnimals(choices);
   if (value) setSetting(FARM_ANIMALS_KEY, value);
   else deleteSetting(FARM_ANIMALS_KEY);
+}
+
+/** The owner picked the herbs tile on onboarding screen 2 (37A). */
+export function getFarmHerbs(read: SettingReader = getSetting): boolean {
+  return parseFarmHerbs(read(FARM_HERBS_KEY));
+}
+
+export function setFarmHerbs(on: boolean): void {
+  if (on) setSetting(FARM_HERBS_KEY, FARM_HERBS_VALUE);
+  else deleteSetting(FARM_HERBS_KEY);
 }
 
 export function getGettingStartedDismissedAt(read: SettingReader = getSetting): number | null {

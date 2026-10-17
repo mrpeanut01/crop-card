@@ -15,6 +15,24 @@ describe('/plan setup prompts for a partly set up farm (#475)', () => {
     expect(planSetupPrompts(done, 'owner')).toEqual({ gate: null, nudges: [] });
   });
 
+  it('asks a garden household with no brief for one, first (37A)', () => {
+    const p = planSetupPrompts({ ...done, profile: 'garden', hasGardenBrief: false }, 'owner');
+    expect(p.nudges.map((n) => [n.id, n.href])).toEqual([['brief', '/plan/brief']]);
+    expect(
+      planSetupPrompts({ ...done, profile: 'garden', hasGardenBrief: true }, 'owner').nudges
+    ).toEqual([]);
+    expect(
+      planSetupPrompts({ ...done, profile: 'mixed', hasGardenBrief: false }, 'owner').nudges
+    ).toEqual([]);
+    expect(
+      planSetupPrompts({ ...done, profile: 'garden', hasGardenBrief: false }, 'helper').nudges
+    ).toEqual([]);
+    expect(
+      planSetupPrompts({ ...done, profile: 'garden', hasGardenBrief: false }, 'owner', 'es')
+        .nudges[0].title
+    ).toBe('Cuéntanos sobre tu jardín');
+  });
+
   it('gates on having somewhere to plant', () => {
     expect(planSetupPrompts({ ...done, hasBlocks: false }, 'owner').gate).toBe('blocks');
   });

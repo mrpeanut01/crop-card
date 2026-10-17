@@ -72,3 +72,20 @@ export function usesPetsLayout(
   if (profile === 'garden') return true;
   return choices.includes('pets') && !choices.includes('animals');
 }
+
+/**
+ * The herbs tile from onboarding screen 2 (Phase 37A, R-1). Like
+ * `farm_animals` it lives in its own setting, so `farm_profile` keeps its
+ * three values (an herb garden reads as `garden`). The stored value is
+ * `herbs`; no setting means the farm predates 37A or skipped the tile.
+ */
+export const FARM_HERBS_KEY = 'farm_herbs';
+export const FARM_HERBS_VALUE = 'herbs';
+
+export function parseFarmHerbs(raw: unknown): boolean {
+  if (typeof raw !== 'string') return false;
+  return raw
+    .split(',')
+    .map((v) => v.trim())
+    .includes(FARM_HERBS_VALUE);
+}

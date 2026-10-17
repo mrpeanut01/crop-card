@@ -30,6 +30,7 @@ import { decrementForUse, getStockItem } from '$lib/db/stock';
 import { getDataKinds } from '$lib/server/registry';
 import { bestEffort, errorText } from '$lib/server/recordWrite';
 import { ALL_STOCK_UNITS, convert, type StockUnit } from '$lib/stock/units';
+import { normalizeUnitName } from '$lib/stock/unitName';
 import { subjectFoodProducing } from '$lib/server/animals';
 import {
   lineageFromStays,
@@ -586,9 +587,13 @@ export function stockProductTexts(item: {
   return [...new Set(out.map((t) => t.trim()).filter(Boolean))];
 }
 
-function asStockUnit(unit: string | null | undefined): StockUnit | null {
-  const u = unit?.trim().toLowerCase();
-  return u && (ALL_STOCK_UNITS as readonly string[]).includes(u) ? (u as StockUnit) : null;
+/** A typed dose unit as a stock unit, spelled through the shared
+ *  `normalizeUnitName` ("fl oz", "FLOZ" and " mL " all read the same as on
+ *  the planner and the kernel); anything outside the stock units is null. */
+export function doseStockUnit(unit: string | null | undefined): StockUnit | null {
+  if (!unit) return null;
+  const u = normalizeUnitName(unit);
+  return (ALL_STOCK_UNITS as readonly string[]).includes(u) ? (u as StockUnit) : null;
 }
 
 /**
@@ -626,7 +631,7 @@ export function planHealthStock(
     productPluginId = item.pluginId;
   }
   if (!productName && !productPluginId) productName = item.displayName;
-  const unit = asStockUnit(input.doseUnit);
+  const unit = doseStockUnit(input.doseUnit);
   let deduct: StockPlan['deduct'] = null;
   if (input.dose && input.dose > 0) {
     if (unit && convert(input.dose, unit, item.defaultUnit) !== null) {

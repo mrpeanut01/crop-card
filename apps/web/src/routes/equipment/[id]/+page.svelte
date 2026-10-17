@@ -4,6 +4,7 @@
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
   import { createT } from '$lib/i18n';
+  import WatererEditor from '$lib/components/irrigation/WatererEditor.svelte';
 
   let { data } = $props();
   const tr = $derived(createT(data.locale));
@@ -360,6 +361,17 @@
     {/if}
   </div>
 </section>
+
+{#if data.waterer}
+  <WatererEditor
+    equipmentId={eq.id}
+    schedule={data.waterer.schedule}
+    defaultMethod={data.waterer.defaultMethod}
+    targets={data.waterer.targets}
+    areas={data.waterer.areas}
+    canEdit={data.canRename}
+  />
+{/if}
 
 {#if data.canEdit}
   <section class="card">

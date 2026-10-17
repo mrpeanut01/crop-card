@@ -52,6 +52,7 @@ import {
 import { hintsPostSchema } from '../src/lib/hints.ts';
 import { bedLayoutRequestSchema } from '../src/lib/plan/bedLayoutApi.ts';
 import { keepInOneBedRequestSchema } from '../src/lib/plan/keepInOneBed.ts';
+import { gardenBriefChatSchema, gardenBriefPutSchema } from '../src/lib/garden/brief/schema.ts';
 import {
   journalEntrySchema,
   photoHelpSchema,
@@ -2449,6 +2450,80 @@ const paths = {
           properties: { cropPluginIds: { type: 'array', items: { type: 'string' } } }
         }),
         400: { description: 'Invalid body, or the crop is not in the crop library.' },
+        403: { description: 'Not the owner.' }
+      }
+    }
+  },
+
+  '/api/garden/brief': {
+    get: {
+      summary: "Read the farm's garden brief",
+      description:
+        'Every role. The owner setting `garden_brief` (Phase 37A): answers to the beginner questions, each with its provenance, and the shortlist of herbs with the reason each was picked. `brief` is null until the owner saves one.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The brief.', {
+          type: 'object',
+          required: ['brief', 'canEdit'],
+          properties: {
+            brief: { type: ['object', 'null'] },
+            canEdit: { type: 'boolean' }
+          }
+        })
+      }
+    },
+    put: {
+      summary: 'Save the garden brief',
+      description:
+        'Owner only. Saves the answers. Without `shortlist` the deterministic shortlist is built from the answers (rows tagged `fallback`, herbs the owner typed `manual`). Every reason runs through the spray-advice guard. Ids that are not herbs in the farm library answer 400 `UNKNOWN_PLUGIN`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(gardenBriefPutSchema),
+      responses: {
+        200: jsonResponse('The saved brief.', {
+          type: 'object',
+          required: ['brief', 'sunWarning'],
+          properties: { brief: { type: 'object' }, sunWarning: { type: 'boolean' } }
+        }),
+        400: { description: 'Invalid body, or an id that is not a herb (`UNKNOWN_PLUGIN`).' },
+        403: { description: 'Not the owner.' }
+      }
+    },
+    delete: {
+      summary: 'Clear the garden brief',
+      description: 'Owner only. Starts the brief over, conversation turns included.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Cleared.', { type: 'object', properties: { ok: { type: 'boolean' } } }),
+        403: { description: 'Not the owner.' }
+      }
+    }
+  },
+
+  '/api/garden/brief/chat': {
+    post: {
+      summary: 'One turn of the garden brief conversation',
+      description:
+        'Owner only. Asks Claude through `aiTry()` and the `garden-brief` allowance (20 s, at most 8 turns per brief). The answer is checked on the server: unknown or avoided herbs are dropped, the shortlist is capped at 12 and every sentence runs through the spray-advice guard, a dropped sentence being replaced by the deterministic reason. With no key, over a limit, slow, at the turn limit or with nothing usable, the deterministic shortlist answers tagged `fallback` with `fallbackReason` saying why. Saves the answers and the shortlist.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(gardenBriefChatSchema),
+      responses: {
+        200: jsonResponse('The turn.', {
+          type: 'object',
+          required: ['reply', 'shortlist', 'provenance', 'fallbackReason', 'turnsLeft', 'brief'],
+          properties: {
+            reply: { type: 'string' },
+            followUp: { type: ['string', 'null'] },
+            shortlist: { type: 'array', items: { type: 'object' } },
+            provenance: { type: 'string', enum: ['ai', 'fallback'] },
+            fallbackReason: { type: ['string', 'null'] },
+            message: { type: ['string', 'null'] },
+            sunWarning: { type: 'boolean' },
+            sprayRedirect: { type: 'boolean' },
+            turnsLeft: { type: 'integer' },
+            brief: { type: 'object' }
+          }
+        }),
+        400: { description: 'Invalid body, or an id that is not a herb (`UNKNOWN_PLUGIN`).' },
         403: { description: 'Not the owner.' }
       }
     }

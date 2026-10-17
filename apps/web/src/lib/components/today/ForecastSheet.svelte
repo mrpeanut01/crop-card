@@ -6,6 +6,7 @@
   import Modal from '$lib/components/ui/Modal.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import WeatherIcon from './WeatherIcon.svelte';
+  import ObservedTemps from './ObservedTemps.svelte';
   import { RAIN_POP_PCT, type TodayWeather } from '$lib/today/weatherSummary';
   import { forecastWords } from '$lib/today/forecastText';
   import { fmt } from '$lib/prefsState.svelte';
@@ -81,6 +82,7 @@
         {tr('today.forecast.unreachable')}
       </p>
     {/if}
+    <ObservedTemps {open} />
   </div>
 </Modal>
 

@@ -10,6 +10,9 @@ import { createEquipment, listEquipment, type EquipmentType } from '$lib/db/equi
 import { getTaxonomyTerm } from '$lib/db/taxonomy';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
+import { irrigationScheduleSchema } from '$lib/irrigation/apiSchemas';
+import { invalid } from '$lib/server/irrigationApi';
+import { storeSchedule } from '$lib/server/waterers';
 
 const TYPES: EquipmentType[] = [
   'sprayer',
@@ -58,5 +61,17 @@ export const POST: RequestHandler = async (event) => {
     getTaxonomyTerm
   ]);
   if (foreign) return foreign;
-  return json({ equipment: createEquipment(parsed.data) }, { status: 201 });
+  const input = { ...parsed.data };
+  if (input.spec?.schedule !== undefined) {
+    if (input.type !== 'irrigation') {
+      return json(
+        { error: t(event.locals?.locale, 'herbse.api.scheduleIrrigationOnly') },
+        { status: 400 }
+      );
+    }
+    const schedule = irrigationScheduleSchema.safeParse(input.spec.schedule);
+    if (!schedule.success) return invalid(schedule.error);
+    input.spec = { ...input.spec, schedule: storeSchedule(schedule.data, null, Date.now()) };
+  }
+  return json({ equipment: createEquipment(input) }, { status: 201 });
 };

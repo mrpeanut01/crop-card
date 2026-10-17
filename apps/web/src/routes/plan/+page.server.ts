@@ -53,6 +53,10 @@ import { listCrops, type Crop } from '$lib/db/crops';
 import { harvestTargetKey } from '$lib/plan/harvestTargetKey';
 import { frostDatesForYear, frostDatesIsoForYear, hasFarmLatLon } from '$lib/schedule/settings';
 import { planSetupPrompts } from '$lib/onboarding/pageSetup';
+import { getFarmProfile } from '$lib/onboarding/state.server';
+import { hasGardenBrief, loadGardenBrief } from '$lib/server/garden/briefStore';
+import { briefWizardSeeds } from '$lib/garden/brief/handoff';
+import { isHerbGardenCrop } from '$lib/garden/herbs';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { getSetting } from '$lib/db/settings';
 import {
@@ -79,6 +83,7 @@ import { countInputsPlanTasksInYear, listTasks, type Task } from '$lib/db/tasks'
 import {
   resolveArchetype,
   type CropPlugin,
+  type Plugin,
   type StageSystem,
   type CornType
 } from '$lib/plugins/schemas';
@@ -97,6 +102,11 @@ import { suggestCompanions, type CompanionSuggestion } from '$lib/calendar/compa
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import { isEmptySeason, plantingsInYear, priorSeasonSummary } from '$lib/plan/seasonStart';
 import { setupAreas } from '$lib/server/setupContext';
+import { lifecycleVerdictsFor } from '$lib/server/lifecycleLine.server';
+
+function isCrop(p: Plugin | null | undefined): p is CropPlugin {
+  return p?.type === 'crop';
+}
 
 export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'calendar';
 const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calendar'];
@@ -157,6 +167,13 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   const blocks = listBlocks();
   const fields = listFields();
+  const briefSaved = hasGardenBrief();
+  // Phase 37: the Garden brief and Pantry links, from reads already made.
+  const herbGardenLinks =
+    briefSaved ||
+    blocks.some((b) =>
+      b.plantings.some((p) => p.status !== 'archived' && isHerbGardenCrop(p.cropPluginId))
+    );
   const isFirstRun = blocks.length === 0 && fields.length === 0;
   const canEdit = locals.user?.role === 'owner';
   const keepInOneBedCrops = canEdit ? keepInOneBedCrops_() : [];
@@ -229,6 +246,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     };
   });
   const seedShortNameByDisplay: Record<string, string> = {};
+  // Phase 37B: the lifecycle line on the wizard's herb seed rows.
+  const herbLifecycle = await lifecycleVerdictsFor(
+    allSeedStock.map((s) => (s.pluginId ? registry.get(s.pluginId)?.plugin : null)).filter(isCrop)
+  );
   for (const s of allSeedStock) {
     if (s.shortName) seedShortNameByDisplay[s.displayName] = s.shortName;
   }
@@ -246,7 +267,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     areaHousing,
     areaGrazing,
     petsLayout,
-    cropCatalog,
+    cropCatalog: cropCatalog.map((c) =>
+      herbLifecycle[c.pluginId] ? { ...c, lifecycle: herbLifecycle[c.pluginId] } : c
+    ),
     plantingGuides,
     showFieldControls: fields.length > 1,
     frostDates,
@@ -255,6 +278,12 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     seasonSetup,
     lastYearSetup,
     emptySeason: isEmptySeason(blocks, currentYear),
+    // Phase 37A (R-27): /plan?wizard=allocation&brief=1 opens the wizard
+    // with the garden brief's shortlist picked, each as a bought seedling.
+    briefHandoff:
+      canEdit && url.searchParams.get('brief') === '1'
+        ? briefWizardSeeds(loadGardenBrief()?.shortlist ?? [], seedStock, cropCatalog)
+        : null,
     // #475 — setup questions for a farm that finished only part of setup.
     setupLatLon: hasFarmLatLon() ? getFarmLatLon() : null,
     setupPrompts: planSetupPrompts(
@@ -265,11 +294,14 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         hasSeasonSetup: !!seasonSetup,
         hasBlocks: blocks.length > 0,
         hasSeed: allSeedStock.length > 0,
-        year: currentYear
+        year: currentYear,
+        profile: getFarmProfile(),
+        hasGardenBrief: briefSaved
       },
       locals.user?.role ?? 'helper',
       locals.locale
     ),
+    herbGardenLinks,
     priorSeason: priorSeasonSummary(blocks, currentYear),
     // Phase 25d v2-addendum (#89) — drives AI-on/off variant on the
     // schedule step of the AllocationWizard.

@@ -2,9 +2,10 @@
   "pluginId": "fennel-bulb-perfection",
   "type": "crop",
   "displayName": "Fennel Bulb Perfection F1 (Florence)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "apiaceae",
+  "waterNeed": "high",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 80,
@@ -29,5 +30,12 @@
     "daysFromPlantingMax": 90,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "harvest-bulb",
+      "topic": "harvest",
+      "title": "Florence fennel can be harvested when the “bulbs” are about the size of tennis balls by digging the “bulb” and cutting off the root and cutting back the top."
+    }
+  ]
 }

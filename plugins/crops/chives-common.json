@@ -2,7 +2,7 @@
   "pluginId": "chives-common",
   "type": "crop",
   "displayName": "Chives — Common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 60,
@@ -15,10 +15,7 @@
       "max": 12
     }
   },
-  "harvestIndicators": [
-    "Cut at 6 in",
-    "Multiple cuts per season"
-  ],
+  "harvestIndicators": ["Cut at 6 in", "Multiple cuts per season"],
   "notes": "Hardy perennial. Edible flowers — cut before bloom to keep tender.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -29,15 +26,55 @@
   "archetype": "cut-and-come-again-leafy",
   "animalToxicity": [
     {
-      "speciesIds": [
-        "dog",
-        "cat",
-        "horse"
-      ],
-      "parts": [
-        "whole-plant"
-      ],
+      "speciesIds": ["dog", "cat", "horse"],
+      "parts": ["whole-plant"],
       "severity": "toxic"
+    }
+  ],
+  "preserving": [
+    {
+      "method": "freeze",
+      "suitability": "good"
+    }
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "4a",
+  "careTasks": [
+    {
+      "key": "remove-flowers",
+      "topic": "prune",
+      "title": "Chives can self-sow and overtake a garden unless flowers are removed before they fade."
+    },
+    {
+      "key": "harvest-through-season",
+      "topic": "harvest",
+      "title": "Harvest chives throughout the season to prevent the leaves from becoming tough and to encourage formation of new bulblets."
+    },
+    {
+      "key": "cut-near-base",
+      "topic": "harvest",
+      "title": "Cut leaves toward the base about one inch above the soil."
+    }
+  ],
+  "growthHabit": "clumping",
+  "seasonalTasks": [
+    {
+      "key": "divide",
+      "kind": "cultural",
+      "dayOfYear": 75,
+      "windowDays": 21,
+      "title": "Divide chive clumps",
+      "body": "In early spring, divide the clumps every 2 to 3 years to keep plants vigorous and uncrowded."
+    },
+    {
+      "key": "remove-flowers",
+      "kind": "pruning",
+      "dayOfYear": 170,
+      "windowDays": 30,
+      "title": "Remove chive flowers before they fade",
+      "body": "Cut off the flowers before they fade, or chives self-sow and spread through the garden."
     }
   ]
 }

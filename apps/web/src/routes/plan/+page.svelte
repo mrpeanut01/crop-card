@@ -2167,6 +2167,13 @@
   />
 {/if}
 
+{#if data.herbGardenLinks}
+  <nav class="herb-links" aria-label={tr('herbsc.planLinks.label')}>
+    <a href="/plan/brief">{tr('herbsc.planLinks.brief')}</a>
+    <a href="/plan/pantry">{tr('herbsc.planLinks.pantry')}</a>
+  </nav>
+{/if}
+
 <!-- Phase 25d (#89) — provenance chain for the active plan. Hidden until
      a wizard commit, AI refinement or manual edit records a revision. -->
 {#if data.tab === 'overview' && data.planRevisions && data.planRevisions.length > 0}
@@ -3971,7 +3978,9 @@
 {#if showAllocationWizard}
   <AllocationWizard
     initialStep={wizardInitialStep}
-    seedStock={(data.seedStock ?? []).map((s) => ({
+    preselectSeeds={data.briefHandoff?.preselect ?? []}
+    seedlingCrops={data.briefHandoff?.seedlingCrops ?? []}
+    seedStock={[...(data.seedStock ?? []), ...(data.briefHandoff?.extra ?? [])].map((s) => ({
       stockItemId: s.stockItemId,
       displayName: s.displayName,
       shortName: s.shortName,
@@ -4113,6 +4122,28 @@
   }
   .provenance-mount {
     margin: 0 0 16px;
+  }
+  .herb-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 16px;
+  }
+  .herb-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .herb-links a:focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 2px;
   }
   .plan-tabs-view-toggle {
     display: flex;

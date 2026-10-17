@@ -76,7 +76,11 @@ const spacingFt = z.number().positive().max(200);
 export const gardenDetailsSchema = z.strictObject({
   organicStatus: z.enum(ORGANIC_STATUSES).optional(),
   transitionDate: isoDate.optional(),
-  irrigation: z.enum(IRRIGATION_KINDS).optional()
+  irrigation: z.enum(IRRIGATION_KINDS).optional(),
+  /** Phase 37E (R-11): grown in pots or containers; an owner fact. */
+  container: z.boolean().optional(),
+  /** Phase 37E (R-11): kept indoors, such as a windowsill; rain never reaches it. */
+  indoors: z.boolean().optional()
 });
 
 export const greenhouseDetailsSchema = z.strictObject({

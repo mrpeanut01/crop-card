@@ -29,6 +29,7 @@ import {
   type SnapshotStockItem
 } from '$lib/cards/snapshot';
 import { farmZone } from '$lib/climate/zoneSettings.server';
+import { herbLifecycleSnapshotPart } from './lifecycleSnapshot';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { loadEmergencyContacts } from '$lib/farm/emergencyContacts.server';
 import { listAreas } from '$lib/db/areas';
@@ -57,6 +58,7 @@ import { labReportForSoilTests, type SoilTestLabReport } from '$lib/db/documents
 import { listStockItems } from '$lib/db/stock';
 import { dbChangeMarker } from '$lib/db/requestMemo';
 import { requireOwnerId } from '$lib/db/tenant';
+import { cropCareTasksOf } from '$lib/journal/cropCareTasks';
 import type { CropPlugin, Plugin } from '$lib/plugins/schemas';
 import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
@@ -68,6 +70,9 @@ import { sprayTermsFor } from './sprayTerms';
 import { listMapFeatureViews } from '$lib/db/mapFeatures';
 import { splitGroupBlockIds } from '$lib/plan/splitGroup';
 import { orchardSnapshotPart } from './orchardSnapshot';
+import { pantrySnapshotPart } from './pantrySnapshot';
+import { gardenBriefSnapshotPart } from './garden/briefStore';
+import { watererSnapshotPart } from './watererSnapshot';
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
@@ -201,6 +206,7 @@ export function careTasksOf(p: CropPlugin): SnapshotCareTask[] {
       t.body ? { key: t.key, title: t.title, body: t.body } : { key: t.key, title: t.title }
     );
   }
+  out.push(...cropCareTasksOf(p));
   return out;
 }
 
@@ -233,7 +239,8 @@ export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
     harvestIndicators: p.harvestIndicators,
     notes: p.notes,
     ...(p.treeSizeClasses ? { treeSizeClasses: p.treeSizeClasses } : {}),
-    ...(careTasks.length ? { careTasks } : {})
+    ...(careTasks.length ? { careTasks } : {}),
+    ...(p.growthHabit ? { growthHabit: p.growthHabit } : {})
   };
 }
 
@@ -623,7 +630,11 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     soilTests: latestSoilTestsPerBlock(listSoilTests(), labReportForSoilTests()),
     ...(await animalSnapshotPart(windowNow, opts.locale)),
     carryover: snapshotCarryover(await loadCarryoverLines(windowNow)),
-    ...(orchard ? { orchard } : {})
+    ...(orchard ? { orchard } : {}),
+    ...(await pantrySnapshotPart(windowNow)),
+    ...herbLifecycleSnapshotPart(Object.keys(cropPlugins).map((id) => registry.get(id)?.plugin)),
+    ...gardenBriefSnapshotPart(),
+    ...watererSnapshotPart()
   };
 }
 

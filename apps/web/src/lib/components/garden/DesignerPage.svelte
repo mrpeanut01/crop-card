@@ -8,6 +8,7 @@
   import DesignerCanvas from '$lib/components/garden/DesignerCanvas.svelte';
   import DesignerToolbar from '$lib/components/garden/DesignerToolbar.svelte';
   import DesignerListView from '$lib/components/garden/DesignerListView.svelte';
+  import HarvestSchedulePanel from '$lib/components/garden/HarvestSchedulePanel.svelte';
   import CropPanel from '$lib/components/garden/CropPanel.svelte';
   import BedInspector from '$lib/components/garden/BedInspector.svelte';
   import PlantingEstablishment from '$lib/components/garden/PlantingEstablishment.svelte';
@@ -31,6 +32,7 @@
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { syncCardSnapshot } from '$lib/client/cardSync';
   import type { DesignerPageData } from '$lib/garden/api';
+  import { parseDesignerCrops } from '$lib/garden/brief/handoff';
 
   const { data }: { data: DesignerPageData } = $props();
   const PRINT_SYNC_WAIT_MS = 4000;
@@ -47,10 +49,12 @@
           companions: data.companions,
           lookbackByFamily: data.lookbackByFamily,
           recipes: data.recipes,
+          lifecycle: data.lifecycle,
           areaKind: data.areaKind,
           canEdit: data.canEdit,
           initialDateMs: parseYmd(page.url.searchParams.get('on')),
-          initialBedId: page.url.searchParams.get('bed')
+          initialBedId: page.url.searchParams.get('bed'),
+          briefCropIds: parseDesignerCrops(page.url.searchParams.get('crops'))
         })
     )
   );
@@ -456,6 +460,7 @@
     <div class="layout list">
       <div class="main">
         <DesignerListView oncustom={() => (customOpen = true)} />
+        <HarvestSchedulePanel areaId={d.canvas.areaId} showGoals={false} />
       </div>
       <aside class="side">
         <CropPanel />

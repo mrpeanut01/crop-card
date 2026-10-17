@@ -1,6 +1,8 @@
 /** Client-safe planting journal types shared by the repo, the endpoints and
  *  the photo-help panel. */
 
+import type { PruneDrawingId } from './pruneDrawing';
+
 export const JOURNAL_KINDS = ['note', 'photo_help', 'observation'] as const;
 export type JournalKind = (typeof JOURNAL_KINDS)[number];
 
@@ -23,6 +25,21 @@ export interface JournalAnswerSection {
   provenance?: 'plugin' | 'fallback';
 }
 
+/** Kinds of mark drawn over a photo (Phase 37F, R-13). */
+export const PHOTO_MARK_KINDS = ['cut', 'pinch', 'harvest', 'leave'] as const;
+export type PhotoMarkKind = (typeof PHOTO_MARK_KINDS)[number];
+
+/** One mark on a photo. `x`, `y`, `w` and `h` are 0 to 1 of the stored
+ *  photo's width and height. */
+export interface PhotoMark {
+  kind: PhotoMarkKind;
+  x: number;
+  y: number;
+  w?: number;
+  h?: number;
+  label: string;
+}
+
 export interface JournalAnswer {
   question: PhotoQuestion;
   /** Claude's short answer; empty when the Care Guide answered. */
@@ -31,6 +48,16 @@ export interface JournalAnswer {
   sections: JournalAnswerSection[];
   /** True when the answer points to the Spray flow and the label. */
   sprayRedirect: boolean;
+  /** Marks drawn over the photo, stored with the answer (R-14). */
+  marks?: PhotoMark[];
+  /** Claude's numbered steps when marks were asked for; mark n goes with
+   *  step n. `text` holds the same steps joined. */
+  steps?: string[];
+  /** `ai` when Claude's marks passed `parseMarks`, `fallback` when they were
+   *  asked for and refused (the answer then has steps only). */
+  marksProvenance?: 'ai' | 'fallback';
+  /** The growth-habit line drawing shown beside a Care Guide answer. */
+  drawing?: PruneDrawingId;
 }
 
 export interface JournalEntry {

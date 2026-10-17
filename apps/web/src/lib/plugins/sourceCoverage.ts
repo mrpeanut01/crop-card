@@ -17,6 +17,13 @@ import {
 import { SEEDING_RATE_KEYS } from './schemas';
 import { calendarWindowFromWords } from '../plan/calendarWords';
 import { numberPattern, statesDays, statesInches } from './quoteNumbers';
+import { quoteNamesCrop } from '../garden/herbQuoteNames';
+import { isHerbGardenCrop } from '$lib/garden/herbs';
+import {
+  quoteNamesHerb,
+  quoteStatesLifecycle,
+  quoteStatesZone
+} from '$lib/garden/lifecycleSources';
 import type {
   ForageHazard,
   ForageHazardKind,
@@ -163,6 +170,9 @@ export function cropFactPaths(c: CropPlugin): string[] {
   for (const row of c.treeSizeClasses ?? []) paths.push(`treeSizeClasses.${row.sizeClass}`);
   if (c.nitrogenNeedLbPerAcre) paths.push('nitrogenNeedLbPerAcre');
   if (c.harvestSeason) paths.push('harvestSeason');
+  if (c.waterNeed) paths.push('waterNeed'); // Phase 37E
+  for (const t of c.careTasks ?? []) paths.push(`careTasks.${t.key}`); // Phase 37F
+  if (c.growthHabit) paths.push('growthHabit'); // Phase 37F
   for (const [, key] of rowSpacingFields(c)) if (!paths.includes(key)) paths.push(key);
   if (guide.inRowSpacingIn !== undefined) paths.push('inRowSpacingIn');
   if (c.fertility) {
@@ -179,6 +189,10 @@ export function cropFactPaths(c: CropPlugin): string[] {
       if (!paths.includes(key)) paths.push(key);
     }
   }
+  if (isHerbGardenCrop(c.pluginId))
+    for (const r of c.seasonalTasks ?? []) paths.push(`seasonalTasks.${r.key}`);
+  paths.push(...herbHarvestFactPaths(c)); // Phase 37C
+  if (c.winterHardyToZone) paths.push('winterHardyToZone');
   return paths;
 }
 
@@ -921,4 +935,529 @@ export function forageHazardGaps(
     if (reason.trim().length <= 10) gaps.push(`${id}: exclusion reason is too short`);
   }
   return gaps;
+}
+
+// ─── Phase 37C: preserving and harvest cadence ─────────────────────────
+
+/** Phase 37C: the source keys for a crop's `preserving` entries and its
+ *  `harvestCadence`; an infuse entry also needs its food-safety line. */
+export function herbHarvestFactPaths(
+  c: Pick<CropPlugin, 'preserving' | 'harvestCadence'>
+): string[] {
+  const paths: string[] = [];
+  for (const p of c.preserving ?? []) {
+    paths.push(`preserving.${p.method}`);
+    if (p.method === 'infuse') paths.push('preserving.infuse.safety');
+  }
+  if (c.harvestCadence) paths.push('harvestCadence');
+  return paths;
+}
+
+type PreservingMethodKey = NonNullable<CropPlugin['preserving']>[number]['method'];
+
+const FREEZE_DRY_WORDS = /\bfreeze[- ]?dr(?:y|ied|ies|ying|ier)\b|\blyophili[sz]/gi;
+
+/** The quote names the method. "Freeze-dried" names freeze-dry only, never
+ *  dry or freeze. */
+const PRESERVING_METHOD_WORDS: Record<Exclude<PreservingMethodKey, 'freeze-dry'>, RegExp> = {
+  fresh: /\bfresh\b/i,
+  dry: /\bdr(?:y|ied|ies|ying)\b/i,
+  freeze: /\bfr(?:eez(?:e|es|ing)|oz(?:en)?)\b/i,
+  infuse:
+    /\binfus(?:e|ed|es|ing|ion)\b|\bin (?:olive )?oil\b|\b(?:herb|herbal|flavou?red) (?:oils?|vinegars?)\b/i
+};
+
+/** Qualifying words a source uses when a method works only fairly well, or
+ *  poorly. A `good` entry needs none. */
+const SUITABILITY_WORDS: Record<'fair' | 'poor', RegExp> = {
+  fair: /\b(?:fairly|moderately|somewhat|less|(?:will|may) mold|not as (?:well|good)|loses? some|some of (?:the|its) (?:flavou?r|aroma|colou?r)|acceptable)\b/i,
+  poor: /\b(?:poor(?:ly)?|does not|do not|don't|doesn't|not recommended|not suitable|unsuitable|loses? (?:most|much)|best (?:used )?fresh|turns? (?:black|brown))\b/i
+};
+
+function namesMethod(quote: string, method: PreservingMethodKey): boolean {
+  if (method === 'freeze-dry') return new RegExp(FREEZE_DRY_WORDS.source, 'i').test(quote);
+  const rest =
+    method === 'dry' || method === 'freeze' ? quote.replace(FREEZE_DRY_WORDS, ' ') : quote;
+  return PRESERVING_METHOD_WORDS[method].test(rest);
+}
+
+/** Phase 37C: each `preserving.<method>` quote comes from an extension or
+ *  government page, names the method and the crop, and for `fair` or `poor`
+ *  carries the source's qualifying words. An infuse entry needs a note (the
+ *  line the app shows) and a `preserving.infuse.safety` quote from a .edu
+ *  food-safety page (NCHFP is one) that names botulism. Returns "pluginId:
+ *  problem" lines; a missing source is `checkSources`' report. */
+export function preservingQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'preserving'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    for (const p of c.preserving ?? []) {
+      const key = `preserving.${p.method}`;
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
+      if (entry.success) {
+        const quote = entry.data.quote;
+        if (!isAllowedSpacingSource(entry.data.url)) {
+          gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+        }
+        if (!namesMethod(quote, p.method)) {
+          gaps.push(`${c.pluginId}: ${key} quote does not name the method`);
+        }
+        if (!quoteNamesCrop(quote, c)) {
+          gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
+        }
+        if (p.suitability !== 'good' && !SUITABILITY_WORDS[p.suitability].test(quote)) {
+          gaps.push(`${c.pluginId}: ${key} quote has no words that say ${p.suitability}`);
+        }
+      }
+      if (p.method !== 'infuse') continue;
+      if (!p.note) gaps.push(`${c.pluginId}: preserving.infuse needs a note with the safety line`);
+      const safety = sourceEntrySchema.safeParse(sources[c.pluginId]?.['preserving.infuse.safety']);
+      if (!safety.success) continue;
+      if (!isEduHost(safety.data.url)) {
+        gaps.push(`${c.pluginId}: preserving.infuse.safety source is not a .edu food-safety page`);
+      }
+      if (!/\bbotulism\b|\bbotulinum\b/i.test(safety.data.quote)) {
+        gaps.push(`${c.pluginId}: preserving.infuse.safety quote does not name botulism`);
+      }
+    }
+  }
+  return gaps;
+}
+
+function isEduHost(url: string): boolean {
+  try {
+    return new URL(url).hostname.toLowerCase().endsWith('.edu');
+  } catch {
+    return false;
+  }
+}
+
+const CADENCE_INTERVAL_WORDS =
+  /\bevery\b|\bbetween (?:cuts|cuttings|harvests|clippings|pickings)\b|\bapart\b|\bintervals?\b|\bagain (?:in|after)\b/i;
+const VAGUE_INTERVAL_WORDS =
+  /\b(?:a few|several|a couple of|couple of|a couple)\s+(?:days|weeks)\b/i;
+
+/** Phase 37C: a `harvestCadence` quote comes from an extension or
+ *  government page, names the crop, states both ends of the interval as
+ *  days or whole weeks and says it is the time between cuts. "A few weeks"
+ *  never counts. */
+export function harvestCadenceQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'harvestCadence'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    const cadence = c.harvestCadence;
+    if (!cadence) continue;
+    const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.harvestCadence);
+    if (!entry.success) continue;
+    const quote = entry.data.quote;
+    if (!isAllowedSpacingSource(entry.data.url)) {
+      gaps.push(`${c.pluginId}: harvestCadence source is not an extension or government page`);
+    }
+    if (!quoteNamesCrop(quote, c)) {
+      gaps.push(`${c.pluginId}: harvestCadence quote does not name the crop`);
+    }
+    if (!CADENCE_INTERVAL_WORDS.test(quote)) {
+      gaps.push(`${c.pluginId}: harvestCadence quote does not say it is the time between cuts`);
+    }
+    const { min, max } = cadence.everyDays;
+    if (!(statesDays(quote, min) && statesDays(quote, max))) {
+      gaps.push(
+        VAGUE_INTERVAL_WORDS.test(quote)
+          ? `${c.pluginId}: harvestCadence quote gives no number ("a few weeks" never counts)`
+          : `${c.pluginId}: harvestCadence quote does not state ${min}-${max} days`
+      );
+    }
+  }
+  return gaps;
+}
+
+// Phase 37B (R-17): lifecycle and winter zone sources, herbs only.
+
+/** Why a herb's lifecycle has no quote yet: `{ reason }` under
+ *  `lifecycle.notRecorded`. */
+export const LIFECYCLE_NOT_RECORDED_KEY = 'lifecycle.notRecorded';
+/** Why a perennial herb has no `winterHardyToZone` yet. */
+export const ZONE_NOT_RECORDED_KEY = 'winterHardyToZone.notRecorded';
+
+function notRecordedReason(
+  sources: SourceMap,
+  pluginId: string,
+  key: string = LIFECYCLE_NOT_RECORDED_KEY
+): string | null {
+  const entry = sources[pluginId]?.[key] as { reason?: unknown } | undefined;
+  return typeof entry?.reason === 'string' && entry.reason.trim().length > 10 ? entry.reason : null;
+}
+
+/** A listed herb's `agronomy.lifecycle` carries a `lifecycle` source from
+ *  an extension or government page whose quote names the crop and states
+ *  the lifecycle word (or its plural, as a table heading), or a
+ *  `lifecycle.notRecorded` reason. A herb with no lifecycle needs the
+ *  reason too. Returns "pluginId: problem" lines. */
+export function lifecycleQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'agronomy'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    if (!isHerbGardenCrop(c.pluginId)) continue;
+    const lifecycle = c.agronomy?.lifecycle;
+    const raw = sources[c.pluginId]?.lifecycle;
+    const reason = notRecordedReason(sources, c.pluginId);
+    if (raw === undefined) {
+      if (!reason) {
+        gaps.push(`${c.pluginId}: no lifecycle source and no ${LIFECYCLE_NOT_RECORDED_KEY} reason`);
+      }
+      continue;
+    }
+    const entry = sourceEntrySchema.safeParse(raw);
+    if (!entry.success) {
+      gaps.push(`${c.pluginId}: lifecycle source is invalid`);
+      continue;
+    }
+    if (!lifecycle) {
+      gaps.push(`${c.pluginId}: lifecycle source but the plugin has no agronomy.lifecycle`);
+      continue;
+    }
+    if (reason)
+      gaps.push(`${c.pluginId}: lifecycle is sourced; drop ${LIFECYCLE_NOT_RECORDED_KEY}`);
+    const { url, quote } = entry.data;
+    if (!isAllowedSpacingSource(url)) {
+      gaps.push(`${c.pluginId}: lifecycle source is not an extension or government page`);
+    }
+    if (!quoteNamesHerb(c.pluginId, quote)) {
+      gaps.push(`${c.pluginId}: lifecycle quote does not name the crop`);
+    }
+    if (!quoteStatesLifecycle(lifecycle, quote)) {
+      gaps.push(`${c.pluginId}: lifecycle quote does not state ${lifecycle}`);
+    }
+  }
+  return gaps;
+}
+
+/** A listed herb's `winterHardyToZone` is on a perennial and its quote,
+ *  from an extension or government page, names the crop, says "zone" and
+ *  states the stored number (and letter when stored). A perennial herb with
+ *  no zone needs a `winterHardyToZone.notRecorded` reason. A missing source
+ *  is reported by `checkSources` over `cropFactPaths`. */
+export function winterHardyToZoneQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'agronomy' | 'winterHardyToZone'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    if (!isHerbGardenCrop(c.pluginId)) continue;
+    const zone = c.winterHardyToZone;
+    const reason = notRecordedReason(sources, c.pluginId, ZONE_NOT_RECORDED_KEY);
+    if (!zone) {
+      if (c.agronomy?.lifecycle === 'perennial' && !reason) {
+        gaps.push(
+          `${c.pluginId}: perennial with no winterHardyToZone and no ${ZONE_NOT_RECORDED_KEY} reason`
+        );
+      }
+      continue;
+    }
+    if (reason) gaps.push(`${c.pluginId}: winterHardyToZone is set; drop ${ZONE_NOT_RECORDED_KEY}`);
+    if (c.agronomy?.lifecycle !== 'perennial') {
+      gaps.push(`${c.pluginId}: winterHardyToZone on a crop that is not a perennial`);
+    }
+    const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.winterHardyToZone);
+    if (!entry.success) continue;
+    const { url, quote } = entry.data;
+    if (!isAllowedSpacingSource(url)) {
+      gaps.push(`${c.pluginId}: winterHardyToZone source is not an extension or government page`);
+    }
+    if (!quoteNamesHerb(c.pluginId, quote)) {
+      gaps.push(`${c.pluginId}: winterHardyToZone quote does not name the crop`);
+    }
+    if (!quoteStatesZone(zone, quote)) {
+      gaps.push(`${c.pluginId}: winterHardyToZone quote does not state zone ${zone}`);
+    }
+  }
+  return gaps;
+}
+
+/** Phase 37F: quotes compare word for word, ignoring only spacing and
+ *  typographic quote marks. */
+function plainQuoteText(s: string): string {
+  return s
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const GROWTH_HABIT_WORDS: Record<'woody' | 'clumping', RegExp> = {
+  woody: /\bwoody\b/i,
+  clumping: /\bclump(s|ing)?\b/i
+};
+
+/** Phase 37F (R-20): a crop's care task is quoted from an extension or
+ *  government page, and its title and body each appear in the quote word
+ *  for word; a growth habit's quote names it ("woody", "clump"). Returns
+ *  "pluginId: problem" lines; missing entries are `checkSources`' job. */
+export function cropCareQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'careTasks' | 'growthHabit'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    for (const task of c.careTasks ?? []) {
+      const key = `careTasks.${task.key}`;
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
+      if (!entry.success) continue;
+      if (!isAllowedSpacingSource(entry.data.url)) {
+        gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+      }
+      const quote = plainQuoteText(entry.data.quote);
+      for (const part of [task.title, task.body]) {
+        if (part !== undefined && !quote.includes(plainQuoteText(part))) {
+          gaps.push(`${c.pluginId}: ${key} text is not in its quote word for word`);
+        }
+      }
+    }
+    if (c.growthHabit) {
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.growthHabit);
+      if (!entry.success) continue;
+      if (!isAllowedSpacingSource(entry.data.url)) {
+        gaps.push(`${c.pluginId}: growthHabit source is not an extension or government page`);
+      }
+      if (!GROWTH_HABIT_WORDS[c.growthHabit].test(entry.data.quote)) {
+        gaps.push(`${c.pluginId}: growthHabit quote does not name ${c.growthHabit}`);
+      }
+    }
+  }
+  return gaps;
+}
+
+// ─── Phase 37E: watering need ───────────────────────────────────────────
+
+/** The fixed phrases a `waterNeed` quote is read through. Longer phrases are
+ *  matched first and blanked out, so "moderately moist soil" reads medium
+ *  and never also high. */
+export const WATER_NEED_PHRASES: Readonly<Record<'low' | 'medium' | 'high', readonly string[]>> = {
+  low: [
+    'dry soil',
+    'drier soil',
+    'dry side',
+    'dry conditions',
+    'dry, rocky',
+    'rocky, dry',
+    'drought tolerant',
+    'drought-tolerant',
+    'tolerates drought',
+    'tolerant of drought',
+    'allow the soil to dry',
+    'let the soil dry'
+  ],
+  medium: [
+    'moderate moisture',
+    'moderate water',
+    'moderately moist',
+    'somewhat moist',
+    'average moisture',
+    'medium moisture'
+  ],
+  high: [
+    'moist soil',
+    'moist but well-drained',
+    'moist but well drained',
+    'moist, well-drained',
+    'moist, but well-drained',
+    'evenly moist',
+    'consistently moist',
+    'constantly moist',
+    'uniformly moist',
+    'uniform soil moisture',
+    'keep the soil moist',
+    'keep soil moist',
+    'well-watered',
+    'well watered',
+    'plenty of water',
+    'abundant moisture',
+    'wet soil'
+  ]
+};
+
+/** The water need a quote states, or null when it states none or more than
+ *  one. */
+export function waterNeedOfQuote(quote: string): 'low' | 'medium' | 'high' | null {
+  let text = ` ${quote.toLowerCase().replace(/\s+/g, ' ')} `;
+  const phrases = (Object.entries(WATER_NEED_PHRASES) as Array<[string, readonly string[]]>)
+    .flatMap(([need, list]) => list.map((p) => ({ need, p })))
+    .sort((a, b) => b.p.length - a.p.length);
+  const found = new Set<string>();
+  for (const { need, p } of phrases) {
+    const re = new RegExp(`(?<![a-z])${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z])`, 'g');
+    if (re.test(text)) {
+      found.add(need);
+      text = text.replace(re, ' ');
+    }
+  }
+  return found.size === 1 ? ([...found][0] as 'low' | 'medium' | 'high') : null;
+}
+
+/** Words that never name a crop on their own ("Summer Savory" is not named
+ *  by "summer"). */
+const GENERIC_NAME_WORDS: ReadonlySet<string> = new Set([
+  'anise',
+  'bee',
+  'common',
+  'east',
+  'english',
+  'french',
+  'german',
+  'greek',
+  'green',
+  'holy',
+  'italian',
+  'lemon',
+  'mountain',
+  'summer',
+  'sweet'
+]);
+
+/** Ways a quote may name the crop: the name before the variety ("Basil —
+ *  Genovese" gives basil), its first two words ("bee balm"), its first word
+ *  unless that word is generic, the variety ("Mint — Spearmint" gives
+ *  spearmint) and a binomial in parentheses ("origanum majorana"). */
+export function cropNameWords(displayName: string): string[] {
+  const lower = displayName.toLowerCase();
+  const base = (lower.split(/[—–(,]/)[0] ?? lower).trim();
+  const words = base.split(/\s+/).filter(Boolean);
+  const out = new Set<string>([base]);
+  if (words.length >= 2) out.add(`${words[0]} ${words[1]}`);
+  if (words[0] && words[0].length >= 4 && !GENERIC_NAME_WORDS.has(words[0])) out.add(words[0]);
+  const variety = (lower.split(/\s[—–]\s/)[1] ?? '').split(/[(,]/)[0]?.trim();
+  if (variety && variety.length >= 4) out.add(variety);
+  for (const m of lower.matchAll(/\(([^)]+)\)/g)) {
+    const inner = m[1].trim().split(/\s+/);
+    if (inner.length >= 2) out.add(`${inner[0]} ${inner[1]}`);
+  }
+  return [...out].filter(Boolean);
+}
+
+/** True when the quote names the crop by one of `cropNameWords`. */
+export function quoteNamesCropName(quote: string, displayName: string): boolean {
+  const q = quote.toLowerCase();
+  return cropNameWords(displayName).some((w) =>
+    new RegExp(`(?<![a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(q)
+  );
+}
+
+/** #37E: every counted `waterNeed` source (`waterNeed` and any
+ *  `waterNeed.<n>`) comes from an extension or government page, names the
+ *  crop and states one need through `WATER_NEED_PHRASES` equal to the stored
+ *  value. A second counted source that maps to a different value means the
+ *  field must stay empty. Returns "pluginId: problem" lines. */
+export function waterNeedQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'waterNeed'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    const own = sources[c.pluginId] ?? {};
+    const keys = Object.keys(own).filter((k) => k === 'waterNeed' || k.startsWith('waterNeed.'));
+    if (!c.waterNeed && keys.length === 0) continue;
+    const values = new Set<string>();
+    for (const key of keys) {
+      const entry = sourceEntrySchema.safeParse(own[key]);
+      if (!entry.success) {
+        gaps.push(`${c.pluginId}: ${key} source is not a valid entry`);
+        continue;
+      }
+      if (!isAllowedSpacingSource(entry.data.url)) {
+        gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+      }
+      if (!quoteNamesCropName(entry.data.quote, c.displayName)) {
+        gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
+      }
+      const need = waterNeedOfQuote(entry.data.quote);
+      if (need === null) {
+        gaps.push(`${c.pluginId}: ${key} quote states no single dry, moderate or moist need`);
+        continue;
+      }
+      values.add(need);
+      if (c.waterNeed && need !== c.waterNeed) {
+        gaps.push(`${c.pluginId}: ${key} quote reads ${need}, not ${c.waterNeed}`);
+      }
+    }
+    if (c.waterNeed && values.size > 1) {
+      gaps.push(`${c.pluginId}: waterNeed sources disagree; leave the field empty`);
+    }
+  }
+  return gaps;
+}
+
+// Phase 37D
+/** The herb's own name words from its display name ("Basil — Genovese" is
+ *  basil; "Tulsi Rama (Holy Basil)" is tulsi, rama, holy and basil). */
+function herbNameWords(displayName: string): string[] {
+  const [head] = displayName.split(/\s+[—–-]\s+/);
+  const inParens = [...displayName.matchAll(/\(([^)]*)\)/g)].map((m) => m[1]).join(' ');
+  const words = `${head.replace(/\([^)]*\)/g, ' ')} ${inParens}`.toLowerCase().split(/[^a-z]+/);
+  return [...new Set(words)].filter((w) => w.length >= 4);
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function quoteHasWordStarting(quote: string, stem: string): boolean {
+  return quote
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .some((w) => w.startsWith(stem));
+}
+
+/** The stem a row's action verb is matched by: "Pinch" matches "pinching",
+ *  "Divide" matches "division", "Cut" matches "cutting". */
+export function herbActionStem(title: string): string {
+  const verb = (title.trim().split(/\s+/)[0] ?? '').toLowerCase().replace(/[^a-z]/g, '');
+  return verb.slice(0, 4);
+}
+
+/**
+ * Phase 37D (R-25): every seasonal row on an herb garden plugin ships only
+ * with a source under `seasonalTasks.<rowKey>` from an .edu or .gov page
+ * whose quote names the row's action (its first word, by stem) and the
+ * herb (a word of its display name). Numbers stay with
+ * `seasonalTaskNumberGaps`. Returns "pluginId seasonalTasks.key: problem".
+ */
+export function herbSeasonalRowSourceGaps(
+  crops: readonly Pick<CropPlugin, 'pluginId' | 'displayName' | 'seasonalTasks'>[],
+  sources: SourceMap,
+  isHerb: (pluginId: string) => boolean
+): string[] {
+  const out: string[] = [];
+  for (const c of crops) {
+    if (!isHerb(c.pluginId)) continue;
+    for (const row of c.seasonalTasks ?? []) {
+      const path = `seasonalTasks.${row.key}`;
+      const at = `${c.pluginId} ${path}`;
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[path]);
+      if (!entry.success) {
+        out.push(`${at}: no source`);
+        continue;
+      }
+      if (!/\.(edu|gov)$/.test(hostOf(entry.data.url)))
+        out.push(`${at}: source is not an .edu or .gov page`);
+      const stem = herbActionStem(row.title);
+      if (!stem || !quoteHasWordStarting(entry.data.quote, stem)) {
+        out.push(`${at}: quote does not name the action "${row.title.trim().split(/\s+/)[0]}"`);
+      }
+      const names = herbNameWords(c.displayName);
+      if (!names.some((n) => quoteHasWordStarting(entry.data.quote, n.replace(/s$/, '')))) {
+        out.push(`${at}: quote does not name the herb`);
+      }
+    }
+  }
+  return out;
 }

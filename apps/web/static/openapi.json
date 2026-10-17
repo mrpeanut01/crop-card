@@ -1847,6 +1847,24 @@
                       "boolean",
                       "null"
                     ]
+                  },
+                  "preservedAs": {
+                    "description": "Phase 37C. Only for kept: how it was kept (fresh, dry, freeze, freeze-dry, infuse).",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "fresh",
+                          "dry",
+                          "freeze",
+                          "freeze-dry",
+                          "infuse"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -2045,6 +2063,24 @@
                     "type": [
                       "boolean",
                       "null"
+                    ]
+                  },
+                  "preservedAs": {
+                    "description": "Phase 37C. Only for kept: how it was kept (fresh, dry, freeze, freeze-dry, infuse).",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "fresh",
+                          "dry",
+                          "freeze",
+                          "freeze-dry",
+                          "infuse"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "ledgerEntryId": {
@@ -13304,6 +13340,1001 @@
         }
       }
     },
+    "/api/garden/brief": {
+      "get": {
+        "summary": "Read the farm's garden brief",
+        "description": "Every role. The owner setting `garden_brief` (Phase 37A): answers to the beginner questions, each with its provenance, and the shortlist of herbs with the reason each was picked. `brief` is null until the owner saves one.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The brief.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "brief",
+                    "canEdit"
+                  ],
+                  "properties": {
+                    "brief": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "canEdit": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Save the garden brief",
+        "description": "Owner only. Saves the answers. Without `shortlist` the deterministic shortlist is built from the answers (rows tagged `fallback`, herbs the owner typed `manual`). Every reason runs through the spray-advice guard. Ids that are not herbs in the farm library answer 400 `UNKNOWN_PLUGIN`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "answers": {
+                    "type": "object",
+                    "properties": {
+                      "why": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 6,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "cooking",
+                                "tea",
+                                "pollinators-looks",
+                                "gifts",
+                                "save-money",
+                                "learn-with-children"
+                              ]
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "cuisines": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 7,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "italian",
+                                "mexican",
+                                "thai-vietnamese",
+                                "french",
+                                "middle-eastern",
+                                "indian",
+                                "tea-drinks"
+                              ]
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "wanted": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 20,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "pattern": "^[a-z0-9][a-z0-9-]*$"
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "avoid": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 40,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "pattern": "^[a-z0-9][a-z0-9-]*$"
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "time": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "under-1h",
+                                  "1-2h",
+                                  "more"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "sun": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "half-day",
+                                  "shade"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "where": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 4,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "ground",
+                                "raised",
+                                "pots",
+                                "windowsill"
+                              ]
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "storage": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 7,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "goal": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fresh",
+                                    "dry",
+                                    "freeze",
+                                    "freeze-dry",
+                                    "pesto",
+                                    "infuse",
+                                    "can-or-jelly"
+                                  ]
+                                },
+                                "target": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                }
+                              },
+                              "required": [
+                                "goal"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "shortlist": {
+                    "maxItems": 12,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "cropPluginId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "pattern": "^[a-z0-9][a-z0-9-]*$"
+                        },
+                        "because": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 240
+                        },
+                        "provenance": {
+                          "type": "string",
+                          "enum": [
+                            "manual",
+                            "ai",
+                            "fallback"
+                          ]
+                        },
+                        "reasons": {
+                          "maxItems": 16,
+                          "type": "array",
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "cuisine"
+                                  },
+                                  "cuisine": {
+                                    "type": "string",
+                                    "enum": [
+                                      "italian",
+                                      "mexican",
+                                      "thai-vietnamese",
+                                      "french",
+                                      "middle-eastern",
+                                      "indian",
+                                      "tea-drinks"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "cuisine"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "why"
+                                  },
+                                  "why": {
+                                    "type": "string",
+                                    "enum": [
+                                      "cooking",
+                                      "tea",
+                                      "pollinators-looks",
+                                      "gifts",
+                                      "save-money",
+                                      "learn-with-children"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "why"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "wanted"
+                                  }
+                                },
+                                "required": [
+                                  "kind"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "suggested"
+                                  }
+                                },
+                                "required": [
+                                  "kind"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "cropPluginId",
+                        "because",
+                        "provenance"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "answers"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The saved brief.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "brief",
+                    "sunWarning"
+                  ],
+                  "properties": {
+                    "brief": {
+                      "type": "object"
+                    },
+                    "sunWarning": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or an id that is not a herb (`UNKNOWN_PLUGIN`)."
+          },
+          "403": {
+            "description": "Not the owner."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Clear the garden brief",
+        "description": "Owner only. Starts the brief over, conversation turns included.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cleared.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not the owner."
+          }
+        }
+      }
+    },
+    "/api/garden/brief/chat": {
+      "post": {
+        "summary": "One turn of the garden brief conversation",
+        "description": "Owner only. Asks Claude through `aiTry()` and the `garden-brief` allowance (20 s, at most 8 turns per brief). The answer is checked on the server: unknown or avoided herbs are dropped, the shortlist is capped at 12 and every sentence runs through the spray-advice guard, a dropped sentence being replaced by the deterministic reason. With no key, over a limit, slow, at the turn limit or with nothing usable, the deterministic shortlist answers tagged `fallback` with `fallbackReason` saying why. Saves the answers and the shortlist.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "answers": {
+                    "type": "object",
+                    "properties": {
+                      "why": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 6,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "cooking",
+                                "tea",
+                                "pollinators-looks",
+                                "gifts",
+                                "save-money",
+                                "learn-with-children"
+                              ]
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "cuisines": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 7,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "italian",
+                                "mexican",
+                                "thai-vietnamese",
+                                "french",
+                                "middle-eastern",
+                                "indian",
+                                "tea-drinks"
+                              ]
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "wanted": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 20,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "pattern": "^[a-z0-9][a-z0-9-]*$"
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "avoid": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 40,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "pattern": "^[a-z0-9][a-z0-9-]*$"
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "time": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "under-1h",
+                                  "1-2h",
+                                  "more"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "sun": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "half-day",
+                                  "shade"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "where": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 4,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "ground",
+                                "raised",
+                                "pots",
+                                "windowsill"
+                              ]
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "storage": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "maxItems": 7,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "goal": {
+                                  "type": "string",
+                                  "enum": [
+                                    "fresh",
+                                    "dry",
+                                    "freeze",
+                                    "freeze-dry",
+                                    "pesto",
+                                    "infuse",
+                                    "can-or-jelly"
+                                  ]
+                                },
+                                "target": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                }
+                              },
+                              "required": [
+                                "goal"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "notSure": {
+                            "default": false,
+                            "type": "boolean"
+                          },
+                          "provenance": {
+                            "default": "manual",
+                            "type": "string",
+                            "enum": [
+                              "manual",
+                              "ai",
+                              "fallback"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "history": {
+                    "maxItems": 16,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "assistant"
+                          ]
+                        },
+                        "text": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        }
+                      },
+                      "required": [
+                        "role",
+                        "text"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The turn.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "reply",
+                    "shortlist",
+                    "provenance",
+                    "fallbackReason",
+                    "turnsLeft",
+                    "brief"
+                  ],
+                  "properties": {
+                    "reply": {
+                      "type": "string"
+                    },
+                    "followUp": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "shortlist": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "provenance": {
+                      "type": "string",
+                      "enum": [
+                        "ai",
+                        "fallback"
+                      ]
+                    },
+                    "fallbackReason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sunWarning": {
+                      "type": "boolean"
+                    },
+                    "sprayRedirect": {
+                      "type": "boolean"
+                    },
+                    "turnsLeft": {
+                      "type": "integer"
+                    },
+                    "brief": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or an id that is not a herb (`UNKNOWN_PLUGIN`)."
+          },
+          "403": {
+            "description": "Not the owner."
+          }
+        }
+      }
+    },
     "/api/garden/beds/{blockId}/recipe": {
       "parameters": [
         {
@@ -18921,6 +19952,9 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "wantMarks": {
+                    "type": "boolean"
                   }
                 },
                 "required": [

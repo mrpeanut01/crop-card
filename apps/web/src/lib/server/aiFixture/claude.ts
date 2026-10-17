@@ -12,6 +12,10 @@
  * valid for any farm. The text is placeholder wording and holds no farm
  * advice. Any request it does not recognise throws FixtureNoAnswerError at
  * once, which the callers already turn into their deterministic fallback.
+ *
+ * Requests are routed through `FIXTURE_ENTRIES` (R-24): allocation here, and
+ * one module per Phase 37 cluster (`gardenBrief.ts`, `photoMarks.ts`) keyed
+ * on a `CROPCARD_FIXTURE:<name>` marker in the prompt.
  */
 
 import {
@@ -19,6 +23,15 @@ import {
   FIXTURE_REFINE_INVALID,
   FIXTURE_REFINE_VALID
 } from '$lib/aiFixturePhrases';
+import {
+  type CreateParams,
+  type FixtureEntry,
+  FixtureNoAnswerError,
+  type FixtureMessage,
+  textOf
+} from './types';
+import { gardenBriefFixture } from './gardenBrief';
+import { photoMarksFixture } from './photoMarks';
 
 export { E2E_FIXTURE_API_KEY, FIXTURE_REFINE_INVALID, FIXTURE_REFINE_VALID };
 
@@ -28,48 +41,7 @@ export function claudeFixtureEnabled(env: Record<string, string | undefined>): b
   return env.E2E_CLAUDE_FIXTURE === '1' && env.ENABLE_DEV_ROUTES === '1';
 }
 
-export class FixtureNoAnswerError extends Error {
-  constructor(what = 'request') {
-    super(`The e2e fixture Claude has no canned answer for this ${what}.`);
-    this.name = 'FixtureNoAnswerError';
-  }
-}
-
-type TextBlock = { type: 'text'; text: string };
-type Msg = {
-  role: 'user' | 'assistant';
-  content: string | ReadonlyArray<{ type: string; text?: string }>;
-};
-
-interface CreateParams {
-  model: string;
-  system?: string | ReadonlyArray<{ type: string; text?: string }>;
-  messages: ReadonlyArray<Msg>;
-}
-
-export interface FixtureMessage {
-  id: string;
-  type: 'message';
-  role: 'assistant';
-  model: string;
-  content: Array<TextBlock & { citations: null }>;
-  stop_reason: 'end_turn';
-  stop_sequence: null;
-  usage: {
-    input_tokens: number;
-    output_tokens: number;
-    cache_creation_input_tokens: number;
-    cache_read_input_tokens: number;
-  };
-}
-
-function textOf(content: Msg['content'] | CreateParams['system']): string {
-  if (content === undefined) return '';
-  if (typeof content === 'string') return content;
-  return content
-    .map((b) => (b.type === 'text' && typeof b.text === 'string' ? b.text : ''))
-    .join('\n');
-}
+export { FixtureNoAnswerError, type FixtureMessage };
 
 const MATRIX_MARKER = 'CANDIDACY MATRIX';
 const ALLOCATE_LEAD = 'Allocate the following seed lots';
@@ -243,39 +215,79 @@ export function fixtureRefinement(
   throw new FixtureNoAnswerError('refine message');
 }
 
-/** Picks the canned answer for a Messages API request, or throws. */
-export function fixtureAnswerText(params: CreateParams): string {
-  const turns = params.messages.map((m) => ({ role: m.role, text: textOf(m.content) }));
-  let refineIdx = -1;
+function lastFarmerTurn(turns: Array<{ role: string; text: string }>): number {
   for (let i = turns.length - 1; i >= 0; i--) {
-    if (turns[i].role === 'user' && turns[i].text.includes(FARMER_MARKER)) {
-      refineIdx = i;
-      break;
-    }
+    if (turns[i].role === 'user' && turns[i].text.includes(FARMER_MARKER)) return i;
   }
-  if (refineIdx >= 0) {
-    const t = turns[refineIdx].text;
-    const farmer = t.slice(t.lastIndexOf(FARMER_MARKER) + FARMER_MARKER.length).trim();
-    let matrixIdx = -1;
-    for (let i = refineIdx - 1; i >= 0; i--) {
-      if (turns[i].role === 'user' && turns[i].text.includes(MATRIX_MARKER)) {
-        matrixIdx = i;
-        break;
+  return -1;
+}
+
+function turnsOf(params: CreateParams) {
+  return params.messages.map((m) => ({ role: m.role, text: textOf(m.content) }));
+}
+
+function isAllocationLead(t: { role: string; text: string }): boolean {
+  return t.role === 'user' && t.text.startsWith(ALLOCATE_LEAD) && t.text.includes(MATRIX_MARKER);
+}
+
+/** The allocation wizard's allocate and refine turns. */
+export const allocationFixture: FixtureEntry = {
+  name: 'allocation',
+  matches(params) {
+    const turns = turnsOf(params);
+    return lastFarmerTurn(turns) >= 0 || turns.some(isAllocationLead);
+  },
+  answer(params) {
+    const turns = turnsOf(params);
+    const refineIdx = lastFarmerTurn(turns);
+    if (refineIdx >= 0) {
+      const t = turns[refineIdx].text;
+      const farmer = t.slice(t.lastIndexOf(FARMER_MARKER) + FARMER_MARKER.length).trim();
+      let matrixIdx = -1;
+      for (let i = refineIdx - 1; i >= 0; i--) {
+        if (turns[i].role === 'user' && turns[i].text.includes(MATRIX_MARKER)) {
+          matrixIdx = i;
+          break;
+        }
       }
+      const prev = turns[matrixIdx + 1];
+      if (matrixIdx < 0 || !prev || prev.role !== 'assistant') {
+        throw new FixtureNoAnswerError('refine turn');
+      }
+      return JSON.stringify(fixtureRefinement(farmer, turns[matrixIdx].text, prev.text));
     }
-    const prev = turns[matrixIdx + 1];
-    if (matrixIdx < 0 || !prev || prev.role !== 'assistant') {
-      throw new FixtureNoAnswerError('refine turn');
+    for (let i = turns.length - 1; i >= 0; i--) {
+      if (isAllocationLead(turns[i])) return JSON.stringify(fixtureAllocationPlan(turns[i].text));
     }
-    return JSON.stringify(fixtureRefinement(farmer, turns[matrixIdx].text, prev.text));
+    throw new FixtureNoAnswerError();
   }
-  for (let i = turns.length - 1; i >= 0; i--) {
-    const t = turns[i];
-    if (t.role === 'user' && t.text.startsWith(ALLOCATE_LEAD) && t.text.includes(MATRIX_MARKER)) {
-      return JSON.stringify(fixtureAllocationPlan(t.text));
-    }
-  }
-  throw new FixtureNoAnswerError();
+};
+
+/** Checked in order; the first entry whose `matches` is true answers. */
+export const FIXTURE_ENTRIES: readonly FixtureEntry[] = [
+  allocationFixture,
+  gardenBriefFixture,
+  photoMarksFixture
+];
+
+/** The first matching entry's answer, or FixtureNoAnswerError. */
+export function dispatchFixture(
+  params: CreateParams,
+  entries: readonly FixtureEntry[] = FIXTURE_ENTRIES
+): string | FixtureMessage {
+  const entry = entries.find((e) => e.matches(params));
+  if (!entry) throw new FixtureNoAnswerError();
+  return entry.answer(params);
+}
+
+/** Picks the canned answer for a Messages API request, or throws. */
+export function fixtureAnswerText(
+  params: CreateParams,
+  entries: readonly FixtureEntry[] = FIXTURE_ENTRIES
+): string {
+  const answer = dispatchFixture(params, entries);
+  if (typeof answer === 'string') return answer;
+  return answer.content.map((b) => b.text).join('');
 }
 
 const tokens = (s: string) => Math.max(1, Math.ceil(s.length / 4));
@@ -283,8 +295,13 @@ const tokens = (s: string) => Math.max(1, Math.ceil(s.length / 4));
 let messageSeq = 0;
 
 /** A Messages API response with the same shape a real key returns. */
-export function fixtureMessage(params: CreateParams): FixtureMessage {
-  const text = fixtureAnswerText(params);
+export function fixtureMessage(
+  params: CreateParams,
+  entries: readonly FixtureEntry[] = FIXTURE_ENTRIES
+): FixtureMessage {
+  const answer = dispatchFixture(params, entries);
+  if (typeof answer !== 'string') return answer;
+  const text = answer;
   const prompt = params.messages.map((m) => textOf(m.content)).join('\n');
   messageSeq += 1;
   return {

@@ -18,6 +18,12 @@ import { enApierrB } from './en/apierrB';
 import { enApierrA } from './en/apierrA';
 import { enSeasonal } from './en/seasonal';
 import { enOrchard } from './en/orchard';
+import { enHerbsa } from './en/herbsa';
+import { enHerbsb } from './en/herbsb';
+import { enHerbsc } from './en/herbsc';
+import { enHerbsd } from './en/herbsd';
+import { enHerbse } from './en/herbse';
+import { enHerbsf } from './en/herbsf';
 
 /**
  * The English catalog is the source of every message key (F5-2). Keys are
@@ -45,7 +51,13 @@ export const EN_PARTS = [
   enApierrB,
   enApierrA,
   enSeasonal,
-  enOrchard
+  enOrchard,
+  enHerbsa,
+  enHerbsb,
+  enHerbsc,
+  enHerbsd,
+  enHerbse,
+  enHerbsf
 ] as const;
 
 export const en = {
@@ -68,7 +80,13 @@ export const en = {
   ...enApierrB,
   ...enApierrA,
   ...enSeasonal,
-  ...enOrchard
+  ...enOrchard,
+  ...enHerbsa,
+  ...enHerbsb,
+  ...enHerbsc,
+  ...enHerbsd,
+  ...enHerbse,
+  ...enHerbsf
 } as const;
 
 export type MessageKey = keyof typeof en;

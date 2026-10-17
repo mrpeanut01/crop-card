@@ -31,12 +31,18 @@ export interface GettingStartedFacts {
   animalsAnswered?: boolean;
   /** Any animal or group was ever added, archived or not. */
   hasAnimals?: boolean;
+  /** The owner saved a garden brief (Phase 37A). The brief item hides once
+   *  it is saved. */
+  hasGardenBrief?: boolean;
+  /** The owner picked the herbs tile on onboarding screen 2 (37A). */
+  herbsAnswered?: boolean;
 }
 
 /** Per-Owner setting written when the owner skips the planning assistant. */
 export const ASSISTANT_SKIPPED_SETTING = 'onboarding_assistant_skipped';
 
 export type GettingStartedItemId =
+  | 'brief'
   | 'location'
   | 'area'
   | 'crop'
@@ -58,6 +64,7 @@ export interface GettingStartedItem {
 }
 
 export const GETTING_STARTED_HREFS: Record<GettingStartedItemId, string> = {
+  brief: '/plan/brief',
   location: '/settings/farm',
   area: '/settings/farm/map',
   crop: '/plan',
@@ -78,8 +85,8 @@ export function gettingStartedItems(
   const farm = profileIncludesFarm(f.profile);
   const item = (id: GettingStartedItemId, done: boolean, optional = false): GettingStartedItem => ({
     id,
-    title: t(locale, `gs.${id}.title` as MessageKey),
-    blurb: t(locale, `gs.${id}.blurb` as MessageKey),
+    title: t(locale, (id === 'brief' ? 'herbsa.gs.title' : `gs.${id}.title`) as MessageKey),
+    blurb: t(locale, (id === 'brief' ? 'herbsa.gs.blurb' : `gs.${id}.blurb`) as MessageKey),
     href: id === 'bed' && f.gardenAreaId ? designerHref(f.gardenAreaId) : GETTING_STARTED_HREFS[id],
     done,
     optional
@@ -90,6 +97,9 @@ export function gettingStartedItems(
     item('area', f.hasMappedArea),
     item('crop', f.hasPlanting)
   ];
+  if ((garden || f.herbsAnswered) && f.hasGardenBrief === false) {
+    items.push(item('brief', false, true));
+  }
   if (garden) {
     items.push(item('bed', f.hasGardenBed));
   }

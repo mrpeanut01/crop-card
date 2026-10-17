@@ -37,6 +37,7 @@ import {
   documentSection,
   journalPhotoFacts,
   phase33Sections,
+  phase37Sections,
   mapFeatureAreaSection,
   deletedRecordSection,
   mapFeatureSection,
@@ -44,6 +45,7 @@ import {
   shadeSourceSection,
   soilTestSection
 } from './accountExportSections';
+import { gardenBriefExportSection } from './garden/briefStore';
 
 export async function buildAccountExport(event: RequestEvent): Promise<Record<string, unknown>> {
   const user = requireUser(event);
@@ -150,7 +152,7 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
   const journalPhotos = journalPhotoFacts();
 
   return {
-    schemaVersion: '1.6.0',
+    schemaVersion: '1.7.0',
     generatedAt: new Date().toISOString(),
     generator: `CropCard v${APP_VERSION}`,
     rulesVersion: RULES_VERSION,
@@ -250,6 +252,8 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
     })),
     ...recordSections(user),
     ...phase33Sections(user),
+    ...phase37Sections(),
+    gardenBrief: gardenBriefExportSection(user),
     documents: documentSection(user),
     apiTokens,
     relatedDownloads: {

@@ -1591,6 +1591,134 @@
       ],
       "additionalProperties": false
     },
+    "preserving": {
+      "minItems": 1,
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "fresh",
+              "dry",
+              "freeze",
+              "freeze-dry",
+              "infuse"
+            ]
+          },
+          "suitability": {
+            "type": "string",
+            "enum": [
+              "good",
+              "fair",
+              "poor"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "method",
+          "suitability"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "harvestCadence": {
+      "type": "object",
+      "properties": {
+        "everyDays": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120
+            }
+          },
+          "required": [
+            "min",
+            "max"
+          ],
+          "additionalProperties": false
+        },
+        "from": {
+          "type": "string",
+          "const": "first-cut"
+        }
+      },
+      "required": [
+        "everyDays",
+        "from"
+      ],
+      "additionalProperties": false
+    },
+    "winterHardyToZone": {
+      "type": "string",
+      "pattern": "^(1[0-3]|[1-9])[ab]?$"
+    },
+    "careTasks": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+          },
+          "topic": {
+            "type": "string",
+            "enum": [
+              "prune",
+              "harvest"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
+        },
+        "required": [
+          "key",
+          "topic",
+          "title"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "growthHabit": {
+      "type": "string",
+      "enum": [
+        "woody",
+        "clumping"
+      ]
+    },
+    "waterNeed": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
     "planting": {
       "type": "object",
       "propertyNames": {

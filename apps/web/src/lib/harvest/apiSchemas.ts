@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { t, type MessageKey } from '$lib/i18n';
+import { PRESERVING_METHODS } from '$lib/garden/preserving';
 
 /** Where a harvest went (Phase 33B, B-27). Client-safe: no server imports, so
  *  the OpenAPI generator and the disposition panel share these. */
@@ -79,12 +80,19 @@ const soldAsOrganicSchema = z
   .optional()
   .describe('Only for sold. Ignored (stored as null) when the farm has no organic status on file.');
 
+const preservedAsSchema = z
+  .enum(PRESERVING_METHODS)
+  .nullable()
+  .optional()
+  .describe('Phase 37C. Only for kept: how it was kept (fresh, dry, freeze, freeze-dry, infuse).');
+
 /** Cross-field rules shared by create and the merged patch. Returns the
  *  plain-English problem, or null. */
 export function dispositionProblem(v: {
   kind: HarvestDispositionKind;
   recipient?: string | null;
   soldAsOrganic?: boolean | null;
+  preservedAs?: string | null;
 }): string | null {
   if (v.recipient && v.kind !== 'sold' && v.kind !== 'donated') {
     return 'Only a sale or a gift has a recipient.';
@@ -92,12 +100,16 @@ export function dispositionProblem(v: {
   if (v.soldAsOrganic != null && v.kind !== 'sold') {
     return 'Only a sale can be marked sold as organic.';
   }
+  if (v.preservedAs != null && v.kind !== 'kept') {
+    return 'Only a kept harvest can say how it was kept.';
+  }
   return null;
 }
 
 const DISPOSITION_PROBLEM_KEY: Readonly<Record<string, MessageKey>> = {
   'Only a sale or a gift has a recipient.': 'harvestui.disp.err.recipientKind',
-  'Only a sale can be marked sold as organic.': 'harvestui.disp.err.organicKind'
+  'Only a sale can be marked sold as organic.': 'harvestui.disp.err.organicKind',
+  'Only a kept harvest can say how it was kept.': 'herbsc.disp.err.preservedKind'
 };
 
 /** The first refusal of a disposition body in `locale`: the schema's own
@@ -123,7 +135,8 @@ export const dispositionCreateSchema = z
       .optional()
       .describe('Epoch ms. From the start of the harvest day to now. Defaults to now.'),
     recipient: recipientSchema,
-    soldAsOrganic: soldAsOrganicSchema
+    soldAsOrganic: soldAsOrganicSchema,
+    preservedAs: preservedAsSchema
   })
   .strict()
   .superRefine((v, ctx) => {
@@ -147,6 +160,7 @@ export const dispositionPatchSchema = z
     occurredAt: z.number().int().optional(),
     recipient: recipientSchema,
     soldAsOrganic: soldAsOrganicSchema,
+    preservedAs: preservedAsSchema,
     ledgerEntryId: z
       .string()
       .min(1)

@@ -39,6 +39,7 @@ import type {
   Step
 } from './types';
 import type { SetupArea } from '$lib/setup/types';
+import type { LifecycleDetail } from '$lib/garden/lifecycleHere';
 
 export interface EstablishmentAnswer {
   establishment: 'direct-seed' | 'transplant' | null;
@@ -76,6 +77,10 @@ export interface WizardInitial {
   /** Nothing is planned for this season yet; prior-year plantings on the
    *  blocks are history, so the "plan in place" step is skipped. */
   emptySeason: boolean;
+  /** Phase 37A: seed entries to pick on open (the garden brief hand-off). */
+  preselectSeeds?: readonly string[];
+  /** Phase 37A: crops whose "Seed or seedling?" starts on a bought seedling. */
+  seedlingCrops?: readonly string[];
 }
 
 // Phase 25b (#96) — derived wizard step descriptors for the Almanac
@@ -266,6 +271,7 @@ export class AllocationWizardState {
       if (this.hasExistingPlan) return 'plan-state';
       return 'seeds';
     })();
+    this.#preselect(initial);
     // Phase 25d (#89) — hydrate from server-loaded history when present.
     // `system` rows are dropped from the rendered transcripts since the
     // UI only renders user/assistant bubbles; they may be reintroduced
@@ -448,6 +454,12 @@ export class AllocationWizardState {
     return spacingModel({ plantingGuide: this.props.plantingGuides[cropPluginId] });
   }
 
+  /** Phase 37B: the lifecycle verdict of a herb in the catalog. */
+  lifecycleFor(cropPluginId: string | null | undefined): LifecycleDetail | undefined {
+    if (!cropPluginId) return undefined;
+    return this.props.cropCatalog?.find((c) => c.pluginId === cropPluginId)?.lifecycle;
+  }
+
   isAreaCrop(cropPluginId: string | null | undefined): boolean {
     return this.spacingFor(cropPluginId).kind === 'area';
   }
@@ -510,6 +522,22 @@ export class AllocationWizardState {
     this.selectedSeeds.set(s.stockItemId, total);
     if (total <= 0) this.fillToBedSeeds.add(s.stockItemId);
     else this.fillToBedSeeds.delete(s.stockItemId);
+  }
+
+  #preselect(initial: WizardInitial) {
+    const stock = untrack(() => this.props.seedStock);
+    for (const id of initial.preselectSeeds ?? []) {
+      const s = stock.find((e) => e.stockItemId === id);
+      if (s?.cropPluginId) this.#select(s);
+    }
+    for (const cropId of initial.seedlingCrops ?? []) {
+      this.establishmentByCrop[cropId] = {
+        establishment: 'transplant',
+        startIndoors: false,
+        sowIndoorsOn: ''
+      };
+    }
+    this.#commitSelection();
   }
 
   #commitSelection() {

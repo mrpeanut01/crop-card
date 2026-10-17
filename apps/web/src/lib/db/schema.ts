@@ -1653,7 +1653,8 @@ export const aiCallLog = tenantScoped(
           'scan-barcode',
           'planting-window',
           'garden-fill',
-          'photo-help'
+          'photo-help',
+          'garden-brief'
         ]
       }).notNull(),
       model: text('model').notNull(),
@@ -3051,6 +3052,9 @@ export const ORGANIC_SUBJECT_TYPES = ['field', 'block', 'animal', 'group'] as co
 export const ORGANIC_STATUSES = ['organic', 'transitioning', 'not-organic'] as const;
 export const SEED_ORGANIC_STATUSES = ['organic', 'untreated', 'treated', 'unknown'] as const;
 export const HARVEST_DISPOSITION_KINDS = ['sold', 'kept', 'donated', 'discarded'] as const;
+/** How a kept harvest was preserved (Phase 37C). Mirrors `PRESERVING_METHODS`
+ *  in `lib/garden/preserving.ts`; a test keeps the two equal. */
+export const PRESERVED_AS_METHODS = ['fresh', 'dry', 'freeze', 'freeze-dry', 'infuse'] as const;
 
 /** Owner-entered organic status history. Append-only; the current status is
  *  the latest `effective_at`, then the latest `created_at`. */
@@ -3134,7 +3138,8 @@ export const harvestDispositions = tenantScoped(
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
         .default(sql`(unixepoch() * 1000)`),
-      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      preservedAs: text('preserved_as', { enum: PRESERVED_AS_METHODS })
     },
     (table) => ({
       ownerHarvestIdx: index('harvest_dispositions_owner_harvest_idx').on(
@@ -3305,6 +3310,73 @@ export const forageTests = tenantScoped(
     (table) => ({
       ownerBlockIdx: index('forage_tests_owner_block_idx').on(table.ownerId, table.blockId),
       ownerSampledIdx: index('forage_tests_owner_sampled_idx').on(table.ownerId, table.sampledAt)
+    })
+  )
+);
+
+// ─── Phase 37E: automatic waterers ─────────────────────────────────────
+
+export const IRRIGATION_SKIP_REASONS = ['did-not-run', 'turned-off-for-rain', 'other'] as const;
+
+/** The Areas (and optionally beds) an automatic waterer waters. A row with
+ *  no `block_id` covers the whole Area. */
+export const equipmentWaterTargets = tenantScoped(
+  sqliteTable(
+    'equipment_water_targets',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      equipmentId: text('equipment_id')
+        .notNull()
+        .references(() => equipment.id, { onDelete: 'cascade' }),
+      fieldId: text('field_id')
+        .notNull()
+        .references(() => fields.id, { onDelete: 'cascade' }),
+      blockId: text('block_id').references(() => blocks.id, { onDelete: 'cascade' }),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerTargetUnique: uniqueIndex('equipment_water_targets_owner_target_uq').on(
+        table.ownerId,
+        table.equipmentId,
+        table.fieldId,
+        table.blockId
+      ),
+      ownerFieldIdx: index('equipment_water_targets_owner_field_idx').on(
+        table.ownerId,
+        table.fieldId
+      )
+    })
+  )
+);
+
+/** A scheduled waterer run the owner or a helper says did not water. */
+export const irrigationSkips = tenantScoped(
+  sqliteTable(
+    'irrigation_skips',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      equipmentId: text('equipment_id')
+        .notNull()
+        .references(() => equipment.id, { onDelete: 'cascade' }),
+      scheduledAt: integer('scheduled_at', { mode: 'timestamp_ms' }).notNull(),
+      reason: text('reason', { enum: IRRIGATION_SKIP_REASONS }).notNull(),
+      notes: text('notes'),
+      clientRecordId: text('client_record_id'),
+      createdBy: text('created_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerEquipmentScheduledIdx: index('irrigation_skips_owner_equipment_scheduled_idx').on(
+        table.ownerId,
+        table.equipmentId,
+        table.scheduledAt
+      )
     })
   )
 );

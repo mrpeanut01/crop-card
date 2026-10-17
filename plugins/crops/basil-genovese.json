@@ -2,17 +2,34 @@
   "pluginId": "basil-genovese",
   "type": "crop",
   "displayName": "Basil — Genovese",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
+  "waterNeed": "high",
   "daysToMaturity": {
     "min": 60,
     "max": 80
   },
-  "plantingGuide": {
-  },
+  "plantingGuide": {},
   "harvestIndicators": [
     "8–10 in plant",
     "Pinch flowers to extend leaf production"
+  ],
+  "careTasks": [
+    {
+      "key": "pinch-stems",
+      "topic": "prune",
+      "title": "Pinch stems as they lengthen to promote bushy, compact growth."
+    },
+    {
+      "key": "pinch-flower-buds",
+      "topic": "prune",
+      "title": "Basil flower buds should be removed by pinching as soon as you see them form."
+    },
+    {
+      "key": "harvest-leaves",
+      "topic": "harvest",
+      "title": "Limited harvesting of the leaves can start on young plants and as they get larger, individual leaves as well as tips of the plants can be harvested."
+    }
   ],
   "notes": "Heat-loving annual. Downy mildew (BDM) is the big threat — DMR varieties (Prospera, Amazel) are alternatives.",
   "harvestStyle": "cut-and-come-again",
@@ -21,5 +38,33 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
+    {
+      "method": "freeze",
+      "suitability": "good"
+    },
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes."
+    }
+  ],
+  "agronomy": {
+    "lifecycle": "annual"
+  },
+  "seasonalTasks": [
+    {
+      "key": "pinch-flower-buds",
+      "kind": "pruning",
+      "daysAfterPlanting": 30,
+      "windowDays": 60,
+      "title": "Pinch off basil flower buds",
+      "body": "Pinch stem tips for a bushier plant, and pinch off flower buds as soon as you see them. Left on, buds change the flavor of the leaves."
+    }
+  ]
 }

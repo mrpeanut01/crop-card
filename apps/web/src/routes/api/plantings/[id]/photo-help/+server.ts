@@ -9,6 +9,8 @@ import {
   readJson
 } from '$lib/server/journalApi';
 import { answerPhotoHelp } from '$lib/server/photoHelp';
+import { withClientRecordId } from '$lib/server/clientRecordId';
+import { writeRecord } from '$lib/server/recordWrite';
 import { getRegistry } from '$lib/server/registry';
 import { sprayTermsFor } from '$lib/server/sprayTerms';
 import { t } from '$lib/i18n';
@@ -17,8 +19,10 @@ export const _requestSchema = photoHelpSchema;
 
 /** POST /api/plantings/[id]/photo-help. A short answer from Claude when it
  *  is on, otherwise the matching Care Guide section. Never spray advice.
- *  The ask is saved to the planting journal either way. */
-export const POST: RequestHandler = async (event) => {
+ *  The ask is saved to the planting journal either way, at most once per
+ *  client record id (R-23). With `wantMarks` and a photo, Claude also places
+ *  marks on it (37F). */
+export const POST: RequestHandler = withClientRecordId(async (event) => {
   const who = await journalWriter(event);
   if (!who.ok) return who.response;
   const parsed = photoHelpSchema.safeParse(await readJson(event));
@@ -39,9 +43,15 @@ export const POST: RequestHandler = async (event) => {
       userId: who.userId,
       crop,
       plugin,
-      req: { question: parsed.data.question, text: parsed.data.text, photo: photo.photo },
+      req: {
+        question: parsed.data.question,
+        text: parsed.data.text,
+        photo: photo.photo,
+        wantMarks: parsed.data.wantMarks === true
+      },
       sprayTerms: sprayTermsFor(registry),
-      locale: event.locals?.locale
+      locale: event.locals?.locale,
+      write: (fn) => writeRecord(event, fn)
     })
   );
-};
+});

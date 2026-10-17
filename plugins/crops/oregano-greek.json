@@ -2,18 +2,15 @@
   "pluginId": "oregano-greek",
   "type": "crop",
   "displayName": "Oregano — Greek (Origanum vulgare hirtum)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
     "max": 120
   },
   "defaultRowSpacingInches": 18,
-  "plantingGuide": {
-  },
-  "harvestIndicators": [
-    "Pre-flower harvest for peak essential oils"
-  ],
+  "plantingGuide": {},
+  "harvestIndicators": ["Pre-flower harvest for peak essential oils"],
   "notes": "Hardy perennial in zones 5+. Cut hard 2–3× per season.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -21,5 +18,38 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes."
+    }
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "5",
+  "careTasks": [
+    {
+      "key": "harvest-before-flower",
+      "topic": "harvest",
+      "title": "Harvesting can begin just before the plants are ready to flower."
+    },
+    {
+      "key": "leave-leaf-pairs",
+      "topic": "harvest",
+      "title": "Remove the stem tips leaving 4 to 6 pairs of leaves on the plant in order for it to produce side shoots for additional harvesting."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "winter-mulch",
+      "kind": "cultural",
+      "dayOfYear": 320,
+      "windowDays": 30,
+      "title": "Mulch oregano for winter",
+      "body": "In November or December, after the soil has frozen, cover the plants with straw or evergreen boughs. Take it off as growth starts in spring."
+    }
+  ]
 }

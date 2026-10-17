@@ -2,7 +2,7 @@
   "pluginId": "tarragon-french",
   "type": "crop",
   "displayName": "Tarragon French (Artemisia dracunculus sativa)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -24,14 +24,53 @@
     "rotationLookbackYears": 0
   },
   "notes": "French tarragon is sterile and must be propagated by division or cuttings, not seed. Hardy to zone 4.",
-  "harvestIndicators": [
-    "Cut soft tip growth before flower stalks form"
-  ],
+  "harvestIndicators": ["Cut soft tip growth before flower stalks form"],
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
     "daysFromPlantingMin": 60,
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "dry",
+      "suitability": "fair"
+    },
+    {
+      "method": "freeze",
+      "suitability": "good"
+    }
+  ],
+  "winterHardyToZone": "3a",
+  "careTasks": [
+    {
+      "key": "cut-back-in-spring",
+      "topic": "prune",
+      "title": "Cut back plants in the spring just as growth resumes."
+    },
+    {
+      "key": "harvest-tips",
+      "topic": "harvest",
+      "title": "Young stem tips and leaves can be harvested as needed throughout the season."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "spring-cut-back",
+      "kind": "pruning",
+      "dayOfYear": 95,
+      "windowDays": 21,
+      "title": "Cut back tarragon in spring",
+      "body": "Leave the tops standing over winter, then cut the plants back in spring just as growth starts."
+    },
+    {
+      "key": "divide",
+      "kind": "cultural",
+      "dayOfYear": 90,
+      "windowDays": 21,
+      "title": "Divide tarragon every few years",
+      "body": "Divide the plants every 3 to 4 years to keep the planting vigorous and productive."
+    }
+  ]
 }

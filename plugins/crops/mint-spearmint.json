@@ -2,8 +2,9 @@
   "pluginId": "mint-spearmint",
   "type": "crop",
   "displayName": "Mint — Spearmint",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
+  "waterNeed": "medium",
   "daysToMaturity": {
     "min": 60,
     "max": 90
@@ -15,9 +16,7 @@
       "max": 18
     }
   },
-  "harvestIndicators": [
-    "Pre-flower for peak flavor"
-  ],
+  "harvestIndicators": ["Pre-flower for peak flavor"],
   "notes": "Aggressive runner — confine to dedicated bed or containers. Cut hard mid-summer to refresh.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -25,5 +24,58 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
+    {
+      "method": "dry",
+      "suitability": "fair"
+    },
+    {
+      "method": "freeze",
+      "suitability": "good"
+    }
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "4a",
+  "careTasks": [
+    {
+      "key": "remove-flower-spikes",
+      "topic": "prune",
+      "title": "In order to maintain the flavor of the leaves, flower spikes should be removed as they appear."
+    },
+    {
+      "key": "harvest-often",
+      "topic": "harvest",
+      "title": "Leaves can be harvested as needed but the more frequently the stems are cut the more new growth is produced."
+    },
+    {
+      "key": "harvest-for-drying",
+      "topic": "harvest",
+      "title": "Leaves that are to be dried are best taken just as the flowers begin to appear."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "remove-flower-spikes",
+      "kind": "pruning",
+      "dayOfYear": 170,
+      "windowDays": 45,
+      "title": "Remove mint flower spikes",
+      "body": "Remove flower spikes as they appear to keep the leaves' flavor."
+    },
+    {
+      "key": "divide",
+      "kind": "cultural",
+      "dayOfYear": 90,
+      "windowDays": 21,
+      "title": "Divide mint if it is crowded",
+      "body": "Divide the plants every 3 to 4 years to keep them vigorous."
+    }
+  ]
 }

@@ -2,7 +2,7 @@
   "pluginId": "lemon-verbena",
   "type": "crop",
   "displayName": "Lemon Verbena (Aloysia citrodora)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -31,5 +31,18 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "winterHardyToZone": "8a",
+  "careTasks": [
+    {
+      "key": "prune-for-form",
+      "topic": "prune",
+      "title": "They benefit from occasional pruning or frequent harvest to maintain a nice form."
+    },
+    {
+      "key": "harvest-leaves",
+      "topic": "harvest",
+      "title": "Harvest leaves as needed throughout the season."
+    }
+  ]
 }

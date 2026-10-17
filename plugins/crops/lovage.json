@@ -2,9 +2,10 @@
   "pluginId": "lovage",
   "type": "crop",
   "displayName": "Lovage (Levisticum officinale)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "apiaceae",
+  "waterNeed": "high",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 90,
@@ -24,14 +25,20 @@
     "rotationLookbackYears": 0
   },
   "notes": "Hardy perennial to zone 3. Celery-flavored leaves and stems used in soups. Single plant supplies a household.",
-  "harvestIndicators": [
-    "Tender young stems and leaves at 12 to 18 inches"
-  ],
+  "harvestIndicators": ["Tender young stems and leaves at 12 to 18 inches"],
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
     "daysFromPlantingMin": 50,
     "daysFromPlantingMax": 90,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "winterHardyToZone": "4a",
+  "careTasks": [
+    {
+      "key": "harvest-young-leaves",
+      "topic": "harvest",
+      "title": "Harvest young leaves as they are more tender."
+    }
+  ]
 }

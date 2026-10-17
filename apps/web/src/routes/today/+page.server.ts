@@ -8,7 +8,8 @@ import {
   getOnboardingStatus,
   restoreGettingStarted
 } from '$lib/onboarding/state.server';
-import { FARM_ANIMALS_KEY, FARM_PROFILE_KEY } from '$lib/onboarding/profile';
+import { FARM_ANIMALS_KEY, FARM_HERBS_KEY, FARM_PROFILE_KEY } from '$lib/onboarding/profile';
+import { GARDEN_BRIEF_UPDATED_AT_KEY } from '$lib/garden/brief/schema';
 import { ASSISTANT_SKIPPED_SETTING } from '$lib/onboarding/gettingStarted';
 import { loadGettingStartedFacts } from '$lib/onboarding/gettingStarted.server';
 import { getFarmProfile } from '$lib/onboarding/state.server';
@@ -60,6 +61,8 @@ import { careCards, careCloseFormData } from '$lib/server/careView';
 import { todayDigestInput } from '$lib/digest/todayInput';
 import { activeReEntryItems, reEntryReadStart } from '$lib/today/reEntryCard';
 import { longestLibraryReiHours } from '$lib/spray/herbicideReEntry';
+import { HERB_CALENDAR_SETTING_KEYS, herbContextFor } from '$lib/calendar/herbCalendarContext';
+import { loadHerbCalendarInputs } from '$lib/server/herbCalendar.server';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;
@@ -86,11 +89,12 @@ const TODAY_SETTING_KEYS = [
   ONBOARDING_STATUS_KEY,
   FARM_PROFILE_KEY,
   FARM_ANIMALS_KEY,
+  FARM_HERBS_KEY,
+  GARDEN_BRIEF_UPDATED_AT_KEY,
   GETTING_STARTED_DISMISSED_KEY,
   ASSISTANT_SKIPPED_SETTING,
   SETTINGS_KEYS.farmLatLon,
-  SETTINGS_KEYS.lastFrost,
-  SETTINGS_KEYS.firstFrost
+  ...HERB_CALENDAR_SETTING_KEYS
 ];
 
 function hasBothFrostDates(read: SettingReader): boolean {
@@ -118,6 +122,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const registry = await getRegistry();
   const now = Date.now();
   const blocks = listBlocks({ plantings: 'current', now });
+  const read = settings ?? settingsReader(TODAY_SETTING_KEYS);
+  const herbInputs = loadHerbCalendarInputs(read);
 
   // Calendar-engine derived events — every active planting contributes
   // spray windows / harvest windows / orchard tasks etc. These are the
@@ -131,7 +137,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       allEvents.push(
         ...eventsForPlanting(planting, cropRecord.plugin as CropPlugin, {
           blockPlantings: b.plantings,
-          now
+          now,
+          herb: herbContextFor(planting, cropRecord.plugin as CropPlugin, herbInputs)
         })
       );
     }
@@ -231,7 +238,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   const equipment = listEquipment();
   const sprayers = sprayersFrom(equipment);
-  const read = settings ?? settingsReader(TODAY_SETTING_KEYS);
   const farmLatLon = savedFarmLatLon(read);
   const hasLocation = farmLatLon !== null;
   const farmProfile = getFarmProfile(read);
@@ -353,6 +359,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       timeZone: careTimeZone,
       locale: locals?.locale,
       isOwner,
+      equipment,
+      canRecord: !!locals.user && locals.user.role !== 'inspector',
       // Phase 32F (F4-8): the Monday card, from rows already read here.
       digest: todayDigestInput({
         openPrimaries: allOpenPrimaries,
@@ -366,18 +374,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       plantings: blocks.flatMap((b) =>
         b.plantings.map((p) => {
           const rec = registry.get(p.cropPluginId);
-          const family =
-            rec && rec.plugin.type === 'crop'
-              ? ((rec.plugin as CropPlugin).cropFamily ?? null)
-              : null;
+          const crop = rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : null;
           return {
             id: p.id,
             blockId: b.id,
             fieldId: b.fieldId ?? null,
             cropPluginId: p.cropPluginId,
-            cropFamily: family,
+            cropFamily: crop?.cropFamily ?? null,
             status: p.status ?? 'active',
-            plantingDate: p.plantingDate
+            plantingDate: p.plantingDate,
+            waterNeed: crop?.waterNeed ?? null,
+            cropName: crop?.displayName
           };
         })
       )

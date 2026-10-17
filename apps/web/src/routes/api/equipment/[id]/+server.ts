@@ -11,6 +11,9 @@ import {
   updateEquipmentState
 } from '$lib/db/equipment';
 import { currentUser, requireOwner } from '$lib/server/auth';
+import { irrigationScheduleSchema } from '$lib/irrigation/apiSchemas';
+import { scheduleOf } from '$lib/irrigation/schedule';
+import { storeSchedule } from '$lib/server/waterers';
 
 export const GET: RequestHandler = ({ params, url, locals }) => {
   if (!params.id)
@@ -31,7 +34,9 @@ const patchSchema = z
     spec: z
       .object({
         tankGal: z.number().positive().max(10_000).nullable().optional(),
-        nozzle: z.string().trim().max(80).nullable().optional()
+        nozzle: z.string().trim().max(80).nullable().optional(),
+        /** Phase 37E: an automatic waterer's weekly program; null clears it. */
+        schedule: irrigationScheduleSchema.nullable().optional()
       })
       .strict()
       .optional()
@@ -64,13 +69,29 @@ export const PATCH: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
-  if (parsed.data.spec !== undefined && existing.type !== 'sprayer') {
+  const specIn = parsed.data.spec;
+  const sprayerKeys =
+    specIn !== undefined && (specIn.tankGal !== undefined || specIn.nozzle !== undefined);
+  if (sprayerKeys && existing.type !== 'sprayer') {
     return json({ error: t(event.locals?.locale, 'equip.api.specSprayerOnly') }, { status: 400 });
+  }
+  if (specIn?.schedule !== undefined && existing.type !== 'irrigation') {
+    return json(
+      { error: t(event.locals?.locale, 'herbse.api.scheduleIrrigationOnly') },
+      { status: 400 }
+    );
   }
   const patch: Parameters<typeof updateEquipment>[1] = {};
   if (parsed.data.label !== undefined) patch.label = parsed.data.label.trim();
   if (parsed.data.notes !== undefined) patch.notes = parsed.data.notes;
-  if (parsed.data.spec !== undefined) patch.spec = parsed.data.spec;
+  if (specIn !== undefined) {
+    const { schedule, ...sprayer } = specIn;
+    patch.spec = { ...sprayer };
+    if (schedule !== undefined) {
+      patch.spec.schedule =
+        schedule === null ? null : storeSchedule(schedule, scheduleOf(existing.spec), Date.now());
+    }
+  }
   const id = event.params.id;
   const oldNozzle = nozzleOf(existing.spec?.nozzle);
   const nextNozzle =

@@ -300,8 +300,8 @@
         {#each data.options ?? [] as o (o.id)}
           <label class="choice" class:on={picked.includes(o.id)}>
             <input type="checkbox" name="growing" value={o.id} bind:group={picked} />
-            <span class="choice-title serif">{tr(`onboard.opt.${o.id}.title` as MessageKey)}</span>
-            <span class="choice-blurb">{tr(`onboard.opt.${o.id}.blurb` as MessageKey)}</span>
+            <span class="choice-title serif">{tr(o.titleKey)}</span>
+            <span class="choice-blurb">{tr(o.blurbKey)}</span>
             <span class="tick" aria-hidden="true"><Check size={16} /></span>
           </label>
         {/each}

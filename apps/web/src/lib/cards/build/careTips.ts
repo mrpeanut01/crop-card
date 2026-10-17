@@ -179,12 +179,7 @@ export const FAMILY_CARE_TIPS: Readonly<Record<string, FamilyCareTips>> = {
       { id: 'herb-culinary.water.0', text: 'Avoid soggy soil. Constant moisture encourages root rot.' }
     ],
     feed: [{ id: 'herb-culinary.feed.0', text: 'Go easy on feeding. Lean soil gives stronger flavor.' }],
-    prune: [
-      {
-        id: 'herb-culinary.prune.0',
-        text: 'Pinch basil stems as they lengthen to keep the plant bushy and compact.'
-      }
-    ],
+    prune: [],
     problems: [{ id: 'herb-culinary.problems.0', text: 'Thin, spindly growth: not enough light.' }]
   },
   'small-fruit': {

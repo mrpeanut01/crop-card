@@ -12,7 +12,14 @@ import { FARM_ANIMAL_CHOICES, type FarmAnimalChoice, type FarmProfile } from './
 
 export type OnboardingScreen = 'farm' | 'growing';
 
-export const GROWING_CHOICES = ['garden', 'fields', 'hay', 'greenhouse', 'orchard'] as const;
+export const GROWING_CHOICES = [
+  'garden',
+  'herbs',
+  'fields',
+  'hay',
+  'greenhouse',
+  'orchard'
+] as const;
 export type GrowingChoice = (typeof GROWING_CHOICES)[number];
 
 export interface GrowingOption {
@@ -20,6 +27,9 @@ export interface GrowingOption {
   title: string;
   blurb: string;
   starter: StarterArea;
+  /** Catalog keys for the tile when they are not `onboard.opt.<id>.*`. */
+  titleKey?: MessageKey;
+  blurbKey?: MessageKey;
 }
 
 export interface StarterArea {
@@ -37,6 +47,18 @@ export const GROWING_OPTIONS: readonly GrowingOption[] = [
     starter: {
       name: 'Kitchen Garden',
       nameKey: 'onboard.starter.kitchenGarden',
+      kind: 'garden'
+    }
+  },
+  {
+    id: 'herbs',
+    title: 'A few herbs by the kitchen',
+    blurb: 'Pots or a small bed of herbs to cook with, dry or give away.',
+    titleKey: 'herbsa.onboard.title',
+    blurbKey: 'herbsa.onboard.blurb',
+    starter: {
+      name: 'Herb garden',
+      nameKey: 'herbsa.starter.herbGarden',
       kind: 'garden'
     }
   },
@@ -106,7 +128,7 @@ export function isLegacyStep(v: unknown): boolean {
  * orchard on their own read as a farm; both is mixed. Nothing picked is no profile.
  */
 export function profileForChoices(choices: readonly GrowingChoice[]): FarmProfile | null {
-  const household = choices.some((c) => c === 'garden' || c === 'greenhouse');
+  const household = choices.some((c) => c === 'garden' || c === 'herbs' || c === 'greenhouse');
   const farm = choices.some((c) => c === 'fields' || c === 'hay' || c === 'orchard');
   if (household && farm) return 'mixed';
   if (farm) return 'farm';
@@ -120,11 +142,32 @@ function named(s: StarterArea, locale?: string | null): StarterArea {
   return { ...s, name: locale ? t(locale, s.nameKey) : s.name };
 }
 
+/** One starter Area per picked tile. The herbs tile adds its Herb garden
+ *  only when the garden tile is not also picked (R-1): one garden Area. */
 export function starterAreasFor(
   choices: readonly GrowingChoice[],
   locale?: string | null
 ): StarterArea[] {
-  return GROWING_OPTIONS.filter((o) => choices.includes(o.id)).map((o) => named(o.starter, locale));
+  return GROWING_OPTIONS.filter(
+    (o) => choices.includes(o.id) && !(o.id === 'herbs' && choices.includes('garden'))
+  ).map((o) => named(o.starter, locale));
+}
+
+/** The tile's catalog keys. */
+export function growingOptionKeys(o: GrowingOption): {
+  titleKey: MessageKey;
+  blurbKey: MessageKey;
+} {
+  return {
+    titleKey: o.titleKey ?? (`onboard.opt.${o.id}.title` as MessageKey),
+    blurbKey: o.blurbKey ?? (`onboard.opt.${o.id}.blurb` as MessageKey)
+  };
+}
+
+/** Where screen 2 goes once answered: the garden brief for the herbs tile
+ *  (R-1), else Today. */
+export function afterGrowingLocation(choices: readonly GrowingChoice[]): '/plan/brief' | '/today' {
+  return choices.includes('herbs') ? '/plan/brief' : '/today';
 }
 
 // ─── Animal tiles (Phase 32B) ────────────────────────────────────────────

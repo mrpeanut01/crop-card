@@ -384,6 +384,7 @@ export const KIND_LABEL: Record<string, string> = {
   'seed-start': 'Seed tray',
   irrigation: 'Watering',
   'rain-gauge': 'Rain gauge reading',
+  'irrigation-skip': 'Skipped watering run',
   'harvest-disposition': 'Where a harvest went',
   'time-entry': 'Task time',
   'task-schedule': 'Scheduled task',
@@ -406,6 +407,7 @@ const KIND_KEY: Record<string, MessageKey> = {
   'seed-start': 'recui.qkind.seedStart',
   irrigation: 'recui.qkind.irrigation',
   'rain-gauge': 'recui.qkind.rainGauge',
+  'irrigation-skip': 'recui.qkind.irrigationSkip',
   'harvest-disposition': 'recui.qkind.harvestDisposition',
   'task-schedule': 'recui.qkind.taskSchedule',
   'record-edit': 'recui.conflict.kind'

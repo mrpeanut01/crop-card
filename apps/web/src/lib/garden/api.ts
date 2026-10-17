@@ -22,6 +22,7 @@ import type {
   RecipeApplication,
   SuccessionProposal
 } from './types';
+import type { LifecycleDetail } from './lifecycleHere';
 
 const id = z.string().min(1).max(128);
 const epochMs = z.number().int().nonnegative();
@@ -54,6 +55,8 @@ export interface GardenDesignResponse {
   role: string;
   seasons: number[];
   activeYear: number;
+  /** Phase 37B: the lifecycle verdict for each herb in the catalog. */
+  lifecycle?: Record<string, LifecycleDetail>;
 }
 
 /** What the designer page renders: the endpoint's answer, or the same

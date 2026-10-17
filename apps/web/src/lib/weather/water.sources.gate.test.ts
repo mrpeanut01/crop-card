@@ -5,6 +5,8 @@ import { sourceEntrySchema } from '$lib/plugins/sourceCoverage';
 import {
   DEFAULT_WEEKLY_TARGET_IN,
   GALLONS_PER_SQFT_INCH,
+  POT_HEAT_HIGH_F,
+  POT_HEAT_LOW_F,
   WATER_SOURCED_KEYS
 } from './waterSources';
 
@@ -34,6 +36,18 @@ describe('water-sources.json gate (E0-2)', () => {
     expect((entries.weeklyTargetIn as { quote: string }).quote).toMatch(
       /one inch of water per week/
     );
+  });
+
+  it('keeps the pots-in-heat thresholds to the quoted high and low (37E, R-11)', () => {
+    for (const [key, value] of [
+      ['potHeatHighF', POT_HEAT_HIGH_F],
+      ['potHeatLowF', POT_HEAT_LOW_F]
+    ] as const) {
+      const e = entries[key] as { quote: string; url: string };
+      expect(new URL(e.url).hostname.endsWith('.edu')).toBe(true);
+      expect(value).not.toBeNull();
+      expect(e.quote).toContain(`above ${value}°F`);
+    }
   });
 
   it('keeps the gallon conversion to the unit arithmetic', () => {

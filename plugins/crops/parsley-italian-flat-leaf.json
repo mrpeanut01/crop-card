@@ -2,18 +2,16 @@
   "pluginId": "parsley-italian-flat-leaf",
   "type": "crop",
   "displayName": "Parsley — Italian Flat-Leaf",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "apiaceae",
+  "waterNeed": "high",
   "daysToMaturity": {
     "min": 70,
     "max": 85
   },
   "defaultRowSpacingInches": 12,
-  "plantingGuide": {
-  },
-  "harvestIndicators": [
-    "Stems 6–8 in"
-  ],
+  "plantingGuide": {},
+  "harvestIndicators": ["Stems 6–8 in"],
   "notes": "Biennial — bolts year 2. Outer-leaf cutting extends harvest 6 mo.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -21,5 +19,39 @@
     "daysFromPlantingMax": 90,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
+    {
+      "method": "dry",
+      "suitability": "good"
+    },
+    {
+      "method": "freeze",
+      "suitability": "good"
+    }
+  ],
+  "agronomy": {
+    "lifecycle": "biennial"
+  },
+  "careTasks": [
+    {
+      "key": "harvest-when-large",
+      "topic": "harvest",
+      "title": "Parsley can be cut any time after it has become large enough."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "pot-for-winter",
+      "kind": "cultural",
+      "dayOfYear": 280,
+      "windowDays": 21,
+      "title": "Pot up parsley for winter",
+      "body": "In fall, dig a few plants and pot them to grow indoors over the winter in a bright, cool spot."
+    }
+  ]
 }

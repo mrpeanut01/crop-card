@@ -39,10 +39,12 @@ import { PHASE_32_TABLES, seedPhase32Rows, type Phase32Seed } from '$lib/db/phas
 import { GET } from './+server';
 import {
   PHASE_33_TABLE_GROUPS,
+  PHASE_37_TABLE_GROUPS,
   RECORD_TABLE_GROUPS,
   dataUrlBytes
 } from '$lib/server/accountExportSections';
 import { PHASE_33_TABLES, seedPhase33, type Phase33Seed } from '$lib/db/phase33.fixtures';
+import { PHASE_37_TABLES, seedPhase37, type Phase37Seed } from '$lib/db/phase37.fixtures';
 
 interface Seeded {
   ownerId: string;
@@ -54,6 +56,7 @@ interface Seeded {
   journalId: string;
   phase32: Phase32Seed;
   phase33: Phase33Seed;
+  phase37: Phase37Seed;
 }
 
 function seed(label: string): Seeded {
@@ -62,6 +65,7 @@ function seed(label: string): Seeded {
     .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
     .run();
   const phase33 = seedPhase33(ownerId, `${label}-p33`);
+  const phase37 = seedPhase37(ownerId, `${label}-p37`);
   const farm = runWithTenant(ownerId, () => {
     const area = createField({
       name: `${label} kitchen garden`,
@@ -122,7 +126,7 @@ function seed(label: string): Seeded {
       phase32: seedPhase32Rows(`${label}-p32`)
     };
   });
-  return { ...farm, phase33 };
+  return { ...farm, phase33, phase37 };
 }
 
 async function exportFor(
@@ -148,7 +152,8 @@ function idsOf(s: Seeded): string[] {
     s.soilTestId,
     s.journalId,
     ...Object.values(s.phase32.rowIds),
-    ...Object.values(s.phase33.rowIds)
+    ...Object.values(s.phase33.rowIds),
+    ...Object.values(s.phase37.rowIds)
   ];
 }
 
@@ -173,6 +178,14 @@ describe('GET /api/account/export.json', () => {
       .concat(['documents', 'document_links'])
       .sort();
     expect(exported).toEqual(Object.keys(PHASE_33_TABLES).sort());
+  });
+
+  it('lists every Phase 37 table exactly once', () => {
+    const exported = Object.values(PHASE_37_TABLE_GROUPS)
+      .flatMap((g) => Object.values(g))
+      .map((t) => getTableName(t))
+      .sort();
+    expect(exported).toEqual(Object.keys(PHASE_37_TABLES).sort());
   });
 
   it('counts decoded photo bytes, not data URL characters', () => {
@@ -208,6 +221,12 @@ describe('GET /api/account/export.json', () => {
     expect(organic.harvestDispositions.map((r) => r.id)).toEqual([
       a.phase33.rowIds.harvest_dispositions
     ]);
+    expect(organic.harvestDispositions[0]).toHaveProperty('preservedAs', null);
+    const watering = json.watering as Record<string, Array<{ id: string }>>;
+    expect(watering.waterTargets.map((r) => r.id)).toEqual([
+      a.phase37.rowIds.equipment_water_targets
+    ]);
+    expect(watering.irrigationSkips.map((r) => r.id)).toEqual([a.phase37.rowIds.irrigation_skips]);
     const amendments = json.amendments as Record<string, Array<{ id: string }>>;
     expect(amendments.forageTests.map((r) => r.id)).toEqual([a.phase33.rowIds.forage_tests]);
     for (const id of Object.values(b.phase33.rowIds)) expect(text).not.toContain(id);
@@ -358,7 +377,7 @@ describe('GET /api/account/export.json', () => {
     });
 
     const { json } = await exportFor(farm.ownerId);
-    expect(json.schemaVersion).toBe('1.6.0');
+    expect(json.schemaVersion).toBe('1.7.0');
     const hay = json.hayCuttings as Array<{ id: string; recordedLate: boolean }>;
     expect(hay.find((c) => c.id === late)?.recordedLate).toBe(true);
     expect(hay.find((c) => c.id === onTime)?.recordedLate).toBe(false);

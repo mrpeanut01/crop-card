@@ -39,6 +39,9 @@ export interface FrostPlantingSnapshot {
   /** Phase 32E: a cover active on the bed now. Heat keeps the planting out
    *  of the alert; other covers can blow off, so they only change the copy. */
   cover?: 'heated' | 'covered' | null;
+  /** Phase 37D (R-8): a tender perennial herb, at risk in any frost and
+   *  told to come in or be covered. */
+  bringIn?: boolean;
 }
 
 /** Planted (active) plantings, and planned ones dated close to now. */
@@ -72,8 +75,9 @@ export function frostTonightAlerts(
     if (product.onsetMs !== null && product.onsetMs > now + FROST_ALERT_LEAD_MS) continue;
     if (product.endsMs !== null && product.endsMs <= now) continue;
     const atRisk = AT_RISK[product.event];
-    const hit = candidates.filter((p) => atRisk.has(p.hardiness));
+    const hit = candidates.filter((p) => p.bringIn || atRisk.has(p.hardiness));
     const names = [...new Set(hit.map((p) => p.name))];
+    const bringInNames = [...new Set(hit.filter((p) => p.bringIn).map((p) => p.name))];
     if (names.length === 0) continue;
     const when = product.nwsHeadline ? ` ${sentenceCase(product.nwsHeadline)}.` : '';
     const coveredBeds = [
@@ -86,7 +90,12 @@ export function frostTonightAlerts(
     const anyUncovered = hit.some((p) => p.cover !== 'covered');
     const hardFreeze = HARD_FREEZE_EVENTS.has(product.event);
     const action = [
-      anyUncovered ? ` ${t(locale, 'push.frost.coverOrHarvest')}` : '',
+      bringInNames.length
+        ? ` ${t(locale, 'herbsd.push.bringIn', { names: listNames(bringInNames, locale) })}`
+        : '',
+      anyUncovered && hit.some((p) => p.cover !== 'covered' && !p.bringIn)
+        ? ` ${t(locale, 'push.frost.coverOrHarvest')}`
+        : '',
       coveredBeds.length
         ? ` ${t(locale, 'push.frost.checkCovers', { beds: listNames(coveredBeds, locale) })}`
         : '',

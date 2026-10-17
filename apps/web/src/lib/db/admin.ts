@@ -15,11 +15,13 @@
 import { randomUUID } from 'node:crypto';
 import { realNow } from '$lib/server/clock';
 import { type SQL, and, eq, inArray, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
+import { GARDEN_BRIEF_KEY, GARDEN_BRIEF_UPDATED_AT_KEY } from '$lib/garden/brief/schema';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import { plantingInGround } from '$lib/garden/inGround';
 import {
   amendmentBatchInputs,
+  appSettings,
   amendmentBatches,
   amendmentBioassays,
   amendmentDismissals,
@@ -44,6 +46,7 @@ import {
   cropEquipment,
   crops,
   equipment,
+  equipmentWaterTargets,
   equipmentLog,
   equipmentState,
   fertilityApplications,
@@ -55,6 +58,7 @@ import {
   grazingAttestations,
   insecticideEvents,
   irrigationEvents,
+  irrigationSkips,
   ledgerEntries,
   ledgerEntryChanges,
   mapFeatureAreas,
@@ -968,6 +972,11 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     removed.block_protections = del(blockProtections, isNotNull(blockProtections.id));
     removed.irrigation_events = del(irrigationEvents, isNotNull(irrigationEvents.id));
     removed.rain_gauge_readings = del(rainGaugeReadings, isNotNull(rainGaugeReadings.id));
+    removed.irrigation_skips = del(irrigationSkips, isNotNull(irrigationSkips.id));
+    removed.equipment_water_targets = del(
+      equipmentWaterTargets,
+      isNotNull(equipmentWaterTargets.id)
+    );
     removed.stock_movements = del(stockMovements, isNotNull(stockMovements.id));
     removed.tasks = del(tasks, isNotNull(tasks.id));
     removed.crop_equipment = del(cropEquipment, isNotNull(cropEquipment.id));
@@ -998,6 +1007,10 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     removed.map_features = del(mapFeatures, isNotNull(mapFeatures.id));
     removed.shade_sources = del(shadeSources, isNotNull(shadeSources.id));
     removed.fields = del(fields, isNotNull(fields.id));
+    removed.garden_brief = del(
+      appSettings,
+      inArray(appSettings.key, [GARDEN_BRIEF_KEY, GARDEN_BRIEF_UPDATED_AT_KEY])
+    );
     // Null out any orphan task.linkedToTaskId references (rare but possible
     // if a partial delete left dangling pointers). Tenant-scoped.
     db.update(tasks)

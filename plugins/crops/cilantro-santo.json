@@ -2,14 +2,13 @@
   "pluginId": "cilantro-santo",
   "type": "crop",
   "displayName": "Cilantro — Santo (slow-bolt)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "apiaceae",
   "daysToMaturity": {
     "min": 35,
     "max": 55
   },
-  "plantingGuide": {
-  },
+  "plantingGuide": {},
   "harvestIndicators": [
     "Foliage harvest pre-bolt",
     "Allow some plants to flower for coriander seed"
@@ -21,5 +20,24 @@
     "daysFromPlantingMax": 90,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "freeze",
+      "suitability": "good"
+    }
+  ],
+  "agronomy": {
+    "lifecycle": "annual"
+  },
+  "seasonalTasks": [
+    {
+      "key": "sow-again",
+      "kind": "cultural",
+      "daysAfterPlanting": 21,
+      "windowDays": 7,
+      "title": "Sow cilantro again",
+      "body": "Sow again every 3 to 4 weeks for a steady supply of fresh leaves. Cilantro goes to seed quickly."
+    }
+  ]
 }

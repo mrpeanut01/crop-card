@@ -6,6 +6,11 @@
  * water targets (one joined read), watering logs, gauge readings, and the
  * global weather cache rows. A cold cache goes through the existing cached
  * getters, and a failed fetch reads as unknown rain, never an error.
+ *
+ * Phase 37E adds one read (R-22): automatic waterer targets joined to their
+ * skips. The waterers' schedules come from the equipment rows /today already
+ * read, each bed's water need from the plantings and the in-memory registry,
+ * and the container and indoor flags from the Area row in the first read.
  */
 
 import { and, eq, gte, inArray, lte, sql } from 'drizzle-orm';
@@ -52,7 +57,21 @@ import {
   type WaterBalance,
   type WaterTarget
 } from '$lib/weather/waterBalance';
-import { wateringCard } from '$lib/weather/waterCopy';
+import { wateringCard, type TimerCardInfo } from '$lib/weather/waterCopy';
+import { bedNeed, type BedNeed, type WaterNeed } from '$lib/weather/waterNeed';
+import { potHeatApplies } from '$lib/weather/waterSources';
+import type { WaterLog } from '$lib/weather/waterBalance';
+import { listEquipment } from '$lib/db/equipment';
+import { loadWatererRowsForAreas } from '$lib/db/waterers';
+import { parseAreaDetails, type GardenDetails } from '$lib/farm/areaKinds';
+import { waterersFrom } from '$lib/server/waterers';
+import {
+  expandRuns,
+  runInches,
+  timerLogs,
+  withoutSkipped,
+  type Waterer
+} from '$lib/irrigation/schedule';
 import {
   DEFAULT_WEEKLY_TARGET_IN,
   WATER_TARGET_MAX_IN,
@@ -73,6 +92,8 @@ const TARGET_PREFIX = 'water_target_in_week.';
 export interface WaterAdviceDeps extends ObservedDeps {
   /** Replaces the hourly forecast getter (tests). */
   forecast?: (lat: number, lon: number, now: number) => Promise<HourlyPoint[]>;
+  /** Replaces the registry lookup of a crop's water need (tests). */
+  waterNeedOf?: (cropPluginId: string) => WaterNeed | null;
 }
 
 export interface AreaWaterInput {
@@ -83,6 +104,10 @@ export interface AreaWaterInput {
   sqFt: number | null;
   target: WaterTarget | null;
   beds: BedInput[];
+  /** Phase 37E (R-11): the owner marked the Area as pots or containers. */
+  container?: boolean;
+  /** Phase 37E (R-11): the Area is indoors, so rain never reaches it. */
+  indoors?: boolean;
 }
 
 export function sqFtOf(row: {
@@ -119,6 +144,16 @@ export function resolveTarget(
     : { inches: DEFAULT_WEEKLY_TARGET_IN, provenance: 'fallback' };
 }
 
+/** The garden Area's container and indoor flags (R-11); other kinds have neither. */
+export function containerFlags(
+  kind: string,
+  detailsJson: string | null
+): { container: boolean; indoors: boolean } {
+  if (kind !== 'garden') return { container: false, indoors: false };
+  const d = parseAreaDetails('garden', detailsJson) as GardenDetails | null;
+  return { container: d?.container === true, indoors: d?.indoors === true };
+}
+
 /** One read: the given beds joined to their garden or field Area, covers and water target. */
 export function loadAreasForBeds(
   blockIds: readonly string[],
@@ -142,6 +177,7 @@ export function loadAreasForBeds(
       fWidth: fields.widthFt,
       fLength: fields.lengthFt,
       fGeo: fields.geometryGeojson,
+      fDetails: fields.detailsJson,
       target: appSettings.value,
       pId: blockProtections.id,
       pKind: blockProtections.kind,
@@ -189,7 +225,8 @@ export function loadAreasForBeds(
           geometryGeojson: r.fGeo
         }),
         target: resolveTarget(r.target, r.fieldKind),
-        beds: []
+        beds: [],
+        ...containerFlags(r.fieldKind, r.fDetails)
       };
       areas.set(r.fieldId, area);
     }
@@ -309,11 +346,25 @@ function forecastInches(hours: readonly HourlyPoint[], nowMs: number): number | 
   return Math.round((mm / 25.4) * 100) / 100;
 }
 
+function forecastTemps(
+  hours: readonly HourlyPoint[],
+  nowMs: number
+): { highF: number; lowF: number } | null {
+  const from = Math.floor(nowMs / HOUR_MS) * HOUR_MS;
+  const temps = hours
+    .filter((h) => h.t >= from && h.t < from + 24 * HOUR_MS && h.tempF !== null)
+    .map((h) => h.tempF as number);
+  if (temps.length === 0) return null;
+  return { highF: Math.max(...temps), lowF: Math.min(...temps) };
+}
+
 export interface AreaWaterResult {
   area: AreaWaterInput;
   balance: WaterBalance;
   nearestStation: StationRef | null;
   forecastIn: number | null;
+  /** The next 24 hours' forecast high and low, when the forecast has them. */
+  forecastTemps: { highF: number; lowF: number } | null;
 }
 
 /** Verdicts for the given Areas, sharing one weather lookup. */
@@ -323,6 +374,8 @@ export async function computeAreaWater(
     nowMs: number;
     farmPoint: { lat: number; lon: number } | null;
     deps?: WaterAdviceDeps;
+    /** Phase 37E: waterer runs, by Area id, counted with the hand logs. */
+    extraLogs?: ReadonlyMap<string, readonly WaterLog[]>;
   }
 ): Promise<AreaWaterResult[]> {
   if (areas.length === 0) return [];
@@ -365,6 +418,7 @@ export async function computeAreaWater(
     else forecast = (await getHourlyForecastSafely(anchor.lat, anchor.lon, nowMs)).hours;
   }
   const forecastIn = forecast ? forecastInches(forecast, nowMs) : null;
+  const temps = forecast ? forecastTemps(forecast, nowMs) : null;
 
   return areas.map((area) => {
     const ref = area.point ? (refs.get(area.fieldId) ?? null) : null;
@@ -383,16 +437,19 @@ export async function computeAreaWater(
       gauges: periods,
       logs: logs
         .filter((l) => l.fieldId === area.fieldId)
-        .map((l) => ({
+        .map((l): WaterLog => ({
           occurredAtMs: l.occurredAt.getTime(),
           blockId: l.blockId ?? null,
           inches: l.inches ?? null,
           gallons: l.gallons ?? null,
-          durationMin: l.durationMin ?? null
-        })),
-      beds: area.beds
+          durationMin: l.durationMin ?? null,
+          provenance: 'manual' as const
+        }))
+        .concat(opts.extraLogs?.get(area.fieldId) ?? []),
+      beds: area.beds,
+      indoors: area.indoors
     });
-    return { area, balance, nearestStation: ref, forecastIn };
+    return { area, balance, nearestStation: ref, forecastIn, forecastTemps: temps };
   });
 }
 
@@ -406,13 +463,28 @@ export async function wateringCards(
   ];
   if (blockIds.length === 0) return [];
   const areas = loadAreasForBeds(blockIds, ctx.nowMs, ctx.farmLatLon);
+  if (areas.length === 0) return [];
+  const cropNames = attachBedNeeds(areas, ctx, deps);
+  const timeZone = ctx.timeZone ?? 'America/New_York';
+  const timers = loadTimers(areas, ctx, timeZone);
   const results = await computeAreaWater(areas, {
     nowMs: ctx.nowMs,
     farmPoint: ctx.farmLatLon,
-    deps
+    deps,
+    extraLogs: timers.logs
   });
   return results.map((r) =>
     wateringCard({
+      timers: timers.cards.get(r.area.fieldId) ?? [],
+      cropNames,
+      nowMs: ctx.nowMs,
+      canRecord: ctx.canRecord ?? false,
+      canEditTimers: ctx.isOwner ?? false,
+      potHeat:
+        r.area.container === true &&
+        !r.area.indoors &&
+        r.forecastTemps !== null &&
+        potHeatApplies(r.forecastTemps),
       fieldId: r.area.fieldId,
       areaName: r.area.name,
       areaKind: r.area.kind,
@@ -424,6 +496,83 @@ export async function wateringCards(
       locale: ctx.locale
     })
   );
+}
+
+/** Each bed's need from the crops in the ground there (R-10), read from
+ *  the plantings the loader already resolved against the registry. */
+function attachBedNeeds(
+  areas: readonly AreaWaterInput[],
+  ctx: TodayAdviceContext,
+  deps?: WaterAdviceDeps
+): Record<string, string> {
+  const names: Record<string, string> = {};
+  const needOf = deps?.waterNeedOf;
+  const byBed = new Map<string, Array<{ cropPluginId: string; waterNeed: WaterNeed | null }>>();
+  for (const p of ctx.plantings) {
+    if (!isInGround(p, ctx.nowMs)) continue;
+    if (p.cropName) names[p.cropPluginId] = p.cropName;
+    const list = byBed.get(p.blockId) ?? [];
+    const waterNeed = needOf ? needOf(p.cropPluginId) : (p.waterNeed ?? null);
+    list.push({ cropPluginId: p.cropPluginId, waterNeed });
+    byBed.set(p.blockId, list);
+  }
+  for (const area of areas) {
+    for (const bed of area.beds) {
+      const need: BedNeed = bedNeed(byBed.get(bed.id) ?? []);
+      bed.needLine = need.line;
+      bed.needCropPluginIds = need.cropPluginIds;
+    }
+  }
+  return names;
+}
+
+const NEXT_RUN_REACH_MS = 8 * 24 * HOUR_MS;
+
+/** Waterer runs as logs per Area, and what each Area's card says about its
+ *  timers. One read (R-22); equipment comes from the /today loader. */
+export function loadTimers(
+  areas: readonly AreaWaterInput[],
+  ctx: Pick<TodayAdviceContext, 'nowMs' | 'equipment'>,
+  timeZone: string
+): { logs: Map<string, WaterLog[]>; cards: Map<string, TimerCardInfo[]> } {
+  const logs = new Map<string, WaterLog[]>();
+  const cards = new Map<string, TimerCardInfo[]>();
+  const { startMs } = windowBounds(ctx.nowMs);
+  const rows = loadWatererRowsForAreas(
+    areas.map((a) => a.fieldId),
+    startMs,
+    ctx.nowMs + NEXT_RUN_REACH_MS
+  );
+  if (rows.targets.length === 0) return { logs, cards };
+  const waterers: Waterer[] = waterersFrom(ctx.equipment ?? listEquipment(), rows.targets);
+  for (const w of waterers) {
+    const skipped = rows.skips.get(w.equipmentId) ?? [];
+    const runs = withoutSkipped(
+      expandRuns(w.schedule, { fromMs: startMs, toMs: ctx.nowMs + NEXT_RUN_REACH_MS, timeZone }),
+      skipped
+    );
+    const past = runs.filter((t) => t <= ctx.nowMs);
+    const next = runs.find((t) => t > ctx.nowMs) ?? null;
+    for (const fieldId of new Set(w.targets.map((t) => t.fieldId))) {
+      logs.set(fieldId, [...(logs.get(fieldId) ?? []), ...timerLogs(w, past, fieldId, ctx.nowMs)]);
+      const own = w.targets.filter((t) => t.fieldId === fieldId);
+      cards.set(fieldId, [
+        ...(cards.get(fieldId) ?? []),
+        {
+          equipmentId: w.equipmentId,
+          label: w.label,
+          minutes: w.schedule.minutes,
+          nextRunAt: next,
+          inchesPerRun: runInches(w),
+          lastRunAt: past[past.length - 1] ?? null,
+          bedIds: own.some((t) => t.blockId === null)
+            ? null
+            : own.flatMap((t) => (t.blockId ? [t.blockId] : []))
+        }
+      ]);
+    }
+  }
+  return { logs, cards };
 }
 
 export const wateringAdvice: TodayAdviceProvider = (ctx) => wateringCards(ctx);

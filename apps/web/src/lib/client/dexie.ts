@@ -64,6 +64,7 @@ export type PendingRecordKind =
   | 'seed-start'
   | 'irrigation'
   | 'rain-gauge'
+  | 'irrigation-skip'
   | 'harvest-disposition'
   | 'time-entry'
   | 'task-schedule'

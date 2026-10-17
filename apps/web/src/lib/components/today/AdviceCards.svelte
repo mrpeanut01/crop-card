@@ -7,8 +7,10 @@
   import {
     ADVICE_VISIBLE_PER_KIND,
     type AdviceSheet,
+    type TodayAdviceAction,
     type TodayAdviceCard
   } from '$lib/today/advice';
+  import { submitSkip } from '$lib/irrigation/client';
 
   interface Props {
     cards: TodayAdviceCard[];
@@ -36,6 +38,26 @@
     'log-watering': 'today.advice.logWatering',
     'rain-gauge': 'today.advice.rainGauge'
   };
+
+  let skipping = $state<string | null>(null);
+
+  async function skipRun(a: Extract<TodayAdviceAction, { kind: 'skip-run' }>) {
+    const key = `${a.equipmentId}:${a.scheduledAt}`;
+    skipping = key;
+    try {
+      const out = await submitSkip({
+        equipmentId: a.equipmentId,
+        scheduledAt: a.scheduledAt,
+        reason: a.reason
+      });
+      if (out.status === 'error') message = out.message;
+      else done(tr(out.status === 'queued' ? 'herbse.timer.queued' : 'herbse.timer.skipped'));
+    } catch {
+      message = tr('herbse.timer.skipError');
+    } finally {
+      skipping = null;
+    }
+  }
 
   function done(text: string) {
     sheet = null;
@@ -69,6 +91,16 @@
               {#each card.actions as a (a.label)}
                 {#if a.kind === 'link'}
                   <a class="btn" href={a.href}>{a.label}</a>
+                {:else if a.kind === 'skip-run'}
+                  <button
+                    type="button"
+                    class="btn"
+                    data-testid="advice-skip-run"
+                    disabled={skipping === `${a.equipmentId}:${a.scheduledAt}`}
+                    onclick={() => skipRun(a)}
+                  >
+                    {a.label}
+                  </button>
                 {:else}
                   <button
                     type="button"

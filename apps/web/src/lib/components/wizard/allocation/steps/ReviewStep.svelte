@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LifecycleLine from '$lib/components/garden/LifecycleLine.svelte';
   import type { PollinationConstraint } from '$lib/plan/types';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
@@ -217,7 +218,12 @@
         {@const poll = pollinationSummary(a.stockItemId, a.blockId)}
         {@const splitN = w.splitLotCounts.get(a.stockItemId)}
         <tr data-split={splitN ? a.stockItemId : undefined}>
-          <td class="cell-seed">{w.varietyDisplayFor(a.stockItemId)}</td>
+          <td class="cell-seed">
+            {w.varietyDisplayFor(a.stockItemId)}
+            {#if w.lifecycleFor(a.cropPluginId)}
+              <LifecycleLine verdict={w.lifecycleFor(a.cropPluginId)!} compact />
+            {/if}
+          </td>
           <td data-label={tr('wizard.review.thBlock')}>{w.blockNameFor(a.blockId)}</td>
           <td data-label={tr('wizard.review.thPlants')}>
             {#if byArea}

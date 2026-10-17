@@ -2,9 +2,10 @@
   "pluginId": "lavender-english-munstead",
   "type": "crop",
   "displayName": "Lavender English Munstead",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
+  "waterNeed": "low",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 365,
@@ -33,5 +34,39 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "dry",
+      "suitability": "good"
+    }
+  ],
+  "winterHardyToZone": "5a",
+  "careTasks": [
+    {
+      "key": "no-fall-cutback",
+      "topic": "prune",
+      "title": "Do not cut back plants in the fall."
+    },
+    {
+      "key": "prune-after-new-growth",
+      "topic": "prune",
+      "title": "Wait until some new growth starts to appear in the spring before doing any pruning."
+    },
+    {
+      "key": "harvest-as-flowers-open",
+      "topic": "harvest",
+      "title": "Cut stems of lavender just as the flowers start to open."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "spring-prune",
+      "kind": "pruning",
+      "dayOfYear": 100,
+      "windowDays": 30,
+      "title": "Prune lavender in spring",
+      "body": "Wait until new growth starts in spring before pruning. Do not cut the plants back in the fall."
+    }
+  ]
 }

@@ -32,6 +32,7 @@ import type { BedFrost, BedHistoryEntry, GardenCrop, GardenDesign } from '$lib/g
 import type { DesignerCompanion, GardenDesignResponse } from '$lib/garden/api';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { selectablePlanningYears } from '$lib/season/planningYear';
+import { lifecycleVerdictsFor } from './lifecycleLine.server';
 
 export type { DesignerCompanion };
 
@@ -288,5 +289,6 @@ export async function loadDesignerResponse(
     locale: opts.locale
   });
   if (!loaded) return null;
-  return { ...loaded, canEdit, role: opts.role, seasons, activeYear };
+  const lifecycle = await lifecycleVerdictsFor((await getRegistry()).crops());
+  return { ...loaded, canEdit, role: opts.role, seasons, activeYear, lifecycle };
 }

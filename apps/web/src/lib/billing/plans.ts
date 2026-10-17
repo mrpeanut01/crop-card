@@ -33,6 +33,7 @@ const FREE_QUOTA: DailyQuota = {
   'planting-window': 10,
   'garden-fill': 3,
   'photo-help': 3,
+  'garden-brief': 8,
   inputs: 2,
   shortNames: 2,
   'scan-barcode': 10,
@@ -53,6 +54,7 @@ const GROWER_QUOTA: DailyQuota = {
   'planting-window': 40,
   'garden-fill': 10,
   'photo-help': 10,
+  'garden-brief': 20,
   inputs: 10,
   shortNames: 5,
   'scan-barcode': 40,
@@ -73,6 +75,7 @@ const FARM_QUOTA: DailyQuota = {
   'planting-window': 40,
   'garden-fill': 20,
   'photo-help': 20,
+  'garden-brief': 40,
   inputs: 20,
   shortNames: 10,
   'scan-barcode': 60,
@@ -161,6 +164,7 @@ export const AI_RESERVE_USD: Record<AiEndpointName, number> = {
   shortNames: HAIKU,
   'planting-window': HAIKU,
   'garden-fill': HAIKU,
+  'garden-brief': HAIKU,
   'scan-barcode': HAIKU
 };
 

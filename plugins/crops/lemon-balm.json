@@ -2,9 +2,10 @@
   "pluginId": "lemon-balm",
   "type": "crop",
   "displayName": "Lemon Balm (Melissa officinalis)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
+  "waterNeed": "high",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 70,
@@ -31,5 +32,50 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
+    {
+      "method": "dry",
+      "suitability": "fair"
+    },
+    {
+      "method": "freeze",
+      "suitability": "good"
+    }
+  ],
+  "winterHardyToZone": "3a",
+  "careTasks": [
+    {
+      "key": "prune-flower-stalks",
+      "topic": "prune",
+      "title": "To prevent spreading, prune flowering stalks before they have a chance to set seed."
+    },
+    {
+      "key": "harvest-before-flowering",
+      "topic": "harvest",
+      "title": "Stems can be cut as needed anytime during the season preferably before flowering."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "cut-back",
+      "kind": "pruning",
+      "dayOfYear": 180,
+      "windowDays": 30,
+      "title": "Cut back lemon balm",
+      "body": "Cut the plants back to about half their height for fresh new growth, then water to help them recover."
+    },
+    {
+      "key": "thin-midsummer",
+      "kind": "pruning",
+      "dayOfYear": 196,
+      "windowDays": 21,
+      "title": "Thin lemon balm in mid-summer",
+      "body": "Cut out some stems to let air through, and cut off flower stalks before they set seed."
+    }
+  ]
 }

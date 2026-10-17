@@ -2,7 +2,7 @@
   "pluginId": "chervil",
   "type": "crop",
   "displayName": "Chervil (Anthriscus cerefolium)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "apiaceae",
   "preHarvestIntervalDays": 1,
@@ -24,14 +24,29 @@
     "rotationLookbackYears": 1
   },
   "notes": "Cool-season French culinary herb. Mild anise-parsley flavor. Bolts quickly in heat; plant for spring and fall.",
-  "harvestIndicators": [
-    "Lacy bright-green leaves before flowering"
-  ],
+  "harvestIndicators": ["Lacy bright-green leaves before flowering"],
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
     "daysFromPlantingMin": 50,
     "daysFromPlantingMax": 90,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "harvest-open-leaves",
+      "topic": "harvest",
+      "title": "Harvest leaves when they are fully open but still tender."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "sow-again",
+      "kind": "cultural",
+      "daysAfterPlanting": 21,
+      "windowDays": 7,
+      "title": "Sow chervil again",
+      "body": "Sow again every 3 to 4 weeks for fresh leaves, since chervil flowers quickly."
+    }
+  ]
 }

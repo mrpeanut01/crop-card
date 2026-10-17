@@ -15,6 +15,7 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 import { calendarEventTitle } from '$lib/calendar/eventTitle';
 import { taskDisplayBody, taskDisplayTitle } from '$lib/tasks/title';
+import { lifecycleVerdictFor } from '$lib/server/lifecycleLine.server';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const crop = getCrop(params.id);
@@ -86,6 +87,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           hayOperations: cropPlugin.hayOperations
         }
       : null,
+    lifecycle: await lifecycleVerdictFor(cropPlugin),
     sprays,
     harvests,
     insecticides,

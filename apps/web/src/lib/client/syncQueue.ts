@@ -110,6 +110,7 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   'seed-start': '/api/seed-starts/:id/progress',
   irrigation: '/api/irrigation',
   'rain-gauge': '/api/rain-gauge',
+  'irrigation-skip': '/api/irrigation/skips',
   'harvest-disposition': '/api/harvest/:id/dispositions',
   'time-entry': '/api/tasks/:id/time',
   'task-schedule': '/api/tasks',

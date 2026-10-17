@@ -2,7 +2,7 @@
   "pluginId": "thyme-german-winter",
   "type": "crop",
   "displayName": "Thyme — German Winter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
@@ -15,9 +15,7 @@
       "max": 12
     }
   },
-  "harvestIndicators": [
-    "Pre-flower for peak flavor"
-  ],
+  "harvestIndicators": ["Pre-flower for peak flavor"],
   "notes": "Drought-tolerant perennial. Replace plants every 3–4 yr — woody decline.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -25,5 +23,41 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
+    {
+      "method": "dry",
+      "suitability": "good"
+    },
+    {
+      "method": "freeze",
+      "suitability": "good"
+    }
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "5a",
+  "careTasks": [
+    {
+      "key": "renew-in-spring",
+      "topic": "prune",
+      "title": "As thyme gets older, it can become woody and should be renewed every few years by cutting it back severely in the spring."
+    }
+  ],
+  "growthHabit": "woody",
+  "seasonalTasks": [
+    {
+      "key": "renew-cut-back",
+      "kind": "pruning",
+      "dayOfYear": 90,
+      "windowDays": 30,
+      "title": "Cut back woody thyme",
+      "body": "When thyme gets woody, cut it back hard in spring, every few years, for young tender stems."
+    }
+  ]
 }

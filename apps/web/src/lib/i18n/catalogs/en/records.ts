@@ -1194,6 +1194,7 @@ export const enRecords = {
   'recui.qkind.seedStart': 'Seed tray',
   'recui.qkind.irrigation': 'Watering',
   'recui.qkind.rainGauge': 'Rain gauge reading',
+  'recui.qkind.irrigationSkip': 'Skipped watering run',
   'recui.qkind.harvestDisposition': 'Where a harvest went',
   'recui.qkind.taskSchedule': 'Scheduled task',
   'recui.pending.waiting':

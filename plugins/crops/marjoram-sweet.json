@@ -2,7 +2,7 @@
   "pluginId": "marjoram-sweet",
   "type": "crop",
   "displayName": "Marjoram Sweet (Origanum majorana)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -24,14 +24,39 @@
     "rotationLookbackYears": 0
   },
   "notes": "Tender perennial, grown as annual outside zone 9. Sweeter and milder than Greek oregano. Strong drying herb.",
-  "harvestIndicators": [
-    "Tight knot-like buds about to open, strongest oil"
-  ],
+  "harvestIndicators": ["Tight knot-like buds about to open, strongest oil"],
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
     "daysFromPlantingMin": 60,
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "careTasks": [
+    {
+      "key": "prune-at-six-inches",
+      "topic": "prune",
+      "title": "Sweet marjoram tends to be a low spreading plant that benefits from being pruned back when it is 6-8 inches tall to encourage a bushy growth habit."
+    },
+    {
+      "key": "harvest-at-tips",
+      "topic": "harvest",
+      "title": "Harvest marjoram when ball-like tips appear at the ends of the stems."
+    },
+    {
+      "key": "cut-back-at-bloom",
+      "topic": "harvest",
+      "title": "When the plant starts to bloom, cut plants back close to the ground to stimulate a new flush of growth."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "prune-back",
+      "kind": "pruning",
+      "daysAfterPlanting": 30,
+      "windowDays": 21,
+      "title": "Prune back sweet marjoram",
+      "body": "When the plants are 6 to 8 inches tall, prune them back for bushier growth."
+    }
+  ]
 }

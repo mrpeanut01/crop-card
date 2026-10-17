@@ -105,6 +105,27 @@ describe('gettingStartedItems', () => {
     });
   });
 
+  it('asks a garden or herbs owner for the brief until one is saved (37A)', () => {
+    const brief = (f: GettingStartedFacts) => gettingStartedItems(f).find((i) => i.id === 'brief');
+    expect(brief({ ...BLANK, profile: 'garden', hasGardenBrief: false })).toMatchObject({
+      href: '/plan/brief',
+      title: 'Tell us about your garden',
+      optional: true,
+      done: false
+    });
+    expect(
+      brief({ ...BLANK, profile: 'farm', herbsAnswered: true, hasGardenBrief: false })
+    ).toBeTruthy();
+    expect(brief({ ...BLANK, profile: 'farm', hasGardenBrief: false })).toBeUndefined();
+    expect(brief({ ...BLANK, profile: 'garden', hasGardenBrief: true })).toBeUndefined();
+    expect(brief({ ...BLANK, profile: 'garden' })).toBeUndefined();
+    expect(
+      gettingStartedItems({ ...BLANK, profile: 'garden', hasGardenBrief: false }, 'es').find(
+        (i) => i.id === 'brief'
+      )?.title
+    ).toBe('Cuéntanos sobre tu jardín');
+  });
+
   it('never counts cards as saved while the device has not said so', () => {
     const cards = gettingStartedItems(BLANK).find((i) => i.id === 'cards');
     expect(cards?.done).toBe(false);

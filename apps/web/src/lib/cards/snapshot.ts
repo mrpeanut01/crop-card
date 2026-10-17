@@ -7,12 +7,15 @@
  * render as the same day in every time zone; moments are epoch ms.
  */
 
+import type { SnapshotWaterer } from '$lib/irrigation/snapshot';
 import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
 import type { MapFeatureView } from '$lib/farm/mapFeatures';
 import type { Footprint, SpacingPattern } from '$lib/farm/footprint';
 import type { AudienceChoice } from '$lib/orchard/calendar';
 import type { OrchardCalendarView } from '$lib/orchard/calendarView';
+import type { SnapshotPantry } from '$lib/garden/pantrySnapshot';
+import type { SnapshotGardenBrief } from '$lib/garden/brief/schema';
 import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
 /** 2 since 32D: animals, flocks, care plans and precomputed holds.
@@ -25,8 +28,10 @@ import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/so
  *  sown by area, so cached copies are rebuilt.
  *  7: plantings carry `treeSizeClass` (#548) and `sowingMethod` (#555), and
  *  Planting cards show tree spacing and the saved method's seed amount.
- *  8 since #593: orchard calendars and this year's stage marks (`orchard`). */
-export const FARM_SNAPSHOT_VERSION = 8 as const;
+ *  8 since #593: orchard calendars and this year's stage marks (`orchard`).
+ *  9: Phase 37 herb garden parts (`brief`, `pantry`, `herbLifecycle`,
+ *  `waterers`) and the photo help and crop care-task fields. */
+export const FARM_SNAPSHOT_VERSION = 9 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -260,6 +265,8 @@ export interface SnapshotCropPlugin {
   treeSizeClasses?: SnapshotTreeSizeClass[];
   /** The plugin's pruning and thinning steps (never its spray tasks). */
   careTasks?: SnapshotCareTask[];
+  /** Phase 37F: sourced growth habit for the photo help drawing. */
+  growthHabit?: 'woody' | 'clumping';
 }
 
 export interface SnapshotTreeSizeClass {
@@ -273,6 +280,9 @@ export interface SnapshotCareTask {
   key?: string;
   title: string;
   body?: string;
+  /** Phase 37F: set on the crop's own sourced `careTasks` rows (not
+   *  seasonal rows); `harvest` rows show under Harvest cues. */
+  crop?: 'prune' | 'harvest';
 }
 
 /** Month-day strings (`MM-DD`). `cautious` holds the 90%-sure dates, which
@@ -506,7 +516,7 @@ export interface SnapshotCarryoverLine {
 }
 
 export interface FarmSnapshot {
-  version: typeof FARM_SNAPSHOT_VERSION | 7 | 6 | 5 | 4 | 3 | 2 | 1;
+  version: typeof FARM_SNAPSHOT_VERSION | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1;
   ownerId: string;
   farmName: string | null;
   generatedAt: number;
@@ -570,6 +580,23 @@ export interface FarmSnapshot {
   /** #593 orchard calendars and stage marks. Absent on bundles saved before
    *  it and on farms with no tree fruit, grape or blueberry plantings. */
   orchard?: SnapshotOrchard;
+  /** Phase 37C goal lines and kept totals. Absent on farms with no herbs. */
+  pantry?: SnapshotPantry;
+  /** Phase 37B: each herb's own lifecycle and coldest zone, keyed by plugin
+   *  id, for the lifecycle line on Planting and Care Guide cards. Absent on
+   *  bundles saved before it and on farms with no herbs. */
+  herbLifecycle?: Record<string, SnapshotHerbLifecycle>;
+  /** Phase 37A garden brief goals and shortlist ids. Absent before 37A and
+   *  on farms with no saved brief. */
+  brief?: SnapshotGardenBrief;
+  /** Phase 37E automatic waterers: schedule and targets. Absent when the
+   *  farm has none and on bundles saved before it. */
+  waterers?: SnapshotWaterer[];
+}
+
+export interface SnapshotHerbLifecycle {
+  lifecycle?: 'annual' | 'biennial' | 'perennial';
+  winterHardyToZone?: string;
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

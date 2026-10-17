@@ -1,0 +1,1 @@
+ALTER TABLE `harvest_dispositions` ADD `preserved_as` text;

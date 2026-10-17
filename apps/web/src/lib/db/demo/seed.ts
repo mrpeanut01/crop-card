@@ -41,6 +41,8 @@ import { insertAnimal } from '../animals';
 import { insertStay } from '../animalLocations';
 import { insertProductionLog } from '../animalProduction';
 import { insertCarePlan } from '../animalCarePlans';
+import { insertHarvestDisposition } from '../harvestDispositions';
+import { insertIrrigationSkip, replaceWaterTargets } from '../waterers';
 import { materializePluginPrePost } from '../tasks';
 import { placementColumns } from '../crops';
 
@@ -81,8 +83,22 @@ import {
   type DemoSpray,
   type DemoTimeline
 } from '$lib/demo/timeline';
-import { DAY_MS, DEMO_FROST, DEMO_LAT_LON, addDaysYmd, ymdOf, zonedMs } from '$lib/demo/time';
+import {
+  DAY_MS,
+  DEMO_FROST,
+  DEMO_LAT_LON,
+  addDaysYmd,
+  demoSeason,
+  utcDayMs,
+  ymdInYear,
+  ymdOf,
+  zonedMs
+} from '$lib/demo/time';
 import { demoLocalizer, type DemoLocalizer } from '$lib/demo/localize';
+import { demoGardenBrief } from '$lib/garden/brief/demo';
+import { saveGardenBrief } from '$lib/server/garden/briefStore';
+import { demoPantryFixture } from './pantryFixture';
+import { DEMO_WATERER_AREA, demoWatererFixture } from './watererFixture';
 
 export const DEMO_FARM_NAME: string = CATALOG_FARM_NAME;
 
@@ -769,7 +785,210 @@ function writeFarm(input: DemoSeedInput, t: DemoTimeline): Record<string, number
     }
   }
 
+  writeHerbGarden(input, bump);
+
   return counts;
+}
+
+// ─── herb garden (Phase 37, R-15) ───────────────────────────────────────
+
+const HERB_GARDEN = {
+  name: DEMO_WATERER_AREA,
+  cxFt: -45,
+  cyFt: -75,
+  widthFt: 20,
+  lengthFt: 24
+} as const;
+
+const HERB_BEDS = [
+  { n: 1, xFt: 2, yFt: 2 },
+  { n: 2, xFt: 12, yFt: 2 },
+  { n: 3, xFt: 2, yFt: 13 },
+  { n: 4, xFt: 12, yFt: 13 }
+] as const;
+
+interface HerbPlanting {
+  cropPluginId: string;
+  variety: string;
+  bed: 0 | 1 | 2 | 3;
+  footprint: { x_in: number; y_in: number; w_in: number; l_in: number };
+  /** Perennials: planted on 04-25 this many seasons before the anchor. */
+  yearsAgo?: number;
+  /** Annuals: planted this many days before the demo clock. */
+  daysAgo?: number;
+}
+
+const HERB_PLANTINGS: readonly HerbPlanting[] = [
+  {
+    cropPluginId: 'oregano-greek',
+    variety: 'Greek oregano',
+    bed: 0,
+    footprint: { x_in: 0, y_in: 0, w_in: 48, l_in: 96 },
+    yearsAgo: 2
+  },
+  {
+    cropPluginId: 'chives-common',
+    variety: 'Common chives',
+    bed: 1,
+    footprint: { x_in: 0, y_in: 0, w_in: 48, l_in: 96 },
+    yearsAgo: 2
+  },
+  {
+    cropPluginId: 'basil-genovese',
+    variety: 'Genovese basil',
+    bed: 2,
+    footprint: { x_in: 0, y_in: 0, w_in: 48, l_in: 96 },
+    daysAgo: 70
+  },
+  {
+    cropPluginId: 'cilantro-santo',
+    variety: 'Santo cilantro',
+    bed: 3,
+    footprint: { x_in: 0, y_in: 0, w_in: 48, l_in: 48 },
+    daysAgo: 45
+  },
+  {
+    cropPluginId: 'parsley-italian-flat-leaf',
+    variety: 'Italian flat-leaf parsley',
+    bed: 3,
+    footprint: { x_in: 0, y_in: 48, w_in: 48, l_in: 48 },
+    daysAgo: 60
+  }
+];
+
+/** Willow Run's herb garden: a four-bed garden Area with two perennial and
+ *  three annual-or-biennial herbs, the garden brief, a few kept harvests for
+ *  /plan/pantry and a drip timer with one skipped run. Every planting and
+ *  record is dated at or before `now`; perennials keep their date as the
+ *  demo clock moves within a season. */
+function writeHerbGarden(input: DemoSeedInput, bump: (key: string, n?: number) => void): void {
+  const { userId, now } = input;
+  const anchorSeason = demoSeason(input.anchor ?? now).current;
+  const area = createField({
+    name: L(HERB_GARDEN.name),
+    kind: 'garden',
+    details: { organicStatus: 'non-organic', irrigation: 'drip' },
+    widthFt: HERB_GARDEN.widthFt,
+    lengthFt: HERB_GARDEN.lengthFt,
+    geometryGeojson: rectPolygon(
+      HERB_GARDEN.cxFt,
+      HERB_GARDEN.cyFt,
+      HERB_GARDEN.widthFt,
+      HERB_GARDEN.lengthFt
+    )
+  });
+  bump('areas');
+  const beds = HERB_BEDS.map((b) => {
+    const block = createBlock({
+      name: L(`Herb bed ${b.n}`),
+      fieldId: area.id,
+      kind: 'bed',
+      widthFt: 4,
+      lengthFt: 8,
+      xFt: b.xFt,
+      yFt: b.yFt,
+      bedStyle: 'raised',
+      sunExposure: 'full'
+    });
+    bump('blocks');
+    return block.id;
+  });
+
+  const plantingFor = new Map<string, { id: string; blockId: string; plantedAt: number }>();
+  for (const h of HERB_PLANTINGS) {
+    const plantedAt =
+      h.yearsAgo !== undefined
+        ? utcDayMs(ymdInYear(anchorSeason - h.yearsAgo, '04-25'))
+        : utcDayMs(addDaysYmd(ymdOf(now), -(h.daysAgo ?? 0)));
+    const id = randomUUID();
+    const blockId = beds[h.bed];
+    db.insert(crops)
+      .values(
+        tenantValues({
+          id,
+          blockId,
+          cropPluginId: h.cropPluginId,
+          varietyDisplayName: L(h.variety),
+          plantingDate: new Date(Math.min(plantedAt, now)),
+          status: 'active',
+          establishment: 'transplant',
+          ...placementColumns({
+            footprint: h.footprint,
+            spacingIn: null,
+            rowSpacingIn: null,
+            spacingPattern: 'square',
+            plantCount: null,
+            plantCountProvenance: null
+          })
+        })
+      )
+      .run();
+    plantingFor.set(h.cropPluginId, { id, blockId, plantedAt });
+    bump('plantings.active');
+  }
+
+  saveGardenBrief(demoGardenBrief(now));
+  bump('settings');
+
+  for (const h of demoPantryFixture()) {
+    const planting = plantingFor.get(h.cropPluginId);
+    if (!planting) continue;
+    const at = Math.max(now - h.daysAgo * DAY_MS, planting.plantedAt + DAY_MS);
+    if (at > now) continue;
+    const ev = insertCropHarvestEvent({
+      blockId: planting.blockId,
+      cropId: planting.id,
+      cropPluginId: h.cropPluginId,
+      occurredAt: at,
+      quantity: h.quantity,
+      performedById: userId
+    });
+    bump('records.harvest_event');
+    for (const d of h.dispositions) {
+      insertHarvestDisposition(
+        {
+          harvestEventId: ev.id,
+          kind: d.kind,
+          quantity: d.quantity,
+          unit: d.unit,
+          occurredAt: at,
+          recipient: L(d.recipient ?? null),
+          soldAsOrganic: null,
+          preservedAs: d.preservedAs ?? null
+        },
+        { createdBy: userId, now: at }
+      );
+      bump('records.harvest_disposition');
+    }
+  }
+
+  const waterer = demoWatererFixture(now);
+  const timer = createEquipment({
+    type: waterer.equipment.type,
+    label: L(waterer.equipment.label),
+    spec: waterer.equipment.spec
+  });
+  bump('equipment');
+  const bedByName = new Map(HERB_BEDS.map((b, i) => [`Herb bed ${b.n}`, beds[i]]));
+  replaceWaterTargets(
+    timer.id,
+    waterer.targets
+      .filter((x) => x.areaName === DEMO_WATERER_AREA)
+      .map((x) => ({
+        fieldId: area.id,
+        blockId: x.bedName === null ? null : (bedByName.get(x.bedName) ?? null)
+      }))
+  );
+  for (const skip of waterer.skips) {
+    if (skip.scheduledAt > now) continue;
+    insertIrrigationSkip({
+      equipmentId: timer.id,
+      scheduledAt: skip.scheduledAt,
+      reason: skip.reason,
+      createdBy: userId
+    });
+    bump('records.irrigation_skip');
+  }
 }
 
 // ─── settings ───────────────────────────────────────────────────────────

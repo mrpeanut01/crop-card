@@ -933,6 +933,73 @@ export const nitrogenNeedSchema = z
   .max(3);
 export type NitrogenNeed = z.infer<typeof nitrogenNeedSchema>;
 
+// Phase 37C: how an herb keeps and how often it can be cut. Each entry needs
+// a source under `preserving.<method>` (and `preserving.infuse.safety` for
+// infuse) or `harvestCadence` in apps/web/scripts/crop-data-sources.json.
+// The method list equals PRESERVING_METHODS in apps/web/src/lib/garden/preserving.ts.
+export const CROP_PRESERVING_METHODS = [
+  "fresh",
+  "dry",
+  "freeze",
+  "freeze-dry",
+  "infuse",
+] as const;
+export const CROP_PRESERVING_SUITABILITY = ["good", "fair", "poor"] as const;
+
+export const preservingSchema = z
+  .array(
+    z.strictObject({
+      method: z.enum(CROP_PRESERVING_METHODS),
+      suitability: z.enum(CROP_PRESERVING_SUITABILITY),
+      note: z.string().trim().min(1).max(300).optional(),
+    }),
+  )
+  .min(1)
+  .max(CROP_PRESERVING_METHODS.length)
+  .refine((rows) => new Set(rows.map((r) => r.method)).size === rows.length, {
+    message: "one preserving entry per method",
+  });
+export type CropPreserving = z.infer<typeof preservingSchema>[number];
+
+export const harvestCadenceSchema = z.strictObject({
+  everyDays: z
+    .strictObject({
+      min: z.number().int().min(1).max(120),
+      max: z.number().int().min(1).max(120),
+    })
+    .refine((v) => v.min <= v.max, { message: "min must be ≤ max" }),
+  from: z.literal("first-cut"),
+});
+export type HarvestCadence = z.infer<typeof harvestCadenceSchema>;
+// Phase 37F: crop-level care steps and the growth habit the photo help
+// drawing follows. Each care task needs a source under `careTasks.<key>` in
+// apps/web/scripts/crop-data-sources.json whose quote holds its title and
+// body word for word; a growth habit needs a source under `growthHabit`
+// whose quote names it. Shown in the Care Guide above the family tips.
+export const CROP_CARE_TASK_TOPICS = ["prune", "harvest"] as const;
+export const cropCareTaskSchema = z.strictObject({
+  key: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
+  topic: z.enum(CROP_CARE_TASK_TOPICS),
+  title: z.string().trim().min(1).max(200),
+  body: z.string().trim().min(1).max(400).optional(),
+});
+export type CropCareTask = z.infer<typeof cropCareTaskSchema>;
+export const cropCareTasksSchema = z
+  .array(cropCareTaskSchema)
+  .min(1)
+  .max(12)
+  .refine((rows) => new Set(rows.map((r) => r.key)).size === rows.length, {
+    message: "careTasks keys must be unique",
+  });
+export const GROWTH_HABITS = ["woody", "clumping"] as const;
+export type GrowthHabit = (typeof GROWTH_HABITS)[number];
+// Phase 37E: how much water the crop likes, as an extension page words it
+// (dry, moderate or moist soil). Needs a source under `waterNeed` in
+// apps/web/scripts/crop-data-sources.json that `waterNeedQuoteGaps` maps to
+// the same value. Shown beside the watering verdict; never changes it (R-10).
+export const WATER_NEEDS = ["low", "medium", "high"] as const;
+export type WaterNeed = (typeof WATER_NEEDS)[number];
+
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
   cropFamily: z.preprocess(
@@ -1117,6 +1184,23 @@ export const cropPluginSchema = pluginBase.extend({
   nitrogenNeedLbPerAcre: nitrogenNeedSchema.optional(),
   /** #686: sourced yearly harvest period for a perennial. */
   harvestSeason: harvestSeasonSchema.optional(),
+  // Phase 37C
+  preserving: preservingSchema.optional(),
+  harvestCadence: harvestCadenceSchema.optional(),
+  // Phase 37B: the coldest USDA zone a perennial survives, as its source
+  // prints it ("7" or "7a"); quoted under `winterHardyToZone`.
+  winterHardyToZone: z
+    .string()
+    .regex(/^(1[0-3]|[1-9])[ab]?$/)
+    .optional(),
+  // Phase 37F
+  /** Sourced prune and harvest steps for this crop (Care Guide). */
+  careTasks: cropCareTasksSchema.optional(),
+  /** Sourced growth habit for the photo help drawing. */
+  growthHabit: z.enum(GROWTH_HABITS).optional(),
+  // Phase 37E
+  /** Sourced watering need: low (dry), medium (moderate) or high (moist). */
+  waterNeed: z.enum(WATER_NEEDS).optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

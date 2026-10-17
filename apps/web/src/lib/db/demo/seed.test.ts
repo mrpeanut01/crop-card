@@ -22,6 +22,9 @@ import { listCuttings } from '../hayCuttings';
 import { listSprayEvents } from '../sprayEvents';
 import { listFungicideEvents } from '../fungicideEvents';
 import { getSetting } from '../settings';
+import { listDispositions } from '../harvestDispositions';
+import { listIrrigationSkips, listWaterTargets } from '../waterers';
+import { loadGardenBrief } from '$lib/server/garden/briefStore';
 import { seedDemoFarm, DEMO_FARM_NAME } from './seed';
 import { needsDecon } from '$lib/equipment/decon';
 import { getOnboardingStatus, getGettingStartedDismissedAt } from '$lib/onboarding/state.server';
@@ -59,6 +62,8 @@ const RECORD_DATE_COLUMNS: Array<[string, string[]]> = [
   ['insecticide_events', ['occurred_at']],
   ['fungicide_events', ['occurred_at']],
   ['harvest_events', ['occurred_at']],
+  ['harvest_dispositions', ['occurred_at', 'created_at']],
+  ['irrigation_skips', ['scheduled_at']],
   ['hay_cuttings', ['mow_at', 'ted_at', 'rake_at', 'bale_at', 'stored_at']],
   ['scout_observations', ['occurred_at']],
   ['fertility_applications', ['occurred_at']],
@@ -236,7 +241,7 @@ describe.each(NOWS)('seedDemoFarm on %s', (ymd) => {
       expect(care.open.length).toBeGreaterThanOrEqual(3);
 
       const blocks = listBlocks({ plantings: 'current', now });
-      expect(blocks.length).toBe(16);
+      expect(blocks.length).toBe(20);
       const registry = await getRegistry();
       for (const b of blocks) {
         for (const p of b.plantings) {
@@ -274,7 +279,7 @@ describe.each(NOWS)('seedDemoFarm on %s', (ymd) => {
         expect(statuses.has('planned')).toBe(true);
 
       // /equipment and the decon alert: only the orchard sprayer is dirty.
-      expect(listEquipment().length).toBe(10);
+      expect(listEquipment().length).toBe(11);
       const sprayers = listSprayers();
       expect(sprayers).toHaveLength(3);
       const dirty = sprayers.filter((s) =>
@@ -334,7 +339,32 @@ describe.each(NOWS)('seedDemoFarm on %s', (ymd) => {
       expect(held).toEqual([]);
       expect(holds.covered.size).toBe(0);
 
-      expect(listFields().length).toBe(9);
+      expect(listFields().length).toBe(10);
+
+      // Phase 37: the herb garden, its brief, the pantry and the drip timer.
+      const herbGarden = listFields().find((f) => f.name === 'Herb garden')!;
+      expect(herbGarden.kind).toBe('garden');
+      const herbBeds = listBlocks({ plantings: 'current', now }).filter(
+        (b) => b.fieldId === herbGarden.id
+      );
+      expect(herbBeds).toHaveLength(4);
+      const herbs = herbBeds.flatMap((b) => b.plantings);
+      expect(herbs.map((p) => p.cropPluginId).sort()).toEqual([
+        'basil-genovese',
+        'chives-common',
+        'cilantro-santo',
+        'oregano-greek',
+        'parsley-italian-flat-leaf'
+      ]);
+      expect(herbs.every((p) => p.status === 'active' && (p.plantingDate ?? 0) <= now)).toBe(true);
+      expect(loadGardenBrief()?.shortlist.length).toBeGreaterThan(0);
+      const kept = listDispositions({ fromMs: 0, toMs: now }).filter((d) => d.kind === 'kept');
+      expect(kept.some((d) => d.preservedAs === 'dry')).toBe(true);
+      const timer = listEquipment().find((e) => e.type === 'irrigation')!;
+      expect(listWaterTargets([timer.id])).toEqual([
+        { equipmentId: timer.id, fieldId: herbGarden.id, blockId: null }
+      ]);
+      expect(listIrrigationSkips({ equipmentIds: [timer.id] }).length).toBeLessThanOrEqual(1);
     });
   }, 30_000);
 });

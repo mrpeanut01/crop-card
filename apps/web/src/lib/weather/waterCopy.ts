@@ -16,6 +16,9 @@ import {
   type WaterVerdict
 } from './waterBalance';
 import { WATER_TARGET_SOURCE } from './waterSources';
+import { cropDisplayName } from '$lib/i18n/cropName';
+import { ymdInZone } from '$lib/prefs';
+import type { TodayAdviceAction } from '$lib/today/advice';
 
 export const RAIN_UNKNOWN_LINE = 'Rain unknown here, check your gauge.';
 export const NO_TARGET_LINE = 'No weekly water target set.';
@@ -80,6 +83,9 @@ function bedGroupLine(
   if (reason === 'amount-not-logged') {
     const latest = latestUnknownLog(beds);
     const day = weekdayText(latest.unknownLogAtMs ?? 0, timeZone, locale);
+    if (latest.unknownLogTimer) {
+      return line('herbse.water.bedTimerNoAmount', { timer: latest.unknownLogTimer, day });
+    }
     return line(
       latest.unknownLogNeedsSize
         ? 'advice.water.bedWateredNoSize'
@@ -88,6 +94,7 @@ function bedGroupLine(
     );
   }
   if (reason === 'no-target') return line('advice.water.bedNoTarget');
+  if (reason === 'indoors') return line('herbse.water.bedIndoors');
   return line(
     balance.gaugeHours > 0 ? 'advice.water.bedGaugePartial' : 'advice.water.bedRainUnknown'
   );
@@ -115,6 +122,9 @@ function uniformTitle(
   if (balance.reason === 'greenhouse') {
     return { title: area, lines: [t(locale, 'advice.water.greenhouse')] };
   }
+  if (balance.reason === 'indoors') {
+    return { title: area, lines: [t(locale, 'herbse.water.indoors')] };
+  }
   if (balance.reason === 'covered') {
     return { title: m('advice.water.coveredTitle'), lines: [t(locale, 'advice.water.covered')] };
   }
@@ -129,6 +139,12 @@ function uniformTitle(
   if (balance.reason === 'amount-not-logged') {
     const latest = latestUnknownLog(open);
     const day = weekdayText(latest.unknownLogAtMs ?? 0, tz, locale);
+    if (latest.unknownLogTimer) {
+      return {
+        title: m('advice.water.notLoggedTitle'),
+        lines: [t(locale, 'herbse.water.timerNoAmount', { timer: latest.unknownLogTimer, day })]
+      };
+    }
     return {
       title: m('advice.water.notLoggedTitle'),
       lines: latest.unknownLogNeedsSize
@@ -194,6 +210,18 @@ export interface WaterCardInput {
   noLocation?: boolean;
   /** The viewer's language; English when unset. */
   locale?: string | null;
+  /** Phase 37E: the automatic waterers on this Area. */
+  timers?: readonly TimerCardInfo[];
+  /** Owners and helpers get the one-tap skip; inspectors only read. */
+  canRecord?: boolean;
+  /** Owners get a link to type a timer's inches per run. */
+  canEditTimers?: boolean;
+  /** R-11: a container Area on a sourced hot day. */
+  potHeat?: boolean;
+  /** English crop names by plugin id, for the water-need words. */
+  cropNames?: Readonly<Record<string, string>>;
+  /** Defaults to the current time. */
+  nowMs?: number;
 }
 
 export function waterDetail(input: WaterCardInput): string {
@@ -260,14 +288,18 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
     );
     for (const g of ordered) lines.push(bedGroupLine(g[0].verdict, g[0].reason, g, tz, b, loc));
   }
-  if (b.rainIn !== null && b.reason !== 'greenhouse') {
+  lines.push(...needLines(open, input.cropNames, loc));
+  if (b.rainIn !== null && b.reason !== 'greenhouse' && b.reason !== 'indoors') {
     lines.push(rainTotalLine(b.rainIn, b.rainTrusted, b.coveredHours, loc));
   }
   const watered = wateredLine(open, loc);
   if (watered) lines.push(watered);
-  if (input.forecastIn !== null && input.forecastIn >= 0.05) {
+  if (input.forecastIn !== null && input.forecastIn >= 0.05 && b.reason !== 'indoors') {
     lines.push(t(loc, 'advice.water.forecast', { inches: inchesText(input.forecastIn) }));
   }
+  if (input.potHeat) lines.push(t(loc, 'herbse.water.potHeat'));
+  const timer = timerParts(input, open);
+  lines.push(...timer.lines);
   const provenance =
     b.rainSource === 'gauge' || b.rainSource === 'both'
       ? 'manual'
@@ -294,9 +326,166 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
         label: t(loc, 'today.advice.rainGauge'),
         sheet: 'rain-gauge',
         fieldId: input.fieldId
-      }
+      },
+      ...timer.actions
     ],
     sortKey:
       100 + verdictRank(b.verdict) * 10 + (b.reason === 'no-target' ? NO_TARGET_SORT_OFFSET : 0)
   };
+}
+
+// ─── Phase 37E: water need and automatic waterers ───────────────────────
+
+/** What a card says about one automatic waterer on its Area. */
+export interface TimerCardInfo {
+  equipmentId: string;
+  label: string;
+  minutes: number;
+  /** The next run that was not skipped, within about a week. */
+  nextRunAt: number | null;
+  inchesPerRun: number | null;
+  /** The latest run in the window that counts as water given. */
+  lastRunAt: number | null;
+  /** Beds it waters on this Area; null for the whole Area. */
+  bedIds: readonly string[] | null;
+}
+
+/** "thyme" from "Thyme — English", in the viewer's language. */
+export function shortCropName(
+  pluginId: string,
+  names: Readonly<Record<string, string>> | undefined,
+  locale?: Loc
+): string {
+  const shown = cropDisplayName(pluginId, names?.[pluginId] ?? pluginId, locale);
+  const base = (shown.split(/\s[—–]\s|,|\(/)[0] ?? shown).trim();
+  return base.charAt(0).toLocaleLowerCase() + base.slice(1);
+}
+
+/** The need as words beside the verdict (R-10): "Check the soil first:
+ *  thyme likes it dry" on a dry-loving bed told to water, a mixed-needs line
+ *  for a shared bed, and the need words otherwise. Never changes the verdict. */
+export function needLines(
+  open: readonly BedVerdict[],
+  names?: Readonly<Record<string, string>>,
+  locale?: Loc
+): string[] {
+  const lines: string[] = [];
+  const named = open.length > 1;
+  for (const bed of open) {
+    if (!bed.needLine) continue;
+    const ids = bed.needCropPluginIds;
+    const crops = joinNames(
+      ids.map((id) => shortCropName(id, names, locale)),
+      locale
+    );
+    if (bed.checkSoilFirst) {
+      const many = ids.length > 1;
+      const key: MessageKey = named
+        ? many
+          ? 'herbse.water.checkSoilBed.many'
+          : 'herbse.water.checkSoilBed.one'
+        : many
+          ? 'herbse.water.checkSoil.many'
+          : 'herbse.water.checkSoil.one';
+      lines.push(t(locale, key, { bed: bed.bedName, crops }));
+    } else if (bed.needLine === 'mixed') {
+      lines.push(t(locale, 'herbse.water.mixed', { bed: bed.bedName }));
+    } else {
+      lines.push(
+        t(locale, 'herbse.water.needLine', {
+          bed: bed.bedName,
+          level: t(locale, `herbse.need.${bed.needLine}`),
+          crops
+        })
+      );
+    }
+  }
+  return lines;
+}
+
+/** "today at 6:00 AM", "tomorrow at 6:00 AM" or "Fri at 6:00 AM" in the
+ *  farm's time zone. */
+export function runWhenText(ms: number, nowMs: number, timeZone: string, locale?: Loc): string {
+  const time = dateTimeFormat(intlLocale(locale), {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone
+  }).format(new Date(ms));
+  const day = ymdInZone(ms, timeZone);
+  if (day === ymdInZone(nowMs, timeZone)) return t(locale, 'herbse.when.today', { time });
+  if (day === ymdInZone(nowMs + 86_400_000, timeZone)) {
+    return t(locale, 'herbse.when.tomorrow', { time });
+  }
+  return t(locale, 'herbse.when.day', { day: weekdayText(ms, timeZone, locale), time });
+}
+
+/** Lines and one-tap actions for the Area's automatic waterers: "Drip timer
+ *  gives 0.4 in tomorrow at 6:00 AM; the week is at 1.1 in already, skip it"
+ *  when the beds it waters already have enough. */
+export function timerParts(
+  input: WaterCardInput,
+  open: readonly BedVerdict[]
+): { lines: string[]; actions: TodayAdviceAction[] } {
+  const lines: string[] = [];
+  const actions: TodayAdviceAction[] = [];
+  const loc = input.locale;
+  const tz = input.timeZone;
+  const now = input.nowMs ?? Date.now();
+  const b = input.balance;
+  for (const timer of input.timers ?? []) {
+    const beds = open.filter((x) => timer.bedIds === null || timer.bedIds.includes(x.bedId));
+    const enough = beds.length > 0 && beds.every((x) => x.verdict === 'ok' || x.verdict === 'skip');
+    const week = beds.length
+      ? inchesText((b.rainIn ?? 0) + Math.min(...beds.map((x) => x.wateredIn)))
+      : null;
+    if (timer.nextRunAt !== null) {
+      const when = runWhenText(timer.nextRunAt, now, tz, loc);
+      const known = timer.inchesPerRun !== null;
+      const params = {
+        timer: timer.label,
+        when,
+        minutes: String(timer.minutes),
+        inches: known ? inchesText(timer.inchesPerRun as number) : '',
+        week: week ?? ''
+      };
+      const key: MessageKey =
+        enough && week !== null
+          ? known
+            ? 'herbse.timer.skipIt'
+            : 'herbse.timer.skipItNoAmount'
+          : known
+            ? 'herbse.timer.next'
+            : 'herbse.timer.nextNoAmount';
+      lines.push(t(loc, key, params));
+      if (input.canRecord) {
+        actions.push({
+          kind: 'skip-run',
+          label: t(loc, 'herbse.timer.skipAction', { timer: timer.label, when }),
+          equipmentId: timer.equipmentId,
+          scheduledAt: timer.nextRunAt,
+          reason: enough ? 'turned-off-for-rain' : 'other'
+        });
+      }
+    }
+    if (timer.lastRunAt !== null && input.canRecord) {
+      actions.push({
+        kind: 'skip-run',
+        label: t(loc, 'herbse.timer.didNotRun', {
+          timer: timer.label,
+          day: weekdayText(timer.lastRunAt, tz, loc)
+        }),
+        equipmentId: timer.equipmentId,
+        scheduledAt: timer.lastRunAt,
+        reason: 'did-not-run'
+      });
+    }
+    if (timer.inchesPerRun === null && input.canEditTimers) {
+      actions.push({
+        kind: 'link',
+        label: t(loc, 'herbse.timer.setAmount', { timer: timer.label }),
+        href: `/equipment/${encodeURIComponent(timer.equipmentId)}`
+      });
+    }
+  }
+  return { lines, actions };
 }

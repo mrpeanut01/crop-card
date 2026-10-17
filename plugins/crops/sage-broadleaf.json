@@ -2,7 +2,7 @@
   "pluginId": "sage-broadleaf",
   "type": "crop",
   "displayName": "Sage — Broadleaf (Salvia officinalis)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
@@ -15,9 +15,7 @@
       "max": 12
     }
   },
-  "harvestIndicators": [
-    "Pre-flower for best flavor"
-  ],
+  "harvestIndicators": ["Pre-flower for best flavor"],
   "notes": "Hardy perennial; replace every 3–4 yr.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -25,5 +23,43 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "dry",
+      "suitability": "good"
+    }
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "4a",
+  "careTasks": [
+    {
+      "key": "prune-in-spring",
+      "topic": "prune",
+      "title": "Prune plants back in the spring just as new growth resumes."
+    },
+    {
+      "key": "harvest-leaves",
+      "topic": "harvest",
+      "title": "Leaves can be harvested through the season as needed."
+    },
+    {
+      "key": "cut-for-drying",
+      "topic": "harvest",
+      "title": "Cut 6-8 inch long stems for drying."
+    }
+  ],
+  "growthHabit": "woody",
+  "seasonalTasks": [
+    {
+      "key": "spring-prune",
+      "kind": "pruning",
+      "dayOfYear": 95,
+      "windowDays": 21,
+      "title": "Prune sage in spring",
+      "body": "Prune the plants back in spring just as new growth starts."
+    }
+  ]
 }

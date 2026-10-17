@@ -52,7 +52,7 @@ describe('orchard part of the card snapshot (#593)', () => {
     runWithTenant(owner, () => createBlock({ name: 'Bed' }));
     const snap = await build(owner);
     expect(snap.version).toBe(FARM_SNAPSHOT_VERSION);
-    expect(FARM_SNAPSHOT_VERSION).toBe(8);
+    expect(FARM_SNAPSHOT_VERSION).toBe(9);
     expect(snap.orchard).toBeUndefined();
   });
 

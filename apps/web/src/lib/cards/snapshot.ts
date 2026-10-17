@@ -28,8 +28,10 @@ import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/so
  *  sown by area, so cached copies are rebuilt.
  *  7: plantings carry `treeSizeClass` (#548) and `sowingMethod` (#555), and
  *  Planting cards show tree spacing and the saved method's seed amount.
- *  8 since #593: orchard calendars and this year's stage marks (`orchard`). */
-export const FARM_SNAPSHOT_VERSION = 8 as const;
+ *  8 since #593: orchard calendars and this year's stage marks (`orchard`).
+ *  9: Phase 37 herb garden parts (`brief`, `pantry`, `herbLifecycle`,
+ *  `waterers`) and the photo help and crop care-task fields. */
+export const FARM_SNAPSHOT_VERSION = 9 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -514,7 +516,7 @@ export interface SnapshotCarryoverLine {
 }
 
 export interface FarmSnapshot {
-  version: typeof FARM_SNAPSHOT_VERSION | 7 | 6 | 5 | 4 | 3 | 2 | 1;
+  version: typeof FARM_SNAPSHOT_VERSION | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1;
   ownerId: string;
   farmName: string | null;
   generatedAt: number;

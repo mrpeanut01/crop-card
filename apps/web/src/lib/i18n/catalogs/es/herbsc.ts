@@ -101,5 +101,8 @@ export const esHerbsc: Partial<Record<MessageKey, string>> = {
   'herbsc.suit.good': '{method}: se conserva bien',
   'herbsc.suit.fair': '{method}: bastante bien',
   'herbsc.suit.poor': '{method}: mal',
-  'herbsc.card.goals': 'Metas de cosecha'
+  'herbsc.card.goals': 'Metas de cosecha',
+  'herbsc.planLinks.label': 'Jardín de hierbas',
+  'herbsc.planLinks.brief': 'Plan de jardín',
+  'herbsc.planLinks.pantry': 'Despensa'
 };

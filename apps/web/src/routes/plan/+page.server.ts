@@ -56,6 +56,7 @@ import { planSetupPrompts } from '$lib/onboarding/pageSetup';
 import { getFarmProfile } from '$lib/onboarding/state.server';
 import { hasGardenBrief, loadGardenBrief } from '$lib/server/garden/briefStore';
 import { briefWizardSeeds } from '$lib/garden/brief/handoff';
+import { isHerbGardenCrop } from '$lib/garden/herbs';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { getSetting } from '$lib/db/settings';
 import {
@@ -166,6 +167,13 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   const blocks = listBlocks();
   const fields = listFields();
+  const briefSaved = hasGardenBrief();
+  // Phase 37: the Garden brief and Pantry links, from reads already made.
+  const herbGardenLinks =
+    briefSaved ||
+    blocks.some((b) =>
+      b.plantings.some((p) => p.status !== 'archived' && isHerbGardenCrop(p.cropPluginId))
+    );
   const isFirstRun = blocks.length === 0 && fields.length === 0;
   const canEdit = locals.user?.role === 'owner';
   const keepInOneBedCrops = canEdit ? keepInOneBedCrops_() : [];
@@ -288,11 +296,12 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         hasSeed: allSeedStock.length > 0,
         year: currentYear,
         profile: getFarmProfile(),
-        hasGardenBrief: hasGardenBrief()
+        hasGardenBrief: briefSaved
       },
       locals.user?.role ?? 'helper',
       locals.locale
     ),
+    herbGardenLinks,
     priorSeason: priorSeasonSummary(blocks, currentYear),
     // Phase 25d v2-addendum (#89) — drives AI-on/off variant on the
     // schedule step of the AllocationWizard.

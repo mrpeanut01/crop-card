@@ -8468,11 +8468,11 @@
   },
   "lemongrass-east-indian": {
     "lifecycle.notRecorded": {
-      "reason": "No source on East Indian lemongrass (Cymbopogon flexuosus) was found. Illinois Extension (Lemon Grass) and the NC State Plant Toolbox cover Cymbopogon citratus only (\"Tender Perennial\"; zones 8b to 11b). See docs/research/phase-37-herb-research-b.md.",
+      "reason": "No source on East Indian lemongrass (Cymbopogon flexuosus) was found. Illinois Extension (Lemon Grass) and the NC State Plant Toolbox cover Cymbopogon citratus only (\"Tender Perennial\"; zones 8b to 11b). See docs/research/phase-37-herb-research-prompt.md (Task 1).",
       "date": "2026-10-17"
     },
     "winterHardyToZone.notRecorded": {
-      "reason": "No source states a zone for East Indian lemongrass (Cymbopogon flexuosus); see docs/research/phase-37-herb-research-b.md.",
+      "reason": "No source states a zone for East Indian lemongrass (Cymbopogon flexuosus); see docs/research/phase-37-herb-research-prompt.md (Task 1).",
       "date": "2026-10-17"
     }
   },

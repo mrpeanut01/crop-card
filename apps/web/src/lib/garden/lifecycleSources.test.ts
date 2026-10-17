@@ -19,7 +19,8 @@ const source = (quote: string, url = 'https://pubs.ext.vt.edu/426/426-420/426-42
   quote
 });
 const REASON = {
-  reason: 'No source fetched in Phase 37; see docs/research/phase-37-herb-research-b.md'
+  reason:
+    'No source fetched in Phase 37; see docs/research/phase-37-herb-research-prompt.md (Task 1)'
 };
 
 describe('quote helpers', () => {

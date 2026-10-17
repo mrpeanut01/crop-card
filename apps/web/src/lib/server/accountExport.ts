@@ -152,7 +152,7 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
   const journalPhotos = journalPhotoFacts();
 
   return {
-    schemaVersion: '1.6.0',
+    schemaVersion: '1.7.0',
     generatedAt: new Date().toISOString(),
     generator: `CropCard v${APP_VERSION}`,
     rulesVersion: RULES_VERSION,

@@ -26,6 +26,7 @@
     disabled?: boolean;
   }
 
+  // eslint-disable-next-line prefer-const -- `answers` is $bindable and reassigned; the rest share the one $props() call
   let { answers = $bindable(), herbs, disabled = false }: Props = $props();
 
   const tr = $derived(createT(page.data?.locale));

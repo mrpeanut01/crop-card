@@ -95,5 +95,8 @@ export const enHerbsc = {
   'herbsc.suit.good': '{method}: keeps well',
   'herbsc.suit.fair': '{method}: fairly well',
   'herbsc.suit.poor': '{method}: poorly',
-  'herbsc.card.goals': 'Harvest goals'
+  'herbsc.card.goals': 'Harvest goals',
+  'herbsc.planLinks.label': 'Herb garden',
+  'herbsc.planLinks.brief': 'Garden brief',
+  'herbsc.planLinks.pantry': 'Pantry'
 } as const;

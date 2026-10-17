@@ -21,8 +21,8 @@
  *
  *   1. `philosophyFilter.isProductAllowed()` for every substituted
  *      product.
- *   2. `safety/cropCompatibility.checkCropCompatibility()` for every
- *      (product, crop family) pair.
+ *   2. `herbicideSafeOnCrop()` (the kernel's crop compatibility check,
+ *      with the label's trait claim) for every (product, crop) pair.
  *   3. `safety/chemistry.checkChemistryCompatibility()` for every
  *      tank-mix group.
  *   4. Rate ≤ plugin's `ratePerAcre` ceiling.
@@ -34,11 +34,16 @@
 
 import { anthropicClient } from './anthropicClient';
 
-import { planInputs, type InputsPlan, type InputsPlanInput } from '$lib/plan/inputsPlan';
+import {
+  herbicideSafeOnCrop,
+  planInputs,
+  type InputsPlan,
+  type InputsPlanInput
+} from '$lib/plan/inputsPlan';
 import { isProductAllowed } from '$lib/season/philosophyFilter';
-import { checkCropCompatibility } from '$lib/safety/cropCompatibility';
 import type { HerbicideProduct } from '$lib/safety';
 import type { ChemistryClass } from '$lib/safety/types';
+import type { HerbicidePlugin } from '$lib/plugins/schemas';
 import { checkChemistryCompatibility } from '$lib/safety/chemistry';
 import { getApiKey } from './scanResult';
 import { estimateUsd, selectModel, type AiResultMeta } from './aiPlanning';
@@ -493,20 +498,8 @@ export function validateAiPlan(plan: InputsPlan, input: InputsPlanInput): Valida
     ) {
       const crop = cropPluginFor(input, app.cropPluginId);
       if (crop) {
-        const product: HerbicideProduct = {
-          pluginId: plugin.pluginId,
-          displayName: plugin.displayName,
-          activeIngredients: plugin.activeIngredients.map((ai) => ({
-            name: ai.name,
-            chemistryClass: ai.chemistryClass as ChemistryClass
-          }))
-        };
-        const issues = checkCropCompatibility([product], {
-          cropPluginId: app.cropPluginId,
-          cropFamily: crop.cropFamily
-        });
-        for (const v of issues) {
-          violations.push(`crop-incompatible:${app.id}:${v.code}`);
+        if (!herbicideSafeOnCrop(plugin as unknown as HerbicidePlugin, crop)) {
+          violations.push(`crop-incompatible:${app.id}:CROP_INCOMPATIBLE`);
         }
       }
     }

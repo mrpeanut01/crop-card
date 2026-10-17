@@ -17,6 +17,7 @@ import {
 import { SEEDING_RATE_KEYS } from './schemas';
 import { calendarWindowFromWords } from '../plan/calendarWords';
 import { numberPattern, statesDays, statesInches } from './quoteNumbers';
+import { isHerbGardenCrop } from '../garden/herbs';
 import type {
   ForageHazard,
   ForageHazardKind,
@@ -179,6 +180,8 @@ export function cropFactPaths(c: CropPlugin): string[] {
       if (!paths.includes(key)) paths.push(key);
     }
   }
+  if (isHerbGardenCrop(c.pluginId))
+    for (const r of c.seasonalTasks ?? []) paths.push(`seasonalTasks.${r.key}`);
   return paths;
 }
 
@@ -921,4 +924,73 @@ export function forageHazardGaps(
     if (reason.trim().length <= 10) gaps.push(`${id}: exclusion reason is too short`);
   }
   return gaps;
+}
+
+// Phase 37D
+/** The herb's own name words from its display name ("Basil — Genovese" is
+ *  basil; "Tulsi Rama (Holy Basil)" is tulsi, rama, holy and basil). */
+function herbNameWords(displayName: string): string[] {
+  const [head] = displayName.split(/\s+[—–-]\s+/);
+  const inParens = [...displayName.matchAll(/\(([^)]*)\)/g)].map((m) => m[1]).join(' ');
+  const words = `${head.replace(/\([^)]*\)/g, ' ')} ${inParens}`.toLowerCase().split(/[^a-z]+/);
+  return [...new Set(words)].filter((w) => w.length >= 4);
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function quoteHasWordStarting(quote: string, stem: string): boolean {
+  return quote
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .some((w) => w.startsWith(stem));
+}
+
+/** The stem a row's action verb is matched by: "Pinch" matches "pinching",
+ *  "Divide" matches "division", "Cut" matches "cutting". */
+export function herbActionStem(title: string): string {
+  const verb = (title.trim().split(/\s+/)[0] ?? '').toLowerCase().replace(/[^a-z]/g, '');
+  return verb.slice(0, 4);
+}
+
+/**
+ * Phase 37D (R-25): every seasonal row on an herb garden plugin ships only
+ * with a source under `seasonalTasks.<rowKey>` from an .edu or .gov page
+ * whose quote names the row's action (its first word, by stem) and the
+ * herb (a word of its display name). Numbers stay with
+ * `seasonalTaskNumberGaps`. Returns "pluginId seasonalTasks.key: problem".
+ */
+export function herbSeasonalRowSourceGaps(
+  crops: readonly Pick<CropPlugin, 'pluginId' | 'displayName' | 'seasonalTasks'>[],
+  sources: SourceMap,
+  isHerb: (pluginId: string) => boolean
+): string[] {
+  const out: string[] = [];
+  for (const c of crops) {
+    if (!isHerb(c.pluginId)) continue;
+    for (const row of c.seasonalTasks ?? []) {
+      const path = `seasonalTasks.${row.key}`;
+      const at = `${c.pluginId} ${path}`;
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[path]);
+      if (!entry.success) {
+        out.push(`${at}: no source`);
+        continue;
+      }
+      if (!/\.(edu|gov)$/.test(hostOf(entry.data.url))) out.push(`${at}: source is not an .edu or .gov page`);
+      const stem = herbActionStem(row.title);
+      if (!stem || !quoteHasWordStarting(entry.data.quote, stem)) {
+        out.push(`${at}: quote does not name the action "${row.title.trim().split(/\s+/)[0]}"`);
+      }
+      const names = herbNameWords(c.displayName);
+      if (!names.some((n) => quoteHasWordStarting(entry.data.quote, n.replace(/s$/, '')))) {
+        out.push(`${at}: quote does not name the herb`);
+      }
+    }
+  }
+  return out;
 }

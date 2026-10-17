@@ -26,19 +26,23 @@ export function parseQueuedJournal(
 
 /** Saves a journal note or photo question on this device; the sync queue
  *  replays it when there is signal again. */
-export async function queueJournalEntry(entry: {
-  cropId: string;
-  kind: 'note' | 'photo_help';
-  text: string;
-  photo: string | null;
-}): Promise<string> {
-  return enqueueRecord('journal', {
+export async function queueJournalEntry(
+  entry: {
+    cropId: string;
+    kind: 'note' | 'photo_help';
+    text: string;
+    photo: string | null;
+  },
+  id?: string
+): Promise<string> {
+  const payload = {
     cropId: entry.cropId,
     kind: entry.kind,
     text: entry.text,
     ...(entry.photo ? { photo: entry.photo } : {}),
     occurredAt: Date.now()
-  });
+  };
+  return id ? enqueueRecord('journal', payload, id) : enqueueRecord('journal', payload);
 }
 
 /** The active Owner's journal entries still waiting on this phone for one

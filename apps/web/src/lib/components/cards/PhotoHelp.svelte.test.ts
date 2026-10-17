@@ -84,7 +84,12 @@ describe('PhotoHelp', () => {
     expect(answer.textContent).toContain('Will save when online');
     expect(q.enqueueRecord).toHaveBeenCalledWith(
       'journal',
-      expect.objectContaining({ cropId: 'p_tom', kind: 'photo_help', text: 'Is it ready to pick?' })
+      expect.objectContaining({
+        cropId: 'p_tom',
+        kind: 'photo_help',
+        text: 'Is it ready to pick?'
+      }),
+      expect.any(String)
     );
     expect(fetchMock).not.toHaveBeenCalled();
     expect(getByText(/The journal loads when you have signal/)).toBeTruthy();
@@ -155,7 +160,8 @@ describe('PhotoHelp', () => {
     expect(answer.textContent).toContain('Common problems');
     expect(q.enqueueRecord).toHaveBeenCalledWith(
       'journal',
-      expect.objectContaining({ text: 'Why are the leaves yellow?' })
+      expect.objectContaining({ text: 'Why are the leaves yellow?' }),
+      expect.any(String)
     );
   });
 
@@ -327,5 +333,59 @@ describe('CareGuideList', () => {
     one.unmount();
     const many = render(CareGuideList, { cards: careGuideCardsFor(snap, 'ar_f_garden') });
     expect(many.container.querySelectorAll('details')).toHaveLength(2);
+  });
+});
+
+describe('PhotoHelp marks (37F)', () => {
+  it('queues a failed ask under the record id the request carried (R-23)', async () => {
+    let sentId: string | null = null;
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/photo-help')) {
+        sentId = new Headers(init?.headers).get('x-cropcard-client-record-id');
+        throw new TypeError('network');
+      }
+      return jsonResponse({ entries: [] });
+    });
+    const { getByRole, findByTestId } = render(PhotoHelp, { targets: tomato, role: 'helper' });
+    await fireEvent.click(getByRole('button', { name: 'Where do I prune?' }));
+    await fireEvent.click(getByRole('button', { name: 'Ask' }));
+    await findByTestId('photo-answer');
+    expect(sentId).toMatch(/^[A-Za-z0-9_-]{8,80}$/);
+    expect(q.enqueueRecord).toHaveBeenCalledWith(
+      'journal',
+      expect.objectContaining({ kind: 'photo_help', text: 'Where do I prune?' }),
+      sentId
+    );
+  });
+
+  it('redraws the saved marks over the journal photo', async () => {
+    const marked: JournalEntry = {
+      ...ENTRY,
+      id: 'j9',
+      kind: 'photo_help',
+      hasPhoto: true,
+      provenance: 'ai',
+      text: 'Where do I prune?',
+      answer: {
+        question: 'prune',
+        text: 'One. Two.',
+        source: 'ai',
+        sections: [],
+        sprayRedirect: false,
+        steps: ['One.', 'Two.'],
+        marks: [
+          { kind: 'cut', x: 0.5, y: 0.5, label: 'Cut here' },
+          { kind: 'leave', x: 0.2, y: 0.8, label: 'Leave this' }
+        ],
+        marksProvenance: 'ai'
+      }
+    };
+    fetchMock.mockImplementation(async () => jsonResponse({ entries: [marked] }));
+    const { findByTestId } = render(PhotoHelp, { targets: tomato, role: 'helper' });
+    const overlay = await findByTestId('photo-marks');
+    expect(overlay.querySelector('img')!.getAttribute('src')).toBe(
+      '/api/plantings/p_tom/journal/j9/photo'
+    );
+    expect(overlay.querySelectorAll('[data-testid="photo-marks-legend"] li')).toHaveLength(2);
   });
 });

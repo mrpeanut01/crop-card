@@ -16,6 +16,8 @@
   import { zonedDayStartMs } from '$lib/exports/dateRange';
   import { ymdInZone } from '$lib/prefs';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { PRESERVING_METHODS, type PreservingMethod } from '$lib/garden/preserving';
+  import { preservingMethodLabel } from '$lib/garden/pantryText';
 
   interface Props {
     harvest: {
@@ -49,6 +51,7 @@
   let date = $state(untrack(() => ymdInZone(Date.now(), currentPrefs().timeZone)));
   let recipient = $state('');
   let soldAsOrganic = $state<'yes' | 'no' | ''>('');
+  let preservedAs = $state<PreservingMethod | ''>('');
   let saving = $state(false);
   let error = $state<string | null>(null);
   let notices = $state<string[]>([]);
@@ -68,6 +71,7 @@
     date = ymdInZone(Date.now(), zone);
     recipient = '';
     soldAsOrganic = '';
+    preservedAs = '';
   }
 
   function startEdit(d: DispositionView) {
@@ -79,6 +83,7 @@
     date = ymdInZone(d.occurredAt, zone);
     recipient = d.recipient ?? '';
     soldAsOrganic = d.soldAsOrganic === true ? 'yes' : d.soldAsOrganic === false ? 'no' : '';
+    preservedAs = d.preservedAs ?? '';
     error = null;
     notices = [];
   }
@@ -112,7 +117,10 @@
       occurredAt,
       recipient: hasRecipient ? recipient.trim() || null : null,
       soldAsOrganic:
-        kind === 'sold' && askSoldAsOrganic && soldAsOrganic !== '' ? soldAsOrganic === 'yes' : null
+        kind === 'sold' && askSoldAsOrganic && soldAsOrganic !== ''
+          ? soldAsOrganic === 'yes'
+          : null,
+      preservedAs: kind === 'kept' && preservedAs !== '' ? preservedAs : null
     };
   }
 
@@ -307,6 +315,33 @@
           <input type="text" maxlength="120" bind:value={recipient} />
         </label>
       {/if}
+      {#if kind === 'kept'}
+        <div
+          class="kinds"
+          role="group"
+          aria-label={tr('herbsc.disp.howKept')}
+          data-testid="preserved-as"
+        >
+          <p class="group-label">{tr('herbsc.disp.howKept')}</p>
+          {#each PRESERVING_METHODS as m (m)}
+            <button
+              type="button"
+              class="kind"
+              class:on={preservedAs === m}
+              aria-pressed={preservedAs === m}
+              onclick={() => (preservedAs = preservedAs === m ? '' : m)}
+              >{preservingMethodLabel(m, page.data?.locale)}</button
+            >
+          {/each}
+          <button
+            type="button"
+            class="kind"
+            class:on={preservedAs === ''}
+            aria-pressed={preservedAs === ''}
+            onclick={() => (preservedAs = '')}>{tr('herbsc.method.notSaid')}</button
+          >
+        </div>
+      {/if}
       {#if kind === 'sold' && askSoldAsOrganic}
         <fieldset class="organic">
           <legend>{tr('harvestui.disp.soldAsOrganicQ')}</legend>
@@ -444,6 +479,12 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+  }
+  .group-label {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-ink-soft);
   }
   .kind.on {
     background: var(--color-forest);

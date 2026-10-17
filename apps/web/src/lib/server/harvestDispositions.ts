@@ -35,6 +35,7 @@ export function presentDisposition(
     occurredAt: d.occurredAt,
     recipient: d.recipient,
     soldAsOrganic: d.soldAsOrganic,
+    preservedAs: d.kind === 'kept' ? d.preservedAs : null,
     ledgerEntryId: owner ? d.ledgerEntryId : null,
     sale: !owner || !d.ledgerEntryId ? null : ledger && !ledger.deletedAt ? 'live' : 'deleted',
     locked: evaluateDispositionLock(d, now) !== undefined,

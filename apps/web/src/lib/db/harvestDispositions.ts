@@ -10,6 +10,7 @@ import { db } from './client';
 import { harvestDispositions } from './schema';
 import { tenantValues, withTenant } from './tenant';
 import { fromHundredths, toHundredths, type HarvestDispositionKind } from '$lib/harvest/apiSchemas';
+import type { PreservingMethod } from '$lib/garden/preserving';
 
 export const DISPOSITION_LOCK_WINDOW_MS = 48 * 60 * 60 * 1000;
 
@@ -26,6 +27,8 @@ export interface HarvestDisposition {
   createdBy: string | null;
   createdAt: number;
   lockedAt: number | null;
+  /** Phase 37C: only on kept rows. */
+  preservedAs: PreservingMethod | null;
 }
 
 export interface HarvestDispositionInput {
@@ -36,6 +39,7 @@ export interface HarvestDispositionInput {
   occurredAt: number;
   recipient: string | null;
   soldAsOrganic: boolean | null;
+  preservedAs?: PreservingMethod | null;
 }
 
 type Row = typeof harvestDispositions.$inferSelect;
@@ -53,7 +57,8 @@ function rowTo(row: Row): HarvestDisposition {
     ledgerEntryId: row.ledgerEntryId ?? null,
     createdBy: row.createdBy ?? null,
     createdAt: row.createdAt.getTime(),
-    lockedAt: row.lockedAt?.getTime() ?? null
+    lockedAt: row.lockedAt?.getTime() ?? null,
+    preservedAs: row.preservedAs ?? null
   };
 }
 
@@ -74,6 +79,7 @@ export function insertHarvestDisposition(
         occurredAt: new Date(input.occurredAt),
         recipient: input.recipient,
         soldAsOrganic: input.kind === 'sold' ? input.soldAsOrganic : null,
+        preservedAs: input.kind === 'kept' ? (input.preservedAs ?? null) : null,
         clientRecordId: opts.clientRecordId ?? null,
         createdBy: opts.createdBy ?? null,
         createdAt: new Date(opts.now ?? Date.now())
@@ -173,6 +179,7 @@ export interface DispositionFieldChanges {
   occurredAt?: number;
   recipient?: string | null;
   soldAsOrganic?: boolean | null;
+  preservedAs?: PreservingMethod | null;
 }
 
 /** Writes already-checked field changes. The caller enforces the lock. */
@@ -187,6 +194,7 @@ export function updateHarvestDisposition(
   if (changes.occurredAt !== undefined) set.occurredAt = new Date(changes.occurredAt);
   if (changes.recipient !== undefined) set.recipient = changes.recipient;
   if (changes.soldAsOrganic !== undefined) set.soldAsOrganic = changes.soldAsOrganic;
+  if (changes.preservedAs !== undefined) set.preservedAs = changes.preservedAs;
   if (Object.keys(set).length > 0) {
     db.update(harvestDispositions)
       .set(set)

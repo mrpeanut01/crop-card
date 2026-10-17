@@ -68,7 +68,10 @@ export function loadSeasonCapContext(input: {
       });
     }
   }
-  for (const t of listApplicationTombstones(fromMs)) {
+  for (const t of listApplicationTombstones(fromMs, {
+    kinds: ['spray'],
+    blockId: input.blockId
+  })) {
     if (t.source !== 'spray' || t.blockId !== input.blockId || t.occurredAt >= toMs) continue;
     for (const prod of t.products) {
       if (!prod.pluginId || !ids.has(prod.pluginId)) continue;

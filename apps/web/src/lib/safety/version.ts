@@ -92,5 +92,10 @@
  * that were applied included); a known total over the cap is a stop with
  * no override (SC-1), and an amount that is not known is a warning that
  * never reads as under the cap (SC-2).
+ * #820 review — 0.7.11: season cap units are read through the shared
+ * `normalizeUnitName` (`lib/stock/unitName.ts`), so a rate stored as
+ * "fl oz", "FLOZ" or " PT " converts as the planner converts it instead of
+ * reading as not known. The exact label ratios stay; metric, count and bulk
+ * units stay unknown.
  */
-export const RULES_VERSION = '0.7.10' as const;
+export const RULES_VERSION = '0.7.11' as const;

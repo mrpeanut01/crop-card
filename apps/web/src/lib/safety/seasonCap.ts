@@ -20,6 +20,7 @@
 
 import type { SafetyViolation } from './types';
 import { localDateKey, localDayStartMs } from './animalWithdrawal';
+import { normalizeUnitName } from '$lib/stock/unitName';
 
 export type SeasonCapPeriod = 'crop-year' | 'season' | 'growing-season' | 'year' | '365-days';
 
@@ -87,13 +88,18 @@ export interface SeasonCapVerdict {
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ROLLING_MS = 365 * DAY_MS;
 
+// Exact label ratios rather than the stock table's gram factors, whose
+// lb to oz result can land one float step under 16 and read a pass at the
+// cap as under it; metric and count units stay unknown (SC-2).
 const LIQUID_FL_OZ: Record<string, number> = { 'fl-oz': 1, pt: 16, qt: 32, gal: 128 };
 const MASS_OZ: Record<string, number> = { oz: 1, lb: 16 };
 
 /** `amount` of `from` in `to`, or null when one is a volume and the other a
  *  weight (or either is not a label rate unit). */
-export function convertRateAmount(amount: number, from: string, to: string): number | null {
+export function convertRateAmount(amount: number, fromUnit: string, toUnit: string): number | null {
   if (!Number.isFinite(amount)) return null;
+  const from = normalizeUnitName(fromUnit);
+  const to = normalizeUnitName(toUnit);
   if (from === to) return amount;
   if (from in LIQUID_FL_OZ && to in LIQUID_FL_OZ) {
     return (amount * LIQUID_FL_OZ[from]) / LIQUID_FL_OZ[to];

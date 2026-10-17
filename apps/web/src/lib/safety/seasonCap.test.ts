@@ -1,5 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { convertAmount } from '$lib/plan/inputsChoice';
 import { convert, type StockUnit } from '$lib/stock/units';
 import { evaluateSpray } from './evaluate';
 import {
@@ -83,6 +84,58 @@ describe('convertRateAmount', () => {
         else expect(ours).toBeCloseTo(stock, 6);
       }
     }
+  });
+});
+
+describe('convertRateAmount and the planner share one unit spelling', () => {
+  const spellings = [
+    'fl-oz',
+    'fl oz',
+    'FL OZ',
+    'floz',
+    'fl.oz',
+    ' Fl-Oz ',
+    'pt',
+    ' PT',
+    'qt',
+    'Qt ',
+    'gal',
+    'GAL',
+    'oz',
+    'OZ',
+    'lb',
+    ' Lb '
+  ];
+
+  it('converts every label unit spelling the planner converts, to the same amount', () => {
+    for (const a of spellings) {
+      for (const b of spellings) {
+        const ours = convertRateAmount(3, a, b);
+        const planner = convertAmount(3, a, b);
+        if (planner === null) expect(ours, `${a} -> ${b}`).toBeNull();
+        else expect(ours, `${a} -> ${b}`).toBeCloseTo(planner, 9);
+      }
+    }
+  });
+
+  it('keeps exact label ratios where the gram table lands a float step short', () => {
+    expect(convertRateAmount(3, 'lb', 'oz')).toBe(48);
+    expect(convertRateAmount(3, ' LB', 'oz')).toBe(48);
+    expect(convertAmount(3, 'lb', 'oz')).toBeLessThan(48);
+  });
+
+  it('leaves metric, count and bulk units unknown, never a guess', () => {
+    for (const u of ['ml', 'g', 'kg', 'count', 'bag', 'yd3']) {
+      for (const label of ['fl-oz', 'oz', 'lb', 'pt']) {
+        expect(convertRateAmount(1, u, label)).toBeNull();
+        expect(convertRateAmount(1, label, u)).toBeNull();
+      }
+    }
+  });
+
+  it('counts an earlier pass stored as "fl oz" instead of reading it as not known', () => {
+    const v = one(ctx({ others: [app(JUNE_10 - DAY, { amount: 24, unit: 'fl oz' })] }));
+    expect(v).toMatchObject({ status: 'over', othersKnown: 1.5, thisPass: 0.5, knownTotal: 2 });
   });
 });
 

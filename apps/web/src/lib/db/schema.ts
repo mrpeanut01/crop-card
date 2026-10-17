@@ -916,7 +916,8 @@ export const sprayEvents = tenantScoped(
       /** #640: when the tank's re-entry interval ends, set only when every
        *  herbicide in it had a sourced `reEntryIntervalHours` at save time.
        *  Null on older rows and when any product had none on file. */
-      reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' })
+      reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' }),
+      notes: text('notes')
     },
     (table) => ({
       ownerOccurredIdx: index('spray_events_owner_occurred_idx').on(

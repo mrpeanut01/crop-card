@@ -91,7 +91,8 @@ function rowToEvent(row: typeof sprayEvents.$inferSelect): SprayEvent {
     pluginHashes: JSON.parse(row.pluginHashesJson),
     customRateOverride: row.customRateOverride,
     lockedAt: row.lockedAt ? row.lockedAt.getTime() : undefined,
-    reEntryClearAt: row.reEntryClearAt?.getTime()
+    reEntryClearAt: row.reEntryClearAt?.getTime(),
+    notes: row.notes ?? undefined
   };
 }
 
@@ -112,7 +113,8 @@ export function insertSprayEvent(input: SprayEventInput): SprayEvent {
         rulesVersion: input.rulesVersion,
         pluginHashesJson: JSON.stringify(input.pluginHashes),
         customRateOverride: input.customRateOverride ?? false,
-        reEntryClearAt: input.reEntryClearAt ? new Date(input.reEntryClearAt) : null
+        reEntryClearAt: input.reEntryClearAt ? new Date(input.reEntryClearAt) : null,
+        notes: input.notes?.trim() || null
       })
     )
     .returning()

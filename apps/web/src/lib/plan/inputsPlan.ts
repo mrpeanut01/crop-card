@@ -69,6 +69,7 @@ import { organicInputClass } from '$lib/organic/inputCompliance';
 import { effectiveWeedGate, weedStrategyAllows } from '$lib/season/sprayWindowFilter';
 import { nCreditForIntent } from '$lib/fertility/coverCropCredits';
 import { nextCalendarWindow } from './calendarWords';
+import { noCompliantReasonText, type NoCompliantReasonCode } from './inputsReason';
 import type {
   FertilityApproach,
   PestStrategy,
@@ -380,6 +381,8 @@ export type PlannerWarning =
       plantingId: string;
       slot: SprayWindowPurpose | 'pre-plant-fertility';
       reason: string;
+      /** Which empty pool `reason` describes; drafts saved before it lack it. */
+      reasonCode?: NoCompliantReasonCode;
       /** OT-1: unmarked fertilizers are listed for a pick by hand. */
       byHand?: true;
     }
@@ -828,10 +831,21 @@ function fertilizerCandidates(
   return { planned: build('allowed'), byHand: build('not-marked') };
 }
 
-/** OT-1: nothing with a sourced mark fits, and unmarked fertilizers are
- *  listed for a pick by hand. */
-const BY_HAND_REASON =
-  'No fertilizer with a sourced organic mark fits. Pick one yourself and ask your certifier.';
+/** The `no-compliant-product` fields for an empty pool. OT-1: when
+ *  unmarked fertilizers are listed for a pick by hand, that is the reason. */
+function emptyPool(
+  slot: SprayWindowPurpose | 'pre-plant-fertility',
+  code: NoCompliantReasonCode,
+  setup: SeasonSetup,
+  byHand = false
+): { reason: string; reasonCode: NoCompliantReasonCode; byHand?: true } {
+  const reasonCode = byHand ? 'by-hand' : code;
+  return {
+    reason: noCompliantReasonText({ slot, reasonCode }, setup),
+    reasonCode,
+    ...(byHand ? { byHand: true as const } : {})
+  };
+}
 
 /** Pre-plant fertilizer rate in lb/acre derived from the dominant
  *  deficit nutrient + the fertilizer's analysis. Returns 0 when the
@@ -1094,9 +1108,7 @@ function planForPlanting(
         kind: 'no-compliant-product',
         plantingId: planting.id,
         slot: window.purpose,
-        ...(byHand.length > 0
-          ? { reason: BY_HAND_REASON, byHand: true as const }
-          : { reason: reasonForEmptyPool(window.purpose, seasonSetup.philosophy) })
+        ...emptyPool(window.purpose, 'pool', seasonSetup, byHand.length > 0)
       });
     }
 
@@ -1177,11 +1189,7 @@ function planForPlanting(
           kind: 'no-compliant-product',
           plantingId: planting.id,
           slot: 'pre-plant-fertility',
-          ...(cands.byHand.length > 0
-            ? { reason: BY_HAND_REASON, byHand: true as const }
-            : {
-                reason: `No fertilizer in our library is marked for ${seasonSetup.philosophy} and fits the ${seasonSetup.fertilityApproach} approach.`
-              })
+          ...emptyPool('pre-plant-fertility', 'approach', seasonSetup, cands.byHand.length > 0)
         });
       }
 
@@ -1250,11 +1258,7 @@ function planForPlanting(
         kind: 'no-compliant-product',
         plantingId: planting.id,
         slot: 'sidedress-n',
-        ...(cands.byHand.length > 0
-          ? { reason: BY_HAND_REASON, byHand: true as const }
-          : {
-              reason: `No high-nitrogen fertilizer in our library is marked for ${seasonSetup.philosophy} for sidedress.`
-            })
+        ...emptyPool('sidedress-n', 'sidedress', seasonSetup, cands.byHand.length > 0)
       });
     }
 
@@ -1323,11 +1327,7 @@ function planForPlanting(
           kind: 'no-compliant-product',
           plantingId: planting.id,
           slot: 'sidedress-n',
-          ...(cands.byHand.length > 0
-            ? { reason: BY_HAND_REASON, byHand: true as const }
-            : {
-                reason: `No high-nitrogen fertilizer in our library is marked for ${seasonSetup.philosophy} for topdress.`
-              })
+          ...emptyPool('sidedress-n', 'topdress', seasonSetup, cands.byHand.length > 0)
         });
       }
       const { startMs, endMs } = t.calendar
@@ -1382,7 +1382,7 @@ function planForPlanting(
           kind: 'no-compliant-product',
           plantingId: planting.id,
           slot: 'cover-terminate',
-          reason: `No herbicide in our library is marked for ${seasonSetup.philosophy} for cover-crop termination.`
+          ...emptyPool('cover-terminate', 'cover-terminate', seasonSetup)
         });
       }
     }
@@ -1486,24 +1486,6 @@ function candidatesForPurpose(
         ).map((f) => ({ ...rateCandidate(f), organicMark: 'not-marked' as const }))
       };
   }
-}
-
-function reasonForEmptyPool(
-  slot: SprayWindowPurpose | 'pre-plant-fertility',
-  philosophy: Philosophy
-): string {
-  const family =
-    slot === 'burndown' ||
-    slot === 'pre-emergent' ||
-    slot === 'post-emergent' ||
-    slot === 'cover-terminate'
-      ? 'herbicide'
-      : slot === 'insecticide-prophylactic' || slot === 'insecticide-scouted'
-        ? 'insecticide'
-        : slot === 'fungicide'
-          ? 'fungicide'
-          : 'fertilizer';
-  return `No ${family} in our library is marked for ${philosophy} and fits the ${slot} slot.`;
 }
 
 /* ─── Public entrypoint ─────────────────────────────────────────────── */

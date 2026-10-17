@@ -14,6 +14,7 @@ import {
 import type { FertilityApproach, Philosophy, SeasonSetup } from '$lib/season/setup';
 
 import { planInputs, type InputsPlanApplication, type InputsPlanInput } from './inputsPlan';
+import { noCompliantReasonText } from './inputsReason';
 
 const PLUGINS = path.resolve(__dirname, '../../../../../plugins');
 const MAY_1 = Date.UTC(2026, 4, 1);
@@ -144,6 +145,28 @@ describe('W842-3: a product with an organic condition ranks after one without', 
       expect(app.productPluginId).toBe('poultry');
       expect(app.options?.map((o) => o.pluginId)).toEqual(['poultry', 'nitrate']);
     }
+  });
+
+  it('stock kept in a unit the rate cannot convert reads as some on hand, and the list says so', () => {
+    const a = fertilizer('a-high-n', 12, SOURCED);
+    const b = fertilizer('b-low-n', 4, SOURCED);
+    const p = plan('organic-transitioning', 'compost-amendments', [a, b], {
+      existingStock: [
+        {
+          pluginId: 'b-low-n',
+          category: 'fertilizer',
+          displayName: 'b-low-n',
+          defaultUnit: 'bag',
+          onHand: 3
+        }
+      ]
+    });
+    const sidedress = p.applications.find((x) => x.slot === 'sidedress-n')!;
+    expect(sidedress.productPluginId).toBe('b-low-n');
+    expect(sidedress.productSource).toBe('data');
+    expect(sidedress.options?.[0]).toMatchObject({ pluginId: 'b-low-n', stock: 'some' });
+    const item = p.shoppingList.find((i) => i.pluginId === 'b-low-n')!;
+    expect(item).toMatchObject({ onHand: 0, stockUnitMismatch: 'bag', stockOnHandInStockUnit: 3 });
   });
 
   it('keeps the stock rank, then the preference order, among products alike on condition', () => {
@@ -314,15 +337,38 @@ describe('W842-2: empty-pool reasons name the library mark', () => {
     );
     expect(reasons).toContainEqual([
       'pre-plant-fertility',
-      'No fertilizer in our library is marked for certified-organic and fits the compost-amendments approach.'
+      'No fertilizer in our library is marked for certified organic and fits your fertility approach (compost, manure & natural amendments).'
     ]);
     expect(reasons).toContainEqual([
       'sidedress-n',
-      'No high-nitrogen fertilizer in our library is marked for certified-organic for sidedress.'
+      'No high-nitrogen fertilizer in our library is marked for certified organic for sidedress.'
     ]);
     for (const [, reason] of reasons) {
       expect(reason).not.toMatch(/compliant|catalog/);
       expect(reason.endsWith('.')).toBe(true);
     }
+  });
+
+  it('builds the same reason in Spanish from its code, keeping each kind apart', () => {
+    const p = plan('certified-organic', 'compost-amendments', [urea]);
+    const ws = p.warnings.filter(
+      (w): w is Extract<typeof w, { kind: 'no-compliant-product' }> =>
+        w.kind === 'no-compliant-product'
+    );
+    const setup = { philosophy: 'certified-organic', fertilityApproach: 'compost-amendments' };
+    for (const w of ws) {
+      expect(noCompliantReasonText(w, setup)).toBe(w.reason);
+    }
+    const approach = ws.find((w) => w.reasonCode === 'approach')!;
+    expect(noCompliantReasonText(approach, setup, 'es')).toBe(
+      'Ningún fertilizante de nuestra biblioteca está marcado para el enfoque orgánico certificado y sirve para tu enfoque de fertilidad (composta, estiércol y enmiendas naturales).'
+    );
+    const es = new Set(
+      (['approach', 'sidedress', 'topdress', 'cover-terminate'] as const).map((reasonCode) =>
+        noCompliantReasonText({ slot: 'sidedress-n', reasonCode }, setup, 'es')
+      )
+    );
+    expect(es.size).toBe(4);
+    for (const text of es) expect(text).not.toMatch(/certified-organic|compost-amendments/);
   });
 });

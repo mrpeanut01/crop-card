@@ -931,6 +931,14 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
   'inputs.slot.pre-plant-fertility': 'fertilización antes de sembrar',
   'inputs.warn.poolReason':
     'Ningún {family} de nuestra biblioteca está marcado para el enfoque {philosophy} y sirve para la etapa {slot}.',
+  'inputs.warn.reason.approach':
+    'Ningún fertilizante de nuestra biblioteca está marcado para el enfoque {philosophy} y sirve para tu enfoque de fertilidad ({approach}).',
+  'inputs.warn.reason.sidedress':
+    'Ningún fertilizante alto en nitrógeno de nuestra biblioteca está marcado para el enfoque {philosophy} para la fertilización lateral.',
+  'inputs.warn.reason.topdress':
+    'Ningún fertilizante alto en nitrógeno de nuestra biblioteca está marcado para el enfoque {philosophy} para el abonado de cobertera.',
+  'inputs.warn.reason.coverTerminate':
+    'Ningún herbicida de nuestra biblioteca está marcado para el enfoque {philosophy} para terminar el cultivo de cobertura.',
   'inputs.opt.onHand': '{name} (en existencia)',
   'inputs.opt.some': '{name} (algo en existencia)',
   'inputs.opt.toBuy': '{name} (por comprar)',

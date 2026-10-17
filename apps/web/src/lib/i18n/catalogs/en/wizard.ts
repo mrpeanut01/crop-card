@@ -900,6 +900,14 @@ export const enWizard = {
   'inputs.slot.pre-plant-fertility': 'pre plant fertility',
   'inputs.warn.poolReason':
     'No {family} in our library is marked for {philosophy} and fits the {slot} slot.',
+  'inputs.warn.reason.approach':
+    'No fertilizer in our library is marked for {philosophy} and fits your fertility approach ({approach}).',
+  'inputs.warn.reason.sidedress':
+    'No high-nitrogen fertilizer in our library is marked for {philosophy} for sidedress.',
+  'inputs.warn.reason.topdress':
+    'No high-nitrogen fertilizer in our library is marked for {philosophy} for topdress.',
+  'inputs.warn.reason.coverTerminate':
+    'No herbicide in our library is marked for {philosophy} for cover-crop termination.',
   'inputs.opt.onHand': '{name} (on hand)',
   'inputs.opt.some': '{name} (some on hand)',
   'inputs.opt.toBuy': '{name} (to buy)',

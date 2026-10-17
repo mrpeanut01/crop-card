@@ -3,7 +3,7 @@
   import { pageCropName } from '$lib/i18n/pageCropName';
   import { page } from '$app/state';
   import { createT, type MessageKey } from '$lib/i18n';
-  import { seasonSetupLabel } from '$lib/season/setup';
+  import { noCompliantReasonText } from '$lib/plan/inputsReason';
   import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   /**
    * Inputs Plan wizard step (Phase 21 / B-28 / UC-37d).
@@ -96,22 +96,12 @@
   }
 
   function noCompliantReason(w: Extract<PlannerWarning, { kind: 'no-compliant-product' }>): string {
-    if (english || !plan) return w.reason;
-    const s = w.slot;
-    const family =
-      s === 'burndown' || s === 'pre-emergent' || s === 'post-emergent' || s === 'cover-terminate'
-        ? 'herbicide'
-        : s === 'insecticide-prophylactic' || s === 'insecticide-scouted'
-          ? 'insecticide'
-          : s === 'fungicide'
-            ? 'fungicide'
-            : 'fertilizer';
-    const phil = seasonSetupLabel('philosophy', plan.meta.philosophy, locale);
-    return tr('inputs.warn.poolReason', {
-      family: codeText('inputs.cat.', family, family),
-      philosophy: phil.split(': ')[0],
-      slot: fmtSlot(s)
-    });
+    if (!plan || (english && !w.reasonCode)) return w.reason;
+    return noCompliantReasonText(
+      w.reasonCode ? w : { slot: w.slot, reasonCode: 'pool' },
+      plan.meta,
+      locale
+    );
   }
 
   // Seeded once from the wizard; the step owns the edits and reports them up.

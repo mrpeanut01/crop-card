@@ -60,6 +60,31 @@ export function formatApplicationRateLine(
   return `${rate} × ${area} = ${total}`;
 }
 
+/** "125–150 lb/ac" (or kg/ha) for a sourced N need range (#739). */
+export function formatNeedRange(
+  range: { min: number; max: number },
+  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS
+): string {
+  const max = formatQuantity(range.max, 'weightPerArea', prefs);
+  if (range.min === range.max) return max;
+  return `${formatQuantity(range.min, 'weightPerArea', prefs, { bare: true })}–${max}`;
+}
+
+/** The nutrients of a pre-plant budget that are typical estimates while
+ *  its N is sourced (#739 ruling N739-3), e.g. "P₂O₅, K₂O". Empty when the
+ *  whole budget shares one provenance. */
+export function typicalNutrientsText(
+  app: Pick<InputsPlanApplication, 'budgetProvenance' | 'nutrientProvenance'>
+): string {
+  const prov = app.nutrientProvenance;
+  if (app.budgetProvenance !== 'data' || !prov) return '';
+  const names = { n: 'N', p: 'P₂O₅', k: 'K₂O' } as const;
+  return (['n', 'p', 'k'] as const)
+    .filter((k) => prov[k] === 'fallback')
+    .map((k) => names[k])
+    .join(', ');
+}
+
 /** Rewrites the planner's fertility "N lb/ac" / "lb-N/ac" figures in a
  *  rationale for metric users. The planner itself keeps US units (its
  *  text also feeds the AI refinement prompt). */

@@ -1007,6 +1007,10 @@ export const esWizard: Partial<Record<MessageKey, string>> = {
     'No hay dosis para este producto aquí. Revisa su etiqueta para saber la cantidad.',
   'inputs.budgetTypical':
     'Cantidad típica para este tipo de cultivo, no tomada de una fuente. Ajústala según tu análisis de suelo.',
+  'inputs.budgetNFromNeed':
+    'El nitrógeno es el extremo bajo de la cifra de extensión para este cultivo, {range} de N.',
+  'inputs.budgetNutrientsTypical':
+    '{nutrients}: cantidad típica para este tipo de cultivo, no tomada de una fuente. Ajústala según tu análisis de suelo.',
   'inputs.bedWide.one': 'Cubre toda la cama una vez, para su {count} siembra.',
   'inputs.bedWide.other': 'Cubre toda la cama una vez, para sus {count} siembras.',
   'inputs.scout': 'monitoreo',

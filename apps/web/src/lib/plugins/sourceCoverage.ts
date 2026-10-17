@@ -1003,13 +1003,7 @@ export function preservingQuoteGaps(
       if (!p.note) gaps.push(`${c.pluginId}: preserving.infuse needs a note with the safety line`);
       const safety = sourceEntrySchema.safeParse(sources[c.pluginId]?.['preserving.infuse.safety']);
       if (!safety.success) continue;
-      let host = '';
-      try {
-        host = new URL(safety.data.url).hostname.toLowerCase();
-      } catch {
-        host = '';
-      }
-      if (!host.endsWith('.edu')) {
+      if (!isEduHost(safety.data.url)) {
         gaps.push(`${c.pluginId}: preserving.infuse.safety source is not a .edu food-safety page`);
       }
       if (!/\bbotulism\b|\bbotulinum\b/i.test(safety.data.quote)) {
@@ -1018,6 +1012,14 @@ export function preservingQuoteGaps(
     }
   }
   return gaps;
+}
+
+function isEduHost(url: string): boolean {
+  try {
+    return new URL(url).hostname.toLowerCase().endsWith('.edu');
+  } catch {
+    return false;
+  }
 }
 
 const CADENCE_INTERVAL_WORDS =

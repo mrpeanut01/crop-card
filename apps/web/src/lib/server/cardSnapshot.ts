@@ -68,6 +68,7 @@ import { sprayTermsFor } from './sprayTerms';
 import { listMapFeatureViews } from '$lib/db/mapFeatures';
 import { splitGroupBlockIds } from '$lib/plan/splitGroup';
 import { orchardSnapshotPart } from './orchardSnapshot';
+import { pantrySnapshotPart } from './pantrySnapshot';
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
@@ -623,7 +624,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     soilTests: latestSoilTestsPerBlock(listSoilTests(), labReportForSoilTests()),
     ...(await animalSnapshotPart(windowNow, opts.locale)),
     carryover: snapshotCarryover(await loadCarryoverLines(windowNow)),
-    ...(orchard ? { orchard } : {})
+    ...(orchard ? { orchard } : {}),
+    ...(await pantrySnapshotPart(windowNow))
   };
 }
 

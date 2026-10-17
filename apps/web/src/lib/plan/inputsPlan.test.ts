@@ -44,7 +44,9 @@ import {
 import {
   formatApplicationRateLine,
   formatInputAmount,
-  localizeRationale
+  formatNeedRange,
+  localizeRationale,
+  typicalNutrientsText
 } from './inputsPlanFormat';
 
 /* ─── Fixture builders ──────────────────────────────────────────────── */
@@ -963,6 +965,23 @@ describe('Inputs Plan display units', () => {
     expect(localizeRationale(text, metric)).toBe(
       'N 135 kg/ha, P₂O₅ 0 kg/ha − 73 kg-N/ha cover-crop credit'
     );
+  });
+
+  it('formats a sourced N need range and names typical nutrients (#739)', () => {
+    expect(formatNeedRange({ min: 125, max: 150 })).toBe('125–150 lb/ac');
+    expect(formatNeedRange({ min: 0, max: 0 })).toBe('0 lb/ac');
+    expect(formatNeedRange({ min: 125, max: 150 }, metric)).toMatch(/^\d+–\d+ kg\/ha$/);
+    const n = { n: 'data', p: 'fallback', k: 'fallback' } as const;
+    expect(typicalNutrientsText({ budgetProvenance: 'data', nutrientProvenance: n })).toBe(
+      'P₂O₅, K₂O'
+    );
+    expect(typicalNutrientsText({ budgetProvenance: 'fallback', nutrientProvenance: n })).toBe('');
+    expect(
+      typicalNutrientsText({
+        budgetProvenance: 'data',
+        nutrientProvenance: { n: 'data', p: 'data', k: 'data' }
+      })
+    ).toBe('');
   });
 });
 

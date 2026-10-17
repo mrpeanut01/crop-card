@@ -13,6 +13,8 @@ import {
 } from '$lib/plugins/schemas';
 import type { SeasonSetup } from '$lib/season/setup';
 
+import { nitrogenNeedRows, nitrogenNeedTotal } from '$lib/fertility/nitrogenNeed';
+
 import {
   fertilityBudgetFor,
   herbicideSafeOnCrop,
@@ -180,12 +182,11 @@ describe('#720 field corn, soybean, sorghum and wheat in the inputs plan', () =>
   });
 
   it('marks a sourced budget data and a family estimate fallback', () => {
-    const corn = plan(['corn'], MAY_1).applications;
-    expect(corn.find((a) => a.slot === 'pre-plant-fertility')?.budgetProvenance).toBe('fallback');
-    expect(corn.find((a) => a.slot === 'pre-plant-fertility')?.rationale).toMatch(
+    const squash = plan(['butternut-squash-waltham'], MAY_1).applications;
+    expect(squash.find((a) => a.slot === 'pre-plant-fertility')?.budgetProvenance).toBe('fallback');
+    expect(squash.find((a) => a.slot === 'pre-plant-fertility')?.rationale).toMatch(
       /typical estimate, not from a source/
     );
-    expect(corn.find((a) => a.slot === 'sidedress-n')?.budgetProvenance).toBe('fallback');
     const soy = plan(['soybean-asgrow-roundup-ready-2-xtend'], MAY_1).applications;
     expect(soy.find((a) => a.slot === 'pre-plant-fertility')?.budgetProvenance).toBe('data');
   });
@@ -302,4 +303,127 @@ describe('#720 field corn, soybean, sorghum and wheat in the inputs plan', () =>
     const p = plan(['sorghum-grain-pioneer'], MAY_1);
     expect(p.applications.some((a) => a.slot === 'sidedress-n')).toBe(false);
   });
+});
+
+describe('#739 rulings N739-1 to N739-4: a sourced N need feeds the inputs plan', () => {
+  const library = readdirSync(path.join(PLUGINS, 'crops'))
+    .filter((f) => f.endsWith('.json'))
+    .map((f) =>
+      cropPluginSchema.safeParse(JSON.parse(readFileSync(path.join(PLUGINS, 'crops', f), 'utf8')))
+    )
+    .filter((r) => r.success)
+    .map((r) => r.data as CropPlugin);
+  const needOnly = library.filter((c) => c.nitrogenNeedLbPerAcre && !c.fertility);
+
+  it('corn plans the low end of its VCE N need, tagged data, with P and K typical', () => {
+    for (const id of ['corn', 'corn-feed-dent-pioneer']) {
+      const budget = fertilityBudgetFor(crop(id))!;
+      expect(budget, id).toMatchObject({
+        n: 125,
+        p: 45,
+        k: 35,
+        sourced: true,
+        provenance: { n: 'data', p: 'fallback', k: 'fallback' },
+        nitrogenNeed: { min: 125, max: 150 }
+      });
+      const apps = plan([id], MAY_1).applications;
+      const fert = apps.find((a) => a.slot === 'pre-plant-fertility')!;
+      expect(fert.budgetProvenance, id).toBe('data');
+      expect(fert.nutrientProvenance, id).toEqual({ n: 'data', p: 'fallback', k: 'fallback' });
+      expect(fert.nitrogenNeed, id).toEqual({ min: 125, max: 150 });
+      expect(fert.rationale, id).toMatch(/N 125 lb\/ac, P₂O₅ 45 lb\/ac, K₂O 35 lb\/ac/);
+      expect(fert.rationale, id).toMatch(
+        /N from the extension N need, lower end; P₂O₅ and K₂O typical estimate, not from a source/
+      );
+      expect(
+        apps.some((a) => a.slot === 'sidedress-n'),
+        `${id}: no unsourced sidedress on top of a sourced season total`
+      ).toBe(false);
+    }
+  });
+
+  it('a crop with a fertility block keeps its own budget and topdress', () => {
+    const wheat = fertilityBudgetFor(crop('wheat-soft-red-winter'))!;
+    expect(wheat).toMatchObject({ n: 20, p: 40, k: 40, sourced: true });
+    expect(wheat.provenance).toEqual({ n: 'data', p: 'data', k: 'data' });
+    expect(wheat.nitrogenNeed).toBeUndefined();
+    const fert = plan(['wheat-soft-red-winter'], OCT_15).applications.find(
+      (a) => a.slot === 'pre-plant-fertility'
+    )!;
+    expect(fert.rationale).toMatch(/extension budget/);
+    expect(fert.nitrogenNeed).toBeUndefined();
+  });
+
+  it('a crop with neither still plans the family default tagged fallback', () => {
+    const c = crop('butternut-squash-waltham');
+    expect(c.fertility).toBeUndefined();
+    expect(c.nitrogenNeedLbPerAcre).toBeUndefined();
+    expect(fertilityBudgetFor(c)).toMatchObject({
+      sourced: false,
+      provenance: { n: 'fallback', p: 'fallback', k: 'fallback' }
+    });
+    const fert = plan(['butternut-squash-waltham'], MAY_1).applications.find(
+      (a) => a.slot === 'pre-plant-fertility'
+    )!;
+    expect(fert.budgetProvenance).toBe('fallback');
+    expect(fert.nitrogenNeed).toBeUndefined();
+  });
+
+  it('the /fertility N need row and the inputs plan agree for every need-only crop', () => {
+    expect(needOnly.map((c) => c.pluginId).sort()).toEqual(['corn', 'corn-feed-dent-pioneer']);
+    for (const c of needOnly) {
+      const [row] = nitrogenNeedRows(
+        [{ cropPluginId: c.pluginId, plantingDate: MAY_1 }],
+        2026,
+        () => ({
+          nitrogenNeedLbPerAcre: c.nitrogenNeedLbPerAcre,
+          name: c.displayName
+        })
+      );
+      const budget = fertilityBudgetFor(c)!;
+      expect(budget.n, c.pluginId).toBe(row.minLbPerAcre);
+      expect(budget.nitrogenNeed, c.pluginId).toEqual({
+        min: row.minLbPerAcre,
+        max: row.maxLbPerAcre
+      });
+      const fert = planOne(c).applications.find((a) => a.slot === 'pre-plant-fertility')!;
+      expect(fert.budgetProvenance, c.pluginId).toBe('data');
+      expect(fert.rationale, c.pluginId).toContain(`N ${row.minLbPerAcre} lb/ac`);
+    }
+  });
+
+  it('a crop with both fields plans N inside its sourced need range', () => {
+    for (const c of library.filter((x) => x.nitrogenNeedLbPerAcre && x.fertility)) {
+      const total = nitrogenNeedTotal(c.nitrogenNeedLbPerAcre!);
+      const planned =
+        (c.fertility!.preplant.nLbPerAcre ?? 0) +
+        (c.fertility!.topdressN ?? []).reduce((a, t) => a + t.nLbPerAcre, 0);
+      expect(planned, c.pluginId).toBeGreaterThanOrEqual(total.min);
+      expect(planned, c.pluginId).toBeLessThanOrEqual(total.max);
+    }
+  });
+
+  function planOne(c: CropPlugin) {
+    const input: InputsPlanInput = {
+      plantings: [
+        {
+          id: 'p0',
+          blockId: 'b0',
+          cropPluginId: c.pluginId,
+          varietyDisplayName: c.displayName,
+          plantingDate: MAY_1
+        }
+      ],
+      blocks: [block('b0')],
+      cropPlugins: { [c.pluginId]: c },
+      seasonSetup: setup,
+      soilTests: [],
+      fertilityCredits: [],
+      productPlugins: { herbicides, insecticides: [], fertilizers, fungicides: [] },
+      existingStock: [],
+      year: 2026,
+      nowMs: 0
+    };
+    return planInputs(input);
+  }
 });

@@ -26,9 +26,14 @@ const library = readdirSync(path.join(PLUGINS, 'fertilizers'))
   .filter((r) => r.success)
   .map((r) => r.data as FertilizerPlugin);
 
-const corn = cropPluginSchema.parse(
-  JSON.parse(readFileSync(path.join(PLUGINS, 'crops', 'corn.json'), 'utf8'))
-) as CropPlugin;
+// Corn without its sourced N need (#739 N739-4 drops the family sidedress
+// for it), so these ranking tests keep a pre-plant and a sidedress slot.
+const corn = {
+  ...(cropPluginSchema.parse(
+    JSON.parse(readFileSync(path.join(PLUGINS, 'crops', 'corn.json'), 'utf8'))
+  ) as CropPlugin),
+  nitrogenNeedLbPerAcre: undefined
+} as CropPlugin;
 
 const setup = (philosophy: Philosophy, fertilityApproach: FertilityApproach): SeasonSetup => ({
   philosophy,

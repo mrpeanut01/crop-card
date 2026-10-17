@@ -35,7 +35,9 @@
   import {
     formatApplicationRateLine,
     formatInputAmount,
-    localizeRationale
+    formatNeedRange,
+    localizeRationale,
+    typicalNutrientsText
   } from '$lib/plan/inputsPlanFormat';
   import {
     applyProductChoices,
@@ -515,6 +517,28 @@
                           <small class="typical-budget" data-testid="typical-budget-line"
                             ><Provenance source="fallback" compact /><span
                               >{tr('inputs.budgetTypical')}</span
+                            ></small
+                          >
+                        {/if}
+                        {#if app.nitrogenNeed}
+                          <small class="typical-budget" data-testid="n-need-budget-line"
+                            ><Provenance
+                              source="data"
+                              detail={tr('fert.nNeedSource')}
+                              compact
+                            /><span
+                              >{tr('inputs.budgetNFromNeed', {
+                                range: formatNeedRange(app.nitrogenNeed, currentPrefs())
+                              })}</span
+                            ></small
+                          >
+                        {/if}
+                        {#if typicalNutrientsText(app)}
+                          <small class="typical-budget" data-testid="typical-nutrients-line"
+                            ><Provenance source="fallback" compact /><span
+                              >{tr('inputs.budgetNutrientsTypical', {
+                                nutrients: typicalNutrientsText(app)
+                              })}</span
                             ></small
                           >
                         {/if}

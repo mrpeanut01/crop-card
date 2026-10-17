@@ -43,7 +43,10 @@
  *
  * A crop plugin's own `fertility` block (#720), quoted in
  * `apps/web/scripts/crop-data-sources.json`, replaces its family default,
- * and its `topdressN` entries plan stage-anchored N topdress.
+ * and its `topdressN` entries plan stage-anchored N topdress. A crop with
+ * no `fertility` block but a sourced `nitrogenNeedLbPerAcre` (#739) plans
+ * the lower end of that need as its N, tagged `data`, with P and K left on
+ * the family default (rulings N739-1 to N739-4).
  */
 
 import type { Block } from '$lib/db/blocks';
@@ -68,6 +71,7 @@ import {
 import { organicInputClass } from '$lib/organic/inputCompliance';
 import { effectiveWeedGate, weedStrategyAllows } from '$lib/season/sprayWindowFilter';
 import { nCreditForIntent } from '$lib/fertility/coverCropCredits';
+import { nitrogenNeedTotal } from '$lib/fertility/nitrogenNeed';
 import { nextCalendarWindow } from './calendarWords';
 import { noCompliantReasonText, type NoCompliantReasonCode } from './inputsReason';
 import type {
@@ -202,14 +206,28 @@ export const FAMILY_REMOVAL_DEFAULTS: Partial<Record<CropFamily, FamilyRemovalDe
   }
 };
 
+export type BudgetProvenance = 'data' | 'fallback';
+
+export interface NutrientProvenance {
+  n: BudgetProvenance;
+  p: BudgetProvenance;
+  k: BudgetProvenance;
+}
+
 /** The pre-plant N/P/K budget for a crop, lb/acre: its own sourced
- *  `fertility.preplant` (#720) when it has one, else its family default. */
-interface FertilityBudget {
+ *  `fertility.preplant` (#720) when it has one; else, for N, the lower end
+ *  of its sourced `nitrogenNeedLbPerAcre` (#739, ruling N739-1) with P and
+ *  K from the family default (N739-2); else its family default. */
+export interface FertilityBudget {
   n: number;
   p: number;
   k: number;
   label: string;
+  /** True when the N budget comes from a source. */
   sourced: boolean;
+  provenance: NutrientProvenance;
+  /** #739: the sourced N need range the N figure is the lower end of. */
+  nitrogenNeed?: { min: number; max: number };
 }
 
 export function fertilityBudgetFor(crop: CropPlugin): FertilityBudget | undefined {
@@ -220,18 +238,53 @@ export function fertilityBudgetFor(crop: CropPlugin): FertilityBudget | undefine
       p: own.p2o5LbPerAcre ?? 0,
       k: own.k2oLbPerAcre ?? 0,
       label: crop.displayName,
-      sourced: true
+      sourced: true,
+      provenance: { n: 'data', p: 'data', k: 'data' }
     };
   }
   const d = FAMILY_REMOVAL_DEFAULTS[crop.cropFamily];
+  const need = crop.nitrogenNeedLbPerAcre;
+  if (need) {
+    const total = nitrogenNeedTotal(need);
+    return {
+      n: total.min,
+      p: d?.pRemovalLbPerAcre ?? 0,
+      k: d?.kRemovalLbPerAcre ?? 0,
+      label: crop.displayName,
+      sourced: true,
+      provenance: { n: 'data', p: 'fallback', k: 'fallback' },
+      nitrogenNeed: total
+    };
+  }
   if (!d) return undefined;
   return {
     n: d.nRemovalLbPerAcre,
     p: d.pRemovalLbPerAcre,
     k: d.kRemovalLbPerAcre,
     label: crop.cropFamily,
-    sourced: false
+    sourced: false,
+    provenance: { n: 'fallback', p: 'fallback', k: 'fallback' }
   };
+}
+
+const NUTRIENT_NAME = { n: 'N', p: 'P₂O₅', k: 'K₂O' } as const;
+
+/** The rationale's words for where a bed's budget came from (N739-3). */
+function budgetBasisText(
+  sourced: boolean,
+  provenance: NutrientProvenance,
+  fromNeed: boolean
+): string {
+  if (!sourced) return 'typical estimate, not from a source; adjust to your soil test';
+  if (!fromNeed) return 'extension budget';
+  const typical = (['n', 'p', 'k'] as const).filter((k) => provenance[k] === 'fallback');
+  const names = typical.map((k) => NUTRIENT_NAME[k]).join(' and ');
+  return (
+    'N from the extension N need, lower end' +
+    (typical.length
+      ? `; ${names} typical estimate, not from a source; adjust to your soil test`
+      : '')
+  );
 }
 
 /** IPM scout cadence per family — emitted when pestStrategy === 'ipm' or
@@ -324,7 +377,13 @@ export interface InputsPlanApplication {
   /** #720 ruling R720-6 — fertility only: `data` when the N/P/K amount comes
    *  from the crop's sourced extension budget, `fallback` when it is the
    *  unsourced family estimate. */
-  budgetProvenance?: 'data' | 'fallback';
+  budgetProvenance?: BudgetProvenance;
+  /** #739 ruling N739-3 — pre-plant fertility only: where each nutrient's
+   *  amount came from, so a sourced N beside typical P and K says so. */
+  nutrientProvenance?: NutrientProvenance;
+  /** #739 — pre-plant fertility only: the crop's sourced N need range when
+   *  the planned N is its lower end. */
+  nitrogenNeed?: { min: number; max: number };
   /** Block acreage. */
   acres: number;
   /** Total product needed = `rateAmount × acres`. `null` when no product. */
@@ -897,6 +956,8 @@ interface BedPlan {
     families: string[];
     removal: { n: number; p: number; k: number };
     sourced: boolean;
+    provenance: NutrientProvenance;
+    nitrogenNeed?: { min: number; max: number };
   };
 }
 
@@ -929,17 +990,34 @@ function planBeds(input: InputsPlanInput): Map<string, BedPlan> {
       .filter((x) => x.budget);
     if (fed.length > 0) {
       const removal = { n: 0, p: 0, k: 0 };
+      const provenance: NutrientProvenance = { n: 'fallback', p: 'fallback', k: 'fallback' };
+      let nitrogenNeed: { min: number; max: number } | undefined;
+      const budgets = fed.map((x) => x.budget!);
+      for (const key of ['n', 'p', 'k'] as const) {
+        const best = budgets.reduce((a, b) =>
+          b[key] > a[key] ||
+          (b[key] === a[key] && b.provenance[key] === 'data' && a.provenance[key] !== 'data')
+            ? b
+            : a
+        );
+        removal[key] = best[key];
+        provenance[key] = best.provenance[key];
+        if (key === 'n') nitrogenNeed = best.nitrogenNeed;
+      }
       const families: string[] = [];
       let sourced = false;
-      for (const x of fed) {
-        const d = x.budget!;
-        removal.n = Math.max(removal.n, d.n);
-        removal.p = Math.max(removal.p, d.p);
-        removal.k = Math.max(removal.k, d.k);
+      for (const d of budgets) {
         if (!families.includes(d.label)) families.push(d.label);
         sourced ||= d.sourced;
       }
-      bed.fertility = { leadPlantingId: fed[0].planting.id, families, removal, sourced };
+      bed.fertility = {
+        leadPlantingId: fed[0].planting.id,
+        families,
+        removal,
+        sourced,
+        provenance,
+        ...(nitrogenNeed ? { nitrogenNeed } : {})
+      };
     }
     beds.set(blockId, bed);
   }
@@ -1130,7 +1208,12 @@ function planForPlanting(
 
   /* 2. Pre-plant fertility (synthesized) ─────────────────────────── */
 
-  const removal = crop.fertility ? undefined : FAMILY_REMOVAL_DEFAULTS[crop.cropFamily];
+  // N739-4: a sourced N need is the season's total, so the unsourced family
+  // sidedress is not planned on top of it.
+  const removal =
+    crop.fertility || crop.nitrogenNeedLbPerAcre
+      ? undefined
+      : FAMILY_REMOVAL_DEFAULTS[crop.cropFamily];
   const bedFert = bed?.fertility;
   if (!fertilityBudgetFor(crop) && !bedFert) {
     warnings.push({
@@ -1209,6 +1292,8 @@ function planForPlanting(
         acres,
         ...choice,
         budgetProvenance: bedFert.sourced ? 'data' : 'fallback',
+        nutrientProvenance: bedFert.provenance,
+        ...(bedFert.nitrogenNeed ? { nitrogenNeed: bedFert.nitrogenNeed } : {}),
         coversPlantingIds: bed.plantingIds,
         rationale:
           `Pre-plant fertility budget: ` +
@@ -1216,9 +1301,7 @@ function planForPlanting(
           `P₂O₅ ${Math.max(0, deficit.p).toFixed(0)} lb/ac, ` +
           `K₂O ${Math.max(0, deficit.k).toFixed(0)} lb/ac ` +
           `(${bedFert.families.join(' / ')} ` +
-          (bedFert.sourced
-            ? 'extension budget'
-            : 'typical estimate, not from a source; adjust to your soil test') +
+          budgetBasisText(bedFert.sourced, bedFert.provenance, !!bedFert.nitrogenNeed) +
           ` − soil credits − fertility credits` +
           (coverNCredit > 0
             ? ` − ${coverNCredit} lb-N/ac cover-crop credit (${seasonSetup.coverCropIntent})`

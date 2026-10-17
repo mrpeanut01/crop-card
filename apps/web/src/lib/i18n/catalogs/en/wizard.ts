@@ -973,6 +973,10 @@ export const enWizard = {
   'inputs.rateMissing': 'No rate for this product here. Check its label for the amount.',
   'inputs.budgetTypical':
     'Typical amount for this kind of crop, not from a source. Adjust it to your soil test.',
+  'inputs.budgetNFromNeed':
+    'Nitrogen is the low end of the extension figure for this crop, {range} of N.',
+  'inputs.budgetNutrientsTypical':
+    '{nutrients}: typical amount for this kind of crop, not from a source. Adjust it to your soil test.',
   'inputs.bedWide.one': 'Covers the whole bed once, for its {count} planting.',
   'inputs.bedWide.other': 'Covers the whole bed once, for its {count} plantings.',
   'inputs.scout': 'scout',

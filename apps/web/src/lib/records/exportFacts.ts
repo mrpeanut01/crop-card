@@ -39,17 +39,29 @@ export function modeOfActionLabels(
   return clean;
 }
 
-/** Restricted-entry interval in whole hours. The record's own stored
- *  clear time wins; otherwise the longest library value, but only when
- *  every product has one. Undefined means "not on file". */
+/** Whole hours from the application to a clear time; undefined when no
+ *  clear time is on file. */
+export function reiHoursFromClearAt(
+  occurredAt: number,
+  clearAt: number | null | undefined
+): number | undefined {
+  return typeof clearAt === 'number' && clearAt >= occurredAt
+    ? Math.round((clearAt - occurredAt) / HOUR_MS)
+    : undefined;
+}
+
+/** Restricted-entry interval in whole hours for insecticide and fungicide
+ *  rows. The record's own stored clear time wins; otherwise the longest
+ *  library value, but only when every product has one. Undefined means
+ *  "not on file". Herbicide rows use `herbicideReEntryClearAtFor` with
+ *  `reiHoursFromClearAt` instead, so they match the record card (#815). */
 export function reiHoursFor(
   occurredAt: number,
   reEntryClearAt: number | null | undefined,
   pluginHours: ReadonlyArray<number | null | undefined>
 ): number | undefined {
-  if (typeof reEntryClearAt === 'number' && reEntryClearAt >= occurredAt) {
-    return Math.round((reEntryClearAt - occurredAt) / HOUR_MS);
-  }
+  const stored = reiHoursFromClearAt(occurredAt, reEntryClearAt);
+  if (stored !== undefined) return stored;
   if (pluginHours.length === 0) return undefined;
   let max = -1;
   for (const h of pluginHours) {

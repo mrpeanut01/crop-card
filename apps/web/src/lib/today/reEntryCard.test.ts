@@ -1,12 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import type { PluginRegistry } from '$lib/plugins';
-import {
-  activeReEntryItems,
-  longestLibraryReiHours,
-  reEntryReadStart,
-  type ReEntryCardInput
-} from './reEntryCard';
+import { activeReEntryItems, reEntryReadStart, type ReEntryCardInput } from './reEntryCard';
+import { longestHerbicideReiHours, longestLibraryReiHours } from '$lib/spray/herbicideReEntry';
 
 const HOUR = 60 * 60 * 1000;
 
@@ -87,6 +83,15 @@ describe('longestLibraryReiHours', () => {
   it('takes the longest REI over herbicides, insecticides and fungicides only', () => {
     expect(longestLibraryReiHours(REGISTRY)).toBe(72);
     expect(longestLibraryReiHours(registryOf([]))).toBe(0);
+  });
+
+  it('filters by plugin type; the herbicide helper is the herbicide-only filter', () => {
+    expect(longestLibraryReiHours(REGISTRY, ['herbicide'])).toBe(48);
+    expect(longestLibraryReiHours(REGISTRY, ['insecticide'])).toBe(72);
+    expect(longestLibraryReiHours(REGISTRY, ['fungicide'])).toBe(4);
+    expect(longestLibraryReiHours(REGISTRY, ['fungicide', 'herbicide'])).toBe(48);
+    expect(longestHerbicideReiHours(REGISTRY)).toBe(48);
+    expect(longestHerbicideReiHours(registryOf([]))).toBe(0);
   });
 });
 

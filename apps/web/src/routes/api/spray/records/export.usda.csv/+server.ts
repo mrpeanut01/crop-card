@@ -52,7 +52,9 @@
  * appended `total_amount_unit`; a harvest's quantity text goes in the
  * appended `harvest_quantity`. `rei_hours` is the record's restricted-entry
  * interval, blank when not on file (a herbicide row only when every product
- * in the tank has a sourced REI, #640).
+ * in the tank has a sourced REI, #640). A herbicide row takes the longer of
+ * the stored clear time and the library REI now, as the record card does
+ * (#815).
  *
  * #737 (swarm 2026-10-07): `rate_note` says when a herbicide row's rate was
  * a typical rate, not one quoted from the label; blank otherwise.
@@ -74,6 +76,7 @@ import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { getRegistry } from '$lib/server/registry';
+import { herbicideReEntryClearAtFor } from '$lib/server/herbicideReEntry';
 import { requireUser } from '$lib/server/auth';
 import { parseExportDateRange } from '$lib/exports/dateRange';
 import { localDay, zoneCaption } from '$lib/exports/localTime';
@@ -95,7 +98,8 @@ import {
   cropTreated,
   modeOfActionLabels,
   recordedTarget,
-  reiHoursFor
+  reiHoursFor,
+  reiHoursFromClearAt
 } from '$lib/records/exportFacts';
 
 function applicatorMap(userIds: string[]): Map<string, string> {
@@ -157,6 +161,11 @@ export const GET: RequestHandler = async (event) => {
             ?.reEntryIntervalHours
       )
     );
+    return hours === undefined ? '' : String(hours);
+  }
+
+  function herbicideReiCell(e: (typeof sprays)[number]): string {
+    const hours = reiHoursFromClearAt(e.occurredAt, herbicideReEntryClearAtFor(registry, e));
     return hours === undefined ? '' : String(hours);
   }
 
@@ -223,7 +232,7 @@ export const GET: RequestHandler = async (event) => {
     const commodity = cropCommodityFor(block, e.cropId);
     const wind = e.conditions.windMph;
     const temp = e.conditions.tempF;
-    const rei = reiCell(e, e.products);
+    const rei = herbicideReiCell(e);
     for (const p of e.products) {
       const total = totalAmountApplied(p.rate?.amount, acres);
       const plugin = registry.get(p.pluginId)?.plugin as

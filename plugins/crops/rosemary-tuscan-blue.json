@@ -15,9 +15,7 @@
       "max": 36
     }
   },
-  "harvestIndicators": [
-    "Year-round cuts (light tipping)"
-  ],
+  "harvestIndicators": ["Year-round cuts (light tipping)"],
   "notes": "Tender perennial — winter-kill below 15 °F. Container or high-tunnel in Mid-Atlantic.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -40,5 +38,9 @@
       "suitability": "good",
       "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes."
     }
-  ]
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "8a"
 }

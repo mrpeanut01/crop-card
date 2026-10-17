@@ -15,9 +15,7 @@
       "max": 18
     }
   },
-  "harvestIndicators": [
-    "Pre-flower for peak flavor"
-  ],
+  "harvestIndicators": ["Pre-flower for peak flavor"],
   "notes": "Aggressive runner — confine to dedicated bed or containers. Cut hard mid-summer to refresh.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -39,5 +37,9 @@
       "method": "freeze",
       "suitability": "good"
     }
-  ]
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "4a"
 }

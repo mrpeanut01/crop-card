@@ -8,8 +8,7 @@
     "min": 35,
     "max": 55
   },
-  "plantingGuide": {
-  },
+  "plantingGuide": {},
   "harvestIndicators": [
     "Foliage harvest pre-bolt",
     "Allow some plants to flower for coriander seed"
@@ -27,5 +26,8 @@
       "method": "freeze",
       "suitability": "good"
     }
-  ]
+  ],
+  "agronomy": {
+    "lifecycle": "annual"
+  }
 }

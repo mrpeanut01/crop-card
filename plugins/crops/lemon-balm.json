@@ -45,5 +45,6 @@
       "method": "freeze",
       "suitability": "good"
     }
-  ]
+  ],
+  "winterHardyToZone": "3a"
 }

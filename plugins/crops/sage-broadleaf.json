@@ -15,9 +15,7 @@
       "max": 12
     }
   },
-  "harvestIndicators": [
-    "Pre-flower for best flavor"
-  ],
+  "harvestIndicators": ["Pre-flower for best flavor"],
   "notes": "Hardy perennial; replace every 3–4 yr.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -31,5 +29,9 @@
       "method": "dry",
       "suitability": "good"
     }
-  ]
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "4a"
 }

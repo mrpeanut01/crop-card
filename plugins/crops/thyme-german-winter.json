@@ -15,9 +15,7 @@
       "max": 12
     }
   },
-  "harvestIndicators": [
-    "Pre-flower for peak flavor"
-  ],
+  "harvestIndicators": ["Pre-flower for peak flavor"],
   "notes": "Drought-tolerant perennial. Replace plants every 3–4 yr — woody decline.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -39,5 +37,9 @@
       "method": "freeze",
       "suitability": "good"
     }
-  ]
+  ],
+  "agronomy": {
+    "lifecycle": "perennial"
+  },
+  "winterHardyToZone": "5a"
 }

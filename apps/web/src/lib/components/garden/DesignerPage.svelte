@@ -48,6 +48,7 @@
           companions: data.companions,
           lookbackByFamily: data.lookbackByFamily,
           recipes: data.recipes,
+          lifecycle: data.lifecycle,
           areaKind: data.areaKind,
           canEdit: data.canEdit,
           initialDateMs: parseYmd(page.url.searchParams.get('on')),

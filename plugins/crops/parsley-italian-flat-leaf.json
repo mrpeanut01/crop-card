@@ -9,11 +9,8 @@
     "max": 85
   },
   "defaultRowSpacingInches": 12,
-  "plantingGuide": {
-  },
-  "harvestIndicators": [
-    "Stems 6–8 in"
-  ],
+  "plantingGuide": {},
+  "harvestIndicators": ["Stems 6–8 in"],
   "notes": "Biennial — bolts year 2. Outer-leaf cutting extends harvest 6 mo.",
   "harvestStyle": "cut-and-come-again",
   "bloomWindow": {
@@ -35,5 +32,8 @@
       "method": "freeze",
       "suitability": "good"
     }
-  ]
+  ],
+  "agronomy": {
+    "lifecycle": "biennial"
+  }
 }

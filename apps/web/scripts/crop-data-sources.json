@@ -1117,6 +1117,20 @@
       "date": "Jul 23, 2026 (accessed 2026-10-17)",
       "quote": "Best Herbs for Freezing: basil cilantro parsley dill chives mint",
       "note": "Penn State agrees (\"Freezing works well for herbs like ... chives\")."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Chives, garlic chives Allium spp. | Little care. Divide when overcrowded. Grow from seed or division.\"",
+      "note": "Illinois Extension (Chives) and NC State Plant Toolbox (Allium schoenoprasum) agree: perennial."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/allium-schoenoprasum/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Allium schoenoprasum (Chives, Flowering Onion, Wild Chives)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "clover-red-mammoth": {
@@ -1433,6 +1447,13 @@
       "date": "Updated July 22, 2025 (accessed 2026-10-17)",
       "quote": "Freezing works well for herbs like parsley, dill, basil, chives lemon balm, mint or tarragon.",
       "note": "OSU HYG-5360 lists dill under \"Best Herbs for Freezing\"."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Dill Anethum graveolens | Grow from seed sown in early spring. Sun or partial shade.\"",
+      "note": "Illinois Extension (Dill) and NC State Plant Toolbox (Anethum graveolens) agree: annual."
     }
   },
   "edamame-midori-giant": {
@@ -1533,6 +1554,13 @@
       "date": "Published May 2020 (accessed 2026-10-06)",
       "quote": "USU, How to Grow Fennel in Your Garden: \"Space seeds 4-6 inches apart in the row with rows 18 inches apart.\"; \"After plants begin to bulb, thin Florence fennel to 8-12 inches apart.\"",
       "note": "USU's row figure is for direct-seeded fennel on a page that covers Florence (bulbing) fennel. Arkansas FSA6083 gives rows 24 in only for sweet (herb) fennel, which grows 4-6 ft; for Florence fennel it gives in-row spacing only (it lists Zefa Fino), so it is not a direct disagreement. UF HS595 (Florence fennel) gives no spacing. Lower end of the between-row figure (#591 ruling Q1). Also read: https://www.uaex.uada.edu/publications/PDF/FSA-6083.pdf (rows 24 inches apart, but for sweet (herb) fennel; Florence fennel given in-row only, not counted)."
+    },
+    "lifecycle": {
+      "url": "https://extension.illinois.edu/herbs/fennel",
+      "publisher": "University of Illinois Extension, Herb Gardening",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "Illinois Extension, Herb Gardening | Fennel: \"One that is treated like a bulb type vegetable (Florence fennel or Finocchio – Foeniculum vulgare var. dulce).\"; \"Growing: Annual Both forms of fennel are grown from seed.\"",
+      "note": "Sources disagree: NC State Plant Toolbox (Foeniculum vulgare, with Florence Fennel among its common names) lists Life Cycle Perennial, zones 4a-9b. The bulb fennel this plugin grows is lifted whole in its first season, so the source on bulb fennel is kept."
     }
   },
   "garlic-german-extra-hardy": {
@@ -2056,6 +2084,20 @@
       "date": "Updated July 22, 2025 (accessed 2026-10-17)",
       "quote": "Freezing works well for herbs like parsley, dill, basil, chives lemon balm, mint or tarragon.",
       "note": "OSU HYG-5360 lists mint under \"Best Herbs for Freezing\"."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Mints Mentha spp. | Grow from cuttings or division. Sun or partial shade.\"",
+      "note": "Illinois Extension (Mint) and NC State Plant Toolbox (Mentha spicata) agree: perennial."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/mentha-spicata/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Mentha spicata (Garden Mint, Lamb Mint, Mint, Spearmint)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "mustard-greens-southern-giant-curled": {
@@ -2110,6 +2152,13 @@
       "publisher": "University of Maryland Extension, Home and Garden Information Center",
       "date": "2023-02-20",
       "quote": "UMD HGIC, Nasturtium: \"It is best to use fresh young leaves and flowers and can be harvested throughout the season. When plants become stressed harvested leaves and flowers have a stronger flavor that can be off-putting.\""
+    },
+    "lifecycle": {
+      "url": "https://extension.illinois.edu/herbs/nasturtium",
+      "publisher": "University of Illinois Extension, Herb Gardening",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "Illinois Extension, Herb Gardening | Nasturtium: \"Nasturtium is both a decorative garden annual as well as a useful culinary herb.\" | \"Growing: Annual\"",
+      "note": "NC State Plant Toolbox (Tropaeolum majus) agrees: annual."
     }
   },
   "oats-cover-spring": {
@@ -2382,6 +2431,20 @@
       "date": "2014 (accessed 2026-10-17)",
       "quote": "Tender-Leaf Herbs — Basil, oregano, tarragon, lemon balm and the mints have a high moisture content and will mold if not dried quickly.",
       "note": "Sources disagree on how well oregano dries, so dry stays empty: OSU HYG-5360 lists oregano under \"Best Herbs for Drying\", while NCHFP (this quote) groups it with the tender-leaf herbs that will mold if not dried quickly."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Oregano Origanum spp. | Grow from seed, cuttings, or division. Sun.\"",
+      "note": "Illinois Extension (Greek Oregano) and NC State Plant Toolbox (Origanum vulgare subsp. hirtum) agree: perennial."
+    },
+    "winterHardyToZone": {
+      "url": "https://extension.illinois.edu/herbs/oregano",
+      "publisher": "University of Illinois Extension, Herb Gardening",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "Illinois Extension, Herb Gardening | Greek Oregano: \"Greek oregano is the one to plant.\" ... \"True oregano is marginally hardy in zone 5.\"",
+      "note": "Sources disagree; the warmest is stored (R-5). NC State Plant Toolbox, Origanum vulgare subsp. hirtum, lists USDA Plant Hardiness Zone 4a to 8b (coldest 4a)."
     }
   },
   "ornamental-corn-earth-tones-dent-raw-untreated-non-gmo": {
@@ -2455,6 +2518,13 @@
       "date": "Jul 23, 2026 (accessed 2026-10-17)",
       "quote": "Best Herbs for Freezing: basil cilantro parsley dill chives mint",
       "note": "Penn State (\"Freezing works well for herbs like parsley ...\") and Illinois Extension (\"Parsley can also be frozen for later use.\") agree."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Parsley Petroselinum spp | Grow from seed started in early spring. Slow to germinate. Sun. Biennial.\"",
+      "note": "Listed in the Annuals table with the hint \"Biennial\"; Illinois Extension (Parsley, \"Growing: Biennial\") and NC State Plant Toolbox (Petroselinum crispum, Life Cycle Biennial) agree. The leaf harvest is the first year."
     }
   },
   "parsnip-hollow-crown": {
@@ -2982,6 +3052,20 @@
       "date": "December 17, 2024 (accessed 2026-10-17)",
       "quote": "Oils provide an anaerobic environment, and when combined with low-acid food matrices such as garlic and herbs, this provides the perfect conditions for specific bacteria to thrive. Clostridium botulinum specifically is of concern in infused oils.",
       "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Rosemary Rosmarinus spp. | Grows in well-drained, nonacid soil from cuttings. Sun. Marginally hardy; plant in protected site.\"",
+      "note": "Illinois Extension (Rosemary, \"Growing: Tender Perennial\"), Wisconsin Horticulture and NC State Plant Toolbox agree: perennial. The source names the species or the crop type; the cultivar takes the crop-type value (#591 ruling Q3)."
+    },
+    "winterHardyToZone": {
+      "url": "https://hort.extension.wisc.edu/articles/rosemary/",
+      "publisher": "University of Wisconsin-Madison Division of Extension, Wisconsin Horticulture (Susan Mahr)",
+      "date": "Revised: June 2026; accessed 2026-10-17",
+      "quote": "Wisconsin Horticulture, Rosemary: \"Because it is winter hardy only to zone 8a, rosemary is generally only grown as a potted plant in Wisconsin.\"",
+      "note": "Illinois Extension (\"zone 8 and above\") and NC State Plant Toolbox (Salvia rosmarinus, 8a to 10b) agree. The cultivar Tuscan Blue is listed on the page with no zone of its own; Arp and Madeline Hill are hardier and are other cultivars."
     }
   },
   "sage-broadleaf": {
@@ -3005,6 +3089,20 @@
       "date": "2014 (accessed 2026-10-17)",
       "quote": "Less Tender Herbs — The more sturdy herbs such as rosemary, sage, thyme, summer savory and parsley are the easiest to dry without a dehydrator.",
       "note": "OSU HYG-5360 and NC State (\"Sage ... easy to dry\") agree."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Sage Salvia spp. | From seed or cuttings. Sun. Renew every 3-4 years.\"",
+      "note": "Illinois Extension (Sage) and NC State Plant Toolbox (Salvia officinalis) agree: perennial."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/salvia-officinalis/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Salvia officinalis (Common Sage, Culinary Sage, Garden Sage, Sage)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
+      "note": "Coldest zone listed. Illinois Extension says Golden, Purple and Tricolor sage are not dependably hardy in zone 5; those are other cultivars, not broadleaf sage."
     }
   },
   "scallion-evergreen-bunching": {
@@ -3606,6 +3704,20 @@
       "date": "Updated July 22, 2025 (accessed 2026-10-17)",
       "quote": "Rosemary and thyme can also be frozen on the stem.",
       "note": "OSU HYG-5360 agrees: \"freezing is used for more hearty herbs such as thyme and rosemary.\""
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Thyme Thymus spp. | Light soil, well-drained. Renew every 2-3 years. Grow from cutting or division. Sun.\"",
+      "note": "Illinois Extension (Thyme) and NC State Plant Toolbox (Thymus vulgaris) agree: perennial. The source names the species or the crop type; the cultivar takes the crop-type value (#591 ruling Q3)."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/thymus-vulgaris/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Thymus vulgaris (Common Thyme, Garden Thyme, German Thyme, Thyme)\"; \"USDA Plant Hardiness Zone: 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "tomatillo-de-milpa": {
@@ -6276,6 +6388,20 @@
       "date": "2024 (PDF: \"Produced by Virginia Cooperative Extension, Virginia Tech, 2024\", VT/1220/426-420; accessed 2026-10-06)",
       "quote": "VCE 426-420, Herb Culture and Use, Perennials table (Common name Scientific name | Height | Plant spacing | Cultural hints | Uses): \"Height | Plant spacing\"; \"Catnip Nepeta cataria | 36-48” | 18”\"",
       "note": "VCE 426-420 column is \"Plant spacing\" (spacing between plants; the table names no row axis)."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Catnip Nepeta cataria | Grow from seed or division. Hardy; sun or shade.\"",
+      "note": "Illinois Extension (Catnip) and NC State Plant Toolbox (Nepeta cataria) agree: perennial."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/nepeta-cataria/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Nepeta cataria (Catmint, Catnip, Catswort)\"; \"USDA Plant Hardiness Zone: 3a, 3b, 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "chamomile-german": {
@@ -6292,6 +6418,13 @@
       "date": "Not printed; describes 1998-1999 trials (accessed 2026-10-06)",
       "quote": "MSU WARC, German Chamomile: \"Transplants may be spaced 8\" apart in rows 18\" apart.\"",
       "note": "Applies to transplants; for direct seeding the page gives a seeding rate (4.5 oz/acre) only. The same page reports its trial layout (8.4 in between plants) which agrees but is a trial, not counted. Seen but not counted (no axis named, URL not on file): UC Cooperative Extension Sacramento County Master Gardener herb sheet \"Space 1 to 2 inches\". UMD and Oregon State chamomile pages cached in #591 were 404s. No mid-Atlantic source found."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Chamomile, German chamomile Matricaria recutita | Grow from seed. Prefers a sandy, well-drained soil with a pH of 7.0-7.5 and lots of sun.\"",
+      "note": "NC State Plant Toolbox (Matricaria chamomilla) agrees: annual."
     }
   },
   "hyssop-officinalis": {
@@ -6308,6 +6441,19 @@
       "date": "not printed (file path 2011-05; accessed 2026-10-06)",
       "quote": "UC Master Gardeners of Orange County, Use and Culture of Culinary Herbs (Spacing in inches (cm): Height | Row | Plants): \"Spacing in inches (cm) Height Row Plants\"; \"hyssop (Hyssopus officinalis) 24 (60) 18 (45) 15 (37.5)\"",
       "note": "Columns under \"Spacing in inches (cm)\": Row 18 | Plants 15 (Plants = between plants, distinct from Row). Not in VCE 426-420; the UMD hyssop URL cached in #591 is a 404."
+    },
+    "lifecycle": {
+      "url": "https://plants.ces.ncsu.edu/plants/hyssopus-officinalis/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Hyssopus officinalis (Hyssop)\"; \"Hyssop is a short-lived, semi-evergreen, herbaceous perennial or subshrub in the mint family (Lamiaceae)\""
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/hyssopus-officinalis/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Hyssopus officinalis (Hyssop)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "lavender-english-munstead": {
@@ -6331,6 +6477,20 @@
       "date": "Jul 23, 2026 (accessed 2026-10-17)",
       "quote": "Best Herbs for Drying: rosemary thyme oregano sage lavender",
       "note": "Illinois Extension agrees: \"Hang in small bunches in a cool, dry, dark well-ventilated area to dry.\""
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Lavender Lavendula spp. | Propagate from cuttings. Grows in dry, rocky, sunny locations.\"",
+      "note": "Illinois Extension (Lavender, lists Munstead) and NC State Plant Toolbox (Lavandula angustifolia, lists Munstead) agree: perennial."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/lavandula-angustifolia/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Lavandula angustifolia (Common Lavender, English Lavender, Lavender, Narrow-Leaved Lavender)\"; \"USDA Plant Hardiness Zone: 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
+      "note": "Coldest zone listed for the species; the page lists Munstead among its cultivars. No other fetched source states a zone."
     }
   },
   "marjoram-sweet": {
@@ -6347,6 +6507,13 @@
       "date": "Updated: February 20, 2023 (accessed 2026-10-06)",
       "quote": "UMD Extension, Sweet Marjoram: \"Leave 12” between plants and 18” between rows.\"",
       "note": "Not in VCE 426-420. (UCANR prints an obvious typo \"18 ft\" in the Row column.)"
+    },
+    "lifecycle": {
+      "url": "https://extension.illinois.edu/herbs/marjoram-sweet",
+      "publisher": "University of Illinois Extension, Herb Gardening",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "Illinois Extension, Herb Gardening | Sweet Marjoram: \"Sweet marjoram is an annual with a low, spreading growth habit.\" | \"Growing: Very Tender Perennial/Annual\"",
+      "note": "NC State Plant Toolbox (Origanum majorana) lists Life Cycle \"Annual / Perennial\" with zones 9a-10b. Both sources name annual; the stored annual stays."
     }
   },
   "stevia-sweetleaf": {
@@ -6363,6 +6530,20 @@
       "date": "not printed in cached text (file path 2024-11; accessed 2026-10-06)",
       "quote": "UK CCD-CP-55, Stevia: \"Row spacing of 30 inches with plant spacing of 6 to 7 inches is used in eastern North Carolina.\"",
       "note": "Commercial field practice reported for eastern NC (plant spacing named separately from row spacing). The NC State WNC stevia page is a spacing trial (6/12/18 in) and does not count. Not in VCE 426-420. Current plugin value 12-18 is much wider."
+    },
+    "lifecycle": {
+      "url": "https://plants.ces.ncsu.edu/plants/stevia-rebaudiana/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Stevia rebaudiana (Candy Leaf, Stevia, Sugar Leaf, Sweet Herb of Paraguay\"; \"Sweet leaf is a tender perennial that is a member of the daisy family (Asteraceae)\"",
+      "note": "The page lists Life Cycle \"Annual / Perennial\"; the description names a tender perennial, and the stored perennial stays."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/stevia-rebaudiana/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Stevia rebaudiana (Candy Leaf, Stevia, Sugar Leaf, Sweet Herb of Paraguay\"; \"USDA Plant Hardiness Zone: 10a, 10b, 11a, 11b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "summer-savory": {
@@ -6386,6 +6567,13 @@
       "date": "2014 (accessed 2026-10-17)",
       "quote": "Less Tender Herbs — The more sturdy herbs such as rosemary, sage, thyme, summer savory and parsley are the easiest to dry without a dehydrator.",
       "note": "NC State agrees (\"summer savory ... easy to dry\")."
+    },
+    "lifecycle": {
+      "url": "https://plants.ces.ncsu.edu/plants/satureja-hortensis/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Satureja hortensis (Cimbru, Savory, Summer Savory)\"; \"Summer Savory is an edible, annual flowering herb, and with a culinary, medicinal, aromatic and decorative value.\"",
+      "note": "Illinois Extension (Summer Savory, \"Growing: Annual\") agrees."
     }
   },
   "tarragon-french": {
@@ -6415,6 +6603,20 @@
       "publisher": "Penn State Extension, Freezing Herbs",
       "date": "Updated July 22, 2025 (accessed 2026-10-17)",
       "quote": "Freezing works well for herbs like parsley, dill, basil, chives lemon balm, mint or tarragon."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"French tarragon Artemesia dracunulus | Grow from cuttings or division. Sun or semishade.\"",
+      "note": "Illinois Extension (French Tarragon) and NC State Plant Toolbox (Artemisia dracunculus) agree: perennial."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/artemisia-dracunculus/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Artemisia dracunculus (Dragon Plant, Dragon Sagewort, Estragon, Herbaceous Sagewort, Pinon Wormwood, Silky Wormwood, Tarragon, Wild Tarragon)\"; \"USDA Plant Hardiness Zone: 3a, 3b, 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
+      "note": "Coldest zone listed for the species, which the page says is the wild tarragon that culinary varieties come from (A. dracunculus 'Sativa' is French Tarragon). No fetched source gives French tarragon its own zone; recheck when one is found."
     }
   },
   "arugula-astro": {
@@ -6463,6 +6665,13 @@
       "date": "2024 (PDF: \"Produced by Virginia Cooperative Extension, Virginia Tech, 2024\", VT/1220/426-420; accessed 2026-10-06)",
       "quote": "VCE 426-420, Herb Culture and Use, Annuals table (Common name Scientific name | Height | Plant spacing | Cultural hints | Uses): \"Height | Plant spacing\"; \"Chervil Anthriscus cerefolium | 10” | 3-6”\"",
       "note": "VCE 426-420 column is \"Plant spacing\" (spacing between plants; the table names no row axis). The UCANR row prints the wrong Latin name (Anethum graveolens) for chervil."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Chervil Anthriscus cerefolium | Sow in early spring. Partial shade.\"",
+      "note": "Illinois Extension (Chervil) agrees: annual. NC State Plant Toolbox lists Life Cycle \"Annual / Biennial\"."
     }
   },
   "endive-frisee": {
@@ -6513,6 +6722,20 @@
       "date": "2024 (PDF: \"Produced by Virginia Cooperative Extension, Virginia Tech, 2024\", VT/1220/426-420; accessed 2026-10-06)",
       "quote": "VCE 426-420, Herb Culture and Use, Perennials table (Common name Scientific name | Height | Plant spacing | Cultural hints | Uses): \"Height | Plant spacing\"; \"Lovage Levisticum officinale | 36-48” | 30”\"",
       "note": "VCE 426-420 column is \"Plant spacing\" (spacing between plants; the table names no row axis)."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Lovage Levisticum officinale | Rich, moist soil. Grow from seed planted in late summer. Sun or partial shade.\"",
+      "note": "Illinois Extension (Lovage) and NC State Plant Toolbox (Levisticum officinale) agree: perennial."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/levisticum-officinale/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Levisticum officinale (Bladder seed, Garden Lovage, Lovage, Maggi plant)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "mache-corn-salad": {
@@ -6679,6 +6902,13 @@
       "date": "Published May 2020 (accessed 2026-10-06)",
       "quote": "USU, How to Grow Fennel in Your Garden: \"Space seeds 4-6 inches apart in the row with rows 18 inches apart.\"; \"After plants begin to bulb, thin Florence fennel to 8-12 inches apart.\"",
       "note": "USU's row figure is for direct-seeded fennel on a page that covers Florence (bulbing) fennel. Arkansas FSA6083 gives rows 24 in only for sweet (herb) fennel, which grows 4-6 ft; for Florence fennel it gives in-row spacing only (it lists Zefa Fino), so it is not a direct disagreement. UF HS595 (Florence fennel) gives no spacing. Lower end of the between-row figure (#591 ruling Q1). Also read: https://www.uaex.uada.edu/publications/PDF/FSA-6083.pdf (rows 24 inches apart, but for sweet (herb) fennel; Florence fennel given in-row only, not counted)."
+    },
+    "lifecycle": {
+      "url": "https://extension.illinois.edu/herbs/fennel",
+      "publisher": "University of Illinois Extension, Herb Gardening",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "Illinois Extension, Herb Gardening | Fennel: \"One that is treated like a bulb type vegetable (Florence fennel or Finocchio – Foeniculum vulgare var. dulce).\"; \"Growing: Annual Both forms of fennel are grown from seed.\"",
+      "note": "Sources disagree: NC State Plant Toolbox (Foeniculum vulgare, with Florence Fennel among its common names) lists Life Cycle Perennial, zones 4a-9b. The bulb fennel this plugin grows is lifted whole in its first season, so the source on bulb fennel is kept."
     }
   },
   "barley-hulless-streaker": {
@@ -7438,6 +7668,19 @@
       "date": "not printed (accessed 2026-10-06)",
       "quote": "NC State Extension Gardener Plant Toolbox, Agastache foeniculum: \"anise hyssop grows 3 to 5 feet tall and should be planted 12 to 36 inches apart in well-drained soil\"",
       "note": "Garden plant-to-plant spacing (\"planted 12 to 36 inches apart\"); no row named. Not in VCE 426-420 or the UCANR herb table; the UMD anise-hyssop/agastache URLs cached in #591 are 404 pages. The toolbox Width field (1 ft 6 in - 3 ft) is plant size, not spacing."
+    },
+    "lifecycle": {
+      "url": "https://plants.ces.ncsu.edu/plants/agastache-foeniculum/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Agastache foeniculum (Anise Hyssop, Hyssop)\"; \"Anise hyssop is a member of the mint family (Lamiaceae) and native to the Midwest and prairies of North America. It is an herbaceous perennial with an erect growth habit and fragrant foliage.\""
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/agastache-foeniculum/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Agastache foeniculum (Anise Hyssop, Hyssop)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "bergamot-monarda": {
@@ -7447,6 +7690,19 @@
       "date": "Last reviewed: July 2022 (accessed 2026-10-06)",
       "quote": "ISU Yard and Garden, Growing Bee Balm in the Home Garden: \"When planting bee balms, select a site in full sun and space plants 2 feet apart.\"",
       "note": "2 ft = 24 in, plant-to-plant (no row named). Generic bee balm (Monarda) applied to M. didyma. No VCE/mid-Atlantic figure found: UMD HGIC bee balm/monarda URLs are 404; Penn State rain-garden bee balm, UMD Maryland Grows, UGA Field Report, Illinois and NC State Plant Toolbox give no spacing (toolbox Width is plant size); Clemson HGIC blocked by Cloudflare."
+    },
+    "lifecycle": {
+      "url": "https://plants.ces.ncsu.edu/plants/monarda-didyma/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Monarda didyma (Beebalm, Bee Balm, Bee-balm, Bergamont, Bergamot\"; \"Scarlet beebalm is an herbaceous perennial in the mint family (Lamiaceae).\""
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/monarda-didyma/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Monarda didyma (Beebalm, Bee Balm, Bee-balm, Bergamont, Bergamot\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "lemon-balm": {
@@ -7476,6 +7732,20 @@
       "date": "Updated July 22, 2025 (accessed 2026-10-17)",
       "quote": "Freezing works well for herbs like parsley, dill, basil, chives lemon balm, mint or tarragon.",
       "note": "Illinois Extension agrees: \"Leaves can also be frozen for later use.\""
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Lemon balm Melissa officinalis | Hardy; grow from seed in full sun. Well-drained site.\"",
+      "note": "Illinois Extension (Lemon Balm) and NC State Plant Toolbox (Melissa officinalis) agree: perennial."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/melissa-officinalis/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Melissa officinalis (Balm, Balm Leaf, Balm Mint, Common Balm, Dropsywort, Honey Balm, Lemon Balm\"; \"USDA Plant Hardiness Zone: 3a, 3b, 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "lemon-verbena": {
@@ -7485,6 +7755,20 @@
       "date": "2024 (PDF: \"Produced by Virginia Cooperative Extension, Virginia Tech, 2024\", VT/1220/426-420; accessed 2026-10-06)",
       "quote": "VCE 426-420, Herb Culture and Use, Perennials table (Common name Scientific name | Height | Plant spacing | Cultural hints | Uses): \"Height | Plant spacing\"; \"Lemon verbena Aloysia triphylla | 36” | 36”\"",
       "note": "VCE 426-420 column is \"Plant spacing\" (spacing between plants; the table names no row axis). Aloysia triphylla = A. citrodora."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Perennials table: \"Herb Culture and Use (cont.) | Perennials\"; \"Lemon verbena Aloysia triphylla | Tender perennial; propagate from cuttings. Sun or partial shade.\"",
+      "note": "Illinois Extension (Lemon Verbena, \"Growing: Tender Perennial\") and NC State Plant Toolbox (Aloysia citriodora, a perennial shrub) agree."
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/aloysia-citriodora/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Aloysia citriodora (Lemon Beebrush, Lemon Verbena)\"; \"USDA Plant Hardiness Zone: 8a, 8b, 9a, 9b, 10a, 10b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
     }
   },
   "cosmos-double-click": {
@@ -7675,6 +7959,13 @@
       "date": "Reviewed in 2026 (accessed 2026-10-17)",
       "quote": "Basil leaves turn an unpleasant brown color when air-dried. Freezing is a better method.",
       "note": "Sources disagree on how well basil dries, so dry stays empty: Illinois Extension says \"Basil is easily dried for storing and future use\"; NCHFP and NC State say basil will (or may) mold if not dried quickly; UMN (this quote) says the leaves turn brown when air-dried."
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Basil Ocimum basilicum | Grow from seed. Sun.\"",
+      "note": "Illinois Extension (Basil) agrees: \"It is a tender annual\". NC State Plant Toolbox lists Life Cycle \"Annual / Perennial\" with zones 10a-10b only; stored as annual. The source names the species or the crop type; the cultivar takes the crop-type value (#591 ruling Q3)."
     }
   },
   "cilantro-santo": {
@@ -7683,6 +7974,65 @@
       "publisher": "Ohio State University Extension, HYG-5360 Food Preservation: Preserving Herbs, Freezing and Drying",
       "date": "Jul 23, 2026 (accessed 2026-10-17)",
       "quote": "Best Herbs for Freezing: basil cilantro parsley dill chives mint"
+    },
+    "lifecycle": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-17",
+      "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Cilantro, coriander Coriandrum sativum | Grow from seed. Sow in spring in sun or partial shade.\"",
+      "note": "Illinois Extension (Cilantro) and NC State Plant Toolbox (Coriandrum sativum) agree: annual."
+    }
+  },
+  "lemongrass-east-indian": {
+    "lifecycle.notRecorded": {
+      "reason": "No source on East Indian lemongrass (Cymbopogon flexuosus) was found. Illinois Extension (Lemon Grass) and the NC State Plant Toolbox cover Cymbopogon citratus only (\"Tender Perennial\"; zones 8b to 11b). See docs/research/phase-37-herb-research-b.md.",
+      "date": "2026-10-17"
+    },
+    "winterHardyToZone.notRecorded": {
+      "reason": "No source states a zone for East Indian lemongrass (Cymbopogon flexuosus); see docs/research/phase-37-herb-research-b.md.",
+      "date": "2026-10-17"
+    }
+  },
+  "mountain-mint": {
+    "lifecycle": {
+      "url": "https://plants.ces.ncsu.edu/plants/pycnanthemum-muticum/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Pycnanthemum muticum (Blunt Mountain Mint, Mountain Mint, Short-toothed Mountain Mint)\"; \"Blunt mountain mint is a native, herbaceous perennial, wildflower in the mint family (Lamiaceae).\""
+    },
+    "winterHardyToZone": {
+      "url": "https://plants.ces.ncsu.edu/plants/pycnanthemum-muticum/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Pycnanthemum muticum (Blunt Mountain Mint, Mountain Mint, Short-toothed Mountain Mint)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
+      "note": "Coldest zone listed. No other fetched source states a zone."
+    }
+  },
+  "perilla-shiso-green": {
+    "lifecycle": {
+      "url": "https://plants.ces.ncsu.edu/plants/perilla-frutescens/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Perilla frutescens (Beefsteak Plant, Perilla, Shiso)\"; \"Beefsteak plant is a flowering, annual, edible in the Lamiaceae (mint) family native to the Himalayas and Southeast Asia.\"",
+      "note": "The source names the species or the crop type; the cultivar takes the crop-type value (#591 ruling Q3)."
+    }
+  },
+  "tulsi-holy-basil-rama": {
+    "lifecycle": {
+      "url": "https://plants.ces.ncsu.edu/plants/ocimum-tenuiflorum/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Ocimum tenuiflorum (Holy Basil, Hot Basil, Tulasi, Tulsi)\"; \"Holy basil is an aromatic annual or short-lived pernnial or subshrub in the Lamiaceae (mint) family.\"",
+      "note": "The source names annual first and a short-lived perennial; the stored annual stays. \"pernnial\" is the page's spelling."
+    }
+  },
+  "calendula-resina": {
+    "lifecycle": {
+      "url": "https://plants.ces.ncsu.edu/plants/calendula-officinalis/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox",
+      "date": "undated web page; accessed 2026-10-17",
+      "quote": "NC State Plant Toolbox: \"Calendula officinalis (Calendula, Calendula (Pot Marigold), Common Marigold\"; \"Marigolds are a popular annual with colorful flowers that are easy to grow in average, moderately fertile, well-drained soils in full sun.\"",
+      "note": "The source names the species or the crop type; the cultivar takes the crop-type value (#591 ruling Q3)."
     }
   }
 }

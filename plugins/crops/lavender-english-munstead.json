@@ -39,5 +39,6 @@
       "method": "dry",
       "suitability": "good"
     }
-  ]
+  ],
+  "winterHardyToZone": "5a"
 }

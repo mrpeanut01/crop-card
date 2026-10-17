@@ -1159,6 +1159,12 @@ export const cropPluginSchema = pluginBase.extend({
   // Phase 37C
   preserving: preservingSchema.optional(),
   harvestCadence: harvestCadenceSchema.optional(),
+  // Phase 37B: the coldest USDA zone a perennial survives, as its source
+  // prints it ("7" or "7a"); quoted under `winterHardyToZone`.
+  winterHardyToZone: z
+    .string()
+    .regex(/^(1[0-3]|[1-9])[ab]?$/)
+    .optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

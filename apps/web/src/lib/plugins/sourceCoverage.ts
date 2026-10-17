@@ -18,6 +18,12 @@ import { SEEDING_RATE_KEYS } from './schemas';
 import { calendarWindowFromWords } from '../plan/calendarWords';
 import { numberPattern, statesDays, statesInches } from './quoteNumbers';
 import { quoteNamesCrop } from '../garden/herbQuoteNames';
+import { isHerbGardenCrop } from '$lib/garden/herbs';
+import {
+  quoteNamesHerb,
+  quoteStatesLifecycle,
+  quoteStatesZone
+} from '$lib/garden/lifecycleSources';
 import type {
   ForageHazard,
   ForageHazardKind,
@@ -181,6 +187,7 @@ export function cropFactPaths(c: CropPlugin): string[] {
     }
   }
   paths.push(...herbHarvestFactPaths(c)); // Phase 37C
+  if (c.winterHardyToZone) paths.push('winterHardyToZone');
   return paths;
 }
 
@@ -1058,6 +1065,111 @@ export function harvestCadenceQuoteGaps(
           ? `${c.pluginId}: harvestCadence quote gives no number ("a few weeks" never counts)`
           : `${c.pluginId}: harvestCadence quote does not state ${min}-${max} days`
       );
+    }
+  }
+  return gaps;
+}
+
+// Phase 37B (R-17): lifecycle and winter zone sources, herbs only.
+
+/** Why a herb's lifecycle has no quote yet: `{ reason }` under
+ *  `lifecycle.notRecorded`. */
+export const LIFECYCLE_NOT_RECORDED_KEY = 'lifecycle.notRecorded';
+/** Why a perennial herb has no `winterHardyToZone` yet. */
+export const ZONE_NOT_RECORDED_KEY = 'winterHardyToZone.notRecorded';
+
+function notRecordedReason(
+  sources: SourceMap,
+  pluginId: string,
+  key: string = LIFECYCLE_NOT_RECORDED_KEY
+): string | null {
+  const entry = sources[pluginId]?.[key] as { reason?: unknown } | undefined;
+  return typeof entry?.reason === 'string' && entry.reason.trim().length > 10 ? entry.reason : null;
+}
+
+/** A listed herb's `agronomy.lifecycle` carries a `lifecycle` source from
+ *  an extension or government page whose quote names the crop and states
+ *  the lifecycle word (or its plural, as a table heading), or a
+ *  `lifecycle.notRecorded` reason. A herb with no lifecycle needs the
+ *  reason too. Returns "pluginId: problem" lines. */
+export function lifecycleQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'agronomy'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    if (!isHerbGardenCrop(c.pluginId)) continue;
+    const lifecycle = c.agronomy?.lifecycle;
+    const raw = sources[c.pluginId]?.lifecycle;
+    const reason = notRecordedReason(sources, c.pluginId);
+    if (raw === undefined) {
+      if (!reason) {
+        gaps.push(`${c.pluginId}: no lifecycle source and no ${LIFECYCLE_NOT_RECORDED_KEY} reason`);
+      }
+      continue;
+    }
+    const entry = sourceEntrySchema.safeParse(raw);
+    if (!entry.success) {
+      gaps.push(`${c.pluginId}: lifecycle source is invalid`);
+      continue;
+    }
+    if (!lifecycle) {
+      gaps.push(`${c.pluginId}: lifecycle source but the plugin has no agronomy.lifecycle`);
+      continue;
+    }
+    if (reason)
+      gaps.push(`${c.pluginId}: lifecycle is sourced; drop ${LIFECYCLE_NOT_RECORDED_KEY}`);
+    const { url, quote } = entry.data;
+    if (!isAllowedSpacingSource(url)) {
+      gaps.push(`${c.pluginId}: lifecycle source is not an extension or government page`);
+    }
+    if (!quoteNamesHerb(c.pluginId, quote)) {
+      gaps.push(`${c.pluginId}: lifecycle quote does not name the crop`);
+    }
+    if (!quoteStatesLifecycle(lifecycle, quote)) {
+      gaps.push(`${c.pluginId}: lifecycle quote does not state ${lifecycle}`);
+    }
+  }
+  return gaps;
+}
+
+/** A listed herb's `winterHardyToZone` is on a perennial and its quote,
+ *  from an extension or government page, names the crop, says "zone" and
+ *  states the stored number (and letter when stored). A perennial herb with
+ *  no zone needs a `winterHardyToZone.notRecorded` reason. A missing source
+ *  is reported by `checkSources` over `cropFactPaths`. */
+export function winterHardyToZoneQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'agronomy' | 'winterHardyToZone'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    if (!isHerbGardenCrop(c.pluginId)) continue;
+    const zone = c.winterHardyToZone;
+    const reason = notRecordedReason(sources, c.pluginId, ZONE_NOT_RECORDED_KEY);
+    if (!zone) {
+      if (c.agronomy?.lifecycle === 'perennial' && !reason) {
+        gaps.push(
+          `${c.pluginId}: perennial with no winterHardyToZone and no ${ZONE_NOT_RECORDED_KEY} reason`
+        );
+      }
+      continue;
+    }
+    if (reason) gaps.push(`${c.pluginId}: winterHardyToZone is set; drop ${ZONE_NOT_RECORDED_KEY}`);
+    if (c.agronomy?.lifecycle !== 'perennial') {
+      gaps.push(`${c.pluginId}: winterHardyToZone on a crop that is not a perennial`);
+    }
+    const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.winterHardyToZone);
+    if (!entry.success) continue;
+    const { url, quote } = entry.data;
+    if (!isAllowedSpacingSource(url)) {
+      gaps.push(`${c.pluginId}: winterHardyToZone source is not an extension or government page`);
+    }
+    if (!quoteNamesHerb(c.pluginId, quote)) {
+      gaps.push(`${c.pluginId}: winterHardyToZone quote does not name the crop`);
+    }
+    if (!quoteStatesZone(zone, quote)) {
+      gaps.push(`${c.pluginId}: winterHardyToZone quote does not state zone ${zone}`);
     }
   }
   return gaps;

@@ -79,6 +79,7 @@ import { countInputsPlanTasksInYear, listTasks, type Task } from '$lib/db/tasks'
 import {
   resolveArchetype,
   type CropPlugin,
+  type Plugin,
   type StageSystem,
   type CornType
 } from '$lib/plugins/schemas';
@@ -97,6 +98,11 @@ import { suggestCompanions, type CompanionSuggestion } from '$lib/calendar/compa
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import { isEmptySeason, plantingsInYear, priorSeasonSummary } from '$lib/plan/seasonStart';
 import { setupAreas } from '$lib/server/setupContext';
+import { lifecycleVerdictsFor } from '$lib/server/lifecycleLine.server';
+
+function isCrop(p: Plugin | null | undefined): p is CropPlugin {
+  return p?.type === 'crop';
+}
 
 export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'calendar';
 const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calendar'];
@@ -229,6 +235,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     };
   });
   const seedShortNameByDisplay: Record<string, string> = {};
+  // Phase 37B: the lifecycle line on the wizard's herb seed rows.
+  const herbLifecycle = await lifecycleVerdictsFor(
+    allSeedStock.map((s) => (s.pluginId ? registry.get(s.pluginId)?.plugin : null)).filter(isCrop)
+  );
   for (const s of allSeedStock) {
     if (s.shortName) seedShortNameByDisplay[s.displayName] = s.shortName;
   }
@@ -246,7 +256,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     areaHousing,
     areaGrazing,
     petsLayout,
-    cropCatalog,
+    cropCatalog: cropCatalog.map((c) =>
+      herbLifecycle[c.pluginId] ? { ...c, lifecycle: herbLifecycle[c.pluginId] } : c
+    ),
     plantingGuides,
     showFieldControls: fields.length > 1,
     frostDates,

@@ -1,3 +1,4 @@
+import type { LifecycleDetail } from '$lib/garden/lifecycleHere';
 import type { CompanionGroupMarker, PollinationConstraint } from '$lib/plan/types';
 
 export type SeedStockEntry = {
@@ -45,6 +46,8 @@ export type CropCatalogItem = {
   pluginId: string;
   displayName: string;
   cropFamily: string;
+  /** Phase 37B: set on herbs only. */
+  lifecycle?: LifecycleDetail;
 };
 
 export type SufficiencyResult = {

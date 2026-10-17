@@ -9,8 +9,7 @@
     "max": 70
   },
   "defaultRowSpacingInches": 24,
-  "plantingGuide": {
-  },
+  "plantingGuide": {},
   "harvestIndicators": [
     "Foliage cut as needed",
     "Seed heads at full bloom→drying"
@@ -32,5 +31,8 @@
       "method": "freeze",
       "suitability": "good"
     }
-  ]
+  ],
+  "agronomy": {
+    "lifecycle": "annual"
+  }
 }

@@ -12,8 +12,7 @@
 
 import { philosophyProductClass } from '$lib/season/philosophyFilter';
 import type { Philosophy } from '$lib/season/setup';
-import { checkCropCompatibility } from '$lib/safety/cropCompatibility';
-import type { ChemistryClass } from '$lib/safety/types';
+import { herbicideSafeOnCrop } from '$lib/plan/inputsPlan';
 import type { CropPlugin, HerbicidePlugin } from '$lib/plugins/schemas';
 import { rateCeilingProblem, rateMatches } from '$lib/plan/rateCeiling';
 import { isFallbackRate } from '$lib/plugins/rateProvenance';
@@ -59,21 +58,7 @@ export function validateManualChoices(
     }
     const crop = ctx.cropPlugins[app.cropPluginId];
     if (plugin.type === 'herbicide' && app.slot === 'post-emergent' && crop) {
-      const h = plugin as unknown as HerbicidePlugin;
-      const issues = checkCropCompatibility(
-        [
-          {
-            pluginId: h.pluginId,
-            displayName: h.displayName,
-            activeIngredients: h.activeIngredients.map((ai) => ({
-              name: ai.name,
-              chemistryClass: ai.chemistryClass as ChemistryClass
-            }))
-          }
-        ],
-        { cropPluginId: crop.pluginId, cropFamily: crop.cropFamily }
-      );
-      if (issues.length > 0) {
+      if (!herbicideSafeOnCrop(plugin as unknown as HerbicidePlugin, crop)) {
         problems.push(`${plugin.displayName} would harm ${crop.displayName}.`);
         continue;
       }

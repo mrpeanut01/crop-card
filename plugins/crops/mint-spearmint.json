@@ -4,6 +4,7 @@
   "displayName": "Mint — Spearmint",
   "version": "1.0.1",
   "cropFamily": "herb-culinary",
+  "waterNeed": "medium",
   "daysToMaturity": {
     "min": 60,
     "max": 90

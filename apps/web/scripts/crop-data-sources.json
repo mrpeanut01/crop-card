@@ -1484,6 +1484,13 @@
       "publisher": "University of Illinois Extension, Herbs: Dill",
       "date": "accessed 2026-10-17",
       "quote": "Foliage can be cut at any time and used fresh, or it can be dried for later use."
+    },
+    "waterNeed": {
+      "url": "https://extension.illinois.edu/herbs/dill",
+      "publisher": "University of Illinois Extension, Herb Gardening: Dill",
+      "date": "2026-10-17",
+      "quote": "Dill performs best in a full sun location in moist, well-drained soil.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist, well-drained\"); words only, never a target factor (R-10)."
     }
   },
   "edamame-midori-giant": {
@@ -1597,6 +1604,13 @@
       "publisher": "University of Illinois Extension, Herbs: Fennel",
       "date": "accessed 2026-10-17",
       "quote": "Florence fennel can be harvested when the “bulbs” are about the size of tennis balls by digging the “bulb” and cutting off the root and cutting back the top."
+    },
+    "waterNeed": {
+      "url": "https://extension.illinois.edu/herbs/fennel",
+      "publisher": "University of Illinois Extension, Herb Gardening: Fennel",
+      "date": "2026-10-17",
+      "quote": "This is especially important when growing Florence fennel as it prefers uniformly moist soil to develop the best “bulb.”",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"uniformly moist\"); words only, never a target factor (R-10). The plugin is a bulbing Florence fennel."
     }
   },
   "garlic-german-extra-hardy": {
@@ -2152,6 +2166,13 @@
       "publisher": "University of Illinois Extension, Herbs: Mint",
       "date": "accessed 2026-10-17",
       "quote": "Leaves that are to be dried are best taken just as the flowers begin to appear."
+    },
+    "waterNeed": {
+      "url": "https://extension.umd.edu/resource/mint",
+      "publisher": "University of Maryland Extension, Growing Mint in a Home Garden",
+      "date": "2026-10-17",
+      "quote": "Spearmint grows best in a somewhat moist soil and full sun to part shade.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"somewhat moist\"); words only, never a target factor (R-10). The Illinois mint page states no water need."
     }
   },
   "mustard-greens-southern-giant-curled": {
@@ -2597,6 +2618,13 @@
       "publisher": "University of Illinois Extension, Herbs: Parsley",
       "date": "accessed 2026-10-17",
       "quote": "Parsley can be cut any time after it has become large enough."
+    },
+    "waterNeed": {
+      "url": "https://extension.illinois.edu/herbs/parsley",
+      "publisher": "University of Illinois Extension, Herb Gardening: Parsley",
+      "date": "2026-10-17",
+      "quote": "Parsley prefers a moderately rich, moist, well-drained soil and will grow in a partially shaded area.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist, well-drained\"); words only, never a target factor (R-10). \"Moderately\" qualifies the richness, not the moisture."
     }
   },
   "parsnip-hollow-crown": {
@@ -6546,6 +6574,13 @@
       "publisher": "University of Illinois Extension, Herbs: Catnip",
       "date": "accessed 2026-10-17",
       "quote": "The flavor and aroma of catnip is at its peak when the plant is in full bloom."
+    },
+    "waterNeed": {
+      "url": "https://extension.illinois.edu/herbs/catnip",
+      "publisher": "University of Illinois Extension, Herb Gardening: Catnip",
+      "date": "2026-10-17",
+      "quote": "Catnip prefers a full sun location in soil that is moist but well-drained.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist but well-drained\"); words only, never a target factor (R-10)."
     }
   },
   "chamomile-german": {
@@ -6653,6 +6688,20 @@
       "publisher": "University of Illinois Extension, Herbs: Lavender",
       "date": "accessed 2026-10-17",
       "quote": "Cut stems of lavender just as the flowers start to open."
+    },
+    "waterNeed": {
+      "url": "https://extension.illinois.edu/herbs/lavender",
+      "publisher": "University of Illinois Extension, Herb Gardening: Lavender",
+      "date": "2026-10-17",
+      "quote": "While lavender is drought-tolerant once established, new plantings benefit from regular watering during the first year.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"drought-tolerant\"); words only, never a target factor (R-10). VCE 426-420 also says lavender \"Grows in dry, rocky, sunny locations.\""
+    },
+    "waterNeed.2": {
+      "url": "https://extension.umd.edu/resource/lavender",
+      "publisher": "University of Maryland Extension, Lavender",
+      "date": "2026-10-17",
+      "quote": "Lavender grows best in rocky, dry, sunny places that have abundant lime in the soil.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"rocky, dry\"); words only, never a target factor (R-10). Agrees with the Illinois page."
     }
   },
   "marjoram-sweet": {
@@ -6946,6 +6995,13 @@
       "publisher": "University of Illinois Extension, Herbs: Lovage",
       "date": "accessed 2026-10-17",
       "quote": "Harvest young leaves as they are more tender."
+    },
+    "waterNeed": {
+      "url": "https://extension.illinois.edu/herbs/lovage",
+      "publisher": "University of Illinois Extension, Herb Gardening: Lovage",
+      "date": "2026-10-17",
+      "quote": "Lovage is grown from either division or seed planted in the spring or fall. It likes a fairly rich, moist soil and light shade improves its quality.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist soil\"); words only, never a target factor (R-10). VCE 426-420 Table \"Herb Culture and Use\" also lists lovage with \"Rich, moist soil.\""
     }
   },
   "mache-corn-salad": {
@@ -7125,6 +7181,13 @@
       "publisher": "University of Illinois Extension, Herbs: Fennel",
       "date": "accessed 2026-10-17",
       "quote": "Florence fennel can be harvested when the “bulbs” are about the size of tennis balls by digging the “bulb” and cutting off the root and cutting back the top."
+    },
+    "waterNeed": {
+      "url": "https://extension.illinois.edu/herbs/fennel",
+      "publisher": "University of Illinois Extension, Herb Gardening: Fennel",
+      "date": "2026-10-17",
+      "quote": "This is especially important when growing Florence fennel as it prefers uniformly moist soil to develop the best “bulb.”",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"uniformly moist\"); words only, never a target factor (R-10). The plugin is a bulbing Florence fennel."
     }
   },
   "barley-hulless-streaker": {
@@ -7974,6 +8037,13 @@
       "publisher": "University of Illinois Extension, Herbs: Lemon Balm",
       "date": "accessed 2026-10-17",
       "quote": "Stems can be cut as needed anytime during the season preferably before flowering."
+    },
+    "waterNeed": {
+      "url": "https://extension.illinois.edu/herbs/lemon-balm",
+      "publisher": "University of Illinois Extension, Herb Gardening: Lemon Balm",
+      "date": "2026-10-17",
+      "quote": "Lemon balm can be grown in full sun to partial shade in soils that are moist but well drained.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist but well drained\"); words only, never a target factor (R-10)."
     }
   },
   "lemon-verbena": {
@@ -8225,6 +8295,20 @@
       "publisher": "University of Illinois Extension, Herbs: Basil",
       "date": "accessed 2026-10-17",
       "quote": "Limited harvesting of the leaves can start on young plants and as they get larger, individual leaves as well as tips of the plants can be harvested."
+    },
+    "waterNeed": {
+      "url": "https://extension.illinois.edu/herbs/basil",
+      "publisher": "University of Illinois Extension, Herb Gardening: Basil",
+      "date": "2026-10-17",
+      "quote": "Basil also likes to be kept well-watered.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"well-watered\"); words only, never a target factor (R-10)."
+    },
+    "waterNeed.2": {
+      "url": "https://extension.umd.edu/resource/basil",
+      "publisher": "University of Maryland Extension, Growing Basil in a Home Garden",
+      "date": "2026-10-17",
+      "quote": "Plant basil in a full sun location, where it receives 6 or more hours of direct sun daily in summer. The soil should be moist but well-drained.",
+      "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist but well-drained\"); words only, never a target factor (R-10). Agrees with the Illinois page."
     }
   },
   "cilantro-santo": {

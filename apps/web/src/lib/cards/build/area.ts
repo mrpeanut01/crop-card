@@ -40,6 +40,7 @@ import { familyGlyph } from '$lib/garden/familyGlyph';
 import { footprintBounds } from '$lib/garden/geometry';
 import { withSnapshotAnimals } from './areaAnimals';
 import { AREA_LINE_LIMIT, withCarryover, type CarryoverLine } from '$lib/farm/areaCarryover';
+import { withSnapshotWaterers } from '$lib/irrigation/snapshot';
 
 const MAX_LIST = 8;
 const BLOCK_KIND_ORDER: SnapshotBlockKind[] = ['bed', 'row', 'container', 'block'];
@@ -113,9 +114,10 @@ export function buildAreaCard(
   areaId: string,
   options: BuildOptions = {}
 ): CardModel | null {
-  const card = baseAreaCard(snapshot, areaId, options);
-  if (!card) return null;
+  const base = baseAreaCard(snapshot, areaId, options);
+  if (!base) return null;
   const resolved = resolveOptions(snapshot, options);
+  const card = withSnapshotWaterers(base, snapshot.waterers, areaId, resolved.prefs.locale);
   return withSnapshotCarryover(
     snapshot,
     areaId,

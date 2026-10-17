@@ -176,6 +176,8 @@ export function createEquipment(input: CreateEquipmentInput): Equipment {
 export interface EquipmentSpecPatch {
   tankGal?: number | null;
   nozzle?: string | null;
+  /** Phase 37E: an automatic waterer's stored schedule; null clears it. */
+  schedule?: Record<string, unknown> | null;
 }
 
 export function updateEquipment(
@@ -193,7 +195,7 @@ export function updateEquipment(
       .get();
     if (!row) throw new Error(`unknown equipment: ${id}`);
     const spec: Record<string, unknown> = row.specJson ? (safeJson(row.specJson) ?? {}) : {};
-    for (const key of ['tankGal', 'nozzle'] as const) {
+    for (const key of ['tankGal', 'nozzle', 'schedule'] as const) {
       const v = patch.spec[key];
       if (v === undefined) continue;
       if (v === null || v === '') delete spec[key];

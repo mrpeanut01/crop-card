@@ -19,7 +19,7 @@ type OnlyWhen = { key: string; equals: string };
 
 export type DetailField =
   | { key: string; label: string; type: 'select'; options: readonly Option[] }
-  | { key: string; label: string; type: 'boolean' }
+  | { key: string; label: string; type: 'boolean'; labelKey?: TranslateKey }
   | { key: string; label: string; type: 'date'; onlyWhen?: OnlyWhen }
   | { key: string; label: string; type: 'feet' }
   | { key: string; label: string; type: 'count'; unit: string }
@@ -82,6 +82,18 @@ export const AREA_DETAIL_FIELDS: Readonly<Record<AreaKind, readonly DetailField[
       label: 'Watering',
       type: 'select',
       options: opts(IRRIGATION_KINDS, IRRIGATION_LABELS)
+    },
+    {
+      key: 'container',
+      label: 'Grown in pots or containers',
+      type: 'boolean',
+      labelKey: 'herbse.df.container'
+    },
+    {
+      key: 'indoors',
+      label: 'Kept indoors, such as a windowsill',
+      type: 'boolean',
+      labelKey: 'herbse.df.indoors'
     }
   ],
   greenhouse: [
@@ -219,7 +231,10 @@ export function detailsSummary(
     const v = src[f.key];
     if (v === undefined || v === null) continue;
     if (f.type === 'provenance') continue;
-    const label = localized(locale, `farm.df.${f.key}`, f.label);
+    const label =
+      'labelKey' in f && f.labelKey
+        ? localized(locale, f.labelKey, f.label)
+        : localized(locale, `farm.df.${f.key}`, f.label);
     if (f.type === 'boolean')
       rows.push({ label, value: localized(locale, v ? 'area.yes' : 'area.no', v ? 'Yes' : 'No') });
     else if (f.type === 'feet' && typeof v === 'number') rows.push({ label, value: `${v} ft` });

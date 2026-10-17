@@ -261,7 +261,7 @@ describe('wateringCards', () => {
     expect(runWithTenant(b, () => loadAreasForBeds([ga.bed1], NOW, NEAR))).toEqual([]);
   });
 
-  it('reads the database at most four times on a warm cache (E0-11)', async () => {
+  it('reads the database at most five times on a warm cache (E0-11, plus the 37E waterer read)', async () => {
     const owner = seedOwner();
     const g = seedGarden(owner);
     const g2 = seedGarden(owner, 'field');
@@ -274,7 +274,7 @@ describe('wateringCards', () => {
     );
     const cards = await result;
     expect(cards).toHaveLength(2);
-    expect(timing.queries).toBeLessThanOrEqual(4);
+    expect(timing.queries).toBeLessThanOrEqual(5);
     expect(noNetwork.nwsObservations).not.toHaveBeenCalled();
     expect(noNetwork.forecast).not.toHaveBeenCalled();
   });

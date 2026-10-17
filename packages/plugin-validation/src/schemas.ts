@@ -993,6 +993,12 @@ export const cropCareTasksSchema = z
   });
 export const GROWTH_HABITS = ["woody", "clumping"] as const;
 export type GrowthHabit = (typeof GROWTH_HABITS)[number];
+// Phase 37E: how much water the crop likes, as an extension page words it
+// (dry, moderate or moist soil). Needs a source under `waterNeed` in
+// apps/web/scripts/crop-data-sources.json that `waterNeedQuoteGaps` maps to
+// the same value. Shown beside the watering verdict; never changes it (R-10).
+export const WATER_NEEDS = ["low", "medium", "high"] as const;
+export type WaterNeed = (typeof WATER_NEEDS)[number];
 
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
@@ -1192,6 +1198,9 @@ export const cropPluginSchema = pluginBase.extend({
   careTasks: cropCareTasksSchema.optional(),
   /** Sourced growth habit for the photo help drawing. */
   growthHabit: z.enum(GROWTH_HABITS).optional(),
+  // Phase 37E
+  /** Sourced watering need: low (dry), medium (moderate) or high (moist). */
+  waterNeed: z.enum(WATER_NEEDS).optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

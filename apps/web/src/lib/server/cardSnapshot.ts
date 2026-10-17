@@ -72,6 +72,7 @@ import { splitGroupBlockIds } from '$lib/plan/splitGroup';
 import { orchardSnapshotPart } from './orchardSnapshot';
 import { pantrySnapshotPart } from './pantrySnapshot';
 import { gardenBriefSnapshotPart } from './garden/briefStore';
+import { watererSnapshotPart } from './watererSnapshot';
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
@@ -632,7 +633,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     ...(orchard ? { orchard } : {}),
     ...(await pantrySnapshotPart(windowNow)),
     ...herbLifecycleSnapshotPart(Object.keys(cropPlugins).map((id) => registry.get(id)?.plugin)),
-    ...gardenBriefSnapshotPart()
+    ...gardenBriefSnapshotPart(),
+    ...watererSnapshotPart()
   };
 }
 

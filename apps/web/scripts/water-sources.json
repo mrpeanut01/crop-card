@@ -28,6 +28,20 @@
       "date": "2026-09-29",
       "quote": "144 / 231 = 0.623 gallons per square foot per inch of water.",
       "note": "Arithmetic, not agronomy. Used only to turn logged gallons into inches over a bed or Area of known size."
+    },
+    "potHeatHighF": {
+      "url": "https://extension.umn.edu/planting-and-growing-guides/gardening-hot-weather",
+      "publisher": "University of Minnesota Extension, Gardening in hot weather",
+      "date": "2026-10-17",
+      "quote": "During extremely hot weather (daytime temperatures above 90°F and nighttime temperatures above 70°F), try to water daily or every other day.",
+      "note": "Phase 37E (R-11). Fetched from the page and checked word for word on 2026-10-17. Both numbers come from this one sentence: the pots line shows on container Areas only when the next day's forecast high is above 90 °F and its low is above 70 °F. The page speaks of gardens in general; CropCard only says to check the pots."
+    },
+    "potHeatLowF": {
+      "url": "https://extension.umn.edu/planting-and-growing-guides/gardening-hot-weather",
+      "publisher": "University of Minnesota Extension, Gardening in hot weather",
+      "date": "2026-10-17",
+      "quote": "During extremely hot weather (daytime temperatures above 90°F and nighttime temperatures above 70°F), try to water daily or every other day.",
+      "note": "Phase 37E (R-11). Fetched from the page and checked word for word on 2026-10-17. Both numbers come from this one sentence: the pots line shows on container Areas only when the next day's forecast high is above 90 °F and its low is above 70 °F. The page speaks of gardens in general; CropCard only says to check the pots."
     }
   }
 }

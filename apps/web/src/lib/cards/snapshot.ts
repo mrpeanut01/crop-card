@@ -7,6 +7,7 @@
  * render as the same day in every time zone; moments are epoch ms.
  */
 
+import type { SnapshotWaterer } from '$lib/irrigation/snapshot';
 import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
 import type { MapFeatureView } from '$lib/farm/mapFeatures';
@@ -586,6 +587,9 @@ export interface FarmSnapshot {
   /** Phase 37A garden brief goals and shortlist ids. Absent before 37A and
    *  on farms with no saved brief. */
   brief?: SnapshotGardenBrief;
+  /** Phase 37E automatic waterers: schedule and targets. Absent when the
+   *  farm has none and on bundles saved before it. */
+  waterers?: SnapshotWaterer[];
 }
 
 export interface SnapshotHerbLifecycle {

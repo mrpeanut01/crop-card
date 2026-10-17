@@ -62,3 +62,61 @@ export const waterTargetSchema = z.object({
 });
 
 export type WaterTargetInput = z.infer<typeof waterTargetSchema>;
+
+// ─── Phase 37E: automatic waterers ─────────────────────────────────────
+
+export const WATERER_METHODS = ['drip', 'soaker', 'sprinkler'] as const;
+export type WatererMethod = (typeof WATERER_METHODS)[number];
+
+/** `HH:MM`, 24-hour, in the farm's time zone. */
+export const SCHEDULE_START_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** A timer's weekly program, typed by the owner (`manual`, R-12). Days are
+ *  0 (Sunday) to 6 (Saturday). The amount is known only when the owner gives
+ *  inches per run, or gallons per minute for a single target. */
+export const irrigationScheduleSchema = z.strictObject({
+  days: z
+    .array(z.number().int().min(0).max(6))
+    .min(1)
+    .max(7)
+    .refine((d) => new Set(d).size === d.length, { message: 'Each day once.' })
+    .describe('Days of the week it runs, 0 = Sunday.'),
+  start: z.string().regex(SCHEDULE_START_RE).describe('Start time, HH:MM in the farm time zone.'),
+  minutes: z.number().int().min(1).max(720),
+  method: z.enum(WATERER_METHODS),
+  inchesPerRun: z.number().min(0.01).max(5).nullable().optional(),
+  gallonsPerMinute: z.number().positive().max(500).nullable().optional()
+});
+
+export type IrrigationSchedule = z.infer<typeof irrigationScheduleSchema>;
+
+/** The schedule as stored in `equipment.spec.schedule`. The server sets
+ *  `activeFrom` when the schedule is saved or changed, so runs from before
+ *  it was set up never count as water given. */
+export const storedScheduleSchema = irrigationScheduleSchema.extend({
+  activeFrom: z.number().int().nonnegative()
+});
+
+export type StoredSchedule = z.infer<typeof storedScheduleSchema>;
+
+export const waterTargetsSchema = z.strictObject({
+  areaIds: z.array(id).max(50).describe('Areas the waterer covers whole.'),
+  blockIds: z.array(id).max(200).describe('Single beds the waterer covers.')
+});
+
+export type WaterTargetsInput = z.infer<typeof waterTargetsSchema>;
+
+export const IRRIGATION_SKIP_REASON_VALUES = [
+  'did-not-run',
+  'turned-off-for-rain',
+  'other'
+] as const;
+
+export const irrigationSkipSchema = z.strictObject({
+  equipmentId: id,
+  scheduledAt: epochMs.describe('The start of the scheduled run that did not water.'),
+  reason: z.enum(IRRIGATION_SKIP_REASON_VALUES),
+  notes: z.string().max(500).nullable().optional()
+});
+
+export type IrrigationSkipInput = z.infer<typeof irrigationSkipSchema>;

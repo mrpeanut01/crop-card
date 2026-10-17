@@ -4,6 +4,7 @@
   "displayName": "Basil — Genovese",
   "version": "1.0.1",
   "cropFamily": "herb-culinary",
+  "waterNeed": "high",
   "daysToMaturity": {
     "min": 60,
     "max": 80

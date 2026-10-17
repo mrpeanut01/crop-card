@@ -10,9 +10,19 @@ export type AdviceProvenance = 'data' | 'manual' | 'fallback';
 
 export type AdviceSheet = 'log-watering' | 'rain-gauge';
 
+export type TimerSkipReason = 'did-not-run' | 'turned-off-for-rain' | 'other';
+
 export type TodayAdviceAction =
   | { kind: 'link'; label: string; href: string }
-  | { kind: 'sheet'; label: string; sheet: AdviceSheet; fieldId: string };
+  | { kind: 'sheet'; label: string; sheet: AdviceSheet; fieldId: string }
+  /** Phase 37E: one tap marks a waterer run as not watering; queued offline. */
+  | {
+      kind: 'skip-run';
+      label: string;
+      equipmentId: string;
+      scheduledAt: number;
+      reason: TimerSkipReason;
+    };
 
 export interface TodayAdviceCard {
   /** Stable, e.g. `water:<fieldId>` or `pest:<modelId>`. */
@@ -38,6 +48,10 @@ export interface TodayAdvicePlanting {
   status: string;
   /** In-ground date when known (watering counts only planted crops). */
   plantingDate?: number | null;
+  /** Phase 37E: the crop's sourced water need, from the registry the loader read. */
+  waterNeed?: 'low' | 'medium' | 'high' | null;
+  /** The crop's English display name, for the water-need words. */
+  cropName?: string;
 }
 
 /** Phase 32F (F4-8). Rows the /today loader already read; the Monday
@@ -66,6 +80,16 @@ export interface TodayAdviceContext {
   digest?: TodayDigestInput;
   /** The viewer's language for card text; unset is English. */
   locale?: string | null;
+  /** Phase 37E: equipment rows the loader already read (waterer schedules). */
+  equipment?: ReadonlyArray<{
+    id: string;
+    type: string;
+    label: string;
+    spec?: Record<string, unknown>;
+    retiredAt?: number;
+  }>;
+  /** Owners and helpers can mark a waterer run as skipped; inspectors read. */
+  canRecord?: boolean;
 }
 
 export type TodayAdviceProvider = (ctx: TodayAdviceContext) => Promise<TodayAdviceCard[]>;

@@ -30,8 +30,23 @@ describe('area detail form', () => {
       irrigation: 'drip'
     } as const;
     const draft = draftFromDetails('garden', details);
-    expect(draft).toEqual({ ...details });
+    expect(draft).toEqual({ ...details, container: false, indoors: false });
     expect(detailsFromDraft('garden', draft)).toEqual({ ok: true, details });
+  });
+
+  it('keeps the 37E container and indoor flags as owner facts', () => {
+    const details = { container: true, indoors: true } as const;
+    const draft = draftFromDetails('garden', details);
+    expect(draft).toMatchObject({ container: true, indoors: true });
+    expect(detailsFromDraft('garden', draft)).toEqual({ ok: true, details });
+    expect(detailsSummary('garden', details, undefined, undefined, 'es')).toEqual([
+      { label: 'Cultivado en macetas o recipientes', value: expect.any(String) },
+      { label: 'Dentro de casa, como en una ventana', value: expect.any(String) }
+    ]);
+    expect(detailsSummary('garden', details).map((r) => r.label)).toEqual([
+      'Grown in pots or containers',
+      'Kept indoors, such as a windowsill'
+    ]);
   });
 
   it('drops the transition date unless the garden is transitioning', () => {

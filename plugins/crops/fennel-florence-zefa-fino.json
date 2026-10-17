@@ -4,6 +4,7 @@
   "displayName": "Fennel — Florence Zefa Fino (bulbing)",
   "version": "1.0.1",
   "cropFamily": "apiaceae",
+  "waterNeed": "high",
   "daysToMaturity": {
     "min": 75,
     "max": 90

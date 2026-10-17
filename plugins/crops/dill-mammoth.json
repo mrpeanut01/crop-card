@@ -4,6 +4,7 @@
   "displayName": "Dill — Mammoth",
   "version": "1.0.1",
   "cropFamily": "apiaceae",
+  "waterNeed": "high",
   "daysToMaturity": {
     "min": 50,
     "max": 70

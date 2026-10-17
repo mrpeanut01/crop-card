@@ -35,7 +35,9 @@ const DETAIL_LABEL: Record<string, MessageKey> = {
   runSqFt: 'farm.df.runSqFt',
   capacity: 'farm.df.capacity',
   capacityProvenance: 'farm.df.capacityProvenance',
-  usedForIrrigation: 'farm.df.usedForIrrigation'
+  usedForIrrigation: 'farm.df.usedForIrrigation',
+  container: 'herbse.df.container',
+  indoors: 'herbse.df.indoors'
 };
 
 const DETAIL_OPTION: Record<string, MessageKey> = {

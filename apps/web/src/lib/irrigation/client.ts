@@ -4,12 +4,13 @@
 
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
-import type { IrrigationCreate, RainGaugeCreate } from './apiSchemas';
+import type { IrrigationCreate, IrrigationSkipInput, RainGaugeCreate } from './apiSchemas';
 
 export type SaveOutcome<T> =
   { status: 'saved'; body: T } | { status: 'queued' } | { status: 'error'; message: string };
 
 type FetchFn = typeof fetch;
+type QueueKind = 'irrigation' | 'rain-gauge' | 'irrigation-skip';
 
 function recordId(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -22,14 +23,14 @@ function looksOffline(e: unknown): boolean {
   return e instanceof TypeError && /(fetch|network|failed|load)/i.test(msg);
 }
 
-async function queue(kind: 'irrigation' | 'rain-gauge', payload: unknown, id: string) {
+async function queue(kind: QueueKind, payload: unknown, id: string) {
   const { enqueueRecord } = await import('$lib/client/syncQueue');
   await enqueueRecord(kind, payload, id);
   return { status: 'queued' as const };
 }
 
 async function send<T>(
-  kind: 'irrigation' | 'rain-gauge',
+  kind: QueueKind,
   url: string,
   payload: unknown,
   fetchFn: FetchFn,
@@ -79,4 +80,14 @@ export function submitGauge(
 ): Promise<SaveOutcome<{ readings: Array<{ id: string; countsFrom: number }> }>> {
   const payload = { ...input, readAt: input.readAt ?? Date.now() };
   return send('rain-gauge', '/api/rain-gauge', payload, fetchFn, online);
+}
+
+/** Phase 37E: a scheduled waterer run did not water. Queued offline under
+ *  `irrigation-skip`; the server answers a repeat with the first skip. */
+export function submitSkip(
+  input: IrrigationSkipInput,
+  fetchFn: FetchFn = fetch,
+  online: () => boolean = isOnline
+): Promise<SaveOutcome<{ skip: { id: string } }>> {
+  return send('irrigation-skip', '/api/irrigation/skips', input, fetchFn, online);
 }

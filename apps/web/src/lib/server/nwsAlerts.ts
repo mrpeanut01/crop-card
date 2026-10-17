@@ -6,7 +6,7 @@
  * point share one request per scheduler tick.
  */
 
-import { NWS_BASE, USER_AGENT, WeatherFetchError } from './weather';
+import { NWS_BASE, USER_AGENT, WeatherFetchError, weatherFeedsOff } from './weather';
 import { safeFetch, type SafeFetchOptions } from './safeFetch';
 import { realNow } from '$lib/server/clock';
 
@@ -140,6 +140,7 @@ export async function fetchActiveAlertsBody(
   const now = opts.now ?? realNow();
   const hit = cache.get(url);
   if (hit && now - hit.at < NWS_ALERTS_CACHE_MS) return hit.body;
+  if (weatherFeedsOff()) throw new WeatherFetchError(`Weather feeds are off (${url})`);
   let text: string;
   try {
     const res = await safeFetch(url, {

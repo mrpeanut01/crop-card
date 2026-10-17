@@ -935,6 +935,8 @@ export const WATER_NEED_PHRASES: Readonly<Record<'low' | 'medium' | 'high', read
     'drier soil',
     'dry side',
     'dry conditions',
+    'dry, rocky',
+    'rocky, dry',
     'drought tolerant',
     'drought-tolerant',
     'tolerates drought',
@@ -946,15 +948,25 @@ export const WATER_NEED_PHRASES: Readonly<Record<'low' | 'medium' | 'high', read
     'moderate moisture',
     'moderate water',
     'moderately moist',
+    'somewhat moist',
     'average moisture',
     'medium moisture'
   ],
   high: [
     'moist soil',
+    'moist but well-drained',
+    'moist but well drained',
+    'moist, well-drained',
+    'moist, but well-drained',
     'evenly moist',
     'consistently moist',
     'constantly moist',
+    'uniformly moist',
+    'uniform soil moisture',
     'keep the soil moist',
+    'keep soil moist',
+    'well-watered',
+    'well watered',
     'plenty of water',
     'abundant moisture',
     'wet soil'
@@ -979,15 +991,52 @@ export function waterNeedOfQuote(quote: string): 'low' | 'medium' | 'high' | nul
   return found.size === 1 ? ([...found][0] as 'low' | 'medium' | 'high') : null;
 }
 
-/** Words of the crop's display name a quote may name it by ("Basil — Genovese"
- *  gives basil and genovese). */
+/** Words that never name a crop on their own ("Summer Savory" is not named
+ *  by "summer"). */
+const GENERIC_NAME_WORDS: ReadonlySet<string> = new Set([
+  'anise',
+  'bee',
+  'common',
+  'east',
+  'english',
+  'french',
+  'german',
+  'greek',
+  'green',
+  'holy',
+  'italian',
+  'lemon',
+  'mountain',
+  'summer',
+  'sweet'
+]);
+
+/** Ways a quote may name the crop: the name before the variety ("Basil —
+ *  Genovese" gives basil), its first two words ("bee balm"), its first word
+ *  unless that word is generic, the variety ("Mint — Spearmint" gives
+ *  spearmint) and a binomial in parentheses ("origanum majorana"). */
 export function cropNameWords(displayName: string): string[] {
-  const base = displayName.split(/[—–(,]/)[0] ?? displayName;
-  const words = base
-    .toLowerCase()
-    .split(/[^a-z]+/)
-    .filter((w) => w.length >= 4);
-  return words.length ? words : [base.toLowerCase().trim()].filter(Boolean);
+  const lower = displayName.toLowerCase();
+  const base = (lower.split(/[—–(,]/)[0] ?? lower).trim();
+  const words = base.split(/\s+/).filter(Boolean);
+  const out = new Set<string>([base]);
+  if (words.length >= 2) out.add(`${words[0]} ${words[1]}`);
+  if (words[0] && words[0].length >= 4 && !GENERIC_NAME_WORDS.has(words[0])) out.add(words[0]);
+  const variety = (lower.split(/\s[—–]\s/)[1] ?? '').split(/[(,]/)[0]?.trim();
+  if (variety && variety.length >= 4) out.add(variety);
+  for (const m of lower.matchAll(/\(([^)]+)\)/g)) {
+    const inner = m[1].trim().split(/\s+/);
+    if (inner.length >= 2) out.add(`${inner[0]} ${inner[1]}`);
+  }
+  return [...out].filter(Boolean);
+}
+
+/** True when the quote names the crop by one of `cropNameWords`. */
+export function quoteNamesCrop(quote: string, displayName: string): boolean {
+  const q = quote.toLowerCase();
+  return cropNameWords(displayName).some((w) =>
+    new RegExp(`(?<![a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(q)
+  );
 }
 
 /** #37E: every counted `waterNeed` source (`waterNeed` and any
@@ -1014,8 +1063,7 @@ export function waterNeedQuoteGaps(
       if (!isAllowedSpacingSource(entry.data.url)) {
         gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
       }
-      const quote = entry.data.quote.toLowerCase();
-      if (!cropNameWords(c.displayName).some((w) => quote.includes(w))) {
+      if (!quoteNamesCrop(entry.data.quote, c.displayName)) {
         gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
       }
       const need = waterNeedOfQuote(entry.data.quote);

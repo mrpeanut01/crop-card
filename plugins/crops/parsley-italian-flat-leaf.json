@@ -4,6 +4,7 @@
   "displayName": "Parsley — Italian Flat-Leaf",
   "version": "1.0.0",
   "cropFamily": "apiaceae",
+  "waterNeed": "high",
   "daysToMaturity": {
     "min": 70,
     "max": 85

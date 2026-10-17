@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import { describe, expect, it, vi } from 'vitest';
 import { db } from '$lib/db/client';
 import { owners, weatherForecastCache } from '$lib/db/schema';
@@ -173,6 +174,39 @@ describe('Phase 37E watering advice', () => {
     seedWeather();
     const [card] = await runWithTenantAsync(owner, () => wateringCards(ctx(g.bed), noNetwork));
     expect(card.lines).toEqual(["Rain doesn't reach indoor pots. Check the soil."]);
+  });
+
+  it('adds the sourced pots-in-heat line on an outdoor container Area only', async () => {
+    const owner = seedOwner();
+    const pots = seedGarden(owner, { container: true });
+    const beds = seedGarden(owner);
+    seedWeather();
+    db.delete(weatherForecastCache)
+      .where(eq(weatherForecastCache.cacheKey, hourlyCacheKey(NEAR.lat, NEAR.lon)))
+      .run();
+    const start = Math.floor(NOW / H) * H;
+    const hot = Array.from({ length: 24 }, (_, i) => ({
+      t: start + i * H,
+      tempF: i === 12 ? 96 : 75,
+      dewpointF: null,
+      rhPct: null,
+      popPct: null,
+      precipMm: 0,
+      windMph: null
+    }));
+    const deps = { ...noNetwork, forecast: vi.fn(async () => hot) };
+    const cards = await runWithTenantAsync(owner, () =>
+      wateringCards(
+        {
+          ...ctx(pots.bed),
+          plantings: [...ctx(pots.bed).plantings, { ...ctx(beds.bed).plantings[0], id: 'p2' }]
+        },
+        deps
+      )
+    );
+    const line = 'Hot day and warm night ahead: check the pots today.';
+    expect(cards.find((c) => c.title.includes('Windowsill'))?.lines).toContain(line);
+    expect(cards.find((c) => c.title.includes('Kitchen beds'))?.lines).not.toContain(line);
   });
 
   it('never shows another farm timer', async () => {

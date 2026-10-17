@@ -14,7 +14,9 @@ export const WATER_SOURCED_KEYS = [
   'weeklyTargetIn',
   'metarHourlyPrecipGroup',
   'metarPrecipSensorOut',
-  'gallonsPerSqFtInch'
+  'gallonsPerSqFtInch',
+  'potHeatHighF',
+  'potHeatLowF'
 ] as const;
 
 export const WATER_TARGET_SOURCE =
@@ -30,8 +32,8 @@ export function waterTargetKey(fieldId: string): string {
 /** Phase 37E (R-11): a forecast this hot by day and by night adds "check
  *  pots today" on container Areas. Each number needs a quoted entry under
  *  `potHeatHighF` / `potHeatLowF`; while either is null the line never shows. */
-export const POT_HEAT_HIGH_F: number | null = null;
-export const POT_HEAT_LOW_F: number | null = null;
+export const POT_HEAT_HIGH_F: number | null = 90;
+export const POT_HEAT_LOW_F: number | null = 70;
 
 export interface PotHeatThresholds {
   highF: number | null;

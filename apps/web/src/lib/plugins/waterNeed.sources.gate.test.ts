@@ -21,6 +21,7 @@ beforeAll(async () => {
 describe('Phase 37E waterNeed gate', () => {
   it('every waterNeed source maps to the shipped value, and none disagree', () => {
     expect(waterNeedQuoteGaps(library.crops(), cropSources)).toEqual([]);
+    expect(library.crops().filter((c) => c.waterNeed).length).toBeGreaterThan(0);
   });
 
   it('every shipped waterNeed is in the source coverage check', () => {

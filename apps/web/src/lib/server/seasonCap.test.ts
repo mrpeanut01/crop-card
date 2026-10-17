@@ -25,12 +25,12 @@ vi.mock('$lib/server/auth', async (importOriginal) => {
 });
 
 import { db } from '$lib/db/client';
-import { owners, users } from '$lib/db/schema';
+import { owners, recordDeletions, users } from '$lib/db/schema';
 import { createEquipment } from '$lib/db/equipment';
-import { runWithTenant, runWithTenantAsync } from '$lib/db/tenant';
+import { runWithTenant, runWithTenantAsync, tenantValues } from '$lib/db/tenant';
 import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
-import { deleteSprayEvent } from '$lib/db/admin';
+import { deleteSprayEvent, listApplicationTombstones } from '$lib/db/admin';
 import { insertSprayEvent, listSprayEvents } from '$lib/db/sprayEvents';
 import { withCropRate } from '$lib/plugins/cropRate';
 import { evaluateSeasonCaps } from '$lib/safety/seasonCap';
@@ -151,6 +151,88 @@ describe('loadSeasonCapContext (#820)', () => {
     expect(v).toMatchObject({ status: 'within', othersKnown: 1, knownTotal: 1.5 });
     spray(farm, NOW - DAY);
     expect(verdict(farm, NOW).status).toBe('over');
+  });
+
+  it('never counts a deleted application on another block of the farm', () => {
+    const farm = seedFarm('tomb-other');
+    const other = runWithTenant(farm.ownerId, () =>
+      createBlock({ name: 'Other', fieldId: createField({ name: 'F2', kind: 'field' }).id })
+    );
+    const elsewhere = spray(farm, NOW - 2 * DAY, { blockId: other.id, amount: 9 });
+    const elsewhereVoid = spray(farm, NOW - 2 * DAY, { blockId: other.id, amount: 9 });
+    runWithTenant(farm.ownerId, () => {
+      deleteSprayEvent(elsewhere.id, { force: true, tombstone: true });
+      deleteSprayEvent(elsewhereVoid.id, { force: true, tombstone: true, neverApplied: true });
+    });
+    expect(verdict(farm, NOW)).toMatchObject({ status: 'within', othersKnown: 0, knownTotal: 0.5 });
+  });
+
+  it('the block and kind filter returns exactly what the unfiltered read keeps for the block', () => {
+    const farm = seedFarm('tomb-filter');
+    const other = runWithTenant(farm.ownerId, () =>
+      createBlock({ name: 'Other', fieldId: createField({ name: 'F3', kind: 'field' }).id })
+    );
+    const rows = [
+      spray(farm, NOW - 5 * DAY),
+      spray(farm, NOW - 4 * DAY),
+      spray(farm, NOW - 3 * DAY, { blockId: other.id }),
+      spray(farm, NOW - 400 * DAY)
+    ];
+    runWithTenant(farm.ownerId, () => {
+      deleteSprayEvent(rows[0].id, { force: true, tombstone: true });
+      deleteSprayEvent(rows[1].id, { force: true, tombstone: true, neverApplied: true });
+      deleteSprayEvent(rows[2].id, { force: true, tombstone: true });
+      deleteSprayEvent(rows[3].id, { force: true, tombstone: true });
+      for (const [kind, snapshotJson] of [
+        ['spray', '{not json'],
+        ['spray', JSON.stringify({ blockId: 42, occurredAt: NOW - DAY })],
+        [
+          'insecticide',
+          JSON.stringify({ blockId: farm.blockId, occurredAt: NOW - DAY, products: [] })
+        ],
+        ['harvest', JSON.stringify({ blockId: farm.blockId, occurredAt: NOW - DAY })]
+      ] as const) {
+        db.insert(recordDeletions)
+          .values(
+            tenantValues({
+              id: randomUUID(),
+              recordKind: kind,
+              recordId: randomUUID(),
+              snapshotJson
+            })
+          )
+          .run();
+      }
+    });
+    for (const fromMs of [Number.NEGATIVE_INFINITY, NOW - 10 * DAY]) {
+      const [filtered, all] = runWithTenant(farm.ownerId, () => [
+        listApplicationTombstones(fromMs, { kinds: ['spray'], blockId: farm.blockId }),
+        listApplicationTombstones(fromMs)
+      ]);
+      expect(filtered).toEqual(
+        all.filter((t) => t.source === 'spray' && t.blockId === farm.blockId)
+      );
+    }
+    const ids = runWithTenant(farm.ownerId, () =>
+      listApplicationTombstones(Number.NEGATIVE_INFINITY, {
+        kinds: ['spray'],
+        blockId: farm.blockId
+      })
+    ).map((t) => t.id);
+    expect(ids.sort()).toEqual([rows[0].id, rows[3].id].sort());
+    expect(
+      runWithTenant(farm.ownerId, () =>
+        listApplicationTombstones(0, { kinds: ['insecticide'], blockId: farm.blockId })
+      )
+    ).toHaveLength(1);
+    expect(
+      runWithTenant(seedFarm('tomb-filter-b').ownerId, () =>
+        listApplicationTombstones(Number.NEGATIVE_INFINITY, {
+          kinds: ['spray'],
+          blockId: farm.blockId
+        })
+      )
+    ).toEqual([]);
   });
 
   it('reads a custom-rate record as not known, never as under the cap', () => {

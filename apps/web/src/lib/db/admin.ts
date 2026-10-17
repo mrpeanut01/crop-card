@@ -14,7 +14,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { realNow } from '$lib/server/clock';
-import { type SQL, and, eq, inArray, isNotNull, isNull, lte, or } from 'drizzle-orm';
+import { type SQL, and, eq, inArray, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import { plantingInGround } from '$lib/garden/inGround';
@@ -206,14 +206,25 @@ export interface ApplicationTombstone {
  * applications that still count for grazing and hay holds. Only an owner's
  * "never applied" delete drops one.
  */
-export function listApplicationTombstones(fromMs: number): ApplicationTombstone[] {
+export function listApplicationTombstones(
+  fromMs: number,
+  opts: { kinds?: readonly ApplicationTombstone['source'][]; blockId?: string } = {}
+): ApplicationTombstone[] {
+  const kinds = opts.kinds ?? (['spray', 'insecticide', 'fungicide'] as const);
+  if (kinds.length === 0) return [];
+  const snap = recordDeletions.snapshotJson;
   const rows = db
     .select()
     .from(recordDeletions)
     .where(
       withTenant(
         recordDeletions,
-        inArray(recordDeletions.recordKind, ['spray', 'insecticide', 'fungicide'])
+        and(
+          inArray(recordDeletions.recordKind, [...kinds]),
+          opts.blockId === undefined
+            ? undefined
+            : sql`(CASE WHEN json_valid(${snap}) THEN json_extract(${snap}, '$.blockId') END) = ${opts.blockId}`
+        )
       )
     )
     .all();

@@ -85,6 +85,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     ['cropId', parsed.data.cropId, getCrop]
   );
   if (foreign) return foreign;
+  const block = getBlock(parsed.data.blockId);
 
   const registry = await getRegistry();
   const occurredAt = parsed.data.occurredAt ?? Date.now();
@@ -151,7 +152,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   // as the crops the client names, with the registry's crop families.
   const crops = resolveSprayCrops(
     parsed.data.blockCrops,
-    standingCropPluginIds(getBlock(parsed.data.blockId)?.plantings ?? [], occurredAt),
+    standingCropPluginIds(block?.plantings ?? [], occurredAt),
     registry
   );
   // #737: a label rate by crop replaces the default when every sprayed crop
@@ -290,7 +291,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         // #762 — take what the pass put on the block (rate times acres), not
         // one tank; one tank stands in only when the block has no area.
         // #737 — a product with no label rate on file gets no stock draw.
-        const acres = getBlock(parsed.data.blockId)?.acres ?? null;
+        const acres = block?.acres ?? null;
         const tankSizeGallons = parsed.data.tankSizeGallons;
         const lines = ratedProducts.flatMap((p) => {
           const ratePerAcre = p.ratePerAcre;

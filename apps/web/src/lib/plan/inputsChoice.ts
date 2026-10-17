@@ -6,6 +6,7 @@
  */
 
 import { ALL_STOCK_UNITS, convert, type StockUnit } from '$lib/stock/units';
+import { normalizeUnitName } from '$lib/stock/unitName';
 import type { InputsPlanApplication, InputsPlanShoppingItem } from './inputsPlan';
 import type { RateProvenance } from '$lib/plugins/rateProvenance';
 
@@ -46,8 +47,7 @@ export interface StockAmount {
 
 function asStockUnit(unit: string | null | undefined): StockUnit | null {
   if (!unit) return null;
-  const u = unit.trim().toLowerCase().replace(/\s+/g, '-');
-  const norm = u === 'floz' || u === 'fl.-oz' || u === 'fl.oz' ? 'fl-oz' : u;
+  const norm = normalizeUnitName(unit);
   return (ALL_STOCK_UNITS as ReadonlyArray<string>).includes(norm) ? (norm as StockUnit) : null;
 }
 

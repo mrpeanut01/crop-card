@@ -59,6 +59,7 @@ export default defineConfig({
       // The E2E_CLAUDE_FIXTURE flag lets a farm that saved the fixture's sentinel key
       // get canned Claude answers (lib/server/aiFixture/claude.ts); every other
       // farm stays on the no-key path.
+      // WEATHER_FEEDS=off keeps live NWS/NCEI weather out of every spec.
       // ENABLE_DEV_ROUTES=1 unlocks /_dev/primitives for the visual baseline
       // spec (production never sets this flag — the dev page stays gated).
       command:
@@ -68,7 +69,7 @@ export default defineConfig({
         `touch ${BUILD_MARKER} && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
-        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret ENABLE_DEV_ROUTES=1 E2E_DEGREE_DAY_FIXTURE=1 E2E_CLAUDE_FIXTURE=1 PLUGINS_DIR=${PLUGINS_DIR} ${STRIPE_E2E_ENV} ${VAULT_ENV} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
+        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret WEATHER_FEEDS=off ENABLE_DEV_ROUTES=1 E2E_DEGREE_DAY_FIXTURE=1 E2E_CLAUDE_FIXTURE=1 PLUGINS_DIR=${PLUGINS_DIR} ${STRIPE_E2E_ENV} ${VAULT_ENV} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
       port: PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000
@@ -81,7 +82,7 @@ export default defineConfig({
         `mkdir -p ./.playwright-data && rm -rf ${MAGIC_DB_PATH} ${MAGIC_VAULT_DIR} && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
-        `DATABASE_URL=file:${MAGIC_DB_PATH} AUTH_MODE=magic-link AUTH_SECRET=e2e-only-not-secret EMAIL_TRANSPORT=memory SMS_TRANSPORT=memory E2E_OUTBOX=1 ` +
+        `DATABASE_URL=file:${MAGIC_DB_PATH} AUTH_MODE=magic-link AUTH_SECRET=e2e-only-not-secret WEATHER_FEEDS=off EMAIL_TRANSPORT=memory SMS_TRANSPORT=memory E2E_OUTBOX=1 ` +
         `ORIGIN=http://localhost:${MAGIC_PORT} PLUGINS_DIR=${PLUGINS_DIR} CROPCARD_LOCALES=en,es ${MAGIC_VAULT_ENV} ` +
         `pnpm exec vite preview --host 0.0.0.0 --port ${MAGIC_PORT} --strictPort`,
       port: MAGIC_PORT,

@@ -23,7 +23,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from '$lib/db/client';
 import { weatherForecastCache } from '$lib/db/schema';
 import { haversineFt } from '$lib/blocks/distance';
-import { NWS_BASE, nwsFetch, USER_AGENT } from '$lib/server/weather';
+import { NWS_BASE, nwsFetch, USER_AGENT, weatherFeedsOff } from '$lib/server/weather';
 import { safeFetch, type SafeFetchOptions } from '$lib/server/safeFetch';
 import { floorHour, HOUR_MS, type HourlyPoint, type WeatherProvenance } from '$lib/weather/leafWet';
 import { routineRainHours, type RainHour } from '$lib/weather/metarRain';
@@ -272,6 +272,7 @@ export type FetchText = (url: string) => Promise<string>;
 export function nceiFetchText(extra: SafeFetchOptions = {}): FetchText {
   return async (url) => {
     if (!isNceiAdsUrl(url)) throw new ObservedFetchError('Refusing non-NCEI URL');
+    if (weatherFeedsOff()) throw new ObservedFetchError('Weather feeds are off');
     const res = await safeFetch(url, {
       timeoutMs: NCEI_TIMEOUT_MS,
       maxBytes: NCEI_MAX_BYTES,

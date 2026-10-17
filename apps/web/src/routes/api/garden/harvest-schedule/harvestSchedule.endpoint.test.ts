@@ -184,9 +184,9 @@ describe('pantry kept totals, page and snapshot', () => {
       ['helper', true],
       ['inspector', false]
     ] as const) {
-      const data = (await runWithTenantAsync(farm.ownerId, () =>
+      const data = (await runWithTenantAsync(farm.ownerId, async () =>
         pantryLoad(event(farm, role) as never)
-      )) as {
+      )) as unknown as {
         kept: Array<{ cropName: string; method: string }>;
         canWrite: boolean;
         hasBrief: boolean;

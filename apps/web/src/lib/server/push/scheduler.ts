@@ -41,6 +41,8 @@ import { selectRecipients, sendToSubscriptions, type MemberRole } from './dispat
 import { emailAlertOrigin, sendAlertEmails } from './emailAlerts';
 import { frostTonightAlerts, isInGroundOrImminent, type FrostPlantingSnapshot } from './frost';
 import { activeCoverByBlock } from '$lib/server/blockFrost.server';
+import { isHerbGardenCrop } from '$lib/garden/herbs';
+import { serverHerbVerdict } from '$lib/server/herbCalendar.server';
 import { weeklyDigestForOwner } from './weeklyDigest';
 import {
   LOCK_WINDOW_MS,
@@ -174,6 +176,7 @@ async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<Ale
     now
   );
   const plantings: FrostPlantingSnapshot[] = [];
+  const herbVerdict = serverHerbVerdict();
   for (const c of crops) {
     const plugin = registry.get(c.cropPluginId)?.plugin;
     const crop = plugin?.type === 'crop' ? (plugin as CropPlugin) : undefined;
@@ -185,7 +188,13 @@ async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<Ale
       hardiness: hardinessOf(crop),
       cover: coverByBlock.get(c.blockId) ?? null
     };
-    if (snapshot.hardiness !== 'hardy' && isInGroundOrImminent(snapshot, now)) {
+    if (crop && isHerbGardenCrop(c.cropPluginId)) {
+      if (herbVerdict(crop, c)?.lifecycle === 'tender-perennial') snapshot.bringIn = true;
+    }
+    if (
+      (snapshot.hardiness !== 'hardy' || snapshot.bringIn) &&
+      isInGroundOrImminent(snapshot, now)
+    ) {
       plantings.push(snapshot);
     }
   }

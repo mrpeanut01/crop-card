@@ -11,6 +11,7 @@ import { eventsForPlanting } from '$lib/calendar/engine';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import { getRegistry } from '$lib/server/registry';
 import { HERB_PLUGIN_IDS, isHerbGardenCrop } from '$lib/garden/herbs';
+import { lifecycleVerdictsFor } from './lifecycleLine.server';
 import { BRIEF_SETTING_KEY, briefGoalsFromSetting, type BriefGoal } from '$lib/garden/briefGoals';
 import {
   buildHarvestSchedule,
@@ -93,11 +94,32 @@ function windowsFor(
     }));
 }
 
+/** 37B's verdict for every live herb planting's crop, loaded once so the
+ *  farm zone is read at most once per schedule. */
+async function herbLifecycleLookup(
+  registry: Awaited<ReturnType<typeof getRegistry>>,
+  scope: ScheduleScope,
+  now: number
+): Promise<LifecycleLookup> {
+  const crops = new Map<string, CropPlugin>();
+  for (const block of listBlocks({ plantings: 'current', now })) {
+    if (scope.areaId && block.fieldId !== scope.areaId) continue;
+    for (const p of block.plantings) {
+      if (!isHerbGardenCrop(p.cropPluginId) || crops.has(p.cropPluginId)) continue;
+      const rec = registry.get(p.cropPluginId);
+      if (rec?.plugin.type === 'crop') crops.set(p.cropPluginId, rec.plugin);
+    }
+  }
+  const verdicts = await lifecycleVerdictsFor(crops.values());
+  return (plugin) => verdicts[plugin.pluginId] ?? null;
+}
+
 export async function loadHarvestSchedule(scope: ScheduleScope = {}): Promise<LoadedSchedule> {
   const now = scope.now ?? Date.now();
   const year = seasonYear(now);
   const bounds = seasonBounds(year);
   const registry = await getRegistry();
+  const lifecycleFor = scope.lifecycleFor ?? (await herbLifecycleLookup(registry, scope, now));
   const inputs: SchedulePlantingInput[] = [];
   const plantings: ScheduledPlanting[] = [];
   const plugins: Record<string, GoalPlugin> = {};
@@ -116,7 +138,7 @@ export async function loadHarvestSchedule(scope: ScheduleScope = {}): Promise<Lo
         blockId: block.id,
         windows: windowsFor(p, crop, block, now),
         cadence: crop.harvestCadence ?? null,
-        lifecycle: scope.lifecycleFor?.(crop) ?? null
+        lifecycle: lifecycleFor(crop)
       });
       plantings.push({
         plantingId: p.id,

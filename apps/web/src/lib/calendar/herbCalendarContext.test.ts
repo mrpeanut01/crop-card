@@ -1,3 +1,4 @@
+import { lifecycleHere } from '$lib/garden/lifecycleHere';
 import { describe, expect, it } from 'vitest';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
@@ -120,7 +121,7 @@ describe('server verdict and its e2e hook', () => {
     expect(serverHerbVerdict({})(rosemary, marked)?.lifecycle).toBe('unknown');
     expect(
       serverHerbVerdict({ ENABLE_DEV_ROUTES: '1' })(rosemary, { varietyDisplayName: 'R' })
-    ).toEqual(interimLifecycleVerdict(rosemary));
+    ).toEqual(lifecycleHere(rosemary, null));
   });
 
   it("reads the owner's typed zone from the same batch", () => {

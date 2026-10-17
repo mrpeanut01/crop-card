@@ -6,5 +6,5 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals }) => {
   const user = locals.user;
   if (!user?.activeOwnerId) throw error(401, t(locals.locale, 'api.err.authRequired'));
-  return loadBriefPage({ id: user.id, role: user.role });
+  return loadBriefPage({ id: user.id, role: user.role }, locals.locale);
 };

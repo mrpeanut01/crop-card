@@ -4,6 +4,8 @@ import { HERB_PLUGIN_IDS } from '$lib/garden/herbs';
 import { briefPetSpecies } from '$lib/garden/brief/handoff';
 import { MAX_BRIEF_CHAT_TURNS, type GardenBrief } from '$lib/garden/brief/schema';
 import { getFarmAnimals } from '$lib/onboarding/state.server';
+import { lifecycleLine, type LifecycleDetail } from '$lib/garden/lifecycleHere';
+import { lifecycleVerdictsFor } from '$lib/server/lifecycleLine.server';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { getBaseRegistry, getDataKinds, getRegistry } from '$lib/server/registry';
@@ -37,11 +39,18 @@ export interface BriefPageData {
   gardenAreaId: string | null;
 }
 
-export function briefLifecycleLine(_plugin: CropPlugin): BriefLifecycleLine | null {
-  return null;
+export function briefLifecycleLine(
+  verdict: LifecycleDetail | null | undefined,
+  locale?: string | null
+): BriefLifecycleLine | null {
+  if (!verdict) return null;
+  return { text: lifecycleLine(verdict, locale), provenance: verdict.provenance };
 }
 
-export async function loadBriefPage(user: { id: string; role: string }): Promise<BriefPageData> {
+export async function loadBriefPage(
+  user: { id: string; role: string },
+  locale?: string | null
+): Promise<BriefPageData> {
   const canEdit = user.role === 'owner';
   const brief = loadGardenBrief();
   const [registry, base, kinds] = await Promise.all([
@@ -63,16 +72,21 @@ export async function loadBriefPage(user: { id: string; role: string }): Promise
   const lifecycle: Record<string, BriefLifecycleLine | null> = {};
   const toxic: Record<string, ToxicCrop> = {};
   const petSpecies = briefPetSpecies(getFarmAnimals());
+  const shortlistCrops: CropPlugin[] = [];
   for (const row of brief?.shortlist ?? []) {
     const crop = plugins.get(row.cropPluginId);
     if (!crop) continue;
-    lifecycle[row.cropPluginId] = briefLifecycleLine(crop);
+    shortlistCrops.push(crop);
     if (petSpecies.length === 0) continue;
     const shipped = base.get(row.cropPluginId)?.plugin;
     const toxicity = shipped?.type === 'crop' ? (shipped as CropPlugin).animalToxicity : undefined;
     if (toxicity?.length) {
       toxic[row.cropPluginId] = { pluginId: row.cropPluginId, name: crop.displayName, toxicity };
     }
+  }
+  const verdicts = await lifecycleVerdictsFor(shortlistCrops);
+  for (const crop of shortlistCrops) {
+    lifecycle[crop.pluginId] = briefLifecycleLine(verdicts[crop.pluginId], locale);
   }
   const speciesPlural: Record<string, string> = {};
   for (const s of kinds.species.all()) speciesPlural[s.pluginId] = s.tile.label ?? s.displayName;

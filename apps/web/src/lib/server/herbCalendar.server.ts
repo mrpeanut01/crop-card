@@ -14,6 +14,8 @@ import {
   type HerbCalendarInputs,
   type HerbVerdictResolver
 } from '$lib/calendar/herbCalendarContext';
+import { isHerbGardenCrop } from '$lib/garden/herbs';
+import { lifecycleHere, type LifecycleFarmZone } from '$lib/garden/lifecycleHere';
 
 /** TEST ONLY. A planting whose name carries this marker reads as a tender
  *  perennial on a server with dev routes on (the e2e preview server), so the
@@ -26,19 +28,27 @@ export function herbVerdictTestHookEnabled(env: Record<string, string | undefine
 }
 
 export function serverHerbVerdict(
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = process.env,
+  manualZone: string | null = null
 ): HerbVerdictResolver {
   const hook = herbVerdictTestHookEnabled(env);
+  const zone: LifecycleFarmZone | null = manualZone
+    ? { zone: manualZone, provenance: 'manual' }
+    : null;
   return (crop, planting) => {
     if (hook && planting.varietyDisplayName.includes(E2E_TENDER_PERENNIAL_MARKER)) {
       return { lifecycle: 'tender-perennial', provenance: 'fallback' };
     }
-    return interimLifecycleVerdict(crop);
+    if (!isHerbGardenCrop(crop.pluginId)) return interimLifecycleVerdict(crop);
+    return lifecycleHere(crop, zone);
   };
 }
 
+/** The verdict reads only the owner's typed zone (R-4, R-22): the station
+ *  estimate would add the elevation lookup to every /today load, so a farm
+ *  with no typed zone reads its perennial herbs as unknown on the calendar. */
 export function loadHerbCalendarInputs(read: SettingReader): HerbCalendarInputs {
-  return herbCalendarInputs(read, serverHerbVerdict());
+  return herbCalendarInputs(read, serverHerbVerdict(process.env, manualZoneFromReader(read)));
 }
 
 /** The owner's typed zone from the same batch (`HERB_CALENDAR_SETTING_KEYS`

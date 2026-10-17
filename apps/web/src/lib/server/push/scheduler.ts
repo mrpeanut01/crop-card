@@ -42,6 +42,7 @@ import { emailAlertOrigin, sendAlertEmails } from './emailAlerts';
 import { frostTonightAlerts, isInGroundOrImminent, type FrostPlantingSnapshot } from './frost';
 import { activeCoverByBlock } from '$lib/server/blockFrost.server';
 import { isHerbGardenCrop } from '$lib/garden/herbs';
+import { loadManualZone } from '$lib/climate/zoneSettings.server';
 import { serverHerbVerdict } from '$lib/server/herbCalendar.server';
 import { weeklyDigestForOwner } from './weeklyDigest';
 import {
@@ -176,7 +177,7 @@ async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<Ale
     now
   );
   const plantings: FrostPlantingSnapshot[] = [];
-  const herbVerdict = serverHerbVerdict();
+  const herbVerdict = serverHerbVerdict(process.env, loadManualZone());
   for (const c of crops) {
     const plugin = registry.get(c.cropPluginId)?.plugin;
     const crop = plugin?.type === 'crop' ? (plugin as CropPlugin) : undefined;

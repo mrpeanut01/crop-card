@@ -30,6 +30,7 @@ import { ymdInZone } from '$lib/prefs';
 import { zonedDayStartMs } from '$lib/exports/dateRange';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import type { HarvestScheduleResponse } from '$lib/garden/harvestScheduleApi';
+import { harvestTimingHints } from '$lib/garden/harvestTiming';
 
 const DAY_MS = 86_400_000;
 const LIVE = new Set(['planned', 'active']);
@@ -55,6 +56,8 @@ export interface ScheduledPlanting {
   blockName: string;
   /** How the crop keeps, from plugin data; empty when not known. */
   preserving: NonNullable<CropPlugin['preserving']>;
+  /** #867: the sourced cutting stage per method; empty when not known. */
+  harvestTiming: NonNullable<CropPlugin['harvestTiming']>;
 }
 
 export interface LoadedSchedule {
@@ -146,7 +149,8 @@ export async function loadHarvestSchedule(scope: ScheduleScope = {}): Promise<Lo
         varietyDisplayName: p.varietyDisplayName,
         blockId: block.id,
         blockName: block.name,
-        preserving: crop.preserving ?? []
+        preserving: crop.preserving ?? [],
+        harvestTiming: crop.harvestTiming ?? []
       });
     }
   }
@@ -238,7 +242,9 @@ export async function harvestScheduleResponse(
 ): Promise<HarvestScheduleResponse> {
   const now = scope.now ?? Date.now();
   const loaded = await loadHarvestSchedule({ ...scope, now });
-  const goals = await goalLinesFor(loaded, loadBriefGoals());
+  const briefGoals = loadBriefGoals();
+  const goals = await goalLinesFor(loaded, briefGoals);
+  const goalIds = briefGoals.map((g) => g.goal);
   const byId = new Map(loaded.plantings.map((p) => [p.plantingId, p]));
   const name = (p: ScheduledPlanting) =>
     cropDisplayName(p.cropPluginId, p.varietyDisplayName, scope.locale);
@@ -275,7 +281,8 @@ export async function harvestScheduleResponse(
           method: r.method,
           suitability: r.suitability,
           ...(r.note ? { note: r.note } : {})
-        }))
+        })),
+        timing: harvestTimingHints(p, goalIds)
       };
     }),
     goals

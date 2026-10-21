@@ -4,6 +4,7 @@
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import HarvestSchedulePanel from '$lib/components/garden/HarvestSchedulePanel.svelte';
+  import HarvestTimingLine from '$lib/components/garden/HarvestTimingLine.svelte';
   import { createT, type MessageKey } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import { goalLineText, preservingMethodLabel } from '$lib/garden/pantryText';
@@ -176,6 +177,7 @@
                 <Provenance source="plugin" compact />
               </p>
             {/if}
+            <HarvestTimingLine hints={p.timing ?? []} />
             {#if p.nextCut}
               <p>{tr('herbsc.pantry.nextCut', { date: fmt.day(p.nextCut.week) })}</p>
               {#if data.canWrite}
@@ -205,7 +207,7 @@
     {/if}
   </section>
 
-  <HarvestSchedulePanel {schedule} showGoals={false} />
+  <HarvestSchedulePanel {schedule} showGoals={false} showTiming={false} />
 </div>
 
 <style>

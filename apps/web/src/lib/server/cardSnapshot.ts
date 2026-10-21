@@ -240,7 +240,8 @@ export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
     notes: p.notes,
     ...(p.treeSizeClasses ? { treeSizeClasses: p.treeSizeClasses } : {}),
     ...(careTasks.length ? { careTasks } : {}),
-    ...(p.growthHabit ? { growthHabit: p.growthHabit } : {})
+    ...(p.growthHabit ? { growthHabit: p.growthHabit } : {}),
+    ...(p.harvestTiming ? { harvestTiming: p.harvestTiming } : {})
   };
 }
 

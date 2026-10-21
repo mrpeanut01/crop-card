@@ -16,6 +16,7 @@ import type { AudienceChoice } from '$lib/orchard/calendar';
 import type { OrchardCalendarView } from '$lib/orchard/calendarView';
 import type { SnapshotPantry } from '$lib/garden/pantrySnapshot';
 import type { SnapshotGardenBrief } from '$lib/garden/brief/schema';
+import type { CropHarvestTiming } from '$lib/plugins/schemas';
 import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
 /** 2 since 32D: animals, flocks, care plans and precomputed holds.
@@ -267,6 +268,8 @@ export interface SnapshotCropPlugin {
   careTasks?: SnapshotCareTask[];
   /** Phase 37F: sourced growth habit for the photo help drawing. */
   growthHabit?: 'woody' | 'clumping';
+  /** #867: sourced cutting stage per preserving method. */
+  harvestTiming?: CropHarvestTiming[];
 }
 
 export interface SnapshotTreeSizeClass {

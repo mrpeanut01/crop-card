@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import type { Page } from '@playwright/test';
 import { expect, test } from './lib/test';
 import { provisionEmptyFarm } from './lib/freshFarm';
-import { originOf } from './lib/newOwner';
+import { createOnboardedFarm, originOf, signInNewUser } from './lib/newOwner';
 
 // Phase 37C: a kept harvest records how it was kept, and /plan/pantry lists
 // it against the garden brief's goals. No AI; the no-key path.
@@ -95,6 +95,66 @@ test.describe('pantry (37C)', () => {
 
     await expect(page.getByTestId('harvest-schedule-panel')).toBeVisible();
     await expect(page.getByTestId('pantry-herb')).toContainText('Oregano');
+  });
+
+  test('a drying goal shows the sourced cutting stage, only on herbs with a source (#867)', async ({
+    page
+  }) => {
+    await signInNewUser(page, 'drying-hint');
+    await createOnboardedFarm(page, { growing: ['garden'] });
+    const { block } = await post<{ block: { id: string } }>(page, '/api/blocks', {
+      name: 'Herb bed'
+    });
+    const plantingDate = Date.now() - 120 * 86_400_000;
+    const planted: Record<string, string> = {};
+    for (const cropPluginId of ['rosemary-tuscan-blue', 'mint-spearmint', 'thyme-german-winter']) {
+      const { planting } = await post<{ planting: { id: string } }>(
+        page,
+        `/api/blocks/${block.id}/plantings`,
+        { cropPluginId, plantingDate }
+      );
+      planted[cropPluginId] = planting.id;
+    }
+    saveBrief(block.id, { storageGoals: [{ goal: 'dry', provenance: 'manual' }] });
+
+    await page.goto('/plan/pantry');
+    await page.waitForLoadState('networkidle');
+    const herb = (name: string) => page.getByTestId('pantry-herb').filter({ hasText: name });
+    const rosemary = herb('Rosemary').getByTestId('harvest-timing');
+    await expect(rosemary).toHaveCount(1);
+    await expect(rosemary).toContainText('For drying');
+    await expect(rosemary).toContainText('Cut just before it flowers.');
+    await expect(rosemary).toHaveAttribute('data-stage', 'before-bloom');
+    await expect(herb('Mint').getByTestId('harvest-timing')).toContainText(
+      'Cut just as it starts to flower.'
+    );
+    await expect(herb('Thyme').getByTestId('harvest-timing')).toHaveCount(0);
+    await expect(
+      page.getByTestId('harvest-schedule-panel').getByTestId('harvest-timing')
+    ).toHaveCount(0);
+
+    const cut = await post<{ task: { id: string } }>(page, '/api/tasks', {
+      kind: 'primary',
+      title: 'Cut rosemary',
+      cropId: planted['rosemary-tuscan-blue'],
+      scheduledFor: Date.now(),
+      pluginTemplateKey: `derived:pantry-cut:${planted['rosemary-tuscan-blue']}:e2e`
+    });
+    const prune = await post<{ task: { id: string } }>(page, '/api/tasks', {
+      kind: 'primary',
+      title: 'Trim the thyme',
+      cropId: planted['thyme-german-winter'],
+      scheduledFor: Date.now()
+    });
+    await page.goto('/today');
+    await page.waitForLoadState('networkidle');
+    const deck = page.getByTestId('today-deck');
+    const cutCard = deck.locator(`.deck-card[data-task-id="${cut.task.id}"]`);
+    await expect(cutCard).toContainText('For drying');
+    await expect(cutCard).toContainText('Cut just before it flowers.');
+    await expect(deck.locator(`.deck-card[data-task-id="${prune.task.id}"]`)).not.toContainText(
+      'For drying'
+    );
   });
 
   test('a farm with no herbs gets the empty state', async ({ page }) => {

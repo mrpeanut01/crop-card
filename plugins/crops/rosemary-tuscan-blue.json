@@ -2,7 +2,7 @@
   "pluginId": "rosemary-tuscan-blue",
   "type": "crop",
   "displayName": "Rosemary — Tuscan Blue",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 365,
@@ -37,6 +37,12 @@
       "method": "infuse",
       "suitability": "good",
       "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes."
+    }
+  ],
+  "harvestTiming": [
+    {
+      "method": "dry",
+      "stage": "before-bloom"
     }
   ],
   "agronomy": {

@@ -73,13 +73,13 @@ export const esSeasonal: Partial<Record<MessageKey, string>> = {
   'seasonal.strawberry-jewel.frost-watch.title': 'Vigilancia de heladas en floración',
   'seasonal.strawberry-jewel.frost-watch.body':
     'Las flores abiertas se dañan a 30 °F. Cubre las hileras en noches de helada. El riego por aspersión protege solo mientras el agua corre sin parar hasta que la temperatura sube por encima del punto de congelación; detenerlo demasiado pronto puede causar más daño que no regar.',
-  'seasonal.basil-genovese.pinch-flower-buds.title': 'Pellizca los botones florales de la albahaca',
+  'seasonal.basil-genovese.pinch-flower-buds.title': 'Quita los botones florales de la albahaca',
   'seasonal.basil-genovese.pinch-flower-buds.body':
-    'Pellizca las puntas de los tallos para una planta más tupida, y quita los botones florales en cuanto los veas. Si se quedan, cambian el sabor de las hojas.',
+    'Despunta los tallos para que la planta quede más tupida y quita los botones florales en cuanto los veas. Si se dejan, cambian el sabor de las hojas.',
   'seasonal.mint-spearmint.remove-flower-spikes.title': 'Quita las espigas florales de la menta',
   'seasonal.mint-spearmint.remove-flower-spikes.body':
     'Quita las espigas florales en cuanto aparezcan para conservar el sabor de las hojas.',
-  'seasonal.mint-spearmint.divide.title': 'Divide la menta si está apretada',
+  'seasonal.mint-spearmint.divide.title': 'Divide la menta si está amontonada',
   'seasonal.mint-spearmint.divide.body':
     'Divide las plantas cada 3 a 4 años para mantenerlas vigorosas.',
   'seasonal.chives-common.divide.title': 'Divide las matas de cebollín',
@@ -100,17 +100,17 @@ export const esSeasonal: Partial<Record<MessageKey, string>> = {
     'Siembra otra vez cada 3 a 4 semanas para tener hojas frescas, porque el perifollo florece rápido.',
   'seasonal.oregano-greek.winter-mulch.title': 'Pon acolchado al orégano para el invierno',
   'seasonal.oregano-greek.winter-mulch.body':
-    'En noviembre o diciembre, cuando el suelo ya se congeló, cubre las plantas con paja o ramas de árboles de hoja perenne. Quítalo cuando empiece a crecer en primavera.',
+    'En noviembre o diciembre, cuando el suelo ya se congeló, cubre las plantas con paja o ramas de árboles de hoja perenne. Retira la cubierta cuando empiece a crecer en primavera.',
   'seasonal.lavender-english-munstead.spring-prune.title': 'Poda la lavanda en primavera',
   'seasonal.lavender-english-munstead.spring-prune.body':
-    'Espera a que empiece el crecimiento nuevo en primavera para podar. No recortes las plantas en otoño.',
+    'Espera a que empiece el crecimiento nuevo en primavera antes de podar. No recortes las plantas en otoño.',
   'seasonal.thyme-german-winter.renew-cut-back.title': 'Recorta el tomillo leñoso',
   'seasonal.thyme-german-winter.renew-cut-back.body':
     'Cuando el tomillo se vuelva leñoso, recórtalo fuerte en primavera, cada pocos años, para que salgan tallos jóvenes y tiernos.',
   'seasonal.lemon-balm.cut-back.title': 'Recorta el toronjil',
   'seasonal.lemon-balm.cut-back.body':
     'Recorta las plantas a más o menos la mitad de su altura para que salga crecimiento nuevo, y luego riega para que se recuperen.',
-  'seasonal.lemon-balm.thin-midsummer.title': 'Aclara el toronjil a mitad del verano',
+  'seasonal.lemon-balm.thin-midsummer.title': 'Ralea el toronjil a mitad del verano',
   'seasonal.lemon-balm.thin-midsummer.body':
     'Corta algunos tallos para que circule el aire, y corta los tallos florales antes de que den semilla.',
   'seasonal.sage-broadleaf.spring-prune.title': 'Poda la salvia en primavera',
@@ -125,7 +125,7 @@ export const esSeasonal: Partial<Record<MessageKey, string>> = {
     'Recorta las plantas en primavera justo cuando empiezan a crecer, y divide las plantas viejas que se vean desordenadas.',
   'seasonal.tarragon-french.spring-cut-back.title': 'Recorta el estragón en primavera',
   'seasonal.tarragon-french.spring-cut-back.body':
-    'Deja los tallos en pie durante el invierno, y recorta las plantas en primavera justo cuando empiezan a crecer.',
+    'Deja los tallos en pie durante el invierno y luego recorta las plantas en primavera justo cuando empiezan a crecer.',
   'seasonal.tarragon-french.divide.title': 'Divide el estragón cada pocos años',
   'seasonal.tarragon-french.divide.body':
     'Divide las plantas cada 3 a 4 años para que la plantación siga vigorosa y productiva.',

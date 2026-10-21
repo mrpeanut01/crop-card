@@ -44,7 +44,7 @@ describe('LifecycleLine', () => {
     state.locale = 'es';
     render(LifecycleLine, { verdict });
     expect(screen.getByTestId('lifecycle-line')).toHaveTextContent(
-      'Con la zona que ingresaste, 6b.'
+      'Se usa la zona que ingresaste: 6b.'
     );
   });
 });

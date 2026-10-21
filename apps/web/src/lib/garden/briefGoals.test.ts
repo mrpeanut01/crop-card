@@ -98,7 +98,7 @@ describe('pantry text', () => {
     expect(preservedAsSuffix('dry')).toBe(', dried');
     expect(preservedAsSuffix('dry', 'es')).toBe(', secado');
     expect(goalLineText(line, name, 'es')).toBe(
-      'Congelado: Va bien. Basil se congela bastante bien.'
+      'Congelación: Va bien. Basil se congela bastante bien.'
     );
   });
 

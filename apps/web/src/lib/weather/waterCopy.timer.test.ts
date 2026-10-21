@@ -108,7 +108,7 @@ describe('water need words (R-10)', () => {
       'Bed 2 has plants with different water needs; this goes by the one that needs the most.'
     ]);
     expect(needLines(b.perBed, { sage: 'Sage', thyme: 'Thyme' }, 'es')[0]).toBe(
-      'Bed 1: revisa la tierra primero, a sage y thyme les gusta seca.'
+      'Bed 1: revisa el suelo primero, a sage y thyme les gusta seco.'
     );
   });
 

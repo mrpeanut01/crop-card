@@ -13,6 +13,20 @@ describe('photoHelpTargets', () => {
     expect(t.careGuide?.key).toBe('cg_tomato-cherokee-purple');
   });
 
+  it('names a planting by its Spanish crop name in Spanish, and keeps a typed name', () => {
+    const named = sampleSnapshot({
+      plantings: snap.plantings.map((p) =>
+        p.id === 'p_tom' ? { ...p, varietyDisplayName: 'Tomato — Cherokee Purple (heirloom)' } : p
+      )
+    });
+    const [es] = photoHelpTargets(named, 'pl_p_tom', { locale: 'es' });
+    expect(es.label.startsWith('Tomate Cherokee Purple (criollo) · ')).toBe(true);
+    const [en] = photoHelpTargets(named, 'pl_p_tom');
+    expect(en.label).toBe('Tomato — Cherokee Purple (heirloom) · Bed 3');
+    const [typed] = photoHelpTargets(snap, 'pl_p_tom', { locale: 'es' });
+    expect(typed.label.startsWith('Cherokee Purple tomato · ')).toBe(true);
+  });
+
   it('keeps a planting whose plugin is missing, without a care guide', () => {
     const [t] = photoHelpTargets(snap, 'pl_p_alf');
     expect(t.careGuide).toBeNull();

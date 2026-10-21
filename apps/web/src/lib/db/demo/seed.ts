@@ -940,7 +940,7 @@ function writeHerbGarden(input: DemoSeedInput, bump: (key: string, n?: number) =
       cropId: planting.id,
       cropPluginId: h.cropPluginId,
       occurredAt: at,
-      quantity: h.quantity,
+      quantity: L(h.quantity),
       performedById: userId
     });
     bump('records.harvest_event');
@@ -950,7 +950,7 @@ function writeHerbGarden(input: DemoSeedInput, bump: (key: string, n?: number) =
           harvestEventId: ev.id,
           kind: d.kind,
           quantity: d.quantity,
-          unit: d.unit,
+          unit: L(d.unit),
           occurredAt: at,
           recipient: L(d.recipient ?? null),
           soldAsOrganic: null,

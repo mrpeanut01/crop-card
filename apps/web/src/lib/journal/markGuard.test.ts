@@ -27,18 +27,16 @@ beforeAll(async () => {
   });
   terms = markDiagnosisTerms(targets);
   sprayTerms = sprayProductTerms(
-    library
-      .all()
-      .flatMap(({ plugin: p }) =>
-        p.type === 'herbicide' || p.type === 'insecticide' || p.type === 'fungicide'
-          ? [
-              {
-                displayName: p.displayName,
-                activeIngredients: p.activeIngredients.map((a) => a.name)
-              }
-            ]
-          : []
-      )
+    library.all().flatMap(({ plugin: p }) =>
+      p.type === 'herbicide' || p.type === 'insecticide' || p.type === 'fungicide'
+        ? [
+            {
+              displayName: p.displayName,
+              activeIngredients: p.activeIngredients.map((a) => a.name)
+            }
+          ]
+        : []
+    )
   );
 });
 

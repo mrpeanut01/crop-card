@@ -6894,11 +6894,11 @@
       "note": "Coldest zone listed. No other fetched source states a zone."
     },
     "waterNeed": {
-      "url": "https://hort.purdue.edu/newcrop/med-aro/factsheets/HYSSOP.html",
-      "publisher": "Purdue University Center for New Crops and Plant Products, NewCROP factsheet: Hyssop (from Simon, Chadwick and Craker 1984, Herbs: An Indexed Bibliography)",
-      "date": "Last modified 6-Dec-1997; accessed 2026-10-20",
-      "quote": "The reported life zone of hyssop is 7 to 21 degrees centigrade with an annual precipitation of 0.6 to 1.5 meters (4.1-31). The plant grows on dry, rocky, calcareous soils.",
-      "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"dry, rocky\"); words only, never a target factor (R-10). Describes where Hyssopus officinalis grows; the NC State Plant Toolbox (\"Well-established plants are drought-tolerant\") and MU Extension G6470 (Soil: \"Dry\") agree."
+      "url": "https://plants.ces.ncsu.edu/plants/hyssopus-officinalis/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Hyssopus officinalis",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "NC State Plant Toolbox: \"Hyssopus officinalis\"; \"Well-established plants are drought-tolerant as well as resistant to browsing by deer.\"",
+      "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"drought-tolerant\"); words only, never a target factor (R-10). The sentence is in the Description of the page titled Hyssopus officinalis and does not name the plant itself, so the quote carries the page title as the 37B Toolbox zone quotes do. Purdue NewCROP agrees (\"The plant grows on dry, rocky, calcareous soils.\"), as does MU Extension G6470 (Soil: \"Dry\")."
     },
     "seasonalTasks.spring-trim": {
       "url": "https://plants.ces.ncsu.edu/plants/hyssopus-officinalis/",

@@ -216,11 +216,21 @@ Schema `waterNeed` (`low | medium | high`) with gate `waterNeedQuoteGaps` (a fix
 
 `lib/journal/marks.ts` (`parseMarks`: at most 12, kinds `cut | pinch | harvest | leave`, coordinates and boxes in 0..1, labels 1 to 40 characters through `asksForSprayAdvice`; one bad mark drops the set; the 41 bypass phrasings run as labels). `wantMarks` on the photo-help schema; with a key the prompt asks for strict `{ steps, marks }` JSON (marker `CROPCARD_FIXTURE:photo-marks`), `markedAnswer` runs every step through the spray filter and drops the marks when a step is dropped, the `JournalAnswer` stores `marks`, `steps`, `marksProvenance` and `drawing`, a refusal answers steps only with "Claude could not place marks on this photo."; the route runs under `withClientRecordId`. `PhotoMarks.svelte` (SVG overlay following the rendered size, 48 px numbered buttons, EN/ES legend), `PruneDrawing.svelte` with five wordless SVGs under `static/prune/` chosen by `growthHabit` then archetype, captions only from the Care Guide's sourced sections; an ask with no signal saves a `manual` entry with "Ask again when online". Schema `careTasks` (`key`, `topic: prune | harvest`, `title`, `body`) and `growthHabit` (`woody | clumping`) with gate `cropCareQuoteGaps` (quote holds the text word for word); Spanish through `herbsf.care.<pluginId>.<key>` while the text equals the shipped English. The family tip `herb-culinary.prune.0` is retired in favour of basil's `pinch-stems` care task; `careTipSourceProblems` adds the host check and `supported`-only for new tips (34 `partly` tips grandfathered). Data: `careTasks` on 20 herb plugins from Illinois Extension herb pages (the first 11 cross-checked against UMD), `growthHabit` woody for thyme, sage and rosemary and clumping for chives; thyme harvest timing left out (Illinois and UMD disagree). e2e `photo-marks.spec.ts`.
 
+### Follow-ups worked on 2026-10-20
+
+One PR per open issue, built in parallel worktrees; rulings and as-built notes per issue are in [`phase-37-followups/`](phase-37-followups/):
+
+- [#873](https://github.com/mrpeanut01/crop-card/pull/873) for #871: `watch-deploy.sh` trusts the deploy run when a proxy refuses production ([`871.md`](phase-37-followups/871.md)).
+- [#874](https://github.com/mrpeanut01/crop-card/pull/874) for #868: a pre-review of the Phase 37 Spanish and three English leaks fixed ([`868.md`](phase-37-followups/868.md)).
+- [#875](https://github.com/mrpeanut01/crop-card/pull/875) for #869: `problem` marks, the numbered print sheet and offline copies of marked entries, superseding R-13's deferral of `problem`, R-14's deferral of the print layout and R-23's "no Dexie copy" ([`869.md`](phase-37-followups/869.md)).
+- [#876](https://github.com/mrpeanut01/crop-card/pull/876) for #870: waterer gallons with several targets, undo a skip, "running since" and the stored brief transcript ([`870.md`](phase-37-followups/870.md)).
+- [#877](https://github.com/mrpeanut01/crop-card/pull/877) for #867: the second herb data pass ([`867.md`](phase-37-followups/867.md)).
+
 ### Still open after 37
 
-- `harvestCadence` on every herb, `winterHardyToZone` for lemongrass, `waterNeed` on 22 herbs, `preserving` on 18 herbs and the basil and oregano drying disagreement, seasonal rows for the herbs no page describes, and the thyme harvest timing: all listed with their gate rules in `docs/research/phase-37-herb-research-prompt.md`.
-- The onboarding button still reads "Take me to Today" when the herbs tile sends the owner to `/plan/brief`.
-- Chat history for the brief is not stored; DELETE starts the brief over.
-- `problem` marks and the numbered print layout (R-13, R-14); a Dexie copy of journal entries for offline marks (R-23).
-- A timer's gallons per minute count only with a single target; there is no undo for a skip.
-- The per-method timing hint on harvest tasks ("cut before bloom") waits on a per-crop source.
+- **Herb data (#867 stays open):** `harvestCadence` on every herb but sage; `waterNeed` on 16 herbs (oregano, rosemary, thyme, marjoram and calendula because their sources disagree); `preserving` on bee balm, hyssop, mountain mint and perilla; the basil and oregano drying disagreement, which needs a panel ruling; `winterHardyToZone` for East Indian lemongrass; thyme harvest timing (four sources say before flowering, five at or in bloom); the optional `sunNeed`. Status per item in `docs/research/phase-37-herb-research-prompt.md`, and per herb in `phase-37-followups/867.md`.
+- The per-method timing hint on harvest tasks ("cut before bloom" for drying): per-crop sources now exist (basil Purdue HO-189, rosemary Penn State, mint Illinois and UMD), so what is left is the app code.
+- Vinegar infusions: sources name them, but the `infuse` safety line is written for oil, so no vinegar entry ships until it has a ruling.
+- **Spanish (#868 stays open):** the native-speaker proofreader has the 19 doubts from #874 (listed on the issue), plus the new `herbsg` (#876) and `herbsh` (#869) catalogs and the 19 herb seasonal rows added by #877. "a las {time}" reads "a las 1:00" at one o'clock in several catalogs.
+- `/plan/pantry`'s "Schedule the next cut" saves the task title and body in the reader's language; /today's suggestions save the engine's English and translate on display.
+- Mint mid-season and cilantro-in-heat seasonal rows (outside #867's list).

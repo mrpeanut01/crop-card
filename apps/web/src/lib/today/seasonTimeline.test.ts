@@ -78,9 +78,13 @@ describe('buildSeasonTimeline', () => {
       })
     );
     expect(t.rows.map((r) => r.plantingId)).toEqual(['p1']);
-    expect(t.band).toEqual({ startMs: d(2026, 4, 15), endMs: d(2026, 10, 20), source: 'frost' });
+    expect(t.band).toEqual({
+      startMs: Date.UTC(2026, 3, 15),
+      endMs: Date.UTC(2026, 9, 20),
+      source: 'frost'
+    });
     expect(t.fromMs).toBe(d(2025, 8, 25));
-    expect(t.toMs).toBe(d(2026, 10, 20));
+    expect(t.toMs).toBe(Date.UTC(2026, 9, 20));
   });
 
   it('recorded work is solid, planned and suggested work dashed, and the grow span ends at harvest', () => {

@@ -9,6 +9,7 @@
   import { fmt } from '$lib/prefsState.svelte';
   import { goalLineText, preservingMethodLabel } from '$lib/garden/pantryText';
   import { weekOf } from '$lib/garden/harvestSchedule';
+  import { pantryCutTaskText, pantryCutTemplateKey } from '$lib/garden/pantryCutTask';
   import type { SchedulePlantingView } from '$lib/garden/harvestScheduleApi';
 
   const { data } = $props();
@@ -51,11 +52,10 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           kind: 'primary',
-          title: tr('herbsc.task.title', { crop: p.cropName }),
-          body: tr('herbsc.task.body'),
+          ...(data.cutTasks[p.plantingId] ?? pantryCutTaskText(p.cropName)),
           cropId: p.plantingId,
           scheduledFor,
-          pluginTemplateKey: `derived:pantry-cut:${p.plantingId}:${week}`
+          pluginTemplateKey: pantryCutTemplateKey(p.plantingId, week)
         })
       }).catch(() => null);
       if (!res || !res.ok) {

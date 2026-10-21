@@ -334,7 +334,7 @@ export const esSprayui: Partial<Record<MessageKey, string>> = {
   'sprayui.fun.noPlugins': 'No hay complementos de fungicidas instalados. Agrega archivos JSON en',
   'sprayui.fun.products': 'Productos de la mezcla',
   'sprayui.fun.gateTitle': 'Enfermedad y FRAC',
-  'sprayui.fun.fetched': 'Pronóstico del NWS · obtenido a las {time}',
+  'sprayui.fun.fetched': 'Pronóstico del NWS · obtenido {at}',
   'sprayui.fun.locFarm': '· ubicación de la granja (sin mapa del bloque)',
   'sprayui.fun.locFarmDefault': '· ubicación predeterminada de la granja (sin mapa del bloque)',
   'sprayui.fun.locNearest': '· bloque con mapa más cercano',

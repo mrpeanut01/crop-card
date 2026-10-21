@@ -44,6 +44,7 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import { createT } from '$lib/i18n';
+  import { atText } from '$lib/i18n/atTime';
   import TaskCloseNote from '$lib/components/tasks/TaskCloseNote.svelte';
   import type { RecordTaskClose } from '$lib/tasks/recordClose';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
@@ -554,7 +555,9 @@
       <h2>{tr('sprayui.fun.gateTitle')}</h2>
       {#if weather && weather.provenance === 'data'}
         <span class="gate-meta">
-          {tr('sprayui.fun.fetched', { time: fmt.instant(weather.fetchedAt, 'time') })}
+          {tr('sprayui.fun.fetched', {
+            at: atText(fmt.instant(weather.fetchedAt, 'time'), data.locale, 'clock')
+          })}
           {#if weather.location?.source === 'farm'}{tr('sprayui.fun.locFarm')}{/if}
           {#if weather.location?.source === 'farm-default'}{tr('sprayui.fun.locFarmDefault')}{/if}
           {#if weather.location?.source === 'farm-block'}{tr('sprayui.fun.locNearest')}{/if}

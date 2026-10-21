@@ -38,6 +38,10 @@ export const esCore: Partial<Record<MessageKey, string>> = {
     'Puedes cambiarlo cuando quieras en Configuración o con el botón EN / ES de la parte superior.',
 
   'core.docTitle': '{title} · CropCard',
+  'core.at.one': 'a la {time}',
+  'core.at.other': 'a las {time}',
+  'core.clock.one': 'a la {time}',
+  'core.clock.other': 'a las {time}',
   'account.pageTitle': 'Cuenta e inicio de sesión · CropCard',
   'account.title': 'Cuenta e inicio de sesión',
   'account.kicker': 'Perfil del propietario',

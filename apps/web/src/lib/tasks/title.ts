@@ -15,6 +15,7 @@ import {
   herbTitleCrop,
   type HerbEventKind
 } from '$lib/calendar/herbEvents';
+import { isPantryCutKey, pantryCutBodyIn, pantryCutTitleIn } from '$lib/garden/pantryCutTask';
 
 const SOW = /^Sow (.+) indoors$/;
 const HARDEN = /^Start hardening off (.+)$/;
@@ -64,6 +65,7 @@ export function taskDisplayTitle(task: TaskText, locale?: string | null): string
     return task.title;
   }
   if (parseScoutTaskKey(key)) return orchardScoutTitleIn(task.title, locale);
+  if (isPantryCutKey(key)) return pantryCutTitleIn(task.title, locale);
   return task.title;
 }
 
@@ -81,5 +83,6 @@ export function taskDisplayBody<B extends string | null | undefined>(
   if (DERIVED_SEASONAL.test(key)) return seasonalTextByEnglish(body, locale) as B;
   const herb = herbKindOf(key);
   if (herb && body === herbEventBody(herb)) return herbEventBody(herb, locale) as B;
+  if (isPantryCutKey(key)) return pantryCutBodyIn(body, locale) as B;
   return body as B;
 }

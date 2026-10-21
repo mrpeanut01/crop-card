@@ -30,7 +30,7 @@ export const photoHelpSchema = z.object({
   question: z.enum(PHOTO_QUESTIONS),
   text: z.string().max(MAX_PHOTO_QUESTION).default(''),
   photo: photoField,
-  /** Phase 37F: ask Claude to place cut, pinch, harvest and leave marks on
-   *  the photo. Ignored without a photo or without a key. */
+  /** Phase 37F: ask Claude to place cut, pinch, harvest, leave and problem
+   *  marks on the photo. Ignored without a photo or without a key. */
   wantMarks: z.boolean().optional()
 });

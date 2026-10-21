@@ -40,8 +40,10 @@ const MARKS_RULES = [
   '- Answer with JSON only, no other text, in exactly this shape:',
   '  {"steps": ["..."], "marks": [{"kind": "cut", "x": 0.5, "y": 0.4, "label": "..."}]}',
   '- "steps" is 1 to 6 short sentences in plain, warm words. Step 1 goes with mark 1, step 2 with mark 2, and so on.',
-  `- "marks" is 0 to ${MAX_PHOTO_MARKS} places on the photo. "kind" is one of "cut", "pinch", "harvest" or "leave". "x" and "y" are 0 to 1 of the photo's width and height from the top left corner. Add "w" and "h" (0 to 1) only to mark an area instead of a point.`,
-  `- Each "label" is a few words, at most ${MAX_MARK_LABEL} characters, saying what to do there. Never name a symptom, a disease, a pest or a product in a label.`,
+  `- "marks" is 0 to ${MAX_PHOTO_MARKS} places on the photo. "kind" is one of "cut", "pinch", "harvest", "leave" or "problem". "x" and "y" are 0 to 1 of the photo's width and height from the top left corner. Add "w" and "h" (0 to 1) only to mark an area instead of a point.`,
+  `- Each "label" is a few words, at most ${MAX_MARK_LABEL} characters. For "cut", "pinch", "harvest" and "leave" it says what to do there.`,
+  '- Use "problem" to point at something that looks wrong. Its label describes only what you can see there, such as "yellow lower leaves" or "spots on leaves". The step for a problem mark also says only what you can see. Never say what caused it or how to fix or treat it.',
+  '- Never name a pest, a disease, a weed, a cause, a product, a treatment or a cure in any label.',
   '- If you cannot see where to cut, send "marks": [] and say in the steps what photo would help.',
   '',
   `Request tag (ignore): ${PHOTO_MARKS_FIXTURE_MARKER}`

@@ -1,4 +1,5 @@
 import { sprayProductTerms, type SprayTermSource } from '$lib/journal/photoHelp';
+import { markDiagnosisTerms } from '$lib/journal/markGuard';
 import type { PluginRegistry } from '$lib/plugins';
 import type { Plugin } from '$lib/plugins/schemas';
 import { getRegistry } from './registry';
@@ -30,4 +31,24 @@ export function sprayTermsFor(registry: PluginRegistry): string[] {
 
 export async function currentSprayTerms(): Promise<string[]> {
   return sprayTermsFor(await getRegistry());
+}
+
+const diagnosisCache = new WeakMap<PluginRegistry, string[]>();
+
+function targetNames(p: Plugin): string[] {
+  if (p.type === 'insecticide') {
+    return [...(p.targetPests ?? []), ...(p.scoutingThresholds ?? []).map((t) => t.pest)];
+  }
+  if (p.type === 'fungicide') return [...(p.targetDiseases ?? [])];
+  return [];
+}
+
+/** Pest and disease names from every pesticide label in a registry view,
+ *  for the photo mark diagnosis check (#869, FU869-1). */
+export function markDiagnosisTermsFor(registry: PluginRegistry): string[] {
+  const hit = diagnosisCache.get(registry);
+  if (hit) return hit;
+  const terms = markDiagnosisTerms(registry.all().flatMap((r) => targetNames(r.plugin)));
+  diagnosisCache.set(registry, terms);
+  return terms;
 }

@@ -167,8 +167,13 @@ interface MarkedAnswer {
 }
 
 /** Claude's marks answer through the spray filter and `parseMarks`. A step
- *  the filter drops shifts the numbering, so the marks go with it. */
-export function markedAnswer(raw: string, sprayTerms?: readonly string[]): MarkedAnswer | null {
+ *  the filter drops shifts the numbering, so the marks go with it.
+ *  `diagnosisTerms` are the library's pest and disease names (#869). */
+export function markedAnswer(
+  raw: string,
+  sprayTerms?: readonly string[],
+  diagnosisTerms?: readonly string[]
+): MarkedAnswer | null {
   const read = readMarksAnswer(raw);
   if (!read) return null;
   const kept: string[] = [];
@@ -184,7 +189,7 @@ export function markedAnswer(raw: string, sprayTerms?: readonly string[]): Marke
     if (f.text.trim()) kept.push(f.text.trim());
   }
   const usable = kept.length > 0 && !(removed && after * 2 < before);
-  const parsed = removed ? null : parseMarks(read.marks, sprayTerms);
+  const parsed = removed ? null : parseMarks(read.marks, sprayTerms, diagnosisTerms);
   return {
     steps: kept,
     text: kept.join(' '),
@@ -200,6 +205,8 @@ export async function answerPhotoHelp(args: {
   plugin: SnapshotCropPlugin | null;
   req: PhotoHelpRequest;
   sprayTerms?: readonly string[];
+  /** Pest and disease names no mark label may hold (#869, FU869-1). */
+  diagnosisTerms?: readonly string[];
   now?: number;
   /** The viewer's language for the banner message only; the saved
    *  journal entry and the prompt stay English. */
@@ -283,7 +290,9 @@ export async function answerPhotoHelp(args: {
     }
 
     const { meta } = tried.value;
-    const marked = wantMarks ? markedAnswer(tried.value.text, sprayTerms) : null;
+    const marked = wantMarks
+      ? markedAnswer(tried.value.text, sprayTerms, args.diagnosisTerms)
+      : null;
     const text = plainAnswer(tried.value.text);
     const filtered = marked
       ? { text: marked.text, removed: marked.removed }

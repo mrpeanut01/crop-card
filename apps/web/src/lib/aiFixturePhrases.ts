@@ -15,3 +15,11 @@ export const FIXTURE_REFINE_VALID = 'Plant half as many beans';
 /** A refine message the fixture answers with a plan the validator rejects,
  *  on the first try and on the corrective retry. */
 export const FIXTURE_REFINE_INVALID = 'Put every plant you can in the first bed';
+
+/** A photo question the fixture answers with a problem mark beside a cut
+ *  mark (#869, FU869-1 g). */
+export const FIXTURE_MARKS_PROBLEM = 'Fixture marks with a problem';
+
+/** A photo question the fixture answers with a problem mark whose label
+ *  names a disease, so the server must drop the whole mark set. */
+export const FIXTURE_MARKS_DIAGNOSIS = 'Fixture marks that name a disease';

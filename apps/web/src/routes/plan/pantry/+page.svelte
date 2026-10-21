@@ -8,8 +8,9 @@
   import { createT, type MessageKey } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import { goalLineText, preservingMethodLabel } from '$lib/garden/pantryText';
-  import { weekOf } from '$lib/garden/harvestSchedule';
+  import { infuseGoalMedia, weekOf } from '$lib/garden/harvestSchedule';
   import { pantryCutTaskText, pantryCutTemplateKey } from '$lib/garden/pantryCutTask';
+  import { infuseMethodLabel, infuseSafetyLine } from '$lib/garden/infuse';
   import type { SchedulePlantingView } from '$lib/garden/harvestScheduleApi';
 
   const { data } = $props();
@@ -136,9 +137,11 @@
           <li data-testid="goal-line" data-status={g.status}>
             <span>{goalLineText(g, (id) => names.get(id) ?? id, locale)}</span>
             <Provenance source={g.provenance} compact />
-            {#if g.goal === 'infuse' && g.status !== 'on-track'}
-              <span class="muted">{tr('herbsc.preserve.infuseSafety')}</span>
-            {/if}
+            {#each infuseGoalMedia(g, schedule.plantings) as m (m)}
+              <span class="safety" data-testid="infuse-safety" data-medium={m}
+                >{infuseSafetyLine(m, locale)}</span
+              >
+            {/each}
           </li>
         {/each}
       </ul>
@@ -160,18 +163,18 @@
             {:else}
               <p>
                 <span class="muted">{tr('herbsc.pantry.keepsBy')}</span>
-                {#each p.preserving as r (r.method)}
+                {#each p.preserving as r (`${r.method}:${r.medium ?? ''}`)}
                   <span class="chip"
                     >{tr(`herbsc.suit.${r.suitability}` as MessageKey, {
-                      method: preservingMethodLabel(r.method, locale)
+                      method: r.medium
+                        ? infuseMethodLabel(r.medium, locale)
+                        : preservingMethodLabel(r.method, locale)
                     })}</span
                   >
-                  {#if r.method === 'infuse'}
-                    {#if r.note}
-                      <span lang="en" data-english-only="safety">{r.note}</span>
-                    {:else}
-                      <span class="muted">{tr('herbsc.preserve.infuseSafety')}</span>
-                    {/if}
+                  {#if r.medium}
+                    <span class="safety" data-testid="infuse-safety" data-medium={r.medium}
+                      >{infuseSafetyLine(r.medium, locale)}</span
+                    >
                   {/if}
                 {/each}
                 <Provenance source="plugin" compact />
@@ -295,5 +298,11 @@
   }
   .error {
     color: var(--color-rust);
+  }
+  .safety {
+    display: block;
+    flex-basis: 100%;
+    color: var(--color-ink);
+    font-size: 0.92rem;
   }
 </style>

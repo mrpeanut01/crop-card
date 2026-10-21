@@ -14,6 +14,7 @@ import {
 import { deterministicReason, deterministicShortlist } from '$lib/garden/brief/shortlist';
 import {
   briefHerbCheck,
+  briefSunNeedOf,
   deleteGardenBrief,
   loadGardenBrief,
   saveGardenBrief,
@@ -61,7 +62,7 @@ export const PUT: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
-  const plain = deterministicShortlist(answers, known);
+  const plain = deterministicShortlist(answers, known, briefSunNeedOf(registry));
   let shortlist: ShortlistRow[] = plain.rows;
   if (parsed.data.shortlist) {
     const terms = sprayTermsFor(registry);

@@ -7,11 +7,13 @@
   import ToxicPlantsCallout from '$lib/components/animals/ToxicPlantsCallout.svelte';
   import type { ToxicCrop } from '$lib/animals/toxicAdjacency';
   import { becauseText } from '$lib/garden/brief/shortlist';
-  import type { ShortlistRow } from '$lib/garden/brief/schema';
+  import type { BriefSun, ShortlistRow } from '$lib/garden/brief/schema';
+  import { sunFit, sunLine, type HerbSunNeed } from '$lib/garden/brief/sun';
 
   interface HerbOption {
     pluginId: string;
     displayName: string;
+    sunNeed?: HerbSunNeed;
   }
 
   interface Props {
@@ -20,6 +22,9 @@
     lifecycle?: Readonly<
       Record<string, { text: string; provenance: 'plugin' | 'manual' | 'fallback' } | null>
     >;
+    /** The owner's sun answer; a herb that wants more sun reads as a
+     *  mismatch (CO-5). */
+    sun?: BriefSun | null;
     toxic?: Readonly<Record<string, ToxicCrop>>;
     petSpecies?: readonly string[];
     speciesPlural?: Readonly<Record<string, string>>;
@@ -32,6 +37,7 @@
     rows,
     herbs,
     lifecycle = {},
+    sun = null,
     toxic = {},
     petSpecies = [],
     speciesPlural = {},
@@ -48,6 +54,10 @@
     return h ? cropDisplayName(h.pluginId, h.displayName, locale) : id;
   }
 
+  function needOf(id: string): HerbSunNeed | undefined {
+    return herbs.find((x) => x.pluginId === id)?.sunNeed;
+  }
+
   function because(row: ShortlistRow): string {
     return row.reasons?.length ? becauseText(row.reasons, locale) : row.because;
   }
@@ -56,6 +66,8 @@
 <ul class="shortlist" data-testid="brief-shortlist">
   {#each rows as row (row.cropPluginId)}
     {@const life = lifecycle[row.cropPluginId] ?? null}
+    {@const need = needOf(row.cropPluginId)}
+    {@const sunText = sunLine(need, sun, locale)}
     <li class="row" data-plugin={row.cropPluginId} data-testid="brief-row">
       <div class="head">
         <h3 class="serif">{nameOf(row.cropPluginId)}</h3>
@@ -81,6 +93,17 @@
         <span>{life ? life.text : tr('herbsa.result.lifecycleUnknown')}</span>
         <Provenance source={life ? life.provenance : 'fallback'} compact />
       </p>
+      {#if sunText}
+        <p
+          class="sun"
+          class:mismatch={sunFit(need, sun) === 'mismatch'}
+          data-testid="sun-line"
+          data-fit={sunFit(need, sun)}
+        >
+          <span>{sunText}</span>
+          <Provenance source="plugin" compact />
+        </p>
+      {/if}
       {#if toxic[row.cropPluginId] && petSpecies.length > 0}
         <ToxicPlantsCallout
           crops={[toxic[row.cropPluginId]]}
@@ -121,7 +144,8 @@
     font-size: 1.05rem;
   }
   .because,
-  .life {
+  .life,
+  .sun {
     margin: 0;
     display: flex;
     flex-wrap: wrap;
@@ -129,9 +153,14 @@
     gap: var(--space-1) var(--space-2);
     overflow-wrap: anywhere;
   }
-  .life {
+  .life,
+  .sun {
     color: var(--color-ink-soft);
     font-size: 0.92rem;
+  }
+  .sun.mismatch {
+    color: var(--color-rust, var(--color-ink));
+    font-weight: 600;
   }
   .remove {
     min-height: 48px;

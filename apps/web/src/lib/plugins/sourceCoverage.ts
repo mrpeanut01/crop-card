@@ -171,6 +171,7 @@ export function cropFactPaths(c: CropPlugin): string[] {
   if (c.nitrogenNeedLbPerAcre) paths.push('nitrogenNeedLbPerAcre');
   if (c.harvestSeason) paths.push('harvestSeason');
   if (c.waterNeed) paths.push('waterNeed'); // Phase 37E
+  if (c.sunNeed) paths.push('sunNeed'); // Close-out D2
   for (const t of c.careTasks ?? []) paths.push(`careTasks.${t.key}`); // Phase 37F
   if (c.growthHabit) paths.push('growthHabit'); // Phase 37F
   for (const [, key] of rowSpacingFields(c)) if (!paths.includes(key)) paths.push(key);
@@ -947,8 +948,8 @@ export function herbHarvestFactPaths(
 ): string[] {
   const paths: string[] = [];
   for (const p of c.preserving ?? []) {
-    paths.push(`preserving.${p.method}`);
-    if (p.method === 'infuse') paths.push('preserving.infuse.safety');
+    paths.push(preservingSourceKey(p));
+    if (p.method === 'infuse') paths.push(`${preservingSourceKey(p)}.safety`); // Close-out D2
   }
   if (c.harvestCadence) paths.push('harvestCadence');
   return paths;
@@ -1002,10 +1003,9 @@ function namesMethod(quote: string, method: PreservingMethodKey): boolean {
 
 /** Phase 37C: each `preserving.<method>` quote comes from an extension or
  *  government page, names the method and the crop, and for `fair` or `poor`
- *  carries the source's qualifying words. An infuse entry needs a note (the
- *  line the app shows) and a `preserving.infuse.safety` quote from a .edu
- *  food-safety page (NCHFP is one) that names botulism. Returns "pluginId:
- *  problem" lines; a missing source is `checkSources`' report. */
+ *  carries the source's qualifying words. An infuse entry is checked by
+ *  `infuseRowGaps`. Returns "pluginId: problem" lines; a missing source is
+ *  `checkSources`' report. */
 export function preservingQuoteGaps(
   crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'preserving'>>,
   sources: SourceMap
@@ -1013,7 +1013,7 @@ export function preservingQuoteGaps(
   const gaps: string[] = [];
   for (const c of crops) {
     for (const p of c.preserving ?? []) {
-      const key = `preserving.${p.method}`;
+      const key = preservingSourceKey(p);
       if (sources[c.pluginId]?.[preservingNotRecordedKey(p.method)] !== undefined) {
         gaps.push(`${c.pluginId}: ${key} is set; drop ${preservingNotRecordedKey(p.method)}`);
       }
@@ -1037,16 +1037,7 @@ export function preservingQuoteGaps(
           gaps.push(`${c.pluginId}: ${key} is good but its quote has words that say ${warning}`);
         }
       }
-      if (p.method !== 'infuse') continue;
-      if (!p.note) gaps.push(`${c.pluginId}: preserving.infuse needs a note with the safety line`);
-      const safety = sourceEntrySchema.safeParse(sources[c.pluginId]?.['preserving.infuse.safety']);
-      if (!safety.success) continue;
-      if (!isEduHost(safety.data.url)) {
-        gaps.push(`${c.pluginId}: preserving.infuse.safety source is not a .edu food-safety page`);
-      }
-      if (!/\bbotulism\b|\bbotulinum\b/i.test(safety.data.quote)) {
-        gaps.push(`${c.pluginId}: preserving.infuse.safety quote does not name botulism`);
-      }
+      if (p.method === 'infuse') gaps.push(...infuseRowGaps(c, p, sources)); // Close-out D2
     }
   }
   return gaps;
@@ -1793,4 +1784,233 @@ export function herbSeasonalRowSourceGaps(
     }
   }
   return out;
+}
+
+// Close-out D2 ──────────────────────────────────────────────────────────
+// CO-4 infuse media and CO-5 sun need.
+
+type InfuseMediumKey = 'oil' | 'vinegar';
+
+/** The source key of one `preserving` row: `preserving.<method>`, or
+ *  `preserving.infuse.<medium>` for an infuse row (CO-4). */
+export function preservingSourceKey(p: { method: string; medium?: InfuseMediumKey }): string {
+  return p.method === 'infuse' && p.medium
+    ? `preserving.infuse.${p.medium}`
+    : `preserving.${p.method}`;
+}
+
+/** Words that name each infusion medium. */
+export const INFUSE_MEDIUM_WORDS: Readonly<Record<InfuseMediumKey, RegExp>> = {
+  oil: /\boils?\b/i,
+  vinegar: /\bvinegars?\b/i
+};
+
+/** What each medium's safety quote must state (CO-4): oil names the hazard
+ *  (botulism) and the control (refrigeration and a time limit); vinegar
+ *  names vinegar, discarding on mold or fermentation, cold or cool storage
+ *  and commercially produced vinegar. */
+export const INFUSE_SAFETY_RULES: Readonly<
+  Record<InfuseMediumKey, ReadonlyArray<{ what: string; re: RegExp }>>
+> = {
+  oil: [
+    { what: 'botulism', re: /\bbotulism\b|\bbotulinum\b/i },
+    { what: 'refrigeration', re: /\brefrigerat(?:e|ed|or|ion)\b/i },
+    {
+      what: 'a time limit',
+      re: /\b(?:\d+|one|two|three|four|five|six|seven)\s+(?:days?|weeks?|hours?)\b/i
+    }
+  ],
+  vinegar: [
+    { what: 'vinegar', re: /\bvinegars?\b/i },
+    {
+      what: 'discard on mold or fermentation',
+      re: /\b(?:discard(?:ed|s)?|throw (?:it |them )?(?:out|away))\b[^.]*\b(?:mold|ferment|bubbl|cloud|slim)|\b(?:mold|ferment)[^.]*\b(?:discard(?:ed|s)?|throw (?:it |them )?(?:out|away))\b/i
+    },
+    { what: 'refrigerated or cool storage', re: /\brefrigerat|\bcool (?:places?|dark|spots?)\b/i },
+    { what: 'commercially produced vinegar', re: /\bcommercially produced vinegars?\b/i }
+  ]
+};
+
+/** CO-4: an infuse row's quote names its own medium and never the other,
+ *  and its `preserving.infuse.<medium>.safety` quote comes from a .edu
+ *  food-safety page and states that medium's safety rules. A row with no
+ *  medium is the schema's refusal; here it reads as missing its medium. */
+export function infuseRowGaps(
+  c: Pick<CropPlugin, 'pluginId'>,
+  p: { method: string; medium?: InfuseMediumKey },
+  sources: SourceMap
+): string[] {
+  if (p.method !== 'infuse') return [];
+  if (!p.medium) return [`${c.pluginId}: preserving.infuse needs a medium (oil or vinegar)`];
+  const key = preservingSourceKey(p);
+  const gaps: string[] = [];
+  const other: InfuseMediumKey = p.medium === 'oil' ? 'vinegar' : 'oil';
+  const row = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
+  if (row.success) {
+    if (!INFUSE_MEDIUM_WORDS[p.medium].test(row.data.quote)) {
+      gaps.push(`${c.pluginId}: ${key} quote does not name ${p.medium}`);
+    }
+    if (INFUSE_MEDIUM_WORDS[other].test(row.data.quote)) {
+      gaps.push(`${c.pluginId}: ${key} quote names ${other}, the other medium`);
+    }
+  }
+  const safety = sourceEntrySchema.safeParse(sources[c.pluginId]?.[`${key}.safety`]);
+  if (!safety.success) return gaps;
+  if (!isEduHost(safety.data.url)) {
+    gaps.push(`${c.pluginId}: ${key}.safety source is not a .edu food-safety page`);
+  }
+  for (const rule of INFUSE_SAFETY_RULES[p.medium]) {
+    if (!rule.re.test(safety.data.quote)) {
+      gaps.push(`${c.pluginId}: ${key}.safety quote does not state ${rule.what}`);
+    }
+  }
+  return gaps;
+}
+
+type SunNeedKey = 'full' | 'part' | 'shade';
+
+/** The ruled phrases a `sunNeed` quote is read through (CO-5), matched
+ *  longest first and blanked out, so "tolerates some shade" is never also
+ *  read for another phrase. */
+export const SUN_NEED_PHRASES: Readonly<Record<SunNeedKey, readonly string[]>> = {
+  full: [
+    'full sun',
+    '6 or more hours',
+    'six or more hours',
+    'at least 6 hours',
+    'at least six hours'
+  ],
+  part: [
+    'partial shade',
+    'part shade',
+    'light shade',
+    'partial sun',
+    'part sun',
+    'afternoon shade',
+    'tolerates some shade',
+    'shade tolerant',
+    'shade-tolerant'
+  ],
+  shade: ['full shade', 'deep shade']
+};
+
+const SUN_SHADE_ORDER: Readonly<Record<SunNeedKey, number>> = { full: 0, part: 1, shade: 2 };
+
+const SUN_NEGATION =
+  /\b(?:not|no|never|avoid|avoids|avoiding|without|nor|cannot|can't|won't|doesn't|don't|isn't|aren't)\s+(?:[a-z'-]+\s+){0,3}$/;
+
+export interface SunNeedReading {
+  /** The most shade the quote says the crop takes, or null when it states
+   *  no ruled phrase. */
+  need: SunNeedKey | null;
+  /** A ruled phrase sits under a negation ("avoid full shade"). */
+  negated: boolean;
+}
+
+/** How a quote reads under CO-5: a quote with full sun and part shade reads
+ *  part, the most shade the crop takes. */
+export function sunNeedOfQuote(quote: string): SunNeedReading {
+  let text = ` ${quote.toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, ' ')} `;
+  const phrases = (Object.entries(SUN_NEED_PHRASES) as Array<[SunNeedKey, readonly string[]]>)
+    .flatMap(([need, list]) => list.map((p) => ({ need, p })))
+    .sort((a, b) => b.p.length - a.p.length);
+  let need: SunNeedKey | null = null;
+  let negated = false;
+  for (const { need: n, p } of phrases) {
+    const re = new RegExp(`(?<![a-z])${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z])`, 'g');
+    for (const m of text.matchAll(re)) {
+      if (SUN_NEGATION.test(text.slice(0, m.index))) {
+        negated = true;
+        continue;
+      }
+      if (need === null || SUN_SHADE_ORDER[n] > SUN_SHADE_ORDER[need]) need = n;
+    }
+    text = text.replace(re, ' ');
+  }
+  return { need, negated };
+}
+
+/** Why a herb has no sun need: `{ reason, checked: [url...], date }`. */
+export const SUN_NEED_NOT_RECORDED_KEY = 'sunNeed.notRecorded';
+
+function sunNeedNotRecordedProblems(sources: SourceMap, pluginId: string): string[] {
+  const entry = sources[pluginId]?.[SUN_NEED_NOT_RECORDED_KEY] as
+    { reason?: unknown; checked?: unknown; date?: unknown } | undefined;
+  if (!entry) return ['missing'];
+  const out: string[] = [];
+  if (!(typeof entry.reason === 'string' && entry.reason.trim().length > 10)) out.push('a reason');
+  if (
+    !Array.isArray(entry.checked) ||
+    entry.checked.length === 0 ||
+    !entry.checked.every((u) => typeof u === 'string' && isAllowedSpacingSource(u))
+  ) {
+    out.push('the extension pages checked');
+  }
+  if (!(typeof entry.date === 'string' && entry.date.trim())) out.push('a date');
+  return out;
+}
+
+/**
+ * CO-5: every counted sun source (`sunNeed` and any `sunNeed.<n>`) comes
+ * from an extension or government page, names the crop and states a ruled
+ * phrase that is not negated. The stored value is the `sunNeed` quote's
+ * reading and the sunniest reading across sources (the others belong in
+ * the note). A herb with no value carries a `sunNeed.notRecorded` entry.
+ * Returns "pluginId: problem" lines.
+ */
+export function sunNeedQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'sunNeed'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    const own = sources[c.pluginId] ?? {};
+    const keys = Object.keys(own).filter(
+      (k) => k === 'sunNeed' || (k.startsWith('sunNeed.') && k !== SUN_NEED_NOT_RECORDED_KEY)
+    );
+    if (!c.sunNeed) {
+      if (keys.length > 0) gaps.push(`${c.pluginId}: sunNeed sources but no sunNeed value`);
+      if (!isHerbGardenCrop(c.pluginId)) continue;
+      const problems = sunNeedNotRecordedProblems(sources, c.pluginId);
+      if (problems[0] === 'missing') {
+        gaps.push(`${c.pluginId}: no sunNeed and no ${SUN_NEED_NOT_RECORDED_KEY} entry`);
+      } else if (problems.length) {
+        gaps.push(`${c.pluginId}: ${SUN_NEED_NOT_RECORDED_KEY} needs ${problems.join(', ')}`);
+      }
+      continue;
+    }
+    if (own[SUN_NEED_NOT_RECORDED_KEY]) {
+      gaps.push(`${c.pluginId}: sunNeed is set; drop ${SUN_NEED_NOT_RECORDED_KEY}`);
+    }
+    let sunniest: SunNeedKey | null = null;
+    for (const key of keys) {
+      const entry = sourceEntrySchema.safeParse(own[key]);
+      if (!entry.success) {
+        gaps.push(`${c.pluginId}: ${key} source is not a valid entry`);
+        continue;
+      }
+      if (!isAllowedSpacingSource(entry.data.url)) {
+        gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+      }
+      if (!quoteNamesCrop(entry.data.quote, c)) {
+        gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
+      }
+      const reading = sunNeedOfQuote(entry.data.quote);
+      if (reading.negated) gaps.push(`${c.pluginId}: ${key} quote negates a sun phrase`);
+      if (reading.need === null) {
+        gaps.push(`${c.pluginId}: ${key} quote states no full sun, part shade or shade phrase`);
+        continue;
+      }
+      if (key === 'sunNeed' && reading.need !== c.sunNeed) {
+        gaps.push(`${c.pluginId}: sunNeed quote reads ${reading.need}, not ${c.sunNeed}`);
+      }
+      if (sunniest === null || SUN_SHADE_ORDER[reading.need] < SUN_SHADE_ORDER[sunniest]) {
+        sunniest = reading.need;
+      }
+    }
+    if (sunniest && SUN_SHADE_ORDER[sunniest] < SUN_SHADE_ORDER[c.sunNeed]) {
+      gaps.push(`${c.pluginId}: a source reads ${sunniest}; store the sunnier value`);
+    }
+  }
+  return gaps;
 }

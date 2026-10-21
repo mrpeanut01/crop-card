@@ -57,13 +57,13 @@ describe('herbLifecycleSnapshotPart', () => {
 });
 
 describe('lifecycle fact on cards', () => {
-  it('the Planting card names the typed zone and that the value is not checked', () => {
+  it('the Planting card says winter survival is not known for a perennial with no zone (CO-8)', () => {
     const card = buildPlantingCard(herbSnapshot(), 'p_lav')!;
     const fact = card.facts.find((f) => f.label === LABEL);
     expect(fact).toEqual({
       label: LABEL,
       value:
-        'Perennial; the coldest zone it survives is not known yet. Not yet checked against a source. Using the zone you entered, 7b.',
+        'Not known whether it survives winter here; plan to bring it indoors before frost. Not yet checked against a source.',
       provenance: 'fallback'
     });
   });
@@ -73,7 +73,7 @@ describe('lifecycle fact on cards', () => {
       locale: 'es'
     })!;
     const fact = card.facts.find((f) => f.label === 'Anual o perenne aquí');
-    expect(fact?.value).toContain('Se usa la zona que ingresaste: 7b.');
+    expect(fact?.value).toContain('No se sabe si sobrevive el invierno aquí');
   });
 
   it('non-herbs and bundles saved before 37B get no fact', () => {
@@ -83,8 +83,9 @@ describe('lifecycle fact on cards', () => {
     expect(buildPlantingCard(old, 'p_lav')!.facts.some((f) => f.label === LABEL)).toBe(false);
   });
 
-  it('a perennial with no zone in the bundle says the zone is not known', () => {
+  it('a perennial with no crop zone reads winter not known with no farm zone too', () => {
     const v = snapshotLifecycle(herbSnapshot({ zone: null }), 'test-herb-perennial');
-    expect(v?.reason).toBe('no-farm-zone');
+    expect(v?.reason).toBe('no-crop-zone');
+    expect(v?.winterUnknown).toBe(true);
   });
 });

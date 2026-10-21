@@ -26,6 +26,8 @@ import {
   type ShortlistRow
 } from '$lib/garden/brief/schema';
 import { deterministicReason, deterministicShortlist } from '$lib/garden/brief/shortlist';
+import { SUN_NEED_PROMPT_WORDS, type HerbSunNeed } from '$lib/garden/brief/sun';
+import { isInfuseMedium } from '$lib/garden/infuse';
 import { aiLimitOf, recordFallback, tryAiWithGuard } from '../aiDegrade';
 import type { FallbackReason } from '../aiTry';
 import { recordCall } from '../aiGuard';
@@ -50,8 +52,11 @@ export interface BriefHerbFact {
   name: string;
   family: string;
   lifecycle: string | null;
-  /** Sourced preserving methods rated good or fair (37C), when present. */
+  /** Sourced preserving methods rated good or fair (37C), when present;
+   *  an infuse row reads "infuse in oil" or "infuse in vinegar" (CO-4). */
   keeps?: string[];
+  /** Close-out CO-5: the sourced sun need, when present. */
+  sun?: HerbSunNeed;
 }
 
 export interface BriefPromptInput {
@@ -129,7 +134,7 @@ export function buildBriefPrompt(input: BriefPromptInput): string {
       (h) =>
         `- ${h.pluginId}: ${h.name} (${h.family}, ${h.lifecycle ?? 'lifecycle not recorded'}${
           h.keeps?.length ? `, keeps by ${h.keeps.join(' or ')}` : ''
-        })`
+        }${h.sun ? `, ${SUN_NEED_PROMPT_WORDS[h.sun]}` : ''})`
     ),
     '',
     'Conversation so far:',
@@ -285,11 +290,10 @@ function keepsOf(c: CropPlugin): string[] | undefined {
   const rows = (c as { preserving?: unknown }).preserving;
   if (!Array.isArray(rows)) return undefined;
   const methods = rows.flatMap((r) => {
-    const row = r as { method?: unknown; suitability?: unknown };
-    return typeof row.method === 'string' &&
-      (row.suitability === 'good' || row.suitability === 'fair')
-      ? [row.method]
-      : [];
+    const row = r as { method?: unknown; suitability?: unknown; medium?: unknown };
+    if (typeof row.method !== 'string') return [];
+    if (row.suitability !== 'good' && row.suitability !== 'fair') return [];
+    return [isInfuseMedium(row.medium) ? `infuse in ${row.medium}` : row.method];
   });
   return methods.length ? methods : undefined;
 }
@@ -303,7 +307,8 @@ export function herbFacts(crops: readonly CropPlugin[]): BriefHerbFact[] {
       name: c.displayName,
       family: c.cropFamily,
       lifecycle: c.agronomy?.lifecycle ?? null,
-      keeps: keepsOf(c)
+      keeps: keepsOf(c),
+      ...(c.sunNeed ? { sun: c.sunNeed } : {})
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -329,7 +334,11 @@ export async function runBriefChat(args: {
   locale?: string | null;
 }): Promise<{ response: BriefChatResponse; brief: GardenBrief }> {
   const { brief, locale } = args;
-  const plain = deterministicShortlist(brief.answers, args.known);
+  const plain = deterministicShortlist(
+    brief.answers,
+    args.known,
+    (id) => args.herbs.find((h) => h.pluginId === id)?.sun
+  );
   const turnsLeft = Math.max(0, MAX_BRIEF_CHAT_TURNS - brief.chatTurns);
   const deterministic = (why: BriefChatWhy, limit: AiLimit | null = null) => {
     const kept = why === 'spray' && brief.shortlist.length > 0 ? brief.shortlist : plain.rows;

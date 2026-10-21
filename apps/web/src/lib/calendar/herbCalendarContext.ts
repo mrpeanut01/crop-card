@@ -131,8 +131,10 @@ export function herbContextFor(
   inputs: HerbCalendarInputs
 ): HerbEventContext | undefined {
   if (!isHerbGardenCrop(planting.cropPluginId)) return undefined;
+  const verdict = inputs.verdictFor(crop, planting);
   return {
-    lifecycle: inputs.verdictFor(crop, planting)?.lifecycle ?? null,
+    lifecycle: verdict?.lifecycle ?? null,
+    ...(verdict?.winterUnknown ? { winterUnknown: true } : {}),
     goals: inputs.goals,
     frost: inputs.frost
   };

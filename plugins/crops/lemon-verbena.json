@@ -50,5 +50,6 @@
       "topic": "harvest",
       "title": "Harvest leaves as needed throughout the season."
     }
-  ]
+  ],
+  "sunNeed": "full"
 }

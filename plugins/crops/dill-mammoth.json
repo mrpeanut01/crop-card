@@ -35,6 +35,11 @@
     {
       "method": "freeze",
       "suitability": "good"
+    },
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "medium": "vinegar"
     }
   ],
   "agronomy": {
@@ -56,5 +61,6 @@
       "title": "Sow dill again",
       "body": "Sow again every two weeks for fresh leaves, since plants decline soon after they flower."
     }
-  ]
+  ],
+  "sunNeed": "full"
 }

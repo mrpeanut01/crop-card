@@ -4,6 +4,7 @@
  *  counts jars, bunches or pounds. */
 
 import type { LifecycleVerdict } from './lifecycleTypes';
+import { INFUSE_MEDIA, infuseMediaOf, type InfuseMedium } from './infuse';
 import {
   goalMethod,
   type BriefStorageGoal,
@@ -192,6 +193,8 @@ export interface GoalInput {
 export interface PreservingRow {
   method: PreservingMethod;
   suitability: PreservingSuitability;
+  /** CO-4: an infuse row names what the herb goes into. */
+  medium?: InfuseMedium;
 }
 
 /** What `goalStatus` needs to know about a crop plugin. */
@@ -228,8 +231,27 @@ export interface GoalLine {
   provenance: 'plugin' | 'fallback';
 }
 
+const SUITABILITY_RANK: Record<PreservingSuitability, number> = { good: 0, fair: 1, poor: 2 };
+
+/** The crop's best row for a method. An herb can carry two infuse rows (oil
+ *  and vinegar, CO-4); the better rated one judges the goal, and on a tie
+ *  vinegar, which keeps with fewer rules, comes first. */
+export function bestPreservingRow<R extends PreservingRow>(
+  rows: readonly R[] | undefined,
+  method: PreservingMethod
+): R | undefined {
+  let best: R | undefined;
+  for (const r of rows ?? []) {
+    if (r.method !== method) continue;
+    const rank = SUITABILITY_RANK[r.suitability];
+    const bestRank = best ? SUITABILITY_RANK[best.suitability] : Infinity;
+    if (rank < bestRank || (rank === bestRank && r.medium === 'vinegar')) best = r;
+  }
+  return best;
+}
+
 function rowFor(plugin: GoalPlugin | undefined, method: PreservingMethod) {
-  return plugin?.preserving?.find((r) => r.method === method);
+  return bestPreservingRow(plugin?.preserving, method);
 }
 
 function isSuitable(s: PreservingSuitability | undefined): s is 'good' | 'fair' {
@@ -283,4 +305,22 @@ export function goalStatus(
     }
     return { ...base, status: 'not-known', reason: 'no-data', provenance: 'fallback' };
   });
+}
+
+/** CO-10: the media whose safety line shows beside an infuse goal, on track
+ *  or not: the medium of the row that puts the goal on track, else every
+ *  medium a planted herb infuses in, else both (the goal is "Vinegars and
+ *  oils"). Empty for any other goal. */
+export function infuseGoalMedia(
+  line: Pick<GoalLine, 'goal' | 'status' | 'cropPluginId'>,
+  plantings: ReadonlyArray<{ cropPluginId: string; preserving?: readonly PreservingRow[] }>
+): InfuseMedium[] {
+  if (line.goal !== 'infuse') return [];
+  if (line.status === 'on-track' && line.cropPluginId) {
+    const crop = plantings.find((p) => p.cropPluginId === line.cropPluginId);
+    const medium = bestPreservingRow(crop?.preserving, 'infuse')?.medium;
+    if (medium) return [medium];
+  }
+  const media = new Set(plantings.flatMap((p) => infuseMediaOf(p.preserving)));
+  return media.size ? INFUSE_MEDIA.filter((m) => media.has(m)) : [...INFUSE_MEDIA];
 }

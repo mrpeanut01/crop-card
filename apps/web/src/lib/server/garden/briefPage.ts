@@ -15,11 +15,14 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { getBaseRegistry, getDataKinds, getRegistry } from '$lib/server/registry';
 import { loadGardenBrief } from './briefStore';
+import type { HerbSunNeed } from '$lib/garden/brief/sun';
 
 export interface BriefHerbOption {
   pluginId: string;
   displayName: string;
   cropFamily: string;
+  /** Close-out CO-5: the sourced sun need, when a source states one. */
+  sunNeed?: HerbSunNeed;
 }
 
 /** The line a shortlist row shows for annual, biennial or perennial here.
@@ -72,7 +75,12 @@ export async function loadBriefPage(
     if (rec?.type !== 'crop') continue;
     const crop = rec as CropPlugin;
     plugins.set(id, crop);
-    herbs.push({ pluginId: id, displayName: crop.displayName, cropFamily: crop.cropFamily });
+    herbs.push({
+      pluginId: id,
+      displayName: crop.displayName,
+      cropFamily: crop.cropFamily,
+      ...(crop.sunNeed ? { sunNeed: crop.sunNeed } : {})
+    });
   }
   herbs.sort((a, b) => a.displayName.localeCompare(b.displayName));
 

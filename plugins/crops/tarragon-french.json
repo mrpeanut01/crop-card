@@ -45,6 +45,11 @@
     {
       "method": "freeze",
       "suitability": "good"
+    },
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "medium": "vinegar"
     }
   ],
   "winterHardyToZone": "3a",
@@ -77,5 +82,6 @@
       "title": "Divide tarragon every few years",
       "body": "Divide the plants every 3 to 4 years to keep the planting vigorous and productive."
     }
-  ]
+  ],
+  "sunNeed": "part"
 }

@@ -40,7 +40,8 @@
     {
       "method": "infuse",
       "suitability": "good",
-      "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes."
+      "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes.",
+      "medium": "oil"
     }
   ],
   "harvestTiming": [
@@ -75,5 +76,6 @@
       "title": "Prune rosemary after it blooms",
       "body": "Once the plants finish blooming, you can prune them back to encourage dense, leafy growth."
     }
-  ]
+  ],
+  "sunNeed": "full"
 }

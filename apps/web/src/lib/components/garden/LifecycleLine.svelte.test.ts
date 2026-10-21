@@ -17,8 +17,13 @@ import LifecycleLine from './LifecycleLine.svelte';
 import { lifecycleHere } from '$lib/garden/lifecycleHere';
 
 const verdict = lifecycleHere(
-  { pluginId: 'test-herb-perennial', agronomy: { lifecycle: 'perennial' } },
-  { zone: '6b', provenance: 'manual' }
+  {
+    pluginId: 'test-herb-perennial',
+    agronomy: { lifecycle: 'perennial' },
+    winterHardyToZone: '7a'
+  },
+  { zone: '6b', provenance: 'manual' },
+  { 'test-herb-perennial': { lifecycle: 'perennial', winterHardyToZone: '7a' } }
 );
 
 describe('LifecycleLine', () => {
@@ -26,17 +31,17 @@ describe('LifecycleLine', () => {
     state.locale = 'en';
     render(LifecycleLine, { verdict });
     const line = screen.getByTestId('lifecycle-line');
-    expect(line).toHaveTextContent('Not known');
+    expect(line).toHaveTextContent('Tender perennial');
     expect(line).toHaveTextContent('Using the zone you entered, 6b.');
-    expect(line.getAttribute('data-lifecycle')).toBe('unknown');
-    expect(line.querySelector('[data-provenance="fallback"]')).not.toBeNull();
+    expect(line.getAttribute('data-lifecycle')).toBe('tender-perennial');
+    expect(line.querySelector('[data-provenance="manual"]')).not.toBeNull();
   });
 
   it('compact keeps the line in the title', () => {
     state.locale = 'en';
     render(LifecycleLine, { verdict, compact: true });
     const line = screen.getByTestId('lifecycle-line');
-    expect(line.getAttribute('title')).toContain('Not yet checked against a source.');
+    expect(line.getAttribute('title')).toContain('Using the zone you entered, 6b.');
     expect(line).not.toHaveTextContent('Using the zone');
   });
 

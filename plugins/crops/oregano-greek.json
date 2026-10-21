@@ -36,7 +36,13 @@
     {
       "method": "infuse",
       "suitability": "good",
-      "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes."
+      "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes.",
+      "medium": "oil"
+    },
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "medium": "vinegar"
     }
   ],
   "agronomy": {
@@ -64,5 +70,6 @@
       "title": "Mulch oregano for winter",
       "body": "In November or December, after the soil has frozen, cover the plants with straw or evergreen boughs. Take it off as growth starts in spring."
     }
-  ]
+  ],
+  "sunNeed": "full"
 }

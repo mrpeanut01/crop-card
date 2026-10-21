@@ -94,15 +94,22 @@ describe('lifecycleHere', () => {
     expect(lifecycleLine(v)).toBe("Perennial in warm zones; this farm's zone is not known.");
   });
 
-  it('a perennial with no sourced crop zone is unknown and names the typed zone', () => {
-    const v = lifecycleHere(rosemary(), farm('7b', 'manual'), {});
-    expect(v).toMatchObject({
-      lifecycle: 'unknown',
-      reason: 'no-crop-zone',
-      provenance: 'fallback'
-    });
-    expect(lifecycleLine(v)).toBe(
-      'Perennial; the coldest zone it survives is not known yet. Not yet checked against a source. Using the zone you entered, 7b.'
+  it('a perennial with no sourced crop zone never reads as hardy, whatever the farm zone (CO-8)', () => {
+    for (const zone of [farm('7b', 'manual'), farm('7a'), null]) {
+      const v = lifecycleHere(rosemary(), zone, {});
+      expect(v).toMatchObject({
+        lifecycle: 'unknown',
+        reason: 'no-crop-zone',
+        provenance: 'fallback',
+        winterUnknown: true
+      });
+      expect(lifecycleLine(v)).toBe(
+        'Not known whether it survives winter here; plan to bring it indoors before frost. Not yet checked against a source.'
+      );
+      expect(lifecycleLine(v)).not.toMatch(/^Perennial/);
+    }
+    expect(lifecycleLine(lifecycleHere(rosemary(), null, {}), 'es')).toMatch(
+      /^No se sabe si sobrevive el invierno aquí/
     );
   });
 

@@ -14,7 +14,8 @@ export const enHerbsb = {
   'herbsb.line.biennial': 'Two years; harvest leaves the first year.',
   'herbsb.line.noLifecycle': 'Annual or perennial is not known yet.',
   'herbsb.line.noFarmZone': "Perennial in warm zones; this farm's zone is not known.",
-  'herbsb.line.noCropZone': 'Perennial; the coldest zone it survives is not known yet.',
+  'herbsb.line.noCropZone':
+    'Not known whether it survives winter here; plan to bring it indoors before frost.',
   'herbsb.line.nearLimit': 'It is near its limit here.',
   'herbsb.line.notChecked': 'Not yet checked against a source.',
   'herbsb.line.typedZone': 'Using the zone you entered, {zone}.'

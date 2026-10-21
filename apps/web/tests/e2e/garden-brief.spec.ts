@@ -74,6 +74,14 @@ test.describe('garden brief', () => {
       'Annual or perennial here: not yet known'
     );
     await expect(page.getByTestId('brief-sun-warning')).toBeVisible();
+    const basilSun = basil.getByTestId('sun-line');
+    await expect(basilSun).toContainText('Wants full sun, more than this spot gets.');
+    await expect(basilSun).toHaveAttribute('data-fit', 'mismatch');
+    await expect(basilSun.locator('[data-provenance="plugin"]')).toBeVisible();
+    await expect(rows.filter({ hasText: 'Parsley' }).getByTestId('sun-line')).toContainText(
+      'Takes part shade, but not mostly shade.'
+    );
+    await expect(page.getByTestId('brief-sun-unknown')).toHaveCount(0);
     await expect(page.getByTestId('brief-buy')).toContainText('Basil');
 
     const saved = (await (await page.request.get('/api/garden/brief')).json()) as {

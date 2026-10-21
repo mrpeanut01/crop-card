@@ -39,6 +39,23 @@ describe('BriefShortlist', () => {
     expect(screen.queryByRole('button', { name: /Take .* off the list/ })).toBeNull();
   });
 
+  it('shows each sun line and marks a herb that wants more sun than the spot (CO-5)', () => {
+    render(BriefShortlist, {
+      rows,
+      herbs: [
+        { pluginId: 'basil-genovese', displayName: 'Basil — Genovese', sunNeed: 'full' as const },
+        { pluginId: 'chives-common', displayName: 'Chives — Common' }
+      ],
+      sun: 'half-day' as const
+    });
+    const lines = screen.getAllByTestId('sun-line');
+    expect(lines).toHaveLength(1);
+    expect(lines[0].textContent).toContain('Wants full sun, more than this spot gets.');
+    expect(lines[0].dataset.fit).toBe('mismatch');
+    expect(lines[0].querySelector('[data-provenance="plugin"]')).not.toBeNull();
+    expect(screen.getAllByTestId('brief-row')).toHaveLength(2);
+  });
+
   it('shows the 37B verdict when the page has one', () => {
     render(BriefShortlist, {
       rows,

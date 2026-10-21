@@ -53,12 +53,47 @@ function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** Names of other plants that hold a herb's name ("Russian sage" is not
+ *  sage). */
+const OTHER_HERB_NAMES: readonly string[] = [
+  'russian sage',
+  'mexican oregano',
+  'cuban oregano',
+  'mexican tarragon'
+];
+
+function namePattern(name: string): string {
+  return `(?<![a-z])${escapeRe(name.toLowerCase()).replace(/\s+/g, '\\s+')}(?:e?s)?(?![a-z])`;
+}
+
+/** CO-9: the quote with every longer herb name blanked out that holds one
+ *  of `own` without being one of them, so "mountain mint" never names
+ *  spearmint and "holy basil" never names basil. */
+export function withoutLongerHerbNames(quote: string, own: readonly string[]): string {
+  const ownLower = own.map((n) => n.toLowerCase());
+  const longer = [...new Set([...Object.values(HERB_QUOTE_NAMES).flat(), ...OTHER_HERB_NAMES])]
+    .filter(
+      (n) =>
+        !ownLower.includes(n) &&
+        ownLower.some((o) => n.length > o.length && new RegExp(namePattern(o), 'i').test(n))
+    )
+    .sort((a, b) => b.length - a.length);
+  let text = quote;
+  for (const n of longer) text = text.replace(new RegExp(namePattern(n), 'gi'), ' ');
+  return text;
+}
+
+/** True when `quote` names one of `names` as a whole word, singular or
+ *  plural, and not inside a longer herb name. */
+export function quoteNamesAny(quote: string, names: readonly string[]): boolean {
+  const text = withoutLongerHerbNames(quote, names);
+  return names.some((name) => new RegExp(namePattern(name), 'i').test(text));
+}
+
 /** True when the quote names the crop, singular or plural. */
 export function quoteNamesCrop(
   quote: string,
   c: { pluginId: string; displayName: string }
 ): boolean {
-  return cropQuoteNames(c).some((name) =>
-    new RegExp(`\\b${escapeRe(name).replace(/\s+/g, '\\s+')}(e?s)?\\b`, 'i').test(quote)
-  );
+  return quoteNamesAny(quote, cropQuoteNames(c));
 }

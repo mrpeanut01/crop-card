@@ -1676,11 +1676,19 @@
       "note": "Phase 37C (#867). The page gives a full drying procedure for the bulb (\"Package dried fennel in moisture/vapor proof containers\"), consistent with USDA recommendations."
     },
     "preserving.freeze.notRecorded": {
-      "url": "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf",
-      "publisher": "Purdue Extension FoodLink, Fennel",
-      "date": "undated (accessed 2026-10-20)",
-      "quote": "Due to its high water content, freezing the bulb will change its texture.",
-      "note": "Sources disagree on freezing the bulb, so freeze stays empty: WSU Extension Skagit County gives a blanch-and-freeze method for the bulb; Purdue FoodLink (this quote) says freezing changes its texture (it says stalks and fronds \"freeze well\")."
+      "reason": "Sources disagree on freezing the bulb, so freeze stays empty: WSU Extension Skagit County gives a blanch-and-freeze method for the bulb; Purdue FoodLink (this quote) says freezing changes its texture (it says stalks and fronds \"freeze well\").",
+      "checked": [
+        "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf"
+      ],
+      "date": "2026-10-20",
+      "quotes": [
+        {
+          "url": "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf",
+          "publisher": "Purdue Extension FoodLink, Fennel",
+          "date": "undated (accessed 2026-10-20)",
+          "quote": "Due to its high water content, freezing the bulb will change its texture."
+        }
+      ]
     },
     "seasonalTasks.plant-again": {
       "url": "https://extension.usu.edu/yardandgarden/research/fennel-in-the-garden",
@@ -2620,11 +2628,17 @@
       "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
     },
     "preserving.dry.notRecorded": {
-      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
-      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
-      "date": "2014 (accessed 2026-10-17)",
-      "quote": "Tender-Leaf Herbs — Basil, oregano, tarragon, lemon balm and the mints have a high moisture content and will mold if not dried quickly.",
-      "note": "Sources disagree on how well oregano dries, so dry stays empty: OSU HYG-5360 lists oregano under \"Best Herbs for Drying\", while NCHFP (this quote) groups it with the tender-leaf herbs that will mold if not dried quickly."
+      "reason": "Sources disagree on how well oregano dries, so dry stays empty: OSU HYG-5360 lists oregano under \"Best Herbs for Drying\", while NCHFP (this quote) groups it with the tender-leaf herbs that will mold if not dried quickly.",
+      "checked": ["https://nchfp.uga.edu/how/dry/recipes/herbs"],
+      "date": "2026-10-20",
+      "quotes": [
+        {
+          "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+          "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+          "date": "2014 (accessed 2026-10-17)",
+          "quote": "Tender-Leaf Herbs — Basil, oregano, tarragon, lemon balm and the mints have a high moisture content and will mold if not dried quickly."
+        }
+      ]
     },
     "lifecycle": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
@@ -2664,14 +2678,14 @@
       "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Origanum vulgare",
       "date": "undated web page; accessed 2026-10-20",
       "quote": "Oregano does best in average soil including sandy loams, dry to medium moisture with good drainage, and planted in a site with full sun.",
-      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads medium (\"medium moisture\"), Penn State (waterNeed.2) reads low (\"drought-tolerant\")."
+      "note": "Phase 37E (#867), re-judged under CO-3 and CO-9 (2026-10-21). \"dry to medium moisture\" is a range and reads low to medium; Penn State (waterNeed.2) reads low (\"drought-tolerant\"), so the sources overlap at low. The same NC State paragraph says \"In general, Oregano plants tolerate heat and drought.\" Re-read on the page 2026-10-21. Words only, never a target factor (R-10)."
     },
     "waterNeed.2": {
       "url": "https://extension.psu.edu/herb-garden-plants-oregano",
       "publisher": "Penn State Extension, Herb Garden Plants: Oregano",
       "date": "Updated April 22, 2026 (accessed 2026-10-20)",
       "quote": "Once established, oregano requires little water. As it is drought-tolerant, wait until the soil dries out between waterings.",
-      "note": "Phase 37E (#867). Disagrees with the NC State Plant Toolbox (waterNeed, medium), so waterNeed stays empty."
+      "note": "Phase 37E (#867), re-judged under CO-3 (2026-10-21): agrees with the NC State Plant Toolbox range at low. Re-read on the page 2026-10-21."
     },
     "preserving.freeze": {
       "url": "https://extension.sdstate.edu/preserving-herbs",
@@ -3346,20 +3360,6 @@
       "date": "accessed 2026-10-17",
       "quote": "Occasionally, longer, woody stems can be harvested and used as skewers for kabobs."
     },
-    "waterNeed": {
-      "url": "https://extension.psu.edu/herb-garden-plants-rosemary",
-      "publisher": "Penn State Extension, Herb Garden Plants: Rosemary",
-      "date": "Updated April 22, 2026 (accessed 2026-10-20)",
-      "quote": "Though rosemary is drought-tolerant once established, it does poorly in wet or poorly drained clay soil.",
-      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads low; USDA Farmers' Bulletin 1977 (waterNeed.2) reads medium (\"moderately moist\")."
-    },
-    "waterNeed.2": {
-      "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
-      "publisher": "USDA Farmers' Bulletin No. 1977, Savory Herbs: Culture and Use (1946), web reprint by Purdue University Center for New Crops and Plant Products",
-      "date": "1946 bulletin; accessed 2026-10-20",
-      "quote": "Special consideration should be given to the location of a few of the savory herbs that are sensitive to soil-moisture conditions. Sage, rosemary, and thyme require a well-drained moderately moist situation; celery, parsley, chervil, and the mints give best results on soils that retain considerable moisture but have good drainage.",
-      "note": "Phase 37E (#867). Disagrees with Penn State (waterNeed, low), so waterNeed stays empty."
-    },
     "seasonalTasks.prune-after-bloom": {
       "url": "https://plants.ces.ncsu.edu/plants/salvia-rosmarinus/",
       "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Salvia rosmarinus",
@@ -3373,6 +3373,28 @@
       "date": "Updated April 22, 2026 (accessed 2026-10-20)",
       "quote": "Herb Garden Plants: Rosemary ... Prior to blossoming, harvest leaves for drying.",
       "note": "#867 drying hint (rulings DH-1 to DH-8). Fetched with curl on 2026-10-20 and checked word for word, as a normalised substring and with the source-drift checker's quoteFound. The sentence sits under the page's Harvesting heading and does not name the herb, so the page title is the name piece (DH-3, as F867-2). Wisconsin Horticulture agrees: \"For drying, cut sprigs or branches before the plant flowers.\" (https://hort.extension.wisc.edu/articles/rosemary/)."
+    },
+    "waterNeed.notRecorded": {
+      "reason": "Sources disagree (CO-3): Penn State reads low (\"drought-tolerant\"); USDA Farmers' Bulletin 1977 on Purdue NewCROP reads medium (\"moderately moist\"). No need is common to both, so waterNeed stays empty.",
+      "checked": [
+        "https://extension.psu.edu/herb-garden-plants-rosemary",
+        "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html"
+      ],
+      "date": "2026-10-21",
+      "quotes": [
+        {
+          "url": "https://extension.psu.edu/herb-garden-plants-rosemary",
+          "publisher": "Penn State Extension, Herb Garden Plants: Rosemary",
+          "date": "Updated April 22, 2026 (accessed 2026-10-20)",
+          "quote": "Though rosemary is drought-tolerant once established, it does poorly in wet or poorly drained clay soil."
+        },
+        {
+          "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+          "publisher": "USDA Farmers' Bulletin No. 1977, Savory Herbs: Culture and Use (1946), web reprint by Purdue University Center for New Crops and Plant Products",
+          "date": "1946 bulletin; accessed 2026-10-20",
+          "quote": "Special consideration should be given to the location of a few of the savory herbs that are sensitive to soil-moisture conditions. Sage, rosemary, and thyme require a well-drained moderately moist situation; celery, parsley, chervil, and the mints give best results on soils that retain considerable moisture but have good drainage."
+        }
+      ]
     }
   },
   "sage-broadleaf": {
@@ -4090,22 +4112,41 @@
       "quote": "While thyme can be grown from seed, it is much easier to grow it from divisions or cuttings. As thyme gets older, it can become woody and should be renewed every few years by cutting it back severely in the spring. This will encourage the production of young, tender stems.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     },
-    "waterNeed": {
-      "url": "https://journals.flvc.org/edis/article/download/129307/132349",
-      "publisher": "UF/IFAS Extension EDIS CIR570, Herbs and Spices in the Florida Garden",
-      "date": "Revised December 2021; accessed 2026-10-20",
-      "quote": "Thyme is drought tolerant.",
-      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads low (NC State Plant Toolbox agrees, \"It is frost and drought-tolerant\"); USDA Farmers' Bulletin 1977 (waterNeed.2) reads medium (\"moderately moist\")."
-    },
-    "waterNeed.2": {
-      "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
-      "publisher": "USDA Farmers' Bulletin No. 1977, Savory Herbs: Culture and Use (1946), web reprint by Purdue University Center for New Crops and Plant Products",
-      "date": "1946 bulletin; accessed 2026-10-20",
-      "quote": "Special consideration should be given to the location of a few of the savory herbs that are sensitive to soil-moisture conditions. Sage, rosemary, and thyme require a well-drained moderately moist situation; celery, parsley, chervil, and the mints give best results on soils that retain considerable moisture but have good drainage.",
-      "note": "Phase 37E (#867). Disagrees with UF/IFAS EDIS CIR570 (waterNeed, low), so waterNeed stays empty."
-    },
     "harvestTiming.notRecorded": {
-      "reason": "Sources disagree on when to cut thyme, so no harvestTiming ships (DH-6). Before flowering: Illinois Extension, Penn State, the NC State Plant Toolbox and Iowa State \"All About Thyme\" (which also allows \"when the first blossoms begin to open\"). At or in bloom: UMD (\"when first blossoms open\"), WSU C159 (\"when in full bloom\"), MU G6470 (\"while in flower\"), Montana State (\"normally at bloom\") and Purdue NewCROP (\"during the bloom period\"). Per-source detail in docs/design/phase-37-followups/867.md."
+      "reason": "Sources disagree on when to cut thyme, so no harvestTiming ships (DH-6). Before flowering: Illinois Extension, Penn State, the NC State Plant Toolbox and Iowa State \"All About Thyme\" (which also allows \"when the first blossoms begin to open\"). At or in bloom: UMD (\"when first blossoms open\"), WSU C159 (\"when in full bloom\"), MU G6470 (\"while in flower\"), Montana State (\"normally at bloom\") and Purdue NewCROP (\"during the bloom period\"). Per-source detail in docs/design/phase-37-followups/867.md.",
+      "checked": [
+        "https://extension.illinois.edu/herbs/thyme",
+        "https://extension.psu.edu/herb-garden-plants-thyme",
+        "https://plants.ces.ncsu.edu/plants/thymus-vulgaris/",
+        "https://yardandgarden.extension.iastate.edu/encyclopedia/all-about-thyme",
+        "https://extension.umd.edu/resource/thyme",
+        "https://agresearch.montana.edu/warc/research_current/research_past/herbsandoils/thyme.html",
+        "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+        "https://extension.missouri.edu/publications/g6470"
+      ],
+      "date": "2026-10-20"
+    },
+    "waterNeed.notRecorded": {
+      "reason": "Sources disagree (CO-3): UF/IFAS EDIS CIR570 reads low (\"Thyme is drought tolerant\"; the NC State Plant Toolbox agrees); USDA Farmers' Bulletin 1977 on Purdue NewCROP reads medium (\"moderately moist\"). No need is common to both, so waterNeed stays empty.",
+      "checked": [
+        "https://journals.flvc.org/edis/article/download/129307/132349",
+        "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html"
+      ],
+      "date": "2026-10-21",
+      "quotes": [
+        {
+          "url": "https://journals.flvc.org/edis/article/download/129307/132349",
+          "publisher": "UF/IFAS Extension EDIS CIR570, Herbs and Spices in the Florida Garden",
+          "date": "Revised December 2021; accessed 2026-10-20",
+          "quote": "Thyme is drought tolerant."
+        },
+        {
+          "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+          "publisher": "USDA Farmers' Bulletin No. 1977, Savory Herbs: Culture and Use (1946), web reprint by Purdue University Center for New Crops and Plant Products",
+          "date": "1946 bulletin; accessed 2026-10-20",
+          "quote": "Special consideration should be given to the location of a few of the savory herbs that are sensitive to soil-moisture conditions. Sage, rosemary, and thyme require a well-drained moderately moist situation; celery, parsley, chervil, and the mints give best results on soils that retain considerable moisture but have good drainage."
+        }
+      ]
     }
   },
   "tomatillo-de-milpa": {
@@ -7048,26 +7089,34 @@
       "quote": "Sweet marjoram is easily grown from seed or cuttings. It prefers a full sun location and requires a well-drained soil. Sweet marjoram tends to be a low spreading plant that benefits from being pruned back when it is 6-8 inches tall to encourage a bushy growth habit.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     },
-    "waterNeed": {
-      "url": "https://plants.ces.ncsu.edu/plants/origanum-majorana/",
-      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Origanum majorana",
-      "date": "undated web page; accessed 2026-10-20",
-      "quote": "Plant Sweet Marjoram in average, dry to medium moisture, well-drained soil in the full sun.",
-      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads medium (\"medium moisture\"); USDA Farmers' Bulletin 1977 (waterNeed.2) reads high (\"moist soil\")."
-    },
-    "waterNeed.2": {
-      "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
-      "publisher": "USDA Farmers' Bulletin No. 1977, Savory Herbs: Culture and Use (1946), web reprint by Purdue University Center for New Crops and Plant Products",
-      "date": "1946 bulletin; accessed 2026-10-20",
-      "quote": "The plants grow best in rich moist soil and usually make a growth of only about a foot during the first season. The sweet marjoram can be spaced at intervals of 6 to 8 inches, whereas the pot and wild marjorams should be set a foot or more apart in the row.",
-      "note": "Phase 37E (#867). From the bulletin's marjoram section. Disagrees with the NC State Plant Toolbox (waterNeed, medium), so waterNeed stays empty."
-    },
     "preserving.dry": {
       "url": "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation",
       "publisher": "UMass Amherst Center for Agriculture, Food, and the Environment, Home Lawn and Garden: Herb Preservation",
       "date": "Last Updated March 26, 2018; accessed 2026-10-20",
       "quote": "The best culinary herbs for air drying are mint, thyme, lavender, oregano, marjoram, sage, rosemary, savory, lovage, lemon verbena and lemon balm.",
       "note": "Phase 37C (#867). The Wisconsin Master Gardener \"Drying Herbs\" sheet agrees (\"Sturdy herbs such as ... marjoram are well suited for air-drying\")."
+    },
+    "waterNeed.notRecorded": {
+      "reason": "Sources disagree (CO-3): the NC State Plant Toolbox \"dry to medium moisture\" is a range and reads low to medium; USDA Farmers' Bulletin 1977 on Purdue NewCROP reads high (\"rich moist soil\"). The range and high do not overlap, so waterNeed stays empty.",
+      "checked": [
+        "https://plants.ces.ncsu.edu/plants/origanum-majorana/",
+        "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html"
+      ],
+      "date": "2026-10-21",
+      "quotes": [
+        {
+          "url": "https://plants.ces.ncsu.edu/plants/origanum-majorana/",
+          "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Origanum majorana",
+          "date": "undated web page; accessed 2026-10-20",
+          "quote": "Plant Sweet Marjoram in average, dry to medium moisture, well-drained soil in the full sun."
+        },
+        {
+          "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+          "publisher": "USDA Farmers' Bulletin No. 1977, Savory Herbs: Culture and Use (1946), web reprint by Purdue University Center for New Crops and Plant Products",
+          "date": "1946 bulletin; accessed 2026-10-20",
+          "quote": "The plants grow best in rich moist soil and usually make a growth of only about a foot during the first season. The sweet marjoram can be spaced at intervals of 6 to 8 inches, whereas the pot and wild marjorams should be set a foot or more apart in the row."
+        }
+      ]
     }
   },
   "stevia-sweetleaf": {
@@ -7329,18 +7378,32 @@
       "note": "Phase 37C (#867)."
     },
     "preserving.freeze.notRecorded": {
-      "url": "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation",
-      "publisher": "UMass Amherst Center for Agriculture, Food, and the Environment, Home Lawn and Garden: Herb Preservation",
-      "date": "Last Updated March 26, 2018; accessed 2026-10-20",
-      "quote": "Freezing provides the best flavor for parsley, cilantro, chervil, sweet cicely, chives, tarragon, dill and fennel.",
-      "note": "Sources disagree on how well chervil freezes, so freeze stays empty: UMass (this quote) and Kentucky State (\"retain more flavor if frozen and not dried\") say freezing works; CSU 9.335 says chervil is best used fresh \"because they have little flavor once dried or frozen\"."
+      "reason": "Sources disagree on how well chervil freezes, so freeze stays empty: UMass (this quote) and Kentucky State (\"retain more flavor if frozen and not dried\") say freezing works; CSU 9.335 says chervil is best used fresh \"because they have little flavor once dried or frozen\".",
+      "checked": [
+        "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation"
+      ],
+      "date": "2026-10-20",
+      "quotes": [
+        {
+          "url": "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation",
+          "publisher": "UMass Amherst Center for Agriculture, Food, and the Environment, Home Lawn and Garden: Herb Preservation",
+          "date": "Last Updated March 26, 2018; accessed 2026-10-20",
+          "quote": "Freezing provides the best flavor for parsley, cilantro, chervil, sweet cicely, chives, tarragon, dill and fennel."
+        }
+      ]
     },
     "preserving.dry.notRecorded": {
-      "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-09/335846.pdf",
-      "publisher": "Colorado State University Extension Fact Sheet No. 9.335, Herbs: Preserving and Using (Bunning, Woo and Kendall), copy hosted by UC ANR",
-      "date": "revised 10/14; accessed 2026-10-20",
-      "quote": "Some herbs are best used fresh— such as burnet, chervil, and parsley—because they have little flavor once dried or frozen.",
-      "note": "Sources disagree on drying chervil, so dry stays empty: CSU 9.335 (this quote) says it has little flavor once dried, while its own Table 3 says \"Dry or freeze as for basil\" and Illinois Extension says \"Air dry and store leaves in sealed containers\"."
+      "reason": "Sources disagree on drying chervil, so dry stays empty: CSU 9.335 (this quote) says it has little flavor once dried, while its own Table 3 says \"Dry or freeze as for basil\" and Illinois Extension says \"Air dry and store leaves in sealed containers\".",
+      "checked": ["https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-09/335846.pdf"],
+      "date": "2026-10-20",
+      "quotes": [
+        {
+          "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-09/335846.pdf",
+          "publisher": "Colorado State University Extension Fact Sheet No. 9.335, Herbs: Preserving and Using (Bunning, Woo and Kendall), copy hosted by UC ANR",
+          "date": "revised 10/14; accessed 2026-10-20",
+          "quote": "Some herbs are best used fresh— such as burnet, chervil, and parsley—because they have little flavor once dried or frozen."
+        }
+      ]
     }
   },
   "endive-frisee": {
@@ -7648,11 +7711,19 @@
       "note": "Phase 37C (#867). The page gives a full drying procedure for the bulb (\"Package dried fennel in moisture/vapor proof containers\"), consistent with USDA recommendations."
     },
     "preserving.freeze.notRecorded": {
-      "url": "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf",
-      "publisher": "Purdue Extension FoodLink, Fennel",
-      "date": "undated (accessed 2026-10-20)",
-      "quote": "Due to its high water content, freezing the bulb will change its texture.",
-      "note": "Sources disagree on freezing the bulb, so freeze stays empty: WSU Extension Skagit County gives a blanch-and-freeze method for the bulb; Purdue FoodLink (this quote) says freezing changes its texture (it says stalks and fronds \"freeze well\")."
+      "reason": "Sources disagree on freezing the bulb, so freeze stays empty: WSU Extension Skagit County gives a blanch-and-freeze method for the bulb; Purdue FoodLink (this quote) says freezing changes its texture (it says stalks and fronds \"freeze well\").",
+      "checked": [
+        "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf"
+      ],
+      "date": "2026-10-20",
+      "quotes": [
+        {
+          "url": "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf",
+          "publisher": "Purdue Extension FoodLink, Fennel",
+          "date": "undated (accessed 2026-10-20)",
+          "quote": "Due to its high water content, freezing the bulb will change its texture."
+        }
+      ]
     },
     "seasonalTasks.plant-again": {
       "url": "https://extension.usu.edu/yardandgarden/research/fennel-in-the-garden",
@@ -8827,11 +8898,17 @@
       "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
     },
     "preserving.dry.notRecorded": {
-      "url": "https://extension.umn.edu/vegetables/growing-basil",
-      "publisher": "University of Minnesota Extension, Growing basil",
-      "date": "Reviewed in 2026 (accessed 2026-10-17)",
-      "quote": "Basil leaves turn an unpleasant brown color when air-dried. Freezing is a better method.",
-      "note": "Sources disagree on how well basil dries, so dry stays empty: Illinois Extension says \"Basil is easily dried for storing and future use\"; NCHFP and NC State say basil will (or may) mold if not dried quickly; UMN (this quote) says the leaves turn brown when air-dried."
+      "reason": "Sources disagree on how well basil dries, so dry stays empty: Illinois Extension says \"Basil is easily dried for storing and future use\"; NCHFP and NC State say basil will (or may) mold if not dried quickly; UMN (this quote) says the leaves turn brown when air-dried.",
+      "checked": ["https://extension.umn.edu/vegetables/growing-basil"],
+      "date": "2026-10-20",
+      "quotes": [
+        {
+          "url": "https://extension.umn.edu/vegetables/growing-basil",
+          "publisher": "University of Minnesota Extension, Growing basil",
+          "date": "Reviewed in 2026 (accessed 2026-10-17)",
+          "quote": "Basil leaves turn an unpleasant brown color when air-dried. Freezing is a better method."
+        }
+      ]
     },
     "lifecycle": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
@@ -8934,7 +9011,13 @@
     },
     "winterHardyToZone.notRecorded": {
       "reason": "No allowed page names East Indian lemongrass (Cymbopogon flexuosus) with a USDA zone. Purdue NewCROP (Lemongrass) and Wisconsin Horticulture (Lemongrass) name C. flexuosus but give no zone; Illinois Extension (Lemon Grass) and the NC State Plant Toolbox cover Cymbopogon citratus only, which does not count. Checked again 2026-10-20 (#867); see docs/research/phase-37-herb-research-prompt.md (Task 1).",
-      "date": "2026-10-20"
+      "checked": [
+        "https://hort.purdue.edu/newcrop/med-aro/factsheets/LEMONGRASS.html",
+        "https://hort.extension.wisc.edu/articles/lemongrass",
+        "https://extension.illinois.edu/herbs/lemon-grass",
+        "https://plants.ces.ncsu.edu/plants/cymbopogon-citratus/"
+      ],
+      "date": "2026-10-21"
     }
   },
   "mountain-mint": {
@@ -9018,14 +9101,7 @@
       "publisher": "University of New Hampshire Extension, How to grow calendula (Calendula officinalis)",
       "date": "undated page (accessed 2026-10-20)",
       "quote": "Calendula grows best in evenly moist soil.",
-      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads high; Iowa State (waterNeed.2) lists pot marigold among drought tolerant annuals (low)."
-    },
-    "waterNeed.2": {
-      "url": "https://yardandgarden.extension.iastate.edu/faq/what-are-some-good-drought-tolerant-annuals",
-      "publisher": "Iowa State University Extension and Outreach, Yard and Garden FAQ: What are some good drought tolerant annuals?",
-      "date": "undated page (accessed 2026-10-20)",
-      "quote": "Iowa State Yard and Garden FAQ: \"Drought tolerant annuals include:\"; \"pot marigold (Calendula officinalis)\"",
-      "note": "Phase 37E (#867). A list entry under \"Drought tolerant annuals include:\". Disagrees with UNH Extension (waterNeed, high), so waterNeed stays empty."
+      "note": "Phase 37E (#867), re-judged under CO-3 (2026-10-21): UNH alone counts, read through the waterNeed gate word list (\"evenly moist\"); words only, never a target factor (R-10). Iowa State Yard and Garden (\"Drought tolerant annuals include:\" over a list item \"pot marigold (Calendula officinalis)\", https://yardandgarden.extension.iastate.edu/faq/what-are-some-good-drought-tolerant-annuals) joins a list heading to a list item, which F867-2 does not count for waterNeed, so it is set aside. Re-read on the page 2026-10-21."
     },
     "preserving.dry": {
       "url": "https://www.uvm.edu/extension/news/using-summer-dried-herbs-and-flowers",

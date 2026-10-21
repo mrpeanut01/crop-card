@@ -14,10 +14,10 @@ import {
   FORAGE_TRIGGER_SOURCE_KEYS,
   isPageReaderSource
 } from '$lib/forage/hazardSources';
-import { SEEDING_RATE_KEYS } from './schemas';
+import { CROP_PRESERVING_METHODS, SEEDING_RATE_KEYS } from './schemas';
 import { calendarWindowFromWords } from '../plan/calendarWords';
 import { numberPattern, statesDays, statesInches } from './quoteNumbers';
-import { quoteNamesCrop } from '../garden/herbQuoteNames';
+import { quoteNamesAny, quoteNamesCrop } from '../garden/herbQuoteNames';
 import { isHerbGardenCrop } from '$lib/garden/herbs';
 import {
   quoteNamesHerb,
@@ -969,11 +969,29 @@ const PRESERVING_METHOD_WORDS: Record<Exclude<PreservingMethodKey, 'freeze-dry'>
 };
 
 /** Qualifying words a source uses when a method works only fairly well, or
- *  poorly. A `good` entry needs none. */
+ *  poorly. A `good` entry needs none and must carry none (CO-9); a bare
+ *  "do not" or "less" never qualifies. */
 const SUITABILITY_WORDS: Record<'fair' | 'poor', RegExp> = {
-  fair: /\b(?:fairly|moderately|somewhat|less|(?:will|may) mold|not as (?:well|good)|loses? some|some of (?:the|its) (?:flavou?r|aroma|colou?r)|acceptable)\b/i,
-  poor: /\b(?:poor(?:ly)?|does not|do not|don't|doesn't|not recommended|not suitable|unsuitable|loses? (?:most|much)|best (?:used )?fresh|turns? (?:black|brown))\b/i
+  fair: /\b(?:fairly|moderately|somewhat|less (?:flavou?rful|aromatic|well|successfully|satisfactory|desirable)|(?:will|may) mold|not as (?:well|good)|loses? some|some of (?:the|its) (?:flavou?r|aroma|colou?r)|acceptable)\b/i,
+  poor: /\b(?:poor(?:ly)?|(?:does not|do not|don't|doesn't)\s+(?:[a-z]+\s+){0,2}?(?:well|retain|keep|hold)|not recommended|not suitable|unsuitable|loses? (?:most|much)|best (?:used )?fresh|turns? (?:an? )?(?:[a-z]+ ){0,2}?(?:black|brown))\b/i
 };
+
+/** The fair or poor words a quote's sentences that name the crop carry for
+ *  the method, if any. "Best used fresh" is never a warning about fresh
+ *  use. */
+export function preservingWarningOf(
+  quote: string,
+  method: PreservingMethodKey,
+  crop: { pluginId: string; displayName: string }
+): 'fair' | 'poor' | null {
+  const sentences = quote
+    .split(/(?<=[.!?])\s+/)
+    .filter((s) => quoteNamesCrop(s, crop))
+    .map((s) => (method === 'fresh' ? s.replace(/\bbest (?:used )?fresh\b/gi, ' ') : s));
+  if (sentences.some((s) => SUITABILITY_WORDS.poor.test(s))) return 'poor';
+  if (sentences.some((s) => SUITABILITY_WORDS.fair.test(s))) return 'fair';
+  return null;
+}
 
 function namesMethod(quote: string, method: PreservingMethodKey): boolean {
   if (method === 'freeze-dry') return new RegExp(FREEZE_DRY_WORDS.source, 'i').test(quote);
@@ -996,6 +1014,9 @@ export function preservingQuoteGaps(
   for (const c of crops) {
     for (const p of c.preserving ?? []) {
       const key = `preserving.${p.method}`;
+      if (sources[c.pluginId]?.[preservingNotRecordedKey(p.method)] !== undefined) {
+        gaps.push(`${c.pluginId}: ${key} is set; drop ${preservingNotRecordedKey(p.method)}`);
+      }
       const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
       if (entry.success) {
         const quote = entry.data.quote;
@@ -1010,6 +1031,10 @@ export function preservingQuoteGaps(
         }
         if (p.suitability !== 'good' && !SUITABILITY_WORDS[p.suitability].test(quote)) {
           gaps.push(`${c.pluginId}: ${key} quote has no words that say ${p.suitability}`);
+        }
+        const warning = p.suitability === 'good' ? preservingWarningOf(quote, p.method, c) : null;
+        if (warning) {
+          gaps.push(`${c.pluginId}: ${key} is good but its quote has words that say ${warning}`);
         }
       }
       if (p.method !== 'infuse') continue;
@@ -1039,6 +1064,11 @@ const CADENCE_INTERVAL_WORDS =
   /\bevery\b|\bbetween (?:cuts|cuttings|harvests|clippings|pickings)\b|\bapart\b|\bintervals?\b|\bagain (?:in|after)\b/i;
 const VAGUE_INTERVAL_WORDS =
   /\b(?:a few|several|a couple of|couple of|a couple)\s+(?:days|weeks)\b/i;
+/** CO-6 (F867-1): the interval is between cuts or harvests; pinching and
+ *  pruning are not a harvest cadence. */
+const CADENCE_HARVEST_VERB =
+  /\b(?:cut|cuts|cutting|cuttings|harvest|harvests|harvested|harvesting|clip|clips|clipped|clipping|clippings|pick|picks|picked|picking|pickings)\b/i;
+const CADENCE_NOT_HARVEST_VERB = /\bpinch(?:es|ed|ing)?\b|\bprun(?:e|es|ed|ing)\b/i;
 
 /** Phase 37C: a `harvestCadence` quote comes from an extension or
  *  government page, names the crop, states both ends of the interval as
@@ -1052,6 +1082,9 @@ export function harvestCadenceQuoteGaps(
   for (const c of crops) {
     const cadence = c.harvestCadence;
     if (!cadence) continue;
+    if (sources[c.pluginId]?.[HARVEST_CADENCE_NOT_RECORDED_KEY] !== undefined) {
+      gaps.push(`${c.pluginId}: harvestCadence is set; drop ${HARVEST_CADENCE_NOT_RECORDED_KEY}`);
+    }
     const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.harvestCadence);
     if (!entry.success) continue;
     const quote = entry.data.quote;
@@ -1063,6 +1096,12 @@ export function harvestCadenceQuoteGaps(
     }
     if (!CADENCE_INTERVAL_WORDS.test(quote)) {
       gaps.push(`${c.pluginId}: harvestCadence quote does not say it is the time between cuts`);
+    }
+    if (!CADENCE_HARVEST_VERB.test(quote)) {
+      gaps.push(`${c.pluginId}: harvestCadence quote has no cut or harvest verb`);
+    }
+    if (CADENCE_NOT_HARVEST_VERB.test(quote)) {
+      gaps.push(`${c.pluginId}: harvestCadence quote is about pinching or pruning, not harvest`);
     }
     const { min, max } = cadence.everyDays;
     if (!(statesDays(quote, min) && statesDays(quote, max))) {
@@ -1091,12 +1130,16 @@ type HarvestTimingStageKey = NonNullable<CropPlugin['harvestTiming']>[number]['s
 
 const FLOWER_WORD = String.raw`(?:flowers?|flowering|blooms?|blooming|blossoms?|blossoming)`;
 
+/** CO-9: words after "before the flowers" that put the cut in or after
+ *  bloom ("before the flowers fade", "before the blooms open fully"). */
+const LATE_BLOOM_WORDS = String.raw`(?:(?:have|are|begin to|start to)\s+)?(?:fade|fades|faded|fading|fully\s+open(?:ed)?|open(?:s|ed)?\s+fully|go(?:es)?\s+to\s+seed|set\s+seed|drop|dry\s+up)\b`;
+
 /** The words a source uses for each stage. "Before" covers "prior to the
  *  appearance of flowers" and "before the plant flowers"; "begins" covers
  *  "just as flowering begins" and "when the first flowers open". */
 const HARVEST_TIMING_STAGE_WORDS: Record<HarvestTimingStageKey, RegExp> = {
   'before-bloom': new RegExp(
-    String.raw`\b(?:before|prior to)\s+(?:(?:the|its|it|any)\s+)?(?:(?:appearance|opening)\s+of\s+(?:the\s+)?)?(?:plants?\s+)?${FLOWER_WORD}\b`,
+    String.raw`\b(?:before|prior to)\s+(?:(?:the|its|it|any)\s+)?(?:(?:appearance|opening)\s+of\s+(?:the\s+)?)?(?:plants?\s+)?${FLOWER_WORD}\b(?!\s+${LATE_BLOOM_WORDS})`,
     'i'
   ),
   'bloom-begins': new RegExp(
@@ -1107,8 +1150,10 @@ const HARVEST_TIMING_STAGE_WORDS: Record<HarvestTimingStageKey, RegExp> = {
 
 /** Timing words for a stage the field has no value for (in or after bloom).
  *  A quote holding them, or the words of two stages, reads both ways. */
-const OTHER_BLOOM_TIMING_WORDS =
-  /\bin\s+(?:full\s+)?(?:bloom|flower)\b|\bwhile\s+in\s+flower\b|\bduring\s+(?:the\s+)?(?:bloom|blooming|flowering)\b|\bat\s+(?:full\s+)?bloom\b|\bafter\s+(?:flowering|blooming|bloom|blossoming)\b/i;
+const OTHER_BLOOM_TIMING_WORDS = new RegExp(
+  String.raw`\bin\s+(?:full\s+)?(?:bloom|flower)\b|\bwhile\s+in\s+flower\b|\bduring\s+(?:the\s+)?(?:bloom|blooming|flowering)\b|\bat\s+(?:full\s+)?bloom\b|\bafter\s+(?:flowering|blooming|bloom|blossoming)\b|\bfull\s+(?:flower|bloom)\b|\b${FLOWER_WORD}\s+${LATE_BLOOM_WORDS}`,
+  'i'
+);
 
 /** #867 (rulings DH-1 to DH-8 in docs/design/phase-37-followups/drying-hint.md):
  *  each `harvestTiming.<method>` quote comes from an extension or government
@@ -1124,10 +1169,7 @@ export function harvestTimingQuoteGaps(
   const gaps: string[] = [];
   for (const c of crops) {
     const rows = c.harvestTiming ?? [];
-    if (
-      rows.length > 0 &&
-      notRecordedReason(sources, c.pluginId, HARVEST_TIMING_NOT_RECORDED_KEY)
-    ) {
+    if (rows.length > 0 && sources[c.pluginId]?.[HARVEST_TIMING_NOT_RECORDED_KEY] !== undefined) {
       gaps.push(`${c.pluginId}: harvestTiming is set; drop ${HARVEST_TIMING_NOT_RECORDED_KEY}`);
     }
     for (const r of rows) {
@@ -1166,13 +1208,33 @@ export const LIFECYCLE_NOT_RECORDED_KEY = 'lifecycle.notRecorded';
 /** Why a perennial herb has no `winterHardyToZone` yet. */
 export const ZONE_NOT_RECORDED_KEY = 'winterHardyToZone.notRecorded';
 
+/** CO-7: why a Phase 37 herb field is empty, under `<field>.notRecorded`:
+ *  the reason, the pages checked and the day they were checked, plus the
+ *  disagreeing `quotes` when sources were read (CO-3). */
+export const notRecordedEntrySchema = z
+  .object({
+    reason: z.string().trim().min(11),
+    checked: z.array(z.string().regex(/^https?:\/\/\S+$/)).min(1),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    quotes: z.array(sourceEntrySchema).optional()
+  })
+  .strict();
+export type NotRecordedEntry = z.infer<typeof notRecordedEntrySchema>;
+
+export const WATER_NEED_NOT_RECORDED_KEY = 'waterNeed.notRecorded';
+export const HARVEST_CADENCE_NOT_RECORDED_KEY = 'harvestCadence.notRecorded';
+
+export function preservingNotRecordedKey(method: string): string {
+  return `preserving.${method}.notRecorded`;
+}
+
 function notRecordedReason(
   sources: SourceMap,
   pluginId: string,
   key: string = LIFECYCLE_NOT_RECORDED_KEY
 ): string | null {
-  const entry = sources[pluginId]?.[key] as { reason?: unknown } | undefined;
-  return typeof entry?.reason === 'string' && entry.reason.trim().length > 10 ? entry.reason : null;
+  const entry = notRecordedEntrySchema.safeParse(sources[pluginId]?.[key]);
+  return entry.success ? entry.data.reason : null;
 }
 
 /** A listed herb's `agronomy.lifecycle` carries a `lifecycle` source from
@@ -1365,22 +1427,93 @@ export const WATER_NEED_PHRASES: Readonly<Record<'low' | 'medium' | 'high', read
   ]
 };
 
-/** The water need a quote states, or null when it states none or more than
- *  one. */
-export function waterNeedOfQuote(quote: string): 'low' | 'medium' | 'high' | null {
-  let text = ` ${quote.toLowerCase().replace(/\s+/g, ' ')} `;
-  const phrases = (Object.entries(WATER_NEED_PHRASES) as Array<[string, readonly string[]]>)
+export type WaterNeed = 'low' | 'medium' | 'high';
+const WATER_NEED_ORDER: readonly WaterNeed[] = ['low', 'medium', 'high'];
+
+/** CO-9: the end words of a moisture range, so "dry to medium moisture"
+ *  reads as low and medium and overlaps "drought-tolerant" at low. */
+const WATER_RANGE_ENDS: Readonly<Record<string, WaterNeed>> = {
+  dry: 'low',
+  medium: 'medium',
+  moist: 'high',
+  wet: 'high'
+};
+const WATER_RANGE = new RegExp(
+  String.raw`(?<![a-z])(${Object.keys(WATER_RANGE_ENDS).join('|')})\s+to\s+(${Object.keys(WATER_RANGE_ENDS).join('|')})(?![a-z])(?:\s+(?:moisture|soils?|conditions))?`,
+  'g'
+);
+
+/** A negation up to three words before a phrase, or right after it, in the
+ *  same clause: "never let the soil dry out", "not drought tolerant". */
+const WATER_NEGATION_BEFORE =
+  /(?:^|\s)(?:not|never|no|nor|don't|doesn't|isn't|aren't|cannot|can't|avoid|without)(?:\s+[a-z'-]+){0,3}\s*$/;
+const WATER_NEGATION_AFTER = /^\s*(?:is|are)?\s*(?:not|never)\b/;
+
+function spanOf(a: WaterNeed, b: WaterNeed): WaterNeed[] {
+  const [i, j] = [WATER_NEED_ORDER.indexOf(a), WATER_NEED_ORDER.indexOf(b)].sort((x, y) => x - y);
+  return WATER_NEED_ORDER.slice(i, j + 1);
+}
+
+function isNegated(text: string, start: number, end: number): boolean {
+  const before = text.slice(0, start).split(/[.,;:!?]/).pop() ?? '';
+  const after = text.slice(end).split(/[.,;:!?]/)[0] ?? '';
+  return WATER_NEGATION_BEFORE.test(before) || WATER_NEGATION_AFTER.test(after);
+}
+
+/** The needs a quote states: one need, or every need a range spans
+ *  ("dry to medium moisture" is low and medium). `'negated'` when a phrase
+ *  is negated, null when it states none or two that do not overlap. */
+export function waterNeedsOfQuote(quote: string): readonly WaterNeed[] | 'negated' | null {
+  let text = ` ${quote.toLowerCase().replace(/[‘’]/g, "'").replace(/\s+/g, ' ')} `;
+  const statements: WaterNeed[][] = [];
+  let negated = false;
+  const blank = (m: RegExpExecArray) =>
+    text.slice(0, m.index) + ' '.repeat(m[0].length) + text.slice(m.index + m[0].length);
+  for (const m of [...text.matchAll(WATER_RANGE)]) {
+    if (isNegated(text, m.index, m.index + m[0].length)) negated = true;
+    statements.push(spanOf(WATER_RANGE_ENDS[m[1]], WATER_RANGE_ENDS[m[2]]));
+    text = blank(m);
+  }
+  const phrases = (Object.entries(WATER_NEED_PHRASES) as Array<[WaterNeed, readonly string[]]>)
     .flatMap(([need, list]) => list.map((p) => ({ need, p })))
     .sort((a, b) => b.p.length - a.p.length);
-  const found = new Set<string>();
   for (const { need, p } of phrases) {
     const re = new RegExp(`(?<![a-z])${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z])`, 'g');
-    if (re.test(text)) {
-      found.add(need);
-      text = text.replace(re, ' ');
+    for (const m of [...text.matchAll(re)]) {
+      if (isNegated(text, m.index, m.index + m[0].length)) negated = true;
+      statements.push([need]);
+      text = blank(m);
     }
   }
-  return found.size === 1 ? ([...found][0] as 'low' | 'medium' | 'high') : null;
+  if (negated) return 'negated';
+  if (statements.length === 0) return null;
+  const agreed = statements.reduce((acc, s) => acc.filter((n) => s.includes(n)));
+  return agreed.length > 0 ? agreed : null;
+}
+
+/** The single water need a quote states, or null when it states none, a
+ *  range of more than one, two that differ, or a negated one. */
+export function waterNeedOfQuote(quote: string): WaterNeed | null {
+  const needs = waterNeedsOfQuote(quote);
+  return Array.isArray(needs) && needs.length === 1 ? needs[0] : null;
+}
+
+/** F867-2: a `waterNeed` quote is one passage that names the crop. Pieces
+ *  joined with "...", " | " or as separate quoted strings are refused, save
+ *  the ruled page-title name piece (hyssop, at review). */
+export const WATER_NEED_TITLE_PIECES: Readonly<Record<string, string>> = {
+  'hyssop-officinalis': 'Hyssopus officinalis'
+};
+
+export function isStitchedQuote(quote: string): boolean {
+  return /\.\.\.|…|\s\|\s|"[^"]*"\s*;\s*"/.test(quote);
+}
+
+function waterNeedStitchAllowed(pluginId: string, quote: string): boolean {
+  const title = WATER_NEED_TITLE_PIECES[pluginId];
+  if (!title) return false;
+  const pieces = [...quote.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  return pieces.length === 2 && pieces[0] === title && !isStitchedQuote(pieces[1]);
 }
 
 /** Words that never name a crop on their own ("Summer Savory" is not named
@@ -1423,19 +1556,21 @@ export function cropNameWords(displayName: string): string[] {
   return [...out].filter(Boolean);
 }
 
-/** True when the quote names the crop by one of `cropNameWords`. */
+/** True when the quote names the crop by one of `cropNameWords` as whole
+ *  words, and not inside a longer herb name ("sagebrush" and "mountain
+ *  mint" name neither sage nor spearmint, CO-9). */
 export function quoteNamesCropName(quote: string, displayName: string): boolean {
-  const q = quote.toLowerCase();
-  return cropNameWords(displayName).some((w) =>
-    new RegExp(`(?<![a-z])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(q)
-  );
+  return quoteNamesAny(quote, cropNameWords(displayName));
 }
 
 /** #37E: every counted `waterNeed` source (`waterNeed` and any
- *  `waterNeed.<n>`) comes from an extension or government page, names the
- *  crop and states one need through `WATER_NEED_PHRASES` equal to the stored
- *  value. A second counted source that maps to a different value means the
- *  field must stay empty. Returns "pluginId: problem" lines. */
+ *  `waterNeed.<n>`) comes from an extension or government page, is one
+ *  passage that names the crop (F867-2) and states a need through
+ *  `WATER_NEED_PHRASES`; a range counts as every need it spans (CO-9). The
+ *  stored value is the one need every counted source allows; when they
+ *  allow none in common, or more than one, the field stays empty with a
+ *  `waterNeed.notRecorded` entry holding the quotes (CO-3). Returns
+ *  "pluginId: problem" lines. */
 export function waterNeedQuoteGaps(
   crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'waterNeed'>>,
   sources: SourceMap
@@ -1443,36 +1578,143 @@ export function waterNeedQuoteGaps(
   const gaps: string[] = [];
   for (const c of crops) {
     const own = sources[c.pluginId] ?? {};
-    const keys = Object.keys(own).filter((k) => k === 'waterNeed' || k.startsWith('waterNeed.'));
-    if (!c.waterNeed && keys.length === 0) continue;
-    const values = new Set<string>();
-    for (const key of keys) {
-      const entry = sourceEntrySchema.safeParse(own[key]);
-      if (!entry.success) {
-        gaps.push(`${c.pluginId}: ${key} source is not a valid entry`);
-        continue;
-      }
-      if (!isAllowedSpacingSource(entry.data.url)) {
-        gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
-      }
-      if (!quoteNamesCropName(entry.data.quote, c.displayName)) {
-        gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
-      }
-      const need = waterNeedOfQuote(entry.data.quote);
-      if (need === null) {
-        gaps.push(`${c.pluginId}: ${key} quote states no single dry, moderate or moist need`);
-        continue;
-      }
-      values.add(need);
-      if (c.waterNeed && need !== c.waterNeed) {
-        gaps.push(`${c.pluginId}: ${key} quote reads ${need}, not ${c.waterNeed}`);
-      }
+    const keys = Object.keys(own).filter((k) => k === 'waterNeed' || /^waterNeed\.\d+$/.test(k));
+    const notRecorded = own[WATER_NEED_NOT_RECORDED_KEY];
+    if (!c.waterNeed && keys.length === 0 && notRecorded === undefined) continue;
+    if (c.waterNeed && notRecorded !== undefined) {
+      gaps.push(`${c.pluginId}: waterNeed is set; drop ${WATER_NEED_NOT_RECORDED_KEY}`);
     }
-    if (c.waterNeed && values.size > 1) {
+    if (!c.waterNeed && keys.length > 0) {
+      gaps.push(
+        `${c.pluginId}: waterNeed sources with no value; move them into ${WATER_NEED_NOT_RECORDED_KEY}`
+      );
+    }
+    let agreed: readonly WaterNeed[] | null = null;
+    for (const key of keys) {
+      const { needs, counts } = countedWaterNeeds(c, key, own[key], gaps);
+      if (!needs) continue;
+      if (c.waterNeed && !needs.includes(c.waterNeed)) {
+        gaps.push(`${c.pluginId}: ${key} quote reads ${needs.join(' to ')}, not ${c.waterNeed}`);
+      }
+      if (counts) agreed = agreed ? agreed.filter((n) => needs.includes(n)) : needs;
+    }
+    if (c.waterNeed && agreed && agreed.length === 0) {
       gaps.push(`${c.pluginId}: waterNeed sources disagree; leave the field empty`);
+    } else if (c.waterNeed && agreed && agreed.length > 1) {
+      gaps.push(
+        `${c.pluginId}: waterNeed sources allow ${agreed.join(' to ')}; leave the field empty`
+      );
+    }
+    const entry = notRecordedEntrySchema.safeParse(notRecorded);
+    if (c.waterNeed || !entry.success) continue;
+    let held: readonly WaterNeed[] | null = null;
+    for (const [i, q] of (entry.data.quotes ?? []).entries()) {
+      const { needs, counts } = countedWaterNeeds(c, `${WATER_NEED_NOT_RECORDED_KEY}.quotes.${i}`, q, []);
+      if (!needs || !counts) continue;
+      held = held ? held.filter((n) => needs.includes(n)) : needs;
+    }
+    if (held && held.length === 1) {
+      gaps.push(`${c.pluginId}: the recorded waterNeed quotes agree on ${held[0]}; ship it`);
     }
   }
   return gaps;
+}
+
+// ─── CO-7: every Phase 37 herb field is filled or recorded as empty ─────
+
+/** A Phase 37 herb field the coverage gate checks: filled on the plugin,
+ *  or a `<key>.notRecorded` entry in crop-data-sources.json. */
+export interface HerbDataField {
+  key: string;
+  appliesTo?: (c: CropPlugin) => boolean;
+  filled: (c: CropPlugin) => boolean;
+}
+
+export const HERB_DATA_FIELDS: readonly HerbDataField[] = [
+  { key: 'lifecycle', filled: (c) => !!c.agronomy?.lifecycle },
+  {
+    key: 'winterHardyToZone',
+    appliesTo: (c) => c.agronomy?.lifecycle === 'perennial',
+    filled: (c) => !!c.winterHardyToZone
+  },
+  ...CROP_PRESERVING_METHODS.map(
+    (m): HerbDataField => ({
+      key: `preserving.${m}`,
+      filled: (c) => !!c.preserving?.some((p) => p.method === m)
+    })
+  ),
+  { key: 'harvestCadence', filled: (c) => !!c.harvestCadence },
+  { key: 'waterNeed', filled: (c) => !!c.waterNeed },
+  { key: 'harvestTiming', filled: (c) => (c.harvestTiming?.length ?? 0) > 0 }
+];
+
+/** CO-7: every `HERB_PLUGIN_IDS` plugin has each field in `fields` filled
+ *  or carries a valid `<field>.notRecorded: { reason, checked, date }`, and
+ *  never both. Returns "pluginId: problem" lines. */
+export function herbDataCoverageGaps(
+  crops: readonly CropPlugin[],
+  sources: SourceMap,
+  fields: readonly HerbDataField[] = HERB_DATA_FIELDS
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    if (!isHerbGardenCrop(c.pluginId)) continue;
+    const own = sources[c.pluginId] ?? {};
+    for (const f of fields) {
+      const key = `${f.key}.notRecorded`;
+      const raw = own[key];
+      if (f.appliesTo && !f.appliesTo(c)) {
+        if (raw !== undefined) gaps.push(`${c.pluginId}: ${key} on a crop the field does not apply to`);
+        continue;
+      }
+      if (f.filled(c)) {
+        if (raw !== undefined) gaps.push(`${c.pluginId}: ${f.key} is filled; drop ${key}`);
+      } else if (raw === undefined) {
+        gaps.push(`${c.pluginId}: ${f.key} is neither filled nor recorded under ${key}`);
+      } else if (!notRecordedEntrySchema.safeParse(raw).success) {
+        gaps.push(`${c.pluginId}: ${key} needs { reason, checked: [url...], date }`);
+      }
+    }
+  }
+  return gaps;
+}
+
+/** The needs a waterNeed source's quote states and whether the source
+ *  counts; each problem is pushed onto `gaps`. */
+function countedWaterNeeds(
+  c: Pick<CropPlugin, 'pluginId' | 'displayName'>,
+  key: string,
+  raw: unknown,
+  gaps: string[]
+): { needs: readonly WaterNeed[] | null; counts: boolean } {
+  const entry = sourceEntrySchema.safeParse(raw);
+  if (!entry.success) {
+    gaps.push(`${c.pluginId}: ${key} source is not a valid entry`);
+    return { needs: null, counts: false };
+  }
+  const { url, quote } = entry.data;
+  let counts = true;
+  if (!isAllowedSpacingSource(url)) {
+    gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+    counts = false;
+  }
+  const titled = waterNeedStitchAllowed(c.pluginId, quote);
+  if (isStitchedQuote(quote) && !titled) {
+    gaps.push(`${c.pluginId}: ${key} quote joins pieces; it must be one passage (F867-2)`);
+    counts = false;
+  } else if (!titled && !quoteNamesCropName(quote, c.displayName)) {
+    gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
+    counts = false;
+  }
+  const needs = waterNeedsOfQuote(quote);
+  if (needs === 'negated') {
+    gaps.push(`${c.pluginId}: ${key} quote negates its water phrase`);
+    return { needs: null, counts: false };
+  }
+  if (needs === null) {
+    gaps.push(`${c.pluginId}: ${key} quote states no single dry, moderate or moist need`);
+  }
+  return { needs, counts };
 }
 
 // Phase 37D

@@ -40,8 +40,8 @@ describe('area detail form', () => {
     expect(draft).toMatchObject({ container: true, indoors: true });
     expect(detailsFromDraft('garden', draft)).toEqual({ ok: true, details });
     expect(detailsSummary('garden', details, undefined, undefined, 'es')).toEqual([
-      { label: 'Cultivado en macetas o recipientes', value: expect.any(String) },
-      { label: 'Dentro de casa, como en una ventana', value: expect.any(String) }
+      { label: 'Cultivo en macetas o contenedores', value: expect.any(String) },
+      { label: 'Dentro de casa, como junto a una ventana', value: expect.any(String) }
     ]);
     expect(detailsSummary('garden', details).map((r) => r.label)).toEqual([
       'Grown in pots or containers',

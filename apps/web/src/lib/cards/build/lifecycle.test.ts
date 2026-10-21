@@ -73,7 +73,7 @@ describe('lifecycle fact on cards', () => {
       locale: 'es'
     })!;
     const fact = card.facts.find((f) => f.label === 'Anual o perenne aquí');
-    expect(fact?.value).toContain('Con la zona que ingresaste, 7b.');
+    expect(fact?.value).toContain('Se usa la zona que ingresaste: 7b.');
   });
 
   it('non-herbs and bundles saved before 37B get no fact', () => {

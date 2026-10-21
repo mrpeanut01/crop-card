@@ -14,6 +14,7 @@ import {
   cropFactPaths,
   harvestCadenceQuoteGaps,
   herbHarvestFactPaths,
+  notRecordedEntrySchema,
   preservingQuoteGaps,
   type SourceMap
 } from './sourceCoverage';
@@ -65,11 +66,15 @@ describe('Phase 37C shipped library', () => {
     const byId = new Map(crops.map((c) => [c.pluginId, c]));
     for (const [id, entries] of Object.entries(SOURCES)) {
       for (const key of Object.keys(entries)) {
-        if (!key.startsWith('preserving.') && key !== 'harvestCadence') continue;
+        if (!key.startsWith('preserving.') && !key.startsWith('harvestCadence')) continue;
         const c = byId.get(id);
         if (key.endsWith('.notRecorded')) {
+          expect(notRecordedEntrySchema.safeParse(entries[key]).success, `${id} ${key}`).toBe(true);
+          if (key === 'harvestCadence.notRecorded') {
+            expect(c?.harvestCadence, `${id} ${key}`).toBeUndefined();
+            continue;
+          }
           const method = key.slice('preserving.'.length, -'.notRecorded'.length);
-          expect((entries[key] as { note?: string }).note, `${id} ${key}`).toMatch(/disagree/);
           expect(
             c?.preserving?.some((p) => p.method === method),
             `${id} ${key} is recorded as empty but the plugin has it`
@@ -182,6 +187,85 @@ describe('preservingQuoteGaps', () => {
     expect(preservingQuoteGaps([crop([{ method: 'dry', suitability: 'fair' }])], map)).toEqual([]);
   });
 
+  it('refuses a good row whose quote carries a warning (CO-9)', () => {
+    const umn = 'Basil leaves turn an unpleasant brown color when air-dried.';
+    expect(
+      preservingQuoteGaps([crop([{ method: 'dry', suitability: 'good' }])], {
+        'basil-genovese': { 'preserving.dry': src(umn) }
+      })
+    ).toEqual(['basil-genovese: preserving.dry is good but its quote has words that say poor']);
+    expect(
+      preservingQuoteGaps([crop([{ method: 'dry', suitability: 'poor' }])], {
+        'basil-genovese': { 'preserving.dry': src(umn) }
+      })
+    ).toEqual([]);
+    expect(
+      preservingQuoteGaps([crop([{ method: 'dry', suitability: 'good' }])], {
+        'basil-genovese': {
+          'preserving.dry': src('Basil and the mints will mold if not dried quickly.')
+        }
+      })
+    ).toEqual(['basil-genovese: preserving.dry is good but its quote has words that say fair']);
+  });
+
+  it('reads the warning only in sentences that name the crop', () => {
+    const dill = { pluginId: 'dill-mammoth', displayName: 'Dill — Mammoth' };
+    expect(
+      preservingQuoteGaps([{ ...dill, preserving: [{ method: 'dry', suitability: 'good' }] }], {
+        'dill-mammoth': {
+          'preserving.dry': src(
+            'Sage, thyme, summer savory, dill, and parsley are easy to dry. Basil, tarragon, and mints may mold and discolor if not dried quickly.'
+          )
+        }
+      })
+    ).toEqual([]);
+    const chervil = { pluginId: 'chervil', displayName: 'Chervil' };
+    expect(
+      preservingQuoteGaps(
+        [{ ...chervil, preserving: [{ method: 'fresh', suitability: 'good' }] }],
+        { chervil: { 'preserving.fresh': src('Some herbs are best used fresh, such as chervil.') } }
+      )
+    ).toEqual([]);
+  });
+
+  it('no longer reads a bare "do not" as poor or a bare "less" as fair (CO-9)', () => {
+    expect(
+      preservingQuoteGaps([crop([{ method: 'dry', suitability: 'poor' }])], {
+        'basil-genovese': { 'preserving.dry': src('Do not wash basil before you dry it.') }
+      })
+    ).toEqual(['basil-genovese: preserving.dry quote has no words that say poor']);
+    expect(
+      preservingQuoteGaps([crop([{ method: 'dry', suitability: 'fair' }])], {
+        'basil-genovese': { 'preserving.dry': src('Dry basil in less than a week.') }
+      })
+    ).toEqual(['basil-genovese: preserving.dry quote has no words that say fair']);
+    expect(
+      preservingQuoteGaps([crop([{ method: 'dry', suitability: 'poor' }])], {
+        'basil-genovese': { 'preserving.dry': src('Basil does not dry well.') }
+      })
+    ).toEqual([]);
+    expect(
+      preservingQuoteGaps([crop([{ method: 'dry', suitability: 'fair' }])], {
+        'basil-genovese': { 'preserving.dry': src('Dried basil is less flavorful than fresh.') }
+      })
+    ).toEqual([]);
+  });
+
+  it('refuses a value a notRecorded entry rules out (the DH-6 pattern)', () => {
+    expect(
+      preservingQuoteGaps([crop([{ method: 'dry', suitability: 'good' }])], {
+        'basil-genovese': {
+          'preserving.dry': src('Basil is easily dried for storing and future use.'),
+          'preserving.dry.notRecorded': {
+            reason: 'Sources disagree on how well basil dries.',
+            checked: [URL_OK],
+            date: '2026-10-21'
+          }
+        }
+      })
+    ).toEqual(['basil-genovese: preserving.dry is set; drop preserving.dry.notRecorded']);
+  });
+
   it('infuse needs a note and a .edu safety quote that names botulism', () => {
     const entry = [{ method: 'infuse' as const, suitability: 'good' as const }];
     const map = {
@@ -245,6 +329,45 @@ describe('harvestCadenceQuoteGaps', () => {
     expect(harvestCadenceQuoteGaps([crop], oneEnd)).toEqual([
       'basil-genovese: harvestCadence quote does not state 14-21 days'
     ]);
+  });
+
+  it('needs a cut or harvest verb and refuses pinching and pruning (CO-6, F867-1)', () => {
+    const stevia = {
+      pluginId: 'stevia-sweetleaf',
+      displayName: 'Stevia — Sweetleaf',
+      harvestCadence: cadence
+    };
+    expect(
+      harvestCadenceQuoteGaps([stevia], {
+        'stevia-sweetleaf': { harvestCadence: src('Pinch stevia tips every 2 to 3 weeks.') }
+      })
+    ).toEqual([
+      'stevia-sweetleaf: harvestCadence quote has no cut or harvest verb',
+      'stevia-sweetleaf: harvestCadence quote is about pinching or pruning, not harvest'
+    ]);
+    expect(
+      harvestCadenceQuoteGaps([crop], {
+        'basil-genovese': { harvestCadence: src('Prune your basil every 2-3 weeks.') }
+      })
+    ).toEqual([
+      'basil-genovese: harvestCadence quote has no cut or harvest verb',
+      'basil-genovese: harvestCadence quote is about pinching or pruning, not harvest'
+    ]);
+  });
+
+  it('refuses a cadence a notRecorded entry rules out', () => {
+    expect(
+      harvestCadenceQuoteGaps([crop], {
+        'basil-genovese': {
+          harvestCadence: src('Harvest basil every 2 to 3 weeks.'),
+          'harvestCadence.notRecorded': {
+            reason: 'Sources disagree on the interval.',
+            checked: [URL_OK],
+            date: '2026-10-21'
+          }
+        }
+      })
+    ).toEqual(['basil-genovese: harvestCadence is set; drop harvestCadence.notRecorded']);
   });
 });
 

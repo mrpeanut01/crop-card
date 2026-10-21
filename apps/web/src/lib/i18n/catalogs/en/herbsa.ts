@@ -118,7 +118,14 @@ export const enHerbsa = {
   'herbsa.result.appSuggestions':
     "Rows tagged Fallback are the app's own suggestions for each cuisine and goal, not Claude's.",
   'herbsa.result.sunWarning':
-    'No herb in the library says how much sun it needs yet, so this list is not sorted by sun. Ask at the nursery which of these take part shade.',
+    'This spot gets less than full sun, so herbs that want more sun are listed last. None are taken off the list.',
+  'herbsa.result.sunUnknown':
+    'Not every herb says how much sun it needs. Ask at the nursery about the ones with no sun line.',
+  'herbsa.sun.full': 'Wants full sun.',
+  'herbsa.sun.part': 'Takes part shade.',
+  'herbsa.sun.shade': 'Grows in shade.',
+  'herbsa.sun.mismatch.full': 'Wants full sun, more than this spot gets.',
+  'herbsa.sun.mismatch.part': 'Takes part shade, but not mostly shade.',
   'herbsa.result.lifecycleUnknown': 'Annual or perennial here: not yet known',
   'herbsa.result.remove': 'Take {name} off the list',
 

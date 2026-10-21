@@ -3,7 +3,9 @@
  * the app's own editorial suggestions, not agronomy: they say which herbs
  * a cook usually reaches for, never how a herb grows. Rows from them are
  * tagged `fallback`; herbs the owner asked for are `manual`. The sun answer
- * filters nothing, because no crop plugin says how much sun it needs.
+ * filters nothing: when the spot gets less than full sun, rows are ordered
+ * by each herb's sourced `sunNeed` (match, then unknown, then mismatch,
+ * CO-5) and none is removed.
  */
 
 import { isHerbGardenCrop } from '$lib/garden/herbs';
@@ -16,6 +18,7 @@ import {
   type BriefWhy,
   type ShortlistRow
 } from './schema';
+import { orderBySun, sunIsLimited, type HerbSunNeed } from './sun';
 
 export const CUISINE_HERBS: Readonly<Record<BriefCuisine, readonly string[]>> = {
   italian: [
@@ -163,16 +166,18 @@ export function deterministicReason(
 
 export interface DeterministicShortlist {
   rows: ShortlistRow[];
-  /** The sun answer was half a day or shade. It filters nothing; the page
-   *  says the list is not sorted by sun. */
+  /** The sun answer was half a day or shade. It filters nothing; the rows
+   *  are ordered by sun and the page says so. */
   sunWarning: boolean;
 }
 
 /** The shortlist from the answers alone. `known` drops ids the farm's
- *  library does not hold (a farm copy can retire a plugin). */
+ *  library does not hold (a farm copy can retire a plugin); `sunNeedOf`
+ *  gives each herb's sourced sun need for the order. */
 export function deterministicShortlist(
   answers: BriefAnswers,
-  known: (pluginId: string) => boolean = () => true
+  known: (pluginId: string) => boolean = () => true,
+  sunNeedOf: (pluginId: string) => HerbSunNeed | null | undefined = () => null
 ): DeterministicShortlist {
   const avoid = new Set(answers.avoid?.value ?? []);
   const usable = (id: string) => isHerbGardenCrop(id) && known(id) && !avoid.has(id);
@@ -194,15 +199,13 @@ export function deterministicShortlist(
     .slice(0, MAX_SHORTLIST);
 
   const sun = answers.sun?.value ?? null;
-  return {
-    rows: ranked.map(({ id, reasons }) => ({
-      cropPluginId: id,
-      because: becauseText(reasons),
-      provenance: reasons.some((r) => r.kind === 'wanted') ? 'manual' : 'fallback',
-      reasons
-    })),
-    sunWarning: sun === 'half-day' || sun === 'shade'
-  };
+  const rows: ShortlistRow[] = ranked.map(({ id, reasons }) => ({
+    cropPluginId: id,
+    because: becauseText(reasons),
+    provenance: reasons.some((r) => r.kind === 'wanted') ? 'manual' : 'fallback',
+    reasons
+  }));
+  return { rows: orderBySun(rows, sun, sunNeedOf), sunWarning: sunIsLimited(sun) };
 }
 
 /** Every English sentence the tables can produce, for the guard test. */

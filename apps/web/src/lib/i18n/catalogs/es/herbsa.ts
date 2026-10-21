@@ -122,7 +122,14 @@ export const esHerbsa: Partial<Record<MessageKey, string>> = {
   'herbsa.result.appSuggestions':
     'Las filas marcadas como Alternativa son sugerencias propias de la app para cada cocina y meta, no de Claude.',
   'herbsa.result.sunWarning':
-    'Ninguna hierba de la biblioteca dice todavía cuánto sol necesita, así que esta lista no está ordenada por sol. Pregunta en el vivero cuáles aguantan media sombra.',
+    'Este lugar recibe menos que sol pleno, así que las hierbas que quieren más sol van al final. No se quita ninguna de la lista.',
+  'herbsa.result.sunUnknown':
+    'No todas las hierbas dicen cuánto sol necesitan. Pregunta en el vivero por las que no tienen una línea de sol.',
+  'herbsa.sun.full': 'Necesita sol pleno.',
+  'herbsa.sun.part': 'Tolera media sombra.',
+  'herbsa.sun.shade': 'Crece a la sombra.',
+  'herbsa.sun.mismatch.full': 'Necesita sol pleno, más del que recibe este lugar.',
+  'herbsa.sun.mismatch.part': 'Tolera media sombra, pero no casi todo sombra.',
   'herbsa.result.lifecycleUnknown': 'Anual o perenne aquí: todavía no se sabe',
   'herbsa.result.remove': 'Quitar {name} de la lista',
 

@@ -17,6 +17,7 @@ import {
   type SnapshotGardenBrief
 } from '$lib/garden/brief/schema';
 import type { PluginRegistry } from '$lib/plugins';
+import type { CropPlugin } from '$lib/plugins/schemas';
 
 export function loadGardenBrief(read: SettingReader = getSetting): GardenBrief | null {
   return parseGardenBrief(read(GARDEN_BRIEF_KEY));
@@ -49,6 +50,16 @@ export function deleteGardenBrief(): void {
  *  herb list (R-3). */
 export function briefHerbCheck(registry: PluginRegistry): (pluginId: string) => boolean {
   return (id) => isHerbGardenCrop(id) && registry.get(id)?.plugin.type === 'crop';
+}
+
+/** Close-out CO-5: each herb's sourced sun need, for the shortlist order. */
+export function briefSunNeedOf(
+  registry: PluginRegistry
+): (pluginId: string) => CropPlugin['sunNeed'] | undefined {
+  return (id) => {
+    const p = registry.get(id)?.plugin;
+    return p?.type === 'crop' ? (p as CropPlugin).sunNeed : undefined;
+  };
 }
 
 /** Ids in a brief that are not herbs in this farm's library. */

@@ -21,6 +21,7 @@
     type SharedGardenBrief
   } from '$lib/garden/brief/schema';
   import type { AiLimit } from '$lib/billing/aiLimit';
+  import { orderBySun, sunIsLimited } from '$lib/garden/brief/sun';
 
   const { data } = $props();
   const tr = $derived(createT(page.data?.locale));
@@ -54,9 +55,11 @@
   let confirmStartOver = $state(false);
   let usageKey = $state(0);
 
-  const rows = $derived(brief?.shortlist ?? []);
+  const sunNeedOf = (id: string) => data.herbs.find((h) => h.pluginId === id)?.sunNeed;
+  const rows = $derived(orderBySun(brief?.shortlist ?? [], answers.sun?.value, sunNeedOf));
   const anyFallback = $derived(rows.some((r) => r.provenance === 'fallback'));
-  const sunWarning = $derived(answers.sun?.value === 'half-day' || answers.sun?.value === 'shade');
+  const sunWarning = $derived(sunIsLimited(answers.sun?.value));
+  const sunUnknown = $derived(rows.some((r) => !sunNeedOf(r.cropPluginId)));
   const designerLink = $derived(
     data.gardenAreaId && rows.length > 0
       ? `${designerHref(data.gardenAreaId)}?crops=${encodeURIComponent(designerCropsParam(rows))}`
@@ -219,11 +222,15 @@
       {#if sunWarning}<p class="note no-print" data-testid="brief-sun-warning">
           {tr('herbsa.result.sunWarning')}
         </p>{/if}
+      {#if sunUnknown}<p class="note no-print" data-testid="brief-sun-unknown">
+          {tr('herbsa.result.sunUnknown')}
+        </p>{/if}
       <div class="no-print">
         <BriefShortlist
           {rows}
           herbs={data.herbs}
           lifecycle={data.lifecycle}
+          sun={answers.sun?.value ?? null}
           toxic={data.toxic}
           petSpecies={data.petSpecies}
           speciesPlural={data.speciesPlural}

@@ -206,15 +206,25 @@ describe('pantry kept totals, page and snapshot', () => {
     expect(part.pantry?.goals.map((g) => g.status)).toEqual(['not-known', 'not-known']);
     const snapshot = await runWithTenantAsync(farm.ownerId, () => buildFarmSnapshot());
     expect(snapshot.pantry?.year).toBe(seasonYear());
-    const card = buildPlantingCard(snapshot, farm.plantingId);
     expect(snapshot.cropPlugins['basil-genovese']?.preserving?.length).toBeGreaterThan(0);
-    const section = card?.sections.find((s) => s.title === 'Harvest goals');
-    const basilDries = snapshot.cropPlugins['basil-genovese']!.preserving!.some(
-      (r) => r.method === 'dry' && r.suitability !== 'poor'
+    expect(
+      snapshot.cropPlugins['basil-genovese']!.preserving!.some((r) => r.method === 'freeze-dry')
+    ).toBe(false);
+    const unmet = buildPlantingCard(snapshot, farm.plantingId)?.sections.find(
+      (s) => s.title === 'Harvest goals'
     );
-    if (basilDries) expect(section?.items[0]).toMatch(/^Drying: /);
-    else expect(section).toBeUndefined();
-    expect(section?.items.some((i) => /^Canning/.test(i)) ?? false).toBe(false);
+    expect(unmet).toBeUndefined();
+
+    const dry = seedFarm('snap-dry', {
+      brief: { storageGoals: [{ goal: 'dry', target: 'basil for the winter' }, 'can-or-jelly'] }
+    });
+    const drySnap = await runWithTenantAsync(dry.ownerId, () => buildFarmSnapshot());
+    const section = buildPlantingCard(drySnap, dry.plantingId)?.sections.find(
+      (s) => s.title === 'Harvest goals'
+    );
+    expect(section?.items).toHaveLength(1);
+    expect(section?.items[0]).toMatch(/^Drying: /);
+    expect(section?.items[0]).toContain('basil for the winter');
 
     const infuse = seedFarm('snap-infuse', {
       brief: { storageGoals: [{ goal: 'infuse', target: 'a bottle to give away' }, 'can-or-jelly'] }

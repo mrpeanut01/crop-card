@@ -2,7 +2,7 @@
   "pluginId": "tarragon-french",
   "type": "crop",
   "displayName": "Tarragon French (Artemisia dracunculus sativa)",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "waterNeed": "low",
@@ -34,6 +34,10 @@
   },
   "archetype": "cut-and-come-again-leafy",
   "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
     {
       "method": "dry",
       "suitability": "fair"

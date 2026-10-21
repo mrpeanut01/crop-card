@@ -2,7 +2,7 @@
   "pluginId": "dill-mammoth",
   "type": "crop",
   "displayName": "Dill — Mammoth",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "apiaceae",
   "waterNeed": "high",
   "daysToMaturity": {
@@ -24,6 +24,10 @@
   },
   "archetype": "cut-and-come-again-leafy",
   "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
     {
       "method": "dry",
       "suitability": "good"

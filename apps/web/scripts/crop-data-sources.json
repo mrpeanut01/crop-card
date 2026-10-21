@@ -1540,6 +1540,13 @@
       "date": "Accessed 2026-10-17",
       "quote": "To insure a fresh supply of dill leaves, make successive sowing of dill every two weeks through the growing season as plants decline soon after they start to flower (bolt).",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "preserving.fresh": {
+      "url": "https://www.ndsu.edu/agriculture/extension/publications/garden-table-harvesting-herbs-healthy-eating",
+      "publisher": "North Dakota State University Extension H1267, From Garden to Table: Harvesting Herbs for Healthy Eating",
+      "date": "Reviewed Dec. 2021 (accessed 2026-10-21)",
+      "quote": "Dill, a highly versatile culinary herb fresh and dry, is one of the most commonly grown annual herbs in the upper Midwest.",
+      "note": "CO-7 scan (2026-10-21): the sentence names the herb and fresh use; no counted source warns against using it fresh."
     }
   },
   "edamame-midori-giant": {
@@ -3390,6 +3397,13 @@
           "quote": "Special consideration should be given to the location of a few of the savory herbs that are sensitive to soil-moisture conditions. Sage, rosemary, and thyme require a well-drained moderately moist situation; celery, parsley, chervil, and the mints give best results on soils that retain considerable moisture but have good drainage."
         }
       ]
+    },
+    "preserving.fresh": {
+      "url": "https://hort.extension.wisc.edu/articles/rosemary/",
+      "publisher": "University of Wisconsin-Madison Extension, Wisconsin Horticulture, Rosemary",
+      "date": "accessed 2026-10-21",
+      "quote": "Rosemary, both fresh and dried, has numerous cosmetic, decorative, medicinal, and culinary uses, besides its ornamental appeal.",
+      "note": "CO-7 scan (2026-10-21): the sentence names the herb and fresh use; no counted source warns against using it fresh."
     }
   },
   "sage-broadleaf": {
@@ -3472,6 +3486,27 @@
       "date": "4/6/2019 (accessed 2026-10-20)",
       "quote": "SAGE – Perennial; likes semi-shade. Drought tolerant; just barely moist soil (dry down to second knuckle). When new growth appears in early spring, cut back each stem on mature plants by a third, making the cut right above a set of leaves. Foliar feed when new growth appears in spring and again around the summer solstice (e.g. June 21st). In early July cut the tips of each stem back 3 inches and dry for winter use. Harvest mature plants at 6- to 8-week intervals beginning in late spring, cutting back 3 to 5 inches.",
       "note": "Phase 37C (#867). The SAGE entry of the sheet, whole up to the cadence sentence: 6 to 8 weeks between cuts on mature plants, so everyDays 42 to 56. An Arizona Master Gardener sheet on the extension site; no other allowed page found states a cadence for sage, and none disagrees."
+    },
+    "preserving.fresh": {
+      "url": "https://plants.ces.ncsu.edu/plants/salvia-officinalis/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Salvia officinalis",
+      "date": "accessed 2026-10-21",
+      "quote": "The leaves of common sage may be used fresh, dried or cooked.",
+      "note": "CO-7 scan (2026-10-21): the sentence names the herb and fresh use; no counted source warns against using it fresh."
+    },
+    "waterNeed": {
+      "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+      "publisher": "USDA Farmers' Bulletin 1977, Savory Herbs: Culture and Use (1946), on Purdue NewCROP",
+      "date": "1946 (accessed 2026-10-21)",
+      "quote": "Special consideration should be given to the location of a few of the savory herbs that are sensitive to soil-moisture conditions. Sage, rosemary, and thyme require a well-drained moderately moist situation; celery, parsley, chervil, and the mints give best results on soils that retain considerable moisture but have good drainage.",
+      "note": "CO-9 re-judge (2026-10-21): reads medium (\"moderately moist\"). The NC State Plant Toolbox (waterNeed.2) \"medium to dry soils\" is a range, low to medium, so the two overlap at medium. MU Extension G6470's herb table lists sage under Soil \"Dry\"; a table cell is not one of the gate's phrases, so it is not counted. Words only, never a target factor (R-10)."
+    },
+    "waterNeed.2": {
+      "url": "https://plants.ces.ncsu.edu/plants/salvia-officinalis/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Salvia officinalis",
+      "date": "accessed 2026-10-21",
+      "quote": "Common sage prefers full sun and well-drained, medium to dry soils that mimic those of its Mediterranean homeland.",
+      "note": "CO-9 re-judge (2026-10-21): a range, low to medium; overlaps the USDA bulletin at medium."
     }
   },
   "scallion-evergreen-bunching": {
@@ -7113,6 +7148,13 @@
           "quote": "The plants grow best in rich moist soil and usually make a growth of only about a foot during the first season. The sweet marjoram can be spaced at intervals of 6 to 8 inches, whereas the pot and wild marjorams should be set a foot or more apart in the row."
         }
       ]
+    },
+    "preserving.fresh": {
+      "url": "https://extension.umd.edu/resource/marjoram-sweet",
+      "publisher": "University of Maryland Extension, Sweet Marjoram",
+      "date": "accessed 2026-10-21",
+      "quote": "Sweet marjoram leaves, fresh or dried, can be used as a flavoring in cooking.",
+      "note": "CO-7 scan (2026-10-21): the sentence names the herb and fresh use; no counted source warns against using it fresh. USDA Farmers' Bulletin 1977 on Purdue NewCROP agrees (\"finely chopped fresh or powdered dry marjoram leaves\")."
     }
   },
   "stevia-sweetleaf": {
@@ -7290,6 +7332,13 @@
       "date": "Published May 2020; accessed 2026-10-20",
       "quote": "Newly planted French tarragon should be watered regularly until it becomes established. After that, allow the soil to dry out between waterings.",
       "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"allow the soil to dry\"); words only, never a target factor (R-10). Purdue NewCROP agrees (\"Tarragon grows best in warm, sunny location on dry soils with good drainage\"); Illinois's \"dry side\" is about pots indoors. The sentence after the quote also says \"consistently wet soil\", which is why it is left out."
+    },
+    "preserving.fresh": {
+      "url": "https://extension.illinois.edu/herbs/tarragon-french",
+      "publisher": "University of Illinois Extension, Herb Gardening: French Tarragon",
+      "date": "accessed 2026-10-21",
+      "quote": "Because the flavor of tarragon is quickly lost if leaves are dried, it is suggested that this herb be used in the fresh form whenever possible for best flavor.",
+      "note": "CO-7 scan (2026-10-21): the sentence names the herb and fresh use; no counted source warns against using it fresh. USU Extension agrees: \"Fresh French tarragon is generally used as a fresh herb and sprigs may be harvested as needed throughout the growing season.\""
     }
   },
   "arugula-astro": {
@@ -7491,6 +7540,13 @@
       "date": "undated web page; accessed 2026-10-20",
       "quote": "Lovage does best in moist, well-drained deep fertile soil in full sun to part shade. The plant requires pruning during the growing season (late spring to early fall) to encourage a supply of fresh, new leaves and old foliage can be removed in late fall.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "preserving.fresh": {
+      "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+      "publisher": "USDA Farmers' Bulletin 1977, Savory Herbs: Culture and Use (1946), on Purdue NewCROP",
+      "date": "1946 (accessed 2026-10-21)",
+      "quote": "Fowl.—Various combinations of poultry seasoning made of fresh or dried leaves of basil, lovage, marjoram, parsley, rosemary, summer savory, sage, and thyme may be used to add variety to the different dishes prepared from chicken, turkey, and other fowl.",
+      "note": "CO-7 scan (2026-10-21): the sentence names the herb and fresh use; no counted source warns against using it fresh."
     }
   },
   "mache-corn-salad": {
@@ -9063,6 +9119,13 @@
       "date": "February 15, 2019 (accessed 2026-10-20)",
       "quote": "Tulsi grows rapidly and blooms continually from June through first frost. Individual plants can easily cover 10 sq. ft. but can be pruned to fit smaller spaces.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). From the article text, not the reader comments under it."
+    },
+    "preserving.fresh": {
+      "url": "https://marylandgrows.umd.edu/2019/02/15/tulsi-basil-and-anise-hyssop-easy-useful-and-adaptable/",
+      "publisher": "University of Maryland Extension, Maryland Grows blog, Tulsi Basil and Anise Hyssop: Easy, Useful and Adaptable",
+      "date": "February 15, 2019 (accessed 2026-10-21)",
+      "quote": "Tulsi basil leaves can be harvested, used fresh and dried, through the entire growing season.",
+      "note": "CO-7 scan (2026-10-21): the sentence names the herb and fresh use; no counted source warns against using it fresh. Article text, not reader comments (F867-5)."
     }
   },
   "calendula-resina": {

@@ -2,7 +2,7 @@
   "pluginId": "rosemary-tuscan-blue",
   "type": "crop",
   "displayName": "Rosemary — Tuscan Blue",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 365,
@@ -25,6 +25,10 @@
   },
   "archetype": "cut-and-come-again-leafy",
   "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
     {
       "method": "dry",
       "suitability": "good"

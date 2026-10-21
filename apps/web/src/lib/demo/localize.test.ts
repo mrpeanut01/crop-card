@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { demoLocalizer } from './localize';
 import { buildDemoTimeline } from './timeline';
 import { DEMO_AREAS, DEMO_BEDS, DEMO_CROPS, DEMO_EQUIPMENT } from './catalog';
+import { demoPantryFixture } from '$lib/db/demo/pantryFixture';
 
 const TEXT_FIELDS = /^(title|body|notes|text|description|trayLabel|enterprise)$/;
 
@@ -62,5 +63,15 @@ describe('demoLocalizer', () => {
       ...DEMO_CROPS.map((c) => c.variety).filter((v) => v !== 'Cherokee Purple')
     ].filter((s): s is string => !!s);
     expect(names.filter((s) => L(s) === s)).toEqual([]);
+  });
+
+  it('has Spanish for the herb pantry quantities and units', () => {
+    const L = demoLocalizer('es');
+    expect(L('4 bunch')).toBe('4 manojo');
+    const texts = demoPantryFixture().flatMap((h) => [
+      h.quantity,
+      ...h.dispositions.map((d) => d.unit)
+    ]);
+    expect(texts.filter((s) => L(s) === s)).toEqual([]);
   });
 });

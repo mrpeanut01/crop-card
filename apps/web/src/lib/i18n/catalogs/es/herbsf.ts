@@ -43,11 +43,11 @@ export const esHerbsf: Partial<Record<MessageKey, string>> = {
   'herbsf.care.mint-spearmint.harvest-for-drying.title':
     'Las hojas para secar se cortan mejor justo cuando empiezan a aparecer las flores.',
   'herbsf.care.thyme-german-winter.renew-in-spring.title':
-    'Con los años el tomillo se vuelve leñoso y conviene renovarlo cada pocos años cortándolo a fondo en primavera.',
+    'Al envejecer, el tomillo puede volverse leñoso; conviene renovarlo cada pocos años recortándolo a fondo en primavera.',
   'herbsf.care.oregano-greek.harvest-before-flower.title':
     'Puedes empezar a cosechar justo antes de que las plantas vayan a florecer.',
   'herbsf.care.oregano-greek.leave-leaf-pairs.title':
-    'Quita las puntas de los tallos dejando de 4 a 6 pares de hojas en la planta para que eche brotes laterales para más cosechas.',
+    'Quita las puntas de los tallos y deja de 4 a 6 pares de hojas en la planta, para que eche brotes laterales y puedas cosechar más.',
   'herbsf.care.sage-broadleaf.prune-in-spring.title':
     'Poda las plantas en primavera justo cuando vuelven a brotar.',
   'herbsf.care.sage-broadleaf.harvest-leaves.title':
@@ -55,14 +55,15 @@ export const esHerbsf: Partial<Record<MessageKey, string>> = {
   'herbsf.care.sage-broadleaf.cut-for-drying.title':
     'Corta tallos de 6 a 8 pulgadas de largo para secar.',
   'herbsf.care.chives-common.remove-flowers.title':
-    'El cebollino puede resembrarse solo e invadir el huerto si no quitas las flores antes de que se marchiten.',
+    'El cebollín puede resembrarse solo e invadir el huerto si no quitas las flores antes de que se marchiten.',
   'herbsf.care.chives-common.harvest-through-season.title':
-    'Cosecha el cebollino durante toda la temporada para que las hojas no se endurezcan y para que se formen bulbillos nuevos.',
+    'Cosecha el cebollín durante toda la temporada para que las hojas no se endurezcan y para que se formen bulbillos nuevos.',
   'herbsf.care.chives-common.cut-near-base.title':
     'Corta las hojas cerca de la base, a una pulgada del suelo más o menos.',
   'herbsf.care.dill-mammoth.harvest-foliage.title':
-    'El follaje se puede cortar en cualquier momento y usar fresco, o secarlo para más adelante.',
-  'herbsf.care.lavender-english-munstead.no-fall-cutback.title': 'No cortes las plantas en otoño.',
+    'Puedes cortar el follaje en cualquier momento y usarlo fresco, o secarlo para más adelante.',
+  'herbsf.care.lavender-english-munstead.no-fall-cutback.title':
+    'No recortes las plantas en otoño.',
   'herbsf.care.lavender-english-munstead.prune-after-new-growth.title':
     'Espera a que empiecen a salir brotes nuevos en primavera antes de podar.',
   'herbsf.care.lavender-english-munstead.harvest-as-flowers-open.title':
@@ -80,7 +81,7 @@ export const esHerbsf: Partial<Record<MessageKey, string>> = {
   'herbsf.care.fennel-florence-zefa-fino.harvest-bulb.title':
     'El hinojo de Florencia se puede cosechar cuando los “bulbos” tienen el tamaño de una pelota de tenis: saca el “bulbo”, corta la raíz y recorta la parte de arriba.',
   'herbsf.care.lemon-balm.prune-flower-stalks.title':
-    'Para que no se extienda, poda los tallos florales antes de que lleguen a hacer semilla.',
+    'Para que no se extienda, poda los tallos florales antes de que den semilla.',
   'herbsf.care.lemon-balm.harvest-before-flowering.title':
     'Puedes cortar tallos cuando los necesites durante toda la temporada, mejor antes de que florezca.',
   'herbsf.care.lemon-verbena.prune-for-form.title':
@@ -90,13 +91,13 @@ export const esHerbsf: Partial<Record<MessageKey, string>> = {
   'herbsf.care.lovage.harvest-young-leaves.title':
     'Cosecha las hojas jóvenes, que son más tiernas.',
   'herbsf.care.marjoram-sweet.prune-at-six-inches.title':
-    'La mejorana es una planta baja que se extiende y le viene bien una poda cuando mide de 6 a 8 pulgadas para que crezca más tupida.',
+    'La mejorana dulce suele ser una planta baja y rastrera, y le viene bien una poda cuando mide de 6 a 8 pulgadas para que crezca más tupida.',
   'herbsf.care.marjoram-sweet.harvest-at-tips.title':
     'Cosecha la mejorana cuando aparezcan puntas en forma de bolita al final de los tallos.',
   'herbsf.care.marjoram-sweet.cut-back-at-bloom.title':
     'Cuando la planta empiece a florecer, córtala cerca del suelo para que eche una nueva tanda de brotes.',
   'herbsf.care.summer-savory.harvest-at-buds.title':
-    'Corta las puntas con hojas cuando las plantas empiecen a mostrar botones.',
+    'Corta las puntas con hojas cuando las plantas empiecen a mostrar botones florales.',
   'herbsf.care.tarragon-french.cut-back-in-spring.title':
     'Recorta las plantas en primavera justo cuando vuelven a brotar.',
   'herbsf.care.tarragon-french.harvest-tips.title':

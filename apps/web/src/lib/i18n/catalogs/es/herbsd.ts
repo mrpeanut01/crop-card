@@ -5,7 +5,7 @@ export const esHerbsd: Partial<Record<MessageKey, string>> = {
   'herbsd.title': 'Calendario de hierbas',
   'herbsd.event.bringIndoors.title': 'Lleva {name} adentro o saca esquejes',
   'herbsd.event.bringIndoors.body':
-    'Se acerca la primera helada de otoño. Mete la maceta en casa, o saca esquejes para cultivarlos adentro durante el invierno.',
+    'Se acerca la primera helada de otoño. Mete la maceta en casa o saca esquejes para cultivarlos adentro durante el invierno.',
   'herbsd.event.restart.title': 'Siembra {name} otra vez',
   'herbsd.event.restart.body':
     'Siembra unas cuantas más ahora para tener hojas frescas todo el tiempo.',
@@ -18,8 +18,8 @@ export const esHerbsd: Partial<Record<MessageKey, string>> = {
   'herbsd.source.bringIndoors':
     'Llévala adentro de {from} a {to} semanas antes de la primera helada de otoño ({source}).',
   'herbsd.source.bringIndoorsLong':
-    'La Extensión de UW-Madison indica sacar y poner en maceta las hierbas delicadas antes de la primera helada de otoño prevista.',
-  'herbsd.push.bringIn': '{names}: llévala adentro o cúbrela.',
+    'La Extensión de UW-Madison indica sacar de la tierra y poner en maceta las hierbas sensibles al frío antes de la primera helada de otoño prevista.',
+  'herbsd.push.bringIn': '{names}: lleva las plantas adentro o cúbrelas.',
   'herbsd.observed.title': 'Últimos 7 días',
   'herbsd.observed.loading': 'Cargando las temperaturas pasadas…',
   'herbsd.observed.unavailable': 'Las temperaturas pasadas no están disponibles para esta granja.',

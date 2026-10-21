@@ -54,6 +54,17 @@
     leaves: 'cardsui.photo.q.leaves'
   } as const;
 
+  /** A question is stored in English (`questionText`); show its preset part
+   *  in the reader's language. */
+  function askedText(kind: string, text: string): string {
+    if (kind !== 'photo_help') return text;
+    for (const [q, en] of CHIPS) {
+      if (text === en) return tr(CHIP_KEYS[q]);
+      if (text.startsWith(`${en} `)) return `${tr(CHIP_KEYS[q])} ${text.slice(en.length + 1)}`;
+    }
+    return text;
+  }
+
   let chosenId = $state<string | null>(null);
   const cropId = $derived(chosenId ?? targets[0]?.cropId ?? null);
   const target = $derived(targets.find((t) => t.cropId === cropId) ?? null);
@@ -528,7 +539,7 @@
                 <QueuedBadge />
               {/if}
               <p>
-                {q.text || tr('cardsui.photo.photoWord')}{q.hasPhoto && q.text
+                {askedText(q.kind, q.text) || tr('cardsui.photo.photoWord')}{q.hasPhoto && q.text
                   ? ` ${tr('cardsui.photo.withPhoto')}`
                   : ''}
               </p>
@@ -568,7 +579,7 @@
                   loading="lazy"
                 />
               {/if}
-              {#if e.text}<p>{e.text}</p>{/if}
+              {#if e.text}<p>{askedText(e.kind, e.text)}</p>{/if}
               {#if e.answer?.text && !e.answer.marks?.length}
                 <p class="ai-text">{e.answer.text}</p>
               {:else if e.answer?.sections.length}

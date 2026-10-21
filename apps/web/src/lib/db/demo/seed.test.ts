@@ -362,7 +362,7 @@ describe.each(NOWS)('seedDemoFarm on %s', (ymd) => {
       expect(kept.some((d) => d.preservedAs === 'dry')).toBe(true);
       const timer = listEquipment().find((e) => e.type === 'irrigation')!;
       expect(listWaterTargets([timer.id])).toEqual([
-        { equipmentId: timer.id, fieldId: herbGarden.id, blockId: null }
+        { equipmentId: timer.id, fieldId: herbGarden.id, blockId: null, sharePct: null }
       ]);
       expect(listIrrigationSkips({ equipmentIds: [timer.id] }).length).toBeLessThanOrEqual(1);
     });

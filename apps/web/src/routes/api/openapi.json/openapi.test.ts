@@ -48,6 +48,8 @@ import { _requestSchema as seedStartPatch } from '../seed-starts/[id]/+server';
 import { _requestSchema as seedStartProgress } from '../seed-starts/[id]/progress/+server';
 import { _requestSchema as irrigationCreate } from '../irrigation/+server';
 import { _requestSchema as waterTarget } from '../irrigation/target/+server';
+import { _requestSchema as irrigationSkip } from '../irrigation/skips/+server';
+import { _requestSchema as waterTargets } from '../equipment/[id]/water-targets/+server';
 import { _requestSchema as rainGauge } from '../rain-gauge/+server';
 import { _requestSchema as ledgerCreate } from '../finance/entries/+server';
 import { _requestSchema as ledgerPatch } from '../finance/entries/[id]/+server';
@@ -146,6 +148,8 @@ describe('openapi.json', () => {
     ['/api/seed-starts/{id}/progress', 'post', seedStartProgress],
     ['/api/irrigation', 'post', irrigationCreate],
     ['/api/irrigation/target', 'post', waterTarget],
+    ['/api/irrigation/skips', 'post', irrigationSkip],
+    ['/api/equipment/{id}/water-targets', 'put', waterTargets],
     ['/api/rain-gauge', 'post', rainGauge],
     ['/api/finance/entries', 'post', ledgerCreate],
     ['/api/finance/entries/{id}', 'patch', ledgerPatch],

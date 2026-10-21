@@ -5,6 +5,7 @@ import { requireOwner, requireUser } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
 import { sprayTermsFor } from '$lib/server/sprayTerms';
 import {
+  briefForViewer,
   emptyBrief,
   gardenBriefPutSchema,
   type GardenBrief,
@@ -21,10 +22,14 @@ import {
 
 export const _requestSchema = gardenBriefPutSchema;
 
-/** GET /api/garden/brief (Phase 37A, R-26). Every role reads the brief. */
+/** GET /api/garden/brief (Phase 37A, R-26). Every role reads the brief;
+ *  only the owner gets the stored conversation with it (#870, FU870-3). */
 export const GET: RequestHandler = async (event) => {
   const user = requireUser(event);
-  return json({ brief: loadGardenBrief(), canEdit: user.role === 'owner' });
+  return json({
+    brief: briefForViewer(loadGardenBrief(), user.role),
+    canEdit: user.role === 'owner'
+  });
 };
 
 /** PUT /api/garden/brief. Owner only. Saves the answers; without a
@@ -82,7 +87,8 @@ export const PUT: RequestHandler = async (event) => {
   return json({ brief: saveGardenBrief(brief), sunWarning: plain.sunWarning });
 };
 
-/** DELETE /api/garden/brief. Owner only: start the brief over. */
+/** DELETE /api/garden/brief. Owner only: start the brief over, the stored
+ *  conversation with it. */
 export const DELETE: RequestHandler = async (event) => {
   requireOwner(event);
   deleteGardenBrief();

@@ -82,6 +82,38 @@ export function submitGauge(
   return send('rain-gauge', '/api/rain-gauge', payload, fetchFn, online);
 }
 
+export type UndoOutcome =
+  | { status: 'undone' }
+  | { status: 'offline' }
+  /** `message` is the server's, in the viewer's language; null when none came. */
+  | { status: 'error'; message: string | null };
+
+/** #870 (FU870-2): undo a logged skip so its run counts as water again.
+ *  Online only, never queued: a skip still on the phone has no server id,
+ *  and a queued undo could land after the 48-hour window. */
+export async function undoSkip(
+  skipId: string,
+  fetchFn: FetchFn = fetch,
+  online: () => boolean = isOnline
+): Promise<UndoOutcome> {
+  if (!online()) return { status: 'offline' };
+  let res: Response;
+  try {
+    res = await fetchFn(`/api/irrigation/skips/${encodeURIComponent(skipId)}`, {
+      method: 'DELETE'
+    });
+  } catch (e) {
+    if (looksOffline(e)) return { status: 'offline' };
+    throw e;
+  }
+  if (isUpdatingResponse(res)) return { status: 'error', message: null };
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    return { status: 'error', message: body?.message ?? null };
+  }
+  return { status: 'undone' };
+}
+
 /** Phase 37E: a scheduled waterer run did not water. Queued offline under
  *  `irrigation-skip`; the server answers a repeat with the first skip. */
 export function submitSkip(

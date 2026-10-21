@@ -1,0 +1,1 @@
+ALTER TABLE `equipment_water_targets` ADD `share_pct` integer;

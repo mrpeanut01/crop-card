@@ -365,11 +365,16 @@
 {#if data.waterer}
   <WatererEditor
     equipmentId={eq.id}
+    label={eq.label}
     schedule={data.waterer.schedule}
     defaultMethod={data.waterer.defaultMethod}
     targets={data.waterer.targets}
     areas={data.waterer.areas}
     canEdit={data.canRename}
+    split={data.waterer.split}
+    skips={data.waterer.skips}
+    timeZone={data.waterer.timeZone}
+    todayYmd={data.waterer.todayYmd}
   />
 {/if}
 

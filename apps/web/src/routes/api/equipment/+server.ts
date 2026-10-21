@@ -13,6 +13,8 @@ import { rejectForeignRefsIn } from '$lib/server/foreignRefs';
 import { irrigationScheduleSchema } from '$lib/irrigation/apiSchemas';
 import { invalid } from '$lib/server/irrigationApi';
 import { storeSchedule } from '$lib/server/waterers';
+import { farmTimeZone } from '$lib/db/userProfile';
+import { ymdInZone } from '$lib/prefs';
 
 const TYPES: EquipmentType[] = [
   'sprayer',
@@ -71,6 +73,13 @@ export const POST: RequestHandler = async (event) => {
     }
     const schedule = irrigationScheduleSchema.safeParse(input.spec.schedule);
     if (!schedule.success) return invalid(schedule.error);
+    const since = schedule.data.runningSince;
+    if (since && since > ymdInZone(Date.now(), farmTimeZone())) {
+      return json(
+        { error: t(event.locals?.locale, 'herbsg.api.runningSinceFuture'), code: 'IN_THE_FUTURE' },
+        { status: 400 }
+      );
+    }
     input.spec = { ...input.spec, schedule: storeSchedule(schedule.data, null, Date.now()) };
   }
   return json({ equipment: createEquipment(input) }, { status: 201 });

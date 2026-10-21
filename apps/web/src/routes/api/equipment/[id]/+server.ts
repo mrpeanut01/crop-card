@@ -14,6 +14,8 @@ import { currentUser, requireOwner } from '$lib/server/auth';
 import { irrigationScheduleSchema } from '$lib/irrigation/apiSchemas';
 import { scheduleOf } from '$lib/irrigation/schedule';
 import { storeSchedule } from '$lib/server/waterers';
+import { farmTimeZone } from '$lib/db/userProfile';
+import { ymdInZone } from '$lib/prefs';
 
 export const GET: RequestHandler = ({ params, url, locals }) => {
   if (!params.id)
@@ -78,6 +80,13 @@ export const PATCH: RequestHandler = async (event) => {
   if (specIn?.schedule !== undefined && existing.type !== 'irrigation') {
     return json(
       { error: t(event.locals?.locale, 'herbse.api.scheduleIrrigationOnly') },
+      { status: 400 }
+    );
+  }
+  const since = specIn?.schedule?.runningSince;
+  if (since && since > ymdInZone(Date.now(), farmTimeZone())) {
+    return json(
+      { error: t(event.locals?.locale, 'herbsg.api.runningSinceFuture'), code: 'IN_THE_FUTURE' },
       { status: 400 }
     );
   }

@@ -65,6 +65,7 @@ import { listEquipment } from '$lib/db/equipment';
 import { loadWatererRowsForAreas } from '$lib/db/waterers';
 import { parseAreaDetails, type GardenDetails } from '$lib/farm/areaKinds';
 import { waterersFrom } from '$lib/server/waterers';
+import { skipUndoVerdict } from '$lib/irrigation/skipUndo';
 import {
   expandRuns,
   runInches,
@@ -529,22 +530,32 @@ function attachBedNeeds(
 const NEXT_RUN_REACH_MS = 8 * 24 * HOUR_MS;
 
 /** Waterer runs as logs per Area, and what each Area's card says about its
- *  timers. One read (R-22); equipment comes from the /today loader. */
+ *  timers. One read (R-22); equipment comes from the /today loader. The
+ *  read brings every target of each timer with its size, so a timer that
+ *  waters several Areas splits its gallons over all of them (FU870-1). */
 export function loadTimers(
   areas: readonly AreaWaterInput[],
-  ctx: Pick<TodayAdviceContext, 'nowMs' | 'equipment'>,
+  ctx: Pick<TodayAdviceContext, 'nowMs' | 'equipment' | 'viewerId' | 'isOwner' | 'canRecord'>,
   timeZone: string
 ): { logs: Map<string, WaterLog[]>; cards: Map<string, TimerCardInfo[]> } {
   const logs = new Map<string, WaterLog[]>();
   const cards = new Map<string, TimerCardInfo[]>();
   const { startMs } = windowBounds(ctx.nowMs);
-  const rows = loadWatererRowsForAreas(
-    areas.map((a) => a.fieldId),
-    startMs,
-    ctx.nowMs + NEXT_RUN_REACH_MS
-  );
+  const here = new Set(areas.map((a) => a.fieldId));
+  const rows = loadWatererRowsForAreas([...here], startMs, ctx.nowMs + NEXT_RUN_REACH_MS);
   if (rows.targets.length === 0) return { logs, cards };
-  const waterers: Waterer[] = waterersFrom(ctx.equipment ?? listEquipment(), rows.targets);
+  const waterers: Waterer[] = waterersFrom(
+    ctx.equipment ?? listEquipment(),
+    rows.targets.map((t) => ({
+      ...t,
+      sqFt: t.blockSize ? sqFtOf(t.blockSize) : sqFtOf(t.fieldSize),
+      blockFieldId: t.blockFieldId
+    }))
+  );
+  const viewer = {
+    id: ctx.viewerId ?? '',
+    role: ctx.isOwner ? 'owner' : ctx.canRecord ? 'helper' : 'inspector'
+  };
   for (const w of waterers) {
     const skipped = rows.skips.get(w.equipmentId) ?? [];
     const runs = withoutSkipped(
@@ -553,7 +564,14 @@ export function loadTimers(
     );
     const past = runs.filter((t) => t <= ctx.nowMs);
     const next = runs.find((t) => t > ctx.nowMs) ?? null;
+    const skips = (rows.skipRows.get(w.equipmentId) ?? []).map((s) => ({
+      id: s.id,
+      scheduledAt: s.scheduledAt,
+      reason: s.reason,
+      canUndo: viewer.id !== '' && skipUndoVerdict(s, viewer, ctx.nowMs) === 'ok'
+    }));
     for (const fieldId of new Set(w.targets.map((t) => t.fieldId))) {
+      if (!here.has(fieldId)) continue;
       logs.set(fieldId, [...(logs.get(fieldId) ?? []), ...timerLogs(w, past, fieldId, ctx.nowMs)]);
       const own = w.targets.filter((t) => t.fieldId === fieldId);
       cards.set(fieldId, [
@@ -567,7 +585,8 @@ export function loadTimers(
           lastRunAt: past[past.length - 1] ?? null,
           bedIds: own.some((t) => t.blockId === null)
             ? null
-            : own.flatMap((t) => (t.blockId ? [t.blockId] : []))
+            : own.flatMap((t) => (t.blockId ? [t.blockId] : [])),
+          skips
         }
       ]);
     }

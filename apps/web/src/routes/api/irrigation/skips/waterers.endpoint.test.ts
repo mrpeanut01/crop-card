@@ -6,7 +6,7 @@ import { error } from '@sveltejs/kit';
 const m = vi.hoisted(() => ({ role: 'owner' as string, userId: 'waterer-owner' }));
 
 vi.mock('$lib/server/auth', () => {
-  const user = () => ({ id: m.userId, role: m.role });
+  const user = () => ({ id: m.userId, role: m.role, activeOwnerId: 'mocked-owner' });
   return {
     currentUser: user,
     requireUser: user,
@@ -172,11 +172,11 @@ describe('PUT /api/equipment/:id/water-targets', () => {
       const res = await putTargets(s.timerId, { areaIds: [s.fieldId], blockIds: [s.bedId] });
       expect(res.status).toBe(200);
       expect(res.body.targets).toEqual([
-        { equipmentId: s.timerId, fieldId: s.fieldId, blockId: null }
+        { equipmentId: s.timerId, fieldId: s.fieldId, blockId: null, sharePct: null }
       ]);
       const bedOnly = await putTargets(s.timerId, { areaIds: [], blockIds: [s.bedId, s.bedId] });
       expect(bedOnly.body.targets).toEqual([
-        { equipmentId: s.timerId, fieldId: s.fieldId, blockId: s.bedId }
+        { equipmentId: s.timerId, fieldId: s.fieldId, blockId: s.bedId, sharePct: null }
       ]);
       const read = await call(TARGETS, `/equipment/${s.timerId}/water-targets`, 'GET', {
         params: { id: s.timerId }

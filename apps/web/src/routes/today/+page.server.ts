@@ -361,6 +361,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       isOwner,
       equipment,
       canRecord: !!locals.user && locals.user.role !== 'inspector',
+      viewerId: locals.user?.id,
       // Phase 32F (F4-8): the Monday card, from rows already read here.
       digest: todayDigestInput({
         openPrimaries: allOpenPrimaries,

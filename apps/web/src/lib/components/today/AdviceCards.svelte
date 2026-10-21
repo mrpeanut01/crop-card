@@ -10,7 +10,7 @@
     type TodayAdviceAction,
     type TodayAdviceCard
   } from '$lib/today/advice';
-  import { submitSkip } from '$lib/irrigation/client';
+  import { submitSkip, undoSkip as undoSkipRequest } from '$lib/irrigation/client';
 
   interface Props {
     cards: TodayAdviceCard[];
@@ -59,6 +59,22 @@
     }
   }
 
+  let undoing = $state<string | null>(null);
+
+  async function undoSkip(id: string) {
+    undoing = id;
+    try {
+      const out = await undoSkipRequest(id);
+      if (out.status === 'undone') done(tr('herbsg.skip.undone'));
+      else if (out.status === 'offline') message = tr('herbsg.skip.undoOffline');
+      else message = out.message ?? tr('herbsg.skip.undoError');
+    } catch {
+      message = tr('herbsg.skip.undoError');
+    } finally {
+      undoing = null;
+    }
+  }
+
   function done(text: string) {
     sheet = null;
     message = text;
@@ -83,6 +99,27 @@
           {#each card.lines as line, i (i)}
             <p class="line">{line}</p>
           {/each}
+          {#if card.skips?.length}
+            <ul class="skips" data-testid="advice-skips">
+              {#each card.skips as s (s.id)}
+                <li class="skip" data-testid="advice-skip">
+                  <span>{s.text}</span>
+                  {#if s.canUndo}
+                    <button
+                      type="button"
+                      class="btn undo"
+                      data-testid="advice-skip-undo"
+                      aria-label={s.undoLabel}
+                      disabled={undoing === s.id}
+                      onclick={() => undoSkip(s.id)}
+                    >
+                      {tr('herbsg.skip.undo')}
+                    </button>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+          {/if}
           <p class="meta">
             <Provenance source={card.provenance} detail={card.detail} />
           </p>
@@ -192,6 +229,24 @@
     font-size: 0.95rem;
     cursor: pointer;
     text-decoration: none;
+  }
+  .skips {
+    list-style: none;
+    margin: 0.35rem 0 0;
+    padding: 0;
+  }
+  .skip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 0 0 0.35rem;
+    color: var(--color-ink);
+  }
+  .skip span {
+    flex: 1 1 12rem;
+    min-width: 0;
   }
   .saved {
     margin: 0 0 0.5rem;

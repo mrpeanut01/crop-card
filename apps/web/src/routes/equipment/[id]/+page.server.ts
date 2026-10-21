@@ -15,6 +15,12 @@ export const load: PageServerLoad = ({ params, locals }) => {
     log: listEquipmentLog(params.id, { limit: 100 }),
     canEdit: !!locals.user && canMutate(locals.user.role),
     canRename: locals.user?.role === 'owner',
-    waterer: equipment.type === 'irrigation' ? watererPageData(equipment) : null
+    waterer:
+      equipment.type === 'irrigation'
+        ? watererPageData(
+            equipment,
+            locals.user ? { id: locals.user.id, role: locals.user.role } : null
+          )
+        : null
   };
 };

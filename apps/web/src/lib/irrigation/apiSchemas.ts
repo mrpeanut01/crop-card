@@ -71,9 +71,19 @@ export type WatererMethod = (typeof WATERER_METHODS)[number];
 /** `HH:MM`, 24-hour, in the farm's time zone. */
 export const SCHEDULE_START_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+/** `YYYY-MM-DD`, a real calendar day. */
+export const YMD_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function isCalendarDay(v: string): boolean {
+  if (!YMD_RE.test(v)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === v;
+}
+
 /** A timer's weekly program, typed by the owner (`manual`, R-12). Days are
  *  0 (Sunday) to 6 (Saturday). The amount is known only when the owner gives
- *  inches per run, or gallons per minute for a single target. */
+ *  inches per run, or gallons per minute with a split the app can tell
+ *  (one target, sizes on every target, or typed shares; FU870-1). */
 export const irrigationScheduleSchema = z.strictObject({
   days: z
     .array(z.number().int().min(0).max(6))
@@ -85,7 +95,15 @@ export const irrigationScheduleSchema = z.strictObject({
   minutes: z.number().int().min(1).max(720),
   method: z.enum(WATERER_METHODS),
   inchesPerRun: z.number().min(0.01).max(5).nullable().optional(),
-  gallonsPerMinute: z.number().positive().max(500).nullable().optional()
+  gallonsPerMinute: z.number().positive().max(500).nullable().optional(),
+  runningSince: z
+    .string()
+    .refine(isCalendarDay, { message: 'A day as YYYY-MM-DD.' })
+    .nullable()
+    .optional()
+    .describe(
+      'The day the timer started running this program, typed by the owner (FU870-4); runs from that day count. Not after today on the farm calendar.'
+    )
 });
 
 export type IrrigationSchedule = z.infer<typeof irrigationScheduleSchema>;
@@ -99,9 +117,22 @@ export const storedScheduleSchema = irrigationScheduleSchema.extend({
 
 export type StoredSchedule = z.infer<typeof storedScheduleSchema>;
 
+/** An owner-typed whole-percent share of a run's gallons (FU870-1). */
+export const sharePctSchema = z.number().int().min(1).max(100);
+
 export const waterTargetsSchema = z.strictObject({
   areaIds: z.array(id).max(50).describe('Areas the waterer covers whole.'),
-  blockIds: z.array(id).max(200).describe('Single beds the waterer covers.')
+  blockIds: z.array(id).max(200).describe('Single beds the waterer covers.'),
+  areaShares: z
+    .record(id, sharePctSchema)
+    .optional()
+    .describe('Whole-percent share of the gallons per Area id (FU870-1).'),
+  blockShares: z
+    .record(id, sharePctSchema)
+    .optional()
+    .describe(
+      'Whole-percent share of the gallons per bed id. Give a share for every target or none; they must total 100. Without shares the gallons split by size.'
+    )
 });
 
 export type WaterTargetsInput = z.infer<typeof waterTargetsSchema>;

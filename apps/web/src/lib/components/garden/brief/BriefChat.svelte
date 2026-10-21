@@ -16,9 +16,19 @@
     followUp?: BriefQuestion | null;
     refreshKey?: unknown;
     onSend: (message: string) => void | Promise<void>;
+    /** #870: Claude is off, so the stored conversation shows without the form. */
+    readOnly?: boolean;
   }
 
-  const { lines, turnsLeft, busy = false, followUp = null, refreshKey, onSend }: Props = $props();
+  const {
+    lines,
+    turnsLeft,
+    busy = false,
+    followUp = null,
+    refreshKey,
+    onSend,
+    readOnly = false
+  }: Props = $props();
 
   const tr = $derived(createT(page.data?.locale));
   let draft = $state('');
@@ -40,10 +50,12 @@
 
 <section class="chat" aria-labelledby="brief-chat-title" data-testid="brief-chat">
   <header>
-    <h2 id="brief-chat-title" class="serif">{tr('herbsa.chat.title')}</h2>
-    <AiUsageChip {refreshKey} />
+    <h2 id="brief-chat-title" class="serif">
+      {readOnly ? tr('herbsg.brief.earlierTitle') : tr('herbsa.chat.title')}
+    </h2>
+    {#if !readOnly}<AiUsageChip {refreshKey} />{/if}
   </header>
-  <p class="help">{tr('herbsa.chat.help')}</p>
+  <p class="help">{readOnly ? tr('herbsg.brief.readOnlyNote') : tr('herbsa.chat.help')}</p>
   <ol class="log" aria-live="polite">
     {#each lines as line, i (i)}
       <li class="line {line.role}">
@@ -59,7 +71,7 @@
       </li>
     {/each}
   </ol>
-  {#if followUp}
+  {#if followUp && !readOnly}
     <p class="follow">
       <span
         >{tr('herbsa.chat.followUp', {
@@ -71,24 +83,24 @@
       </button>
     </p>
   {/if}
-  <form onsubmit={submit}>
-    <label for="brief-chat-input">{tr('herbsa.chat.label')}</label>
-    <textarea
-      id="brief-chat-input"
-      rows="3"
-      maxlength={MAX_CHAT_MESSAGE_CHARS}
-      bind:value={draft}
-      disabled={busy || turnsLeft <= 0}
-      placeholder={tr('herbsa.chat.placeholder')}></textarea>
-    <div class="actions">
-      <span class="turns" data-testid="brief-turns"
-        >{tr('herbsa.chat.turnsLeft', { count: turnsLeft })}</span
-      >
-      <button type="submit" class="primary" disabled={busy || turnsLeft <= 0 || !draft.trim()}>
-        {busy ? tr('herbsa.chat.sending') : tr('herbsa.chat.send')}
-      </button>
-    </div>
-  </form>
+  {#if !readOnly}<form onsubmit={submit}>
+      <label for="brief-chat-input">{tr('herbsa.chat.label')}</label>
+      <textarea
+        id="brief-chat-input"
+        rows="3"
+        maxlength={MAX_CHAT_MESSAGE_CHARS}
+        bind:value={draft}
+        disabled={busy || turnsLeft <= 0}
+        placeholder={tr('herbsa.chat.placeholder')}></textarea>
+      <div class="actions">
+        <span class="turns" data-testid="brief-turns"
+          >{tr('herbsa.chat.turnsLeft', { count: turnsLeft })}</span
+        >
+        <button type="submit" class="primary" disabled={busy || turnsLeft <= 0 || !draft.trim()}>
+          {busy ? tr('herbsa.chat.sending') : tr('herbsa.chat.send')}
+        </button>
+      </div>
+    </form>{/if}
 </section>
 
 <style>

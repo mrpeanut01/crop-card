@@ -24,6 +24,7 @@ import { enHerbsc } from './en/herbsc';
 import { enHerbsd } from './en/herbsd';
 import { enHerbse } from './en/herbse';
 import { enHerbsf } from './en/herbsf';
+import { enHerbsg } from './en/herbsg';
 import { enHerbsh } from './en/herbsh';
 
 /**
@@ -59,6 +60,7 @@ export const EN_PARTS = [
   enHerbsd,
   enHerbse,
   enHerbsf,
+  enHerbsg,
   enHerbsh
 ] as const;
 
@@ -89,6 +91,7 @@ export const en = {
   ...enHerbsd,
   ...enHerbse,
   ...enHerbsf,
+  ...enHerbsg,
   ...enHerbsh
 } as const;
 

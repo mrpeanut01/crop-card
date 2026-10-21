@@ -18,7 +18,7 @@ import {
 import { WATER_TARGET_SOURCE } from './waterSources';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import { ymdInZone } from '$lib/prefs';
-import type { TodayAdviceAction } from '$lib/today/advice';
+import type { TimerSkipReason, TodayAdviceAction, TodayAdviceSkip } from '$lib/today/advice';
 
 export const RAIN_UNKNOWN_LINE = 'Rain unknown here, check your gauge.';
 export const NO_TARGET_LINE = 'No weekly water target set.';
@@ -300,6 +300,7 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
   if (input.potHeat) lines.push(t(loc, 'herbse.water.potHeat'));
   const timer = timerParts(input, open);
   lines.push(...timer.lines);
+  const skips = skipItems(input.timers, tz, loc);
   const provenance =
     b.rainSource === 'gauge' || b.rainSource === 'both'
       ? 'manual'
@@ -329,6 +330,7 @@ export function wateringCard(input: WaterCardInput): TodayAdviceCard {
       },
       ...timer.actions
     ],
+    ...(skips.length ? { skips } : {}),
     sortKey:
       100 + verdictRank(b.verdict) * 10 + (b.reason === 'no-target' ? NO_TARGET_SORT_OFFSET : 0)
   };
@@ -348,6 +350,56 @@ export interface TimerCardInfo {
   lastRunAt: number | null;
   /** Beds it waters on this Area; null for the whole Area. */
   bedIds: readonly string[] | null;
+  /** #870 (FU870-2): runs in the window someone marked as not watering. */
+  skips?: ReadonlyArray<{
+    id: string;
+    scheduledAt: number;
+    reason: TimerSkipReason;
+    canUndo: boolean;
+  }>;
+}
+
+/** "Wed, Oct 14 at 6:00 AM" in the farm's zone: a skip can sit a week back
+ *  or a week ahead, so the weekday alone could name two runs. */
+export function skipWhenText(ms: number, timeZone: string, locale?: Loc): string {
+  const day = dateTimeFormat(intlLocale(locale), {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    timeZone
+  }).format(new Date(ms));
+  const time = dateTimeFormat(intlLocale(locale), {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone
+  }).format(new Date(ms));
+  return t(locale, 'herbse.when.day', { day, time });
+}
+
+/** One line per logged skip of the Area's timers, with an Undo the viewer
+ *  may use (FU870-2). */
+export function skipItems(
+  timers: readonly TimerCardInfo[] | undefined,
+  timeZone: string,
+  locale?: Loc
+): TodayAdviceSkip[] {
+  const out: TodayAdviceSkip[] = [];
+  for (const timer of timers ?? []) {
+    for (const s of timer.skips ?? []) {
+      const when = skipWhenText(s.scheduledAt, timeZone, locale);
+      out.push({
+        id: s.id,
+        text: t(locale, 'herbsg.skip.line', {
+          timer: timer.label,
+          when,
+          reason: t(locale, `herbsg.skip.reason.${s.reason}`)
+        }),
+        undoLabel: t(locale, 'herbsg.skip.undoLabel', { timer: timer.label, when }),
+        canUndo: s.canUndo
+      });
+    }
+  }
+  return out;
 }
 
 /** "thyme" from "Thyme — English", in the viewer's language. */

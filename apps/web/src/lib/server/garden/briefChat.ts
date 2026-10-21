@@ -15,11 +15,13 @@ import {
   BRIEF_QUESTIONS,
   MAX_BECAUSE_CHARS,
   MAX_BRIEF_CHAT_TURNS,
+  MAX_BRIEF_REPLY_CHARS,
   MAX_SHORTLIST,
   claudeBriefAnswerSchema,
   type BriefAnswers,
   type BriefChatTurn,
   type BriefQuestion,
+  type BriefTranscriptTurn,
   type GardenBrief,
   type ShortlistRow
 } from '$lib/garden/brief/schema';
@@ -35,7 +37,7 @@ import { getApiKey } from '../scanResult';
 export const GARDEN_BRIEF_TIMEOUT_MS = 20_000;
 export const GARDEN_BRIEF_MARKER = 'CROPCARD_FIXTURE:garden-brief';
 const MAX_TOKENS = 1200;
-const MAX_REPLY_CHARS = 900;
+const MAX_REPLY_CHARS = MAX_BRIEF_REPLY_CHARS;
 
 export interface BriefFarmFacts {
   zone: string | null;
@@ -402,6 +404,12 @@ export async function runBriefChat(args: {
   if (!checked || !usable) {
     const out = deterministic('invalid');
     out.brief.chatTurns = turns;
+    out.brief.transcript = withTurn(brief, {
+      question: args.message,
+      reply: null,
+      provenance: 'fallback',
+      at: args.now
+    });
     out.response.turnsLeft = Math.max(0, MAX_BRIEF_CHAT_TURNS - turns);
     return out;
   }
@@ -418,6 +426,26 @@ export async function runBriefChat(args: {
       turnsLeft: Math.max(0, MAX_BRIEF_CHAT_TURNS - turns),
       aiLimit: null
     },
-    brief: { ...brief, shortlist: checked.rows, chatTurns: turns, updatedAt: args.now }
+    brief: {
+      ...brief,
+      shortlist: checked.rows,
+      chatTurns: turns,
+      transcript: withTurn(brief, {
+        question: args.message,
+        reply: checked.reply,
+        provenance: 'ai',
+        at: args.now
+      }),
+      updatedAt: args.now
+    }
   };
+}
+
+/** The stored conversation with one more turn (FU870-3). Only turns that
+ *  count toward the 8 are kept, so a spray question, a turn Claude never
+ *  answered and the no-key path store nothing. The reply is the one the
+ *  page shows: Claude's text after the spray-advice filter, or null for
+ *  the form's own reply. */
+function withTurn(brief: GardenBrief, turn: BriefTranscriptTurn): BriefTranscriptTurn[] {
+  return [...(brief.transcript ?? []), turn].slice(-MAX_BRIEF_CHAT_TURNS);
 }

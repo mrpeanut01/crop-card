@@ -2,7 +2,12 @@ import { listFields } from '$lib/db/fields';
 import type { ToxicCrop } from '$lib/animals/toxicAdjacency';
 import { HERB_PLUGIN_IDS } from '$lib/garden/herbs';
 import { briefPetSpecies } from '$lib/garden/brief/handoff';
-import { MAX_BRIEF_CHAT_TURNS, type GardenBrief } from '$lib/garden/brief/schema';
+import {
+  MAX_BRIEF_CHAT_TURNS,
+  briefForViewer,
+  type GardenBrief,
+  type SharedGardenBrief
+} from '$lib/garden/brief/schema';
 import { getFarmAnimals } from '$lib/onboarding/state.server';
 import { lifecycleLine, type LifecycleDetail } from '$lib/garden/lifecycleHere';
 import { lifecycleVerdictsFor } from '$lib/server/lifecycleLine.server';
@@ -25,7 +30,9 @@ export interface BriefLifecycleLine {
 }
 
 export interface BriefPageData {
-  brief: GardenBrief | null;
+  /** The owner's brief with its stored conversation; for helpers and
+   *  inspectors the brief without it (#870, FU870-3). */
+  brief: GardenBrief | SharedGardenBrief | null;
   canEdit: boolean;
   aiEnabled: boolean;
   turnsLeft: number;
@@ -94,7 +101,7 @@ export async function loadBriefPage(
   const areas = listFields({ kinds: ['garden', 'greenhouse'] });
   const garden = areas.find((a) => a.kind === 'garden') ?? areas[0] ?? null;
   return {
-    brief,
+    brief: briefForViewer(brief, user.role),
     canEdit,
     aiEnabled: canEdit && getUserAiEnabled(user.id),
     turnsLeft: Math.max(0, MAX_BRIEF_CHAT_TURNS - (brief?.chatTurns ?? 0)),

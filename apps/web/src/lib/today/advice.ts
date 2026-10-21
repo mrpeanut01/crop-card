@@ -35,8 +35,19 @@ export interface TodayAdviceCard {
   detail?: string;
   tone: 'info' | 'wheat';
   actions: TodayAdviceAction[];
+  /** #870 (FU870-2): logged waterer skips, each with an Undo when the
+   *  viewer may undo it. */
+  skips?: TodayAdviceSkip[];
   /** Lower shows first. */
   sortKey: number;
+}
+
+export interface TodayAdviceSkip {
+  id: string;
+  text: string;
+  /** The Undo button's accessible name, naming the timer and run. */
+  undoLabel: string;
+  canUndo: boolean;
 }
 
 export interface TodayAdvicePlanting {
@@ -90,6 +101,8 @@ export interface TodayAdviceContext {
   }>;
   /** Owners and helpers can mark a waterer run as skipped; inspectors read. */
   canRecord?: boolean;
+  /** The signed-in user, so a helper sees Undo on their own recent skips. */
+  viewerId?: string;
 }
 
 export type TodayAdviceProvider = (ctx: TodayAdviceContext) => Promise<TodayAdviceCard[]>;

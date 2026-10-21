@@ -25,6 +25,7 @@ import { esHerbsc } from './es/herbsc';
 import { esHerbsd } from './es/herbsd';
 import { esHerbse } from './es/herbse';
 import { esHerbsf } from './es/herbsf';
+import { esHerbsg } from './es/herbsg';
 import { esHerbsh } from './es/herbsh';
 
 /**
@@ -63,6 +64,7 @@ export const ES_PARTS: ReadonlyArray<Partial<Record<MessageKey, string>>> = [
   esHerbsd,
   esHerbse,
   esHerbsf,
+  esHerbsg,
   esHerbsh
 ];
 

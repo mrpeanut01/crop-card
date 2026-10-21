@@ -3333,6 +3333,9 @@ export const equipmentWaterTargets = tenantScoped(
         .notNull()
         .references(() => fields.id, { onDelete: 'cascade' }),
       blockId: text('block_id').references(() => blocks.id, { onDelete: 'cascade' }),
+      /** #870 (FU870-1): the owner's whole-percent share of a run's gallons
+       *  for this target (`manual`); null splits by size. */
+      sharePct: integer('share_pct'),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
         .default(sql`(unixepoch() * 1000)`)

@@ -143,8 +143,10 @@ import {
 } from '../src/lib/seedStart/apiSchemas.ts';
 import {
   irrigationCreateSchema,
+  irrigationSkipSchema,
   rainGaugeCreateSchema,
-  waterTargetSchema
+  waterTargetSchema,
+  waterTargetsSchema
 } from '../src/lib/irrigation/apiSchemas.ts';
 import {
   labourRateSchema,
@@ -2181,6 +2183,119 @@ const paths = {
     }
   },
 
+  '/api/irrigation/skips': {
+    post: {
+      summary: 'Mark a waterer run as not watering',
+      description:
+        'Owners and helpers; inspectors are read-only (Phase 37E). The scheduled run at `scheduledAt` no longer counts as water given. A run up to 8 days back or ahead; the same run skipped twice answers with the first skip. Safe to replay from the offline queue with the client record id header; a replay of a skip that was since undone stays undone.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(irrigationSkipSchema),
+      responses: {
+        200: jsonResponse('The run was already skipped, or a replay of a saved client record id.', {
+          type: 'object'
+        }),
+        201: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['skip'],
+          properties: { skip: { type: 'object' } }
+        }),
+        400: errorResponse(
+          "Invalid body, another Owner's or a non-irrigation equipment id, or a run too far off (`OUT_OF_RANGE`)."
+        ),
+        ...AUTH_ERRORS
+      }
+    },
+    get: {
+      summary: 'List skipped waterer runs',
+      description: "The active Owner's skips, oldest run first. Every member can read them.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        { name: 'equipmentId', in: 'query', required: false, schema: { type: 'string' } },
+        {
+          name: 'from',
+          in: 'query',
+          required: false,
+          description: 'Epoch ms.',
+          schema: { type: 'integer' }
+        },
+        {
+          name: 'to',
+          in: 'query',
+          required: false,
+          description: 'Epoch ms.',
+          schema: { type: 'integer' }
+        }
+      ],
+      responses: {
+        200: jsonResponse('Skips.', {
+          type: 'object',
+          required: ['skips'],
+          properties: { skips: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse('`from` or `to` is not epoch milliseconds.'),
+        401: errorResponse('Authentication required.')
+      }
+    }
+  },
+
+  '/api/irrigation/skips/{id}': {
+    parameters: [idPath('id', 'Skip id.')],
+    delete: {
+      summary: 'Undo a skipped waterer run',
+      description:
+        'The run counts as water given again (#870, FU870-2). Owners undo any skip at any time; the person who logged it, for 48 hours after the server saved it; everyone else gets 403 with `askOwner: true` (`NOT_YOURS`, `TOO_LATE`, or `READ_ONLY` for inspectors). Online only: a skip still in the offline queue has no server id. A hard delete.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Undone.', {
+          type: 'object',
+          properties: { ok: { const: true }, id: { type: 'string' } }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Not the owner or the person who logged it within 48 hours.'),
+        404: errorResponse('No such skip for the active Owner.')
+      }
+    }
+  },
+
+  '/api/equipment/{id}/water-targets': {
+    parameters: [idPath('id', 'Waterer (irrigation equipment) id.')],
+    get: {
+      summary: "A waterer's Areas and beds",
+      description:
+        'Every member can read them. A row with a null `blockId` covers the whole Area; `sharePct` is the owner-typed share of the gallons, or null.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Targets.', {
+          type: 'object',
+          required: ['targets'],
+          properties: { targets: { type: 'array', items: { type: 'object' } } }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('No such equipment for the active Owner.')
+      }
+    },
+    put: {
+      summary: "Replace a waterer's Areas and beds",
+      description:
+        "Owner only (Phase 37E, R-21). Every id must be the active Owner's; a bed inside an Area covered whole is dropped. A run's gallons split over the targets by size (each one's size over their total, tagged `fallback`), not known when a target has no size or a bed lies inside an Area the timer also waters, unless the owner types `areaShares` and `blockShares` (#870, FU870-1): whole percents, all or none of the kept targets, totalling 100 (`SHARES_INCOMPLETE`, `SHARES_TOTAL`). A timer with one target takes every gallon and keeps no share.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(waterTargetsSchema),
+      responses: {
+        200: jsonResponse('The targets now saved.', {
+          type: 'object',
+          required: ['targets'],
+          properties: { targets: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse(
+          "Invalid body, another Owner's Area or bed, equipment that is not a waterer, or shares that are partial or do not total 100."
+        ),
+        404: errorResponse('No such equipment for the active Owner.'),
+        ...OWNER_ERRORS
+      }
+    }
+  },
+
   '/api/irrigation/summary': {
     get: {
       summary: "One Area's watering summary",
@@ -2459,7 +2574,7 @@ const paths = {
     get: {
       summary: "Read the farm's garden brief",
       description:
-        'Every role. The owner setting `garden_brief` (Phase 37A): answers to the beginner questions, each with its provenance, and the shortlist of herbs with the reason each was picked. `brief` is null until the owner saves one.',
+        "Every role. The owner setting `garden_brief` (Phase 37A): answers to the beginner questions, each with its provenance, and the shortlist of herbs with the reason each was picked. `brief` is null until the owner saves one. Only the owner's copy carries `transcript` (#870, FU870-3): the conversation's counted turns, each the owner's text as sent and Claude's reply as the page showed it after the spray-advice filter (null for the form's own reply); helpers and inspectors never get it.",
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
       responses: {
         200: jsonResponse('The brief.', {
@@ -2490,7 +2605,8 @@ const paths = {
     },
     delete: {
       summary: 'Clear the garden brief',
-      description: 'Owner only. Starts the brief over, conversation turns included.',
+      description:
+        'Owner only. Starts the brief over, the turn count and the stored conversation included.',
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
       responses: {
         200: jsonResponse('Cleared.', { type: 'object', properties: { ok: { type: 'boolean' } } }),
@@ -2503,7 +2619,7 @@ const paths = {
     post: {
       summary: 'One turn of the garden brief conversation',
       description:
-        'Owner only. Asks Claude through `aiTry()` and the `garden-brief` allowance (20 s, at most 8 turns per brief). The answer is checked on the server: unknown or avoided herbs are dropped, the shortlist is capped at 12 and every sentence runs through the spray-advice guard, a dropped sentence being replaced by the deterministic reason. With no key, over a limit, slow, at the turn limit or with nothing usable, the deterministic shortlist answers tagged `fallback` with `fallbackReason` saying why. Saves the answers and the shortlist.',
+        'Owner only. Asks Claude through `aiTry()` and the `garden-brief` allowance (20 s, at most 8 turns per brief). The answer is checked on the server: unknown or avoided herbs are dropped, the shortlist is capped at 12 and every sentence runs through the spray-advice guard, a dropped sentence being replaced by the deterministic reason. With no key, over a limit, slow, at the turn limit or with nothing usable, the deterministic shortlist answers tagged `fallback` with `fallbackReason` saying why. Saves the answers and the shortlist, and a turn that counts toward the 8 joins the owner-only `transcript` with the reply exactly as returned here (#870).',
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
       requestBody: jsonBody(gardenBriefChatSchema),
       responses: {

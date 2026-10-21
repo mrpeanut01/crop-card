@@ -13,10 +13,12 @@
   import { designerCropsParam } from '$lib/garden/brief/handoff';
   import {
     MAX_BRIEF_CHAT_TURNS,
+    transcriptLines,
     type BriefAnswers,
     type BriefChatLine,
     type BriefQuestion,
-    type GardenBrief
+    type GardenBrief,
+    type SharedGardenBrief
   } from '$lib/garden/brief/schema';
   import type { AiLimit } from '$lib/billing/aiLimit';
 
@@ -29,10 +31,19 @@
     ready = true;
   });
 
-  let brief = $state<GardenBrief | null>(untrack(() => data.brief));
+  let brief = $state<GardenBrief | SharedGardenBrief | null>(untrack(() => data.brief));
   let answers = $state<BriefAnswers>(untrack(() => structuredClone(data.brief?.answers ?? {})));
   let turnsLeft = $state(untrack(() => data.turnsLeft));
-  let lines = $state<BriefChatLine[]>([]);
+  // #870 (FU870-3): a returning owner sees the turns stored with the brief.
+  let lines = $state<BriefChatLine[]>(
+    untrack(() =>
+      transcriptLines(
+        data.brief && 'transcript' in data.brief ? data.brief.transcript : undefined,
+        tr('herbsa.chat.formReply')
+      )
+    )
+  );
+  const showChat = $derived(data.aiEnabled || lines.length > 0);
   let followUp = $state<BriefQuestion | null>(null);
   let busy = $state(false);
   let status = $state<string | null>(null);
@@ -117,7 +128,9 @@
   }
 
   async function chat(message: string) {
-    const history = lines.map((l) => ({ role: l.role, text: l.text }));
+    const history = lines
+      .slice(-MAX_BRIEF_CHAT_TURNS * 2)
+      .map((l) => ({ role: l.role, text: l.text }));
     lines = [...lines, { role: 'user', text: message }];
     const out = (await send('/api/garden/brief/chat', 'POST', {
       message,
@@ -160,7 +173,7 @@
   {#if status}<p class="status no-print" role="status">{status}</p>{/if}
   {#if failure}<p class="error no-print" role="alert">{failure}</p>{/if}
 
-  <div class="columns no-print" class:with-chat={data.aiEnabled}>
+  <div class="columns no-print" class:with-chat={showChat}>
     <section class="form-col" aria-labelledby="brief-form-title">
       <h2 id="brief-form-title" class="serif">{tr('herbsa.form.title')}</h2>
       <BriefForm bind:answers herbs={data.herbs} disabled={!data.canEdit || !ready} />
@@ -177,8 +190,16 @@
         </div>
       {/if}
     </section>
-    {#if data.aiEnabled}
-      <BriefChat {lines} {turnsLeft} {busy} {followUp} refreshKey={usageKey} onSend={chat} />
+    {#if showChat}
+      <BriefChat
+        {lines}
+        {turnsLeft}
+        {busy}
+        {followUp}
+        refreshKey={usageKey}
+        onSend={chat}
+        readOnly={!data.aiEnabled}
+      />
     {/if}
   </div>
 

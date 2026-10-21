@@ -120,16 +120,61 @@ export const shortlistRowSchema = z
   .strict();
 export type ShortlistRow = z.infer<typeof shortlistRowSchema>;
 
+/** Claude's reply is cut to this many characters before the owner sees it. */
+export const MAX_BRIEF_REPLY_CHARS = 900;
+
+/** One stored turn of the conversation (#870, FU870-3): the owner's text
+ *  as sent, and Claude's reply exactly as the page showed it, after the
+ *  spray-advice filter. A null reply is the page's own form reply, shown
+ *  in the viewer's language. Owner only: helpers and inspectors never read
+ *  it. */
+export const briefTranscriptTurnSchema = z
+  .object({
+    question: z.string().trim().min(1).max(MAX_CHAT_MESSAGE_CHARS),
+    reply: z.string().min(1).max(MAX_BRIEF_REPLY_CHARS).nullable(),
+    provenance: z.enum(['ai', 'fallback']),
+    at: z.number().int().nonnegative()
+  })
+  .strict();
+export type BriefTranscriptTurn = z.infer<typeof briefTranscriptTurnSchema>;
+
 export const gardenBriefSchema = z
   .object({
     version: z.literal(1),
     answers: briefAnswersSchema,
     shortlist: z.array(shortlistRowSchema).max(MAX_SHORTLIST),
     chatTurns: z.number().int().min(0).max(MAX_BRIEF_CHAT_TURNS).default(0),
+    /** The turns that counted toward the 8 (#870); unset before any. */
+    transcript: z.array(briefTranscriptTurnSchema).max(MAX_BRIEF_CHAT_TURNS).optional(),
     updatedAt: z.number().int().nonnegative()
   })
   .strict();
 export type GardenBrief = z.infer<typeof gardenBriefSchema>;
+
+/** The brief as a helper or inspector reads it: never the transcript. */
+export type SharedGardenBrief = Omit<GardenBrief, 'transcript'>;
+
+/** The brief for this viewer (FU870-3): owners get the transcript, every
+ *  other role the brief without it. */
+export function briefForViewer(
+  brief: GardenBrief | null,
+  role: string
+): GardenBrief | SharedGardenBrief | null {
+  if (!brief || role === 'owner') return brief;
+  const { transcript: _transcript, ...shared } = brief;
+  return shared;
+}
+
+/** The stored turns as chat lines, the form reply for a null reply. */
+export function transcriptLines(
+  transcript: readonly BriefTranscriptTurn[] | undefined,
+  formReply: string
+): BriefChatLine[] {
+  return (transcript ?? []).flatMap((turn): BriefChatLine[] => [
+    { role: 'user', text: turn.question },
+    { role: 'assistant', text: turn.reply ?? formReply, provenance: turn.provenance }
+  ]);
+}
 
 /** `PUT /api/garden/brief`. Without `shortlist` the server builds the
  *  deterministic one from the answers. */
@@ -154,7 +199,8 @@ export const gardenBriefChatSchema = z
   .object({
     message: z.string().trim().min(1).max(MAX_CHAT_MESSAGE_CHARS),
     answers: briefAnswersSchema.optional(),
-    /** The conversation so far, held by the page (nothing is stored). */
+    /** The conversation so far as the page holds it; the turns that count
+     *  are also stored with the brief for the owner (#870). */
     history: z
       .array(briefChatTurnSchema)
       .max(MAX_BRIEF_CHAT_TURNS * 2)

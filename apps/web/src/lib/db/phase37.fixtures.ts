@@ -56,7 +56,8 @@ export function seedPhase37(
     put('equipment_water_targets', {
       equipmentId: timer.id,
       fieldId: field.id,
-      blockId: block.id
+      blockId: block.id,
+      sharePct: 60
     });
     put('irrigation_skips', {
       equipmentId: timer.id,

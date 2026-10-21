@@ -4,6 +4,44 @@ You are working in a local checkout of `mrpeanut01/crop-card` (SvelteKit + TypeS
 
 Read `CLAUDE.md` first. Invariants 2 (plugins are data only), 7 (AI assists, never gates) and 9 (bilingual) matter most here, and the "Crop agronomy gaps" follow-up describes the overlap rule (#551) these tasks reuse.
 
+## Status after the #867 pass (2026-10-20)
+
+A second pass fetched and checked pages for every item below. The herb-by-field table, the pages read and rulings F867-1 to F867-5 are in [`docs/design/phase-37-followups/867.md`](../design/phase-37-followups/867.md). Each task's "Still missing" table below keeps its original text; read it with this status.
+
+- **Task 1:**
+  - Filled: East Indian lemongrass `lifecycle` (perennial, Purdue NewCROP names Cymbopogon flexuosus).
+  - Empty with reason: its `winterHardyToZone`. Pages that name C. flexuosus give no zone, and the zone pages cover C. citratus only.
+  - Not re-checked: the "worth a second source" rows.
+- **Task 2:**
+  - `preserving` filled on 14 more herbs: marjoram, chervil, lovage, anise hyssop, catnip, lemon verbena, lemongrass, stevia, tulsi, both Florence fennels, chamomile, calendula and nasturtium.
+  - Extra methods: oregano fresh and freeze, chives fresh, sage freeze, cilantro fresh and summer savory fresh.
+  - Empty with reason:
+    - bee balm (the only page reprints industry copy, F867-5);
+    - hyssop, mountain mint and perilla (no page names them with a method);
+    - lavender freeze and fresh;
+    - chervil dry and freeze, and Florence fennel freeze (sources disagree, recorded as `notRecorded`);
+    - freeze-dry (no page names a herb);
+    - vinegar infusions (found in OSU SP 50-736, but the infuse safety line is written for oil and needs a ruling).
+  - Basil and oregano drying stay empty: no panel ruling was made.
+  - `harvestCadence` filled on sage only (42 to 56 days). Every other herb is empty with the reason in the follow-up table (F867-1).
+  - The per-method drying hint has per-crop sources (basil, rosemary, mint) but needs app code. It is not built.
+- **Task 3:** seasonal rows filled for every herb the issue listed:
+  - anise hyssop, bee balm (2), hyssop, mountain mint, perilla, stevia (2), tulsi and lovage (2);
+  - both Florence fennels (2 each), chamomile and calendula (2);
+  - rosemary pruning after bloom.
+
+  Not attempted: the mint mid-season cut-back and the cilantro heat rows, which are outside #867.
+- **Task 4:**
+  - `waterNeed` filled on 6 more herbs: anise hyssop low, bee balm high, hyssop low, mountain mint high, tarragon low and chervil high.
+  - Disagreements recorded with both sources: oregano, rosemary, thyme, marjoram and calendula.
+  - Empty with reason: chives, sage, lemon verbena, lemongrass, perilla, stevia, summer savory, tulsi, cilantro, chamomile and nasturtium.
+- **Task 5:** thyme harvest timing stays empty. Seven more pages were read:
+  - Penn State, the NC State Plant Toolbox and Iowa State side with Illinois (before flowering).
+  - WSU, MU, Montana State and Purdue NewCROP side with UMD (at or in bloom).
+
+  Other care tasks are outside #867.
+- **Task 6:** not built. Candidate pages are listed in the follow-up doc.
+
 ## Ground rules (every task)
 
 - **Allowed sources only.** A value goes in only with a quote from a page on an `.edu` or `.gov` host (or `journals.flvc.org`); `isAllowedSpacingSource` in `apps/web/src/lib/plugins/sourceCoverage.ts` encodes the list. Seed-company, nursery and blog pages, page summaries and search snippets never count.

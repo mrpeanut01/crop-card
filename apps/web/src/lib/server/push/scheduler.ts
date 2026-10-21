@@ -190,7 +190,10 @@ async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<Ale
       cover: coverByBlock.get(c.blockId) ?? null
     };
     if (crop && isHerbGardenCrop(c.cropPluginId)) {
-      if (herbVerdict(crop, c)?.lifecycle === 'tender-perennial') snapshot.bringIn = true;
+      const verdict = herbVerdict(crop, c);
+      if (verdict?.lifecycle === 'tender-perennial' || verdict?.winterUnknown) {
+        snapshot.bringIn = true;
+      }
     }
     if (
       (snapshot.hardiness !== 'hardy' || snapshot.bringIn) &&

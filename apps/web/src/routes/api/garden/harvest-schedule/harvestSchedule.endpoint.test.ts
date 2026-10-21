@@ -13,6 +13,7 @@ import { setSetting } from '$lib/db/settings';
 import { loadKeptTotals, seasonYear } from '$lib/server/pantry.server';
 import { pantrySnapshotPart } from '$lib/server/pantrySnapshot';
 import { buildFarmSnapshot } from '$lib/server/cardSnapshot';
+import { infuseSafetyLine } from '$lib/garden/infuse';
 import { buildPlantingCard } from '$lib/cards/build/planting';
 import { BRIEF_SETTING_KEY } from '$lib/garden/briefGoals';
 import type { HarvestScheduleResponse } from '$lib/garden/harvestScheduleApi';
@@ -204,11 +205,26 @@ describe('pantry kept totals, page and snapshot', () => {
     const snapshot = await runWithTenantAsync(farm.ownerId, () => buildFarmSnapshot());
     expect(snapshot.pantry?.year).toBe(seasonYear());
     const card = buildPlantingCard(snapshot, farm.plantingId);
+    expect(snapshot.cropPlugins['basil-genovese']?.preserving?.length).toBeGreaterThan(0);
     const section = card?.sections.find((s) => s.title === 'Harvest goals');
-    expect(section?.items[0]).toBe(
-      'Drying: Not known. No preserving guidance yet for what you planted. Your aim: oregano for the year'
+    const basilDries = snapshot.cropPlugins['basil-genovese']!.preserving!.some(
+      (r) => r.method === 'dry' && r.suitability !== 'poor'
     );
-    expect(section?.provenance).toBe('fallback');
+    if (basilDries) expect(section?.items[0]).toMatch(/^Drying: /);
+    else expect(section).toBeUndefined();
+    expect(section?.items.some((i) => /^Canning/.test(i)) ?? false).toBe(false);
+
+    const infuse = seedFarm('snap-infuse', {
+      brief: { storageGoals: [{ goal: 'infuse', target: 'a bottle to give away' }, 'can-or-jelly'] }
+    });
+    const infuseSnap = await runWithTenantAsync(infuse.ownerId, () => buildFarmSnapshot());
+    const goals = buildPlantingCard(infuseSnap, infuse.plantingId)?.sections.find(
+      (s) => s.title === 'Harvest goals'
+    );
+    expect(goals?.items).toHaveLength(3);
+    expect(goals?.items[0]).toMatch(/^Vinegars and oils: /);
+    expect(goals?.items[1]).toBe(infuseSafetyLine('oil'));
+    expect(goals?.items[2]).toBe(infuseSafetyLine('vinegar'));
     const empty = seedFarm('snap-empty', { herb: 'tomato-amish-paste' });
     const none = await runWithTenantAsync(empty.ownerId, () => pantrySnapshotPart(Date.now()));
     expect(none).toEqual({});

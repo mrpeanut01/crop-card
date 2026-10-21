@@ -241,7 +241,18 @@ export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
     ...(p.treeSizeClasses ? { treeSizeClasses: p.treeSizeClasses } : {}),
     ...(careTasks.length ? { careTasks } : {}),
     ...(p.growthHabit ? { growthHabit: p.growthHabit } : {}),
-    ...(p.harvestTiming ? { harvestTiming: p.harvestTiming } : {})
+    ...(p.harvestTiming ? { harvestTiming: p.harvestTiming } : {}),
+    ...(p.preserving
+      ? {
+          preserving: p.preserving.map((r) => ({
+            method: r.method,
+            suitability: r.suitability,
+            ...(r.medium ? { medium: r.medium } : {})
+          }))
+        }
+      : {}),
+    ...(p.waterNeed ? { waterNeed: p.waterNeed } : {}),
+    ...(p.sunNeed ? { sunNeed: p.sunNeed } : {})
   };
 }
 

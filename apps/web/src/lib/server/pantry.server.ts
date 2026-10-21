@@ -280,6 +280,7 @@ export async function harvestScheduleResponse(
         preserving: p.preserving.map((r) => ({
           method: r.method,
           suitability: r.suitability,
+          ...(r.medium ? { medium: r.medium } : {}),
           ...(r.note ? { note: r.note } : {})
         })),
         timing: harvestTimingHints(p, goalIds)

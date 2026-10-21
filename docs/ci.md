@@ -16,6 +16,8 @@ These jobs run in parallel and usually finish in a few minutes. Branch protectio
 
 The e2e servers run with `WEATHER_FEEDS=off`, so no spec depends on the live NWS or NCEI weather; a spec that needs a forecast routes `/api/weather/**` itself.
 
+The unit job runs in UTC, like production. The suite also has to pass in any other process time zone, because developers and browsers are not in UTC: run `pnpm --filter @cropcard/web test:unit:tz` (the whole suite with `TZ=America/New_York`) after a change to dates, frost, calendars or schedules. A test that builds a calendar day with `new Date(y, m, d)` or reads one back with `getFullYear()`/`getMonth()`/`getDate()` passes in UTC and fails there; build calendar days with `Date.UTC`, and a farm-local moment with `zonedDayStartMs` or a `timeZone` input. `ci.yml` has no non-blocking jobs, so this run is not in CI.
+
 A new push to the same PR cancels the run already in progress.
 
 ## After merge and weekly (`security.yml`)

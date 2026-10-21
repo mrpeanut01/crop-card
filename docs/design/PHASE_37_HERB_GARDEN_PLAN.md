@@ -229,7 +229,7 @@ One PR per open issue, built in parallel worktrees; rulings and as-built notes p
 ### Still open after 37
 
 - **Herb data (#867 stays open):** `harvestCadence` on every herb but sage; `waterNeed` on 16 herbs (oregano, rosemary, thyme, marjoram and calendula because their sources disagree); `preserving` on bee balm, hyssop, mountain mint and perilla; the basil and oregano drying disagreement, which needs a panel ruling; `winterHardyToZone` for East Indian lemongrass; thyme harvest timing (four sources say before flowering, five at or in bloom); the optional `sunNeed`. Status per item in `docs/research/phase-37-herb-research-prompt.md`, and per herb in `phase-37-followups/867.md`.
-- The per-method timing hint on harvest tasks ("cut before bloom" for drying): per-crop sources now exist (basil Purdue HO-189, rosemary Penn State, mint Illinois and UMD), so what is left is the app code.
+- The per-method timing hint is built (`harvestTiming`, [`phase-37-followups/drying-hint.md`](phase-37-followups/drying-hint.md), rulings DH-1 to DH-8) for basil, rosemary and spearmint. What is left is data: more herbs, and any method other than drying.
 - Vinegar infusions: sources name them, but the `infuse` safety line is written for oil, so no vinegar entry ships until it has a ruling.
 - **Spanish (#868 stays open):** the native-speaker proofreader has the 19 doubts from #874 (listed on the issue), plus the new `herbsg` (#876) and `herbsh` (#869) catalogs and the 19 herb seasonal rows added by #877. "a las {time}" reads "a las 1:00" at one o'clock in several catalogs.
 - `/plan/pantry`'s "Schedule the next cut" saves the task title and body in the reader's language; /today's suggestions save the engine's English and translate on display.

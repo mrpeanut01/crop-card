@@ -150,17 +150,15 @@ export const esSeasonal: Partial<Record<MessageKey, string>> = {
   'seasonal.mountain-mint.root-prune.title': 'Poda las raíces de la menta de montaña en primavera',
   'seasonal.mountain-mint.root-prune.body':
     'Si no quieres que la plantación se extienda, poda las raíces con una pala en primavera.',
-  'seasonal.perilla-shiso-green.pinch-flowers.title': 'Pellizca las flores de la perilla',
+  'seasonal.perilla-shiso-green.pinch-flowers.title': 'Quita las flores de la perilla',
   'seasonal.perilla-shiso-green.pinch-flowers.body':
-    'Pellizca las flores antes de que den semilla. Si las dejas, la perilla se resiembra mucho y se extiende.',
-  'seasonal.stevia-sweetleaf.pinch-tips.title':
-    'Pellizca las puntas de la estevia para una planta más tupida',
+    'Quita las flores antes de que den semilla. Si las dejas, la perilla se resiembra mucho y se extiende.',
+  'seasonal.stevia-sweetleaf.pinch-tips.title': 'Despunta la estevia para que quede más tupida',
   'seasonal.stevia-sweetleaf.pinch-tips.body':
-    'Pellizca las puntas de los tallos cada 2 a 3 semanas para que la planta se ramifique y crezca más tupida.',
-  'seasonal.stevia-sweetleaf.pinch-flower-buds.title':
-    'Pellizca los botones florales de la estevia',
+    'Despunta los tallos cada 2 a 3 semanas para que la planta se ramifique y quede más tupida.',
+  'seasonal.stevia-sweetleaf.pinch-flower-buds.title': 'Quita los botones florales de la estevia',
   'seasonal.stevia-sweetleaf.pinch-flower-buds.body':
-    'Pellizca los botones florales en cuanto aparezcan. Las hojas son más dulces antes de que la planta florezca.',
+    'Quita los botones florales en cuanto aparezcan. Las hojas son más dulces antes de que la planta florezca.',
   'seasonal.tulsi-holy-basil-rama.prune-to-size.title':
     'Poda el tulsi para que quepa en su espacio',
   'seasonal.tulsi-holy-basil-rama.prune-to-size.body':
@@ -186,9 +184,9 @@ export const esSeasonal: Partial<Record<MessageKey, string>> = {
   'seasonal.chamomile-german.deadhead.title': 'Quita las flores marchitas de la manzanilla',
   'seasonal.chamomile-german.deadhead.body':
     'Quita las flores marchitas para que las semillas no se esparzan y salgan plantitas el año que viene.',
-  'seasonal.calendula-resina.pinch.title': 'Pellizca la caléndula para que sea más tupida',
+  'seasonal.calendula-resina.pinch.title': 'Despunta la caléndula para que quede más tupida',
   'seasonal.calendula-resina.pinch.body':
-    'Cuando las plantas tengan unas cuantas pulgadas de alto, pellizca las puntas para que se ramifiquen y crezcan más tupidas.',
+    'Cuando las plantas tengan unas cuantas pulgadas de alto, despunta los brotes para que se ramifiquen y queden más tupidas.',
   'seasonal.calendula-resina.deadhead.title': 'Quita las flores marchitas de la caléndula',
   'seasonal.calendula-resina.deadhead.body':
     'Quita seguido las flores marchitas para que las plantas sigan floreciendo. Las flores que dejes pueden resembrarse solas.',

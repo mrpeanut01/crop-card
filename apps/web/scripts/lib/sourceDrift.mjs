@@ -41,6 +41,7 @@ const URL_KEY = /url$/i;
 
 /**
  * YYYYMMDD or a looser date string to YYYY-MM-DD (a bare year-month gets day 01).
+ * A date with no zone ("June 9, 2021") keeps its written day in any process zone.
  * @param {unknown} value
  * @returns {string | null}
  */
@@ -51,7 +52,9 @@ export function isoDate(value) {
   m = /^(\d{4})-(\d{2})(?:-(\d{2}))?/.exec(value);
   if (m) return `${m[1]}-${m[2]}-${m[3] ?? '01'}`;
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+  if (Number.isNaN(d.getTime())) return null;
+  if (/(?:GMT|UTC|Z|[+-]\d{2}:?\d{2})\s*$/i.test(value)) return d.toISOString().slice(0, 10);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /**

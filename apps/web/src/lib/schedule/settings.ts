@@ -30,15 +30,18 @@ export function frostDatesForYear(year: number) {
   );
 }
 
-/** Frost dates as local calendar days, for code shared with the browser. */
+/** Frost dates as calendar days, for code shared with the browser. */
 export function frostDatesIsoForYear(year: number): { lastSpring: string; firstFall: string } {
   const { lastSpringFrostMs, firstFallFrostMs } = frostDatesForYear(year);
-  return { lastSpring: toLocalDay(lastSpringFrostMs), firstFall: toLocalDay(firstFallFrostMs) };
+  return {
+    lastSpring: toCalendarDay(lastSpringFrostMs),
+    firstFall: toCalendarDay(firstFallFrostMs)
+  };
 }
 
-function toLocalDay(ms: number): string {
+function toCalendarDay(ms: number): string {
   const d = new Date(ms);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
 export function getFarmLatLon(): FarmLatLon {

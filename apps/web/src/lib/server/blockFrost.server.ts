@@ -67,18 +67,18 @@ export function hardFrostForYear(
   const last = parseMmDd(getSetting(SETTINGS_KEYS.lastHardFrost) ?? undefined);
   const first = parseMmDd(getSetting(SETTINGS_KEYS.firstHardFrost) ?? undefined);
   if (last) {
-    out.lastSpringFrostMs = new Date(
-      new Date(farm.lastSpringFrostMs).getFullYear(),
+    out.lastSpringFrostMs = Date.UTC(
+      new Date(farm.lastSpringFrostMs).getUTCFullYear(),
       last.month,
       last.day
-    ).getTime();
+    );
   }
   if (first) {
-    out.firstFallFrostMs = new Date(
-      new Date(farm.firstFallFrostMs).getFullYear(),
+    out.firstFallFrostMs = Date.UTC(
+      new Date(farm.firstFallFrostMs).getUTCFullYear(),
       first.month,
       first.day
-    ).getTime();
+    );
   }
   return out;
 }
@@ -159,9 +159,9 @@ export function frostByBlockForPlanner(
   return out;
 }
 
-export function localDay(ms: number): string {
+export function calendarDay(ms: number): string {
   const d = new Date(ms);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
 /** A bed's effective frost as local days, for `plantingWindow` callers. */
@@ -172,11 +172,11 @@ export function bedFrostView(
   locale?: string | null
 ): BedFrostView {
   return {
-    lastSpring: e.frostFree ? `${year}-01-01` : localDay(e.lastSpringFrostMs),
-    firstFall: e.frostFree ? `${year}-12-31` : localDay(e.firstFallFrostMs),
+    lastSpring: e.frostFree ? `${year}-01-01` : calendarDay(e.lastSpringFrostMs),
+    firstFall: e.frostFree ? `${year}-12-31` : calendarDay(e.firstFallFrostMs),
     frostFree: e.frostFree,
-    farmLastSpring: localDay(farm.lastSpringFrostMs),
-    farmFirstFall: localDay(farm.firstFallFrostMs),
+    farmLastSpring: calendarDay(farm.lastSpringFrostMs),
+    farmFirstFall: calendarDay(farm.firstFallFrostMs),
     summary: effectiveFrostSummary(e, locale)
   };
 }
@@ -202,8 +202,8 @@ export function bedFrostIso(
 ): { lastSpring: string; firstFall: string; frostFree: boolean; coverNote: string | null } {
   const e = loadEffectiveFrostByBlock([blockId], seasonYear)[blockId];
   return {
-    lastSpring: e.frostFree ? `${seasonYear}-01-01` : localDay(e.lastSpringFrostMs),
-    firstFall: e.frostFree ? `${seasonYear}-12-31` : localDay(e.firstFallFrostMs),
+    lastSpring: e.frostFree ? `${seasonYear}-01-01` : calendarDay(e.lastSpringFrostMs),
+    firstFall: e.frostFree ? `${seasonYear}-12-31` : calendarDay(e.firstFallFrostMs),
     frostFree: e.frostFree,
     coverNote: effectiveFrostSummary(e)
   };

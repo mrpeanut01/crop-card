@@ -281,7 +281,7 @@ describe('blockFrost.server', () => {
       expect(eff[plain.id].springShiftDays).toBe(0);
       const planner = plannerFrostByBlock([b.id, plain.id], YEAR);
       expect(Object.keys(planner)).toEqual([b.id]);
-      expect(planner[b.id].lastSpringFrostMs).toBe(new Date(YEAR, 3, 20).getTime() - 21 * DAY);
+      expect(planner[b.id].lastSpringFrostMs).toBe(Date.UTC(YEAR, 3, 20) - 21 * DAY);
     });
   });
 

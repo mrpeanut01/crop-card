@@ -17,6 +17,7 @@ import {
   findOmriListing,
   fingerprint,
   hasOpenItems,
+  isoDate,
   mergeIssueBody,
   omriTargets,
   pageBlocked,
@@ -107,6 +108,16 @@ const pluginIds = new Set([
   'actinovate-streptomyces',
   'chicken'
 ]);
+
+describe('isoDate', () => {
+  it('keeps the written day of a date with no zone, and the UTC day of one with a zone', () => {
+    expect(isoDate('June 9, 2021')).toBe('2021-06-09');
+    expect(isoDate('20210609')).toBe('2021-06-09');
+    expect(isoDate('Wed, 09 Jun 2021 23:30:00 GMT')).toBe('2021-06-09');
+    expect(isoDate('2021-06-09T23:30:00-04:00')).toBe('2021-06-09');
+    expect(isoDate('not a date')).toBeNull();
+  });
+});
 
 describe('classifyUrl', () => {
   it('reads the registration number and stamp date from a PPLS label URL', () => {

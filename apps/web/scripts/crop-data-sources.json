@@ -4108,18 +4108,19 @@
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     },
     "harvestTiming.notRecorded": {
-      "reason": "Sources disagree on when to cut thyme, so no harvestTiming ships (DH-6). Before flowering: Illinois Extension, Penn State, the NC State Plant Toolbox and Iowa State \"All About Thyme\" (which also allows \"when the first blossoms begin to open\"). At or in bloom: UMD (\"when first blossoms open\"), WSU C159 (\"when in full bloom\"), MU G6470 (\"while in flower\"), Montana State (\"normally at bloom\") and Purdue NewCROP (\"during the bloom period\"). Per-source detail in docs/design/phase-37-followups/867.md.",
+      "reason": "Sources disagree on when to cut thyme for drying, so no harvestTiming ships (DH-6, recounted under DH-3 for CO-2 on 2026-10-21). Only quotes that name drying count, and they split three ways: UMD Extension, \"Cut leafy tops and flower clusters when first blossoms open and dry.\" (bloom-begins under DH-2); USDA Farmers' Bulletin 1977 on Purdue NewCROP, \"When the plants are in bloom, 5 to 6 inches of the flowering tops should be cut\" before they are spread \"to dry\" (in bloom); Montana State, \"Harvest is normally at bloom. The foliage is dried and screened to produce various grades of herb.\" (at bloom). The field has no in-bloom stage (DH-2), and the drying quotes do not agree with each other. Illinois Extension (\"best cut just before the plant starts to flower\"), Penn State (\"Harvest the leafy branches just before the plant flowers.\"), the NC State Plant Toolbox (\"Harvest it just before it flowers\"), WSU C159 (\"Hyssop, lavender and thyme should be picked when in full bloom.\") and MU G6470 (\"Shoots should be harvested while in flower.\") name no method, so they neither support nor block a dry row. Iowa State \"All About Thyme\" allows two stages and never counts (DH-3); it answered 404 on 2026-10-21. UMD did not load on 2026-10-21; its line was read on 2026-10-20.",
       "checked": [
+        "https://extension.umd.edu/resource/thyme",
+        "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+        "https://agresearch.montana.edu/warc/research_current/research_past/herbsandoils/thyme.html",
         "https://extension.illinois.edu/herbs/thyme",
         "https://extension.psu.edu/herb-garden-plants-thyme",
         "https://plants.ces.ncsu.edu/plants/thymus-vulgaris/",
-        "https://yardandgarden.extension.iastate.edu/encyclopedia/all-about-thyme",
-        "https://extension.umd.edu/resource/thyme",
-        "https://agresearch.montana.edu/warc/research_current/research_past/herbsandoils/thyme.html",
-        "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
-        "https://extension.missouri.edu/publications/g6470"
+        "https://wpcdn.web.wsu.edu/extension/uploads/sites/44/2026/06/C159-Harvesting-Herbs-2026.pdf",
+        "https://extension.missouri.edu/publications/g6470",
+        "https://yardandgarden.extension.iastate.edu/encyclopedia/all-about-thyme"
       ],
-      "date": "2026-10-20"
+      "date": "2026-10-21"
     },
     "waterNeed.notRecorded": {
       "reason": "Sources disagree (CO-3): UF/IFAS EDIS CIR570 reads low (\"Thyme is drought tolerant\"; the NC State Plant Toolbox agrees); USDA Farmers' Bulletin 1977 on Purdue NewCROP reads medium (\"moderately moist\"). No need is common to both, so waterNeed stays empty.",

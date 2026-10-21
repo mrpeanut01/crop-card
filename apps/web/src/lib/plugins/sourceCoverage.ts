@@ -1455,7 +1455,11 @@ function spanOf(a: WaterNeed, b: WaterNeed): WaterNeed[] {
 }
 
 function isNegated(text: string, start: number, end: number): boolean {
-  const before = text.slice(0, start).split(/[.,;:!?]/).pop() ?? '';
+  const before =
+    text
+      .slice(0, start)
+      .split(/[.,;:!?]/)
+      .pop() ?? '';
   const after = text.slice(end).split(/[.,;:!?]/)[0] ?? '';
   return WATER_NEGATION_BEFORE.test(before) || WATER_NEGATION_AFTER.test(after);
 }
@@ -1609,7 +1613,12 @@ export function waterNeedQuoteGaps(
     if (c.waterNeed || !entry.success) continue;
     let held: readonly WaterNeed[] | null = null;
     for (const [i, q] of (entry.data.quotes ?? []).entries()) {
-      const { needs, counts } = countedWaterNeeds(c, `${WATER_NEED_NOT_RECORDED_KEY}.quotes.${i}`, q, []);
+      const { needs, counts } = countedWaterNeeds(
+        c,
+        `${WATER_NEED_NOT_RECORDED_KEY}.quotes.${i}`,
+        q,
+        []
+      );
       if (!needs || !counts) continue;
       held = held ? held.filter((n) => needs.includes(n)) : needs;
     }
@@ -1637,12 +1646,10 @@ export const HERB_DATA_FIELDS: readonly HerbDataField[] = [
     appliesTo: (c) => c.agronomy?.lifecycle === 'perennial',
     filled: (c) => !!c.winterHardyToZone
   },
-  ...CROP_PRESERVING_METHODS.map(
-    (m): HerbDataField => ({
-      key: `preserving.${m}`,
-      filled: (c) => !!c.preserving?.some((p) => p.method === m)
-    })
-  ),
+  ...CROP_PRESERVING_METHODS.map((m): HerbDataField => ({
+    key: `preserving.${m}`,
+    filled: (c) => !!c.preserving?.some((p) => p.method === m)
+  })),
   { key: 'harvestCadence', filled: (c) => !!c.harvestCadence },
   { key: 'waterNeed', filled: (c) => !!c.waterNeed },
   { key: 'harvestTiming', filled: (c) => (c.harvestTiming?.length ?? 0) > 0 }
@@ -1664,7 +1671,8 @@ export function herbDataCoverageGaps(
       const key = `${f.key}.notRecorded`;
       const raw = own[key];
       if (f.appliesTo && !f.appliesTo(c)) {
-        if (raw !== undefined) gaps.push(`${c.pluginId}: ${key} on a crop the field does not apply to`);
+        if (raw !== undefined)
+          gaps.push(`${c.pluginId}: ${key} on a crop the field does not apply to`);
         continue;
       }
       if (f.filled(c)) {

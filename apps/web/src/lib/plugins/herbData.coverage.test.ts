@@ -107,7 +107,12 @@ describe('herbDataCoverageGaps', () => {
     expect(
       herbDataCoverageGaps(
         [thyme],
-        { 'thyme-german-winter': { ...sources['thyme-german-winter'], 'waterNeed.notRecorded': recorded } },
+        {
+          'thyme-german-winter': {
+            ...sources['thyme-german-winter'],
+            'waterNeed.notRecorded': recorded
+          }
+        },
         fields
       )
     ).toEqual(['thyme-german-winter: waterNeed is filled; drop waterNeed.notRecorded']);

@@ -86,7 +86,7 @@ async function get(farm: Farm, role: 'owner' | 'helper' | 'inspector' | null, qu
   });
 }
 
-const BRIEF = { storageGoals: [{ goal: 'dry', target: 'oregano for the year' }, 'can-or-jelly'] };
+const BRIEF = { storageGoals: [{ goal: 'freeze-dry', target: 'oregano for the year' }, 'can-or-jelly'] };
 
 describe('GET /api/garden/harvest-schedule', () => {
   it('gives every role the herb schedule and the brief goals as not known', async () => {
@@ -102,7 +102,7 @@ describe('GET /api/garden/harvest-schedule', () => {
       });
       expect(body.weeks.length).toBeGreaterThan(0);
       expect(body.goals.map((g) => [g.goal, g.status, g.reason])).toEqual([
-        ['dry', 'not-known', 'no-data'],
+        ['freeze-dry', 'not-known', 'no-data'],
         ['can-or-jelly', 'not-known', 'needs-recipe']
       ]);
       expect(body.goals[0].target).toBe('oregano for the year');
@@ -206,7 +206,7 @@ describe('pantry kept totals, page and snapshot', () => {
     const card = buildPlantingCard(snapshot, farm.plantingId);
     const section = card?.sections.find((s) => s.title === 'Harvest goals');
     expect(section?.items[0]).toBe(
-      'Drying: Not known. No preserving guidance yet for what you planted. Your aim: oregano for the year'
+      'Freeze-drying: Not known. No preserving guidance yet for what you planted. Your aim: oregano for the year'
     );
     expect(section?.provenance).toBe('fallback');
     const empty = seedFarm('snap-empty', { herb: 'tomato-amish-paste' });

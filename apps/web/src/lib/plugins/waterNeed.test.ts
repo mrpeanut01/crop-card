@@ -148,7 +148,9 @@ describe('CO-9 waterNeed gate fixes', () => {
     expect(waterNeedsOfQuote('Dry soil is not tolerated.')).toBe('negated');
     expect(waterNeedOfQuote('Never let the soil dry out.')).toBeNull();
     const sources: SourceMap = {
-      [thyme.pluginId]: { waterNeed: entry('Never let thyme sit in soil that is not drought tolerant.') }
+      [thyme.pluginId]: {
+        waterNeed: entry('Never let thyme sit in soil that is not drought tolerant.')
+      }
     };
     expect(waterNeedQuoteGaps([{ ...thyme, waterNeed: 'low' }], sources)).toContain(
       'thyme-english: waterNeed quote negates its water phrase'
@@ -229,8 +231,12 @@ describe('CO-9 waterNeed gate fixes', () => {
 
 describe('CO-9 quoteNamesCropName', () => {
   it('needs a word boundary after the name', () => {
-    expect(quoteNamesCropName('Sagebrush grows on dry soil.', 'Sage — Broadleaf (Salvia officinalis)')).toBe(false);
-    expect(quoteNamesCropName('Sage grows on dry soil.', 'Sage — Broadleaf (Salvia officinalis)')).toBe(true);
+    expect(
+      quoteNamesCropName('Sagebrush grows on dry soil.', 'Sage — Broadleaf (Salvia officinalis)')
+    ).toBe(false);
+    expect(
+      quoteNamesCropName('Sage grows on dry soil.', 'Sage — Broadleaf (Salvia officinalis)')
+    ).toBe(true);
     expect(quoteNamesCropName('Plant chives in moist soil.', 'Chives — Common')).toBe(true);
   });
 
@@ -242,10 +248,16 @@ describe('CO-9 quoteNamesCropName', () => {
     ).toBe(true);
     expect(quoteNamesCropName('Holy basil likes moist soil.', 'Basil — Genovese')).toBe(false);
     expect(
-      quoteNamesCropName('Russian sage is drought tolerant.', 'Sage — Broadleaf (Salvia officinalis)')
+      quoteNamesCropName(
+        'Russian sage is drought tolerant.',
+        'Sage — Broadleaf (Salvia officinalis)'
+      )
     ).toBe(false);
     expect(
-      quoteNamesCropName('Mountain mint prefers moist soil.', 'Mountain Mint (Pycnanthemum muticum)')
+      quoteNamesCropName(
+        'Mountain mint prefers moist soil.',
+        'Mountain Mint (Pycnanthemum muticum)'
+      )
     ).toBe(true);
   });
 });

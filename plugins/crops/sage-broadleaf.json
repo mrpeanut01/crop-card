@@ -2,7 +2,7 @@
   "pluginId": "sage-broadleaf",
   "type": "crop",
   "displayName": "Sage — Broadleaf (Salvia officinalis)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 90,
@@ -28,8 +28,19 @@
     {
       "method": "dry",
       "suitability": "good"
+    },
+    {
+      "method": "freeze",
+      "suitability": "good"
     }
   ],
+  "harvestCadence": {
+    "everyDays": {
+      "min": 42,
+      "max": 56
+    },
+    "from": "first-cut"
+  },
   "agronomy": {
     "lifecycle": "perennial"
   },

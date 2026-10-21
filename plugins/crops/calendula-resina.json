@@ -2,7 +2,7 @@
   "pluginId": "calendula-resina",
   "type": "crop",
   "displayName": "Calendula Resina (medicinal)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "broadleaf-companion",
   "preHarvestIntervalDays": 1,
@@ -27,5 +27,29 @@
     "daysFromPlantingMax": 120,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "dry",
+      "suitability": "good"
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "pinch",
+      "kind": "pruning",
+      "daysAfterPlanting": 21,
+      "windowDays": 14,
+      "title": "Pinch calendula for bushier plants",
+      "body": "Once the plants are several inches tall, pinch the growing tips so they branch and grow bushier."
+    },
+    {
+      "key": "deadhead",
+      "kind": "pruning",
+      "daysAfterPlanting": 50,
+      "windowDays": 60,
+      "title": "Deadhead calendula",
+      "body": "Remove spent flowers regularly to keep the plants blooming. Flowers left on may self-sow."
+    }
+  ]
 }

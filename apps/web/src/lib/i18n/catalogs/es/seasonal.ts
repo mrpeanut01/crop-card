@@ -134,5 +134,65 @@ export const esSeasonal: Partial<Record<MessageKey, string>> = {
     'Cuando las plantas tengan de 6 a 8 pulgadas de alto, recórtalas para que crezcan más tupidas.',
   'seasonal.nasturtium-companion.summer-cut-back.title': 'Recorta las capuchinas que se alargan',
   'seasonal.nasturtium-companion.summer-cut-back.body':
-    'Si las plantas decaen o se alargan en verano, recórtalas un poco para que den crecimiento nuevo el resto de la temporada.'
+    'Si las plantas decaen o se alargan en verano, recórtalas un poco para que den crecimiento nuevo el resto de la temporada.',
+  'seasonal.anise-hyssop.spring-prune.title': 'Poda el hisopo anisado a principios de la primavera',
+  'seasonal.anise-hyssop.spring-prune.body':
+    'Poda las plantas a principios de la primavera para que florezcan más.',
+  'seasonal.bergamot-monarda.divide.title': 'Divide la monarda cada 2 a 3 años',
+  'seasonal.bergamot-monarda.divide.body':
+    'A principios de la primavera, cuando salgan los brotes, saca y divide las matas para que no se extiendan tanto y las plantas se renueven.',
+  'seasonal.bergamot-monarda.fall-cleanup.title': 'Quita los restos de la monarda en otoño',
+  'seasonal.bergamot-monarda.fall-cleanup.body':
+    'En otoño, retira y destruye las hojas y los tallos enfermos, porque el mildiú polvoroso pasa el invierno en ellos.',
+  'seasonal.hyssop-officinalis.spring-trim.title': 'Recorta el hisopo en primavera',
+  'seasonal.hyssop-officinalis.spring-trim.body':
+    'Recorta las plantas en primavera para que se mantengan tupidas y con buena forma.',
+  'seasonal.mountain-mint.root-prune.title': 'Poda las raíces de la menta de montaña en primavera',
+  'seasonal.mountain-mint.root-prune.body':
+    'Si no quieres que la plantación se extienda, poda las raíces con una pala en primavera.',
+  'seasonal.perilla-shiso-green.pinch-flowers.title': 'Pellizca las flores de la perilla',
+  'seasonal.perilla-shiso-green.pinch-flowers.body':
+    'Pellizca las flores antes de que den semilla. Si las dejas, la perilla se resiembra mucho y se extiende.',
+  'seasonal.stevia-sweetleaf.pinch-tips.title':
+    'Pellizca las puntas de la estevia para una planta más tupida',
+  'seasonal.stevia-sweetleaf.pinch-tips.body':
+    'Pellizca las puntas de los tallos cada 2 a 3 semanas para que la planta se ramifique y crezca más tupida.',
+  'seasonal.stevia-sweetleaf.pinch-flower-buds.title':
+    'Pellizca los botones florales de la estevia',
+  'seasonal.stevia-sweetleaf.pinch-flower-buds.body':
+    'Pellizca los botones florales en cuanto aparezcan. Las hojas son más dulces antes de que la planta florezca.',
+  'seasonal.tulsi-holy-basil-rama.prune-to-size.title':
+    'Poda el tulsi para que quepa en su espacio',
+  'seasonal.tulsi-holy-basil-rama.prune-to-size.body':
+    'El tulsi crece rápido y una sola planta puede cubrir 10 pies cuadrados. Pódalo para que quepa en el espacio que tienes.',
+  'seasonal.lovage.prune-for-leaves.title': 'Poda el levístico para tener hojas frescas',
+  'seasonal.lovage.prune-for-leaves.body':
+    'Desde finales de la primavera hasta principios del otoño, recorta las plantas para que sigan saliendo hojas frescas y nuevas.',
+  'seasonal.lovage.remove-old-foliage.title':
+    'Quita el follaje viejo del levístico a finales del otoño',
+  'seasonal.lovage.remove-old-foliage.body': 'A finales del otoño, corta el follaje viejo.',
+  'seasonal.fennel-bulb-perfection.plant-again.title': 'Planta más hinojo',
+  'seasonal.fennel-bulb-perfection.plant-again.body':
+    'Para tener bulbos todo el tiempo, planta otra hilera corta cada 3 a 4 semanas.',
+  'seasonal.fennel-bulb-perfection.mound-soil.title': 'Arrima tierra a los bulbos de hinojo',
+  'seasonal.fennel-bulb-perfection.mound-soil.body':
+    'Cuando los bulbos empiecen a engrosar, arrímales tierra para que se mantengan pálidos y de sabor suave.',
+  'seasonal.fennel-florence-zefa-fino.plant-again.title': 'Planta más hinojo',
+  'seasonal.fennel-florence-zefa-fino.plant-again.body':
+    'Para tener bulbos todo el tiempo, planta otra hilera corta cada 3 a 4 semanas.',
+  'seasonal.fennel-florence-zefa-fino.mound-soil.title': 'Arrima tierra a los bulbos de hinojo',
+  'seasonal.fennel-florence-zefa-fino.mound-soil.body':
+    'Cuando los bulbos empiecen a engrosar, arrímales tierra para que se mantengan pálidos y de sabor suave.',
+  'seasonal.chamomile-german.deadhead.title': 'Quita las flores marchitas de la manzanilla',
+  'seasonal.chamomile-german.deadhead.body':
+    'Quita las flores marchitas para que las semillas no se esparzan y salgan plantitas el año que viene.',
+  'seasonal.calendula-resina.pinch.title': 'Pellizca la caléndula para que sea más tupida',
+  'seasonal.calendula-resina.pinch.body':
+    'Cuando las plantas tengan unas cuantas pulgadas de alto, pellizca las puntas para que se ramifiquen y crezcan más tupidas.',
+  'seasonal.calendula-resina.deadhead.title': 'Quita las flores marchitas de la caléndula',
+  'seasonal.calendula-resina.deadhead.body':
+    'Quita seguido las flores marchitas para que las plantas sigan floreciendo. Las flores que dejes pueden resembrarse solas.',
+  'seasonal.rosemary-tuscan-blue.prune-after-bloom.title': 'Poda el romero después de que florezca',
+  'seasonal.rosemary-tuscan-blue.prune-after-bloom.body':
+    'Cuando las plantas terminen de florecer, puedes podarlas para que salga follaje denso.'
 };

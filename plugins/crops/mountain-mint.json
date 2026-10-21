@@ -2,9 +2,10 @@
   "pluginId": "mountain-mint",
   "type": "crop",
   "displayName": "Mountain Mint (Pycnanthemum muticum)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
+  "waterNeed": "high",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 365,
@@ -28,5 +29,15 @@
     "beeAttractive": true
   },
   "archetype": "cut-and-come-again-leafy",
-  "winterHardyToZone": "4a"
+  "winterHardyToZone": "4a",
+  "seasonalTasks": [
+    {
+      "key": "root-prune",
+      "kind": "pruning",
+      "dayOfYear": 90,
+      "windowDays": 21,
+      "title": "Prune mountain mint roots in spring",
+      "body": "If you don't want the planting to spread, prune the roots with a spade in spring."
+    }
+  ]
 }

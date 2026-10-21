@@ -2,7 +2,7 @@
   "pluginId": "perilla-shiso-green",
   "type": "crop",
   "displayName": "Perilla Green Shiso",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -27,5 +27,15 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "seasonalTasks": [
+    {
+      "key": "pinch-flowers",
+      "kind": "pruning",
+      "daysAfterPlanting": 90,
+      "windowDays": 60,
+      "title": "Pinch off perilla flowers",
+      "body": "Pinch off the flowers before they go to seed. Left alone, perilla self-seeds heavily and spreads."
+    }
+  ]
 }

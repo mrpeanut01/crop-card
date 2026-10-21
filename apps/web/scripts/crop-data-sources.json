@@ -1169,6 +1169,13 @@
       "date": "Accessed 2026-10-17",
       "quote": "Chives can self-sow and overtake a garden unless flowers are removed before they fade.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "preserving.fresh": {
+      "url": "https://extension.illinois.edu/herbs/chives",
+      "publisher": "University of Illinois Extension, Herbs: Chives",
+      "date": "undated page (accessed 2026-10-20)",
+      "quote": "Leaves are used fresh and can be dried but will discolor and quickly absorb moisture. Chives can also be frozen for later use.",
+      "note": "Phase 37C (#867). Drying is not shipped: Illinois (this quote) says the leaves discolor, and CSU 9.335 says chives \"lose their color and flavor when dried\"."
     }
   },
   "clover-red-mammoth": {
@@ -1653,6 +1660,41 @@
       "date": "2026-10-17",
       "quote": "This is especially important when growing Florence fennel as it prefers uniformly moist soil to develop the best “bulb.”",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"uniformly moist\"); words only, never a target factor (R-10). The plugin is a bulbing Florence fennel."
+    },
+    "preserving.fresh": {
+      "url": "https://extension.wsu.edu/skagit/2025/07/25/skagit-food-preservation-fennel/",
+      "publisher": "Washington State University Extension, Skagit County: Skagit Food Preservation: Fennel",
+      "date": "July 25, 2025 (accessed 2026-10-20)",
+      "quote": "To prepare fresh fennel, slice the bulb into thin slices and use it raw and crisp in all kinds of salads, or cook it gently and let the flavor mellow and sweeten and the texture turn silky.",
+      "note": "Phase 37C (#867). About the bulb."
+    },
+    "preserving.dry": {
+      "url": "https://extension.wsu.edu/skagit/2025/07/25/skagit-food-preservation-fennel/",
+      "publisher": "Washington State University Extension, Skagit County: Skagit Food Preservation: Fennel",
+      "date": "July 25, 2025 (accessed 2026-10-20)",
+      "quote": "Drying Preparation: Wash the fennel bulb, removing stalks and leaves.",
+      "note": "Phase 37C (#867). The page gives a full drying procedure for the bulb (\"Package dried fennel in moisture/vapor proof containers\"), consistent with USDA recommendations."
+    },
+    "preserving.freeze.notRecorded": {
+      "url": "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf",
+      "publisher": "Purdue Extension FoodLink, Fennel",
+      "date": "undated (accessed 2026-10-20)",
+      "quote": "Due to its high water content, freezing the bulb will change its texture.",
+      "note": "Sources disagree on freezing the bulb, so freeze stays empty: WSU Extension Skagit County gives a blanch-and-freeze method for the bulb; Purdue FoodLink (this quote) says freezing changes its texture (it says stalks and fronds \"freeze well\")."
+    },
+    "seasonalTasks.plant-again": {
+      "url": "https://extension.usu.edu/yardandgarden/research/fennel-in-the-garden",
+      "publisher": "Utah State University Extension, Fennel in the Garden",
+      "date": "Published May 2020; accessed 2026-10-20",
+      "quote": "After plants begin to bulb, thin Florence fennel to 8-12 inches apart. For a continuous supply of bulbs plant 3-4 feet of rowevery 3-4 weeks.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). \"rowevery\" is the page's own typo. Illinois Extension adds that Florence fennel seeding \"is best done from mid-June to July\", since earlier plantings bolt in long, hot days."
+    },
+    "seasonalTasks.mound-soil": {
+      "url": "https://extension.usu.edu/yardandgarden/research/fennel-in-the-garden",
+      "publisher": "Utah State University Extension, Fennel in the Garden",
+      "date": "Published May 2020; accessed 2026-10-20",
+      "quote": "Florence fennel typically matures in 60 to 90 days depending on variety planted. Some gardeners mound soil around the swollen bases to keep the bases from turning green and developing a stronger flavor.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). Illinois Extension agrees: when the bulbs are the size of an egg, \"push soil around the “bulb.” This will produce a paler and tenderer “bulb.\"\"."
     }
   },
   "garlic-german-extra-hardy": {
@@ -2297,6 +2339,13 @@
       "date": "Accessed 2026-10-17",
       "quote": "Because nasturtium does not transplant well, it is suggested to directly sow seeds into the garden after danger of frost is past. Keep seed bed moist. Germination of seed can be enhanced by soaking seeds overnight in water prior to planting. For the tastiest leaves, keep plants well watered as this helps to moderate the spiciness of the leaves and flowers. Heat stressed plants often produce leaves and flowers that may be more pungent than most people prefer. If plants show signs of decline or become leggy during the summer, cut them back lightly and they will produce new growth for the remainder of the season.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "preserving.dry": {
+      "url": "https://hos.ifas.ufl.edu/media/hosifasufledu/therapeutic-horticulture-activities-database/pdfs/Air-Drying-Leafy-Herbs.pdf",
+      "publisher": "UF/IFAS Environmental Horticulture, Therapeutic Horticulture Activities Database: Air-Drying Leafy Herbs",
+      "date": "revised 2023 (accessed 2026-10-20)",
+      "quote": "Drying nasturtium leaves is another way to preserve the plant's peppery goodness.",
+      "note": "Phase 37C (#867). About the leaves."
     }
   },
   "oats-cover-spring": {
@@ -2602,6 +2651,34 @@
       "date": "Accessed 2026-10-17",
       "quote": "True oregano is marginally hardy in zone 5. Many of the really desirable types are treated as tender perennials and may need to be brought indoors for the winter. To help insure winter survival a winter mulch of evergreen boughs or straw applied in November or December after the soil has frozen is helpful. This is then removed as growth resumes in the spring.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "waterNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/origanum-vulgare/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Origanum vulgare",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Oregano does best in average soil including sandy loams, dry to medium moisture with good drainage, and planted in a site with full sun.",
+      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads medium (\"medium moisture\"), Penn State (waterNeed.2) reads low (\"drought-tolerant\")."
+    },
+    "waterNeed.2": {
+      "url": "https://extension.psu.edu/herb-garden-plants-oregano",
+      "publisher": "Penn State Extension, Herb Garden Plants: Oregano",
+      "date": "Updated April 22, 2026 (accessed 2026-10-20)",
+      "quote": "Once established, oregano requires little water. As it is drought-tolerant, wait until the soil dries out between waterings.",
+      "note": "Phase 37E (#867). Disagrees with the NC State Plant Toolbox (waterNeed, medium), so waterNeed stays empty."
+    },
+    "preserving.freeze": {
+      "url": "https://extension.sdstate.edu/preserving-herbs",
+      "publisher": "South Dakota State University Extension, Preserving Herbs",
+      "date": "Updated June 30, 2022 (accessed 2026-10-20)",
+      "quote": "There are many herbs that can be frozen, such as parsley, basil, mint, tarragon, chives, cilantro, oregano or dill.",
+      "note": "Phase 37C (#867)."
+    },
+    "preserving.fresh": {
+      "url": "https://www.ndsu.edu/agriculture/extension/publications/garden-table-harvesting-herbs-healthy-eating",
+      "publisher": "North Dakota State University Extension H1267, From Garden to Table: Harvesting Herbs for Healthy Eating",
+      "date": "Reviewed Dec. 2021 (accessed 2026-10-20)",
+      "quote": "Fresh oregano is unequaled for flavor and aroma enhancement in Italian dishes.",
+      "note": "Phase 37C (#867)."
     }
   },
   "ornamental-corn-earth-tones-dent-raw-untreated-non-gmo": {
@@ -3261,6 +3338,27 @@
       "publisher": "University of Illinois Extension, Herbs: Rosemary",
       "date": "accessed 2026-10-17",
       "quote": "Occasionally, longer, woody stems can be harvested and used as skewers for kabobs."
+    },
+    "waterNeed": {
+      "url": "https://extension.psu.edu/herb-garden-plants-rosemary",
+      "publisher": "Penn State Extension, Herb Garden Plants: Rosemary",
+      "date": "Updated April 22, 2026 (accessed 2026-10-20)",
+      "quote": "Though rosemary is drought-tolerant once established, it does poorly in wet or poorly drained clay soil.",
+      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads low; USDA Farmers' Bulletin 1977 (waterNeed.2) reads medium (\"moderately moist\")."
+    },
+    "waterNeed.2": {
+      "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+      "publisher": "USDA Farmers' Bulletin No. 1977, Savory Herbs: Culture and Use (1946), web reprint by Purdue University Center for New Crops and Plant Products",
+      "date": "1946 bulletin; accessed 2026-10-20",
+      "quote": "Special consideration should be given to the location of a few of the savory herbs that are sensitive to soil-moisture conditions. Sage, rosemary, and thyme require a well-drained moderately moist situation; celery, parsley, chervil, and the mints give best results on soils that retain considerable moisture but have good drainage.",
+      "note": "Phase 37E (#867). Disagrees with Penn State (waterNeed, low), so waterNeed stays empty."
+    },
+    "seasonalTasks.prune-after-bloom": {
+      "url": "https://plants.ces.ncsu.edu/plants/salvia-rosmarinus/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Salvia rosmarinus",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Rosemary does best in light, slightly acidic, dry to medium, well-drained soils in full sun. It tolerates drought, partial shade, salt, heavy pruning, and most soil types except clay. It is easily transplanted and rooted. However, it has a low tolerance for wet, humid environments and requires careful tending in an appropriate spot. Once the bloom has passed, severely pruning is an option to encourage dense foliage growth.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). Penn State Extension (Herb Garden Plants: Rosemary) agrees on the season: \"Prune after flowering.\""
     }
   },
   "sage-broadleaf": {
@@ -3329,6 +3427,20 @@
       "date": "Accessed 2026-10-17",
       "quote": "Sage can be grown from seeds or cuttings. Cuttings are preferred as seeds may take several years to produce harvestable plants. As plants age, they become woody and benefit from being replaced in order to maintain quality foliage for culinary use. Prune plants back in the spring just as new growth resumes.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "preserving.freeze": {
+      "url": "https://sanweb.lib.msu.edu/DMC/extension_publications/e3179/E3179_Herbs.pdf",
+      "publisher": "Michigan State University Extension Bulletin E3179, Michigan Fresh: Using, Storing, and Preserving Herbs (Beth A. Clawson)",
+      "date": "June 2012 (accessed 2026-10-20)",
+      "quote": "Some of the hardier herbs — such as sage, rosemary and thyme — can be frozen right on the stalk.",
+      "note": "Phase 37C (#867)."
+    },
+    "harvestCadence": {
+      "url": "https://extension.arizona.edu/sites/extension.arizona.edu/files/attachment/HerbCareReference_0.pdf",
+      "publisher": "University of Arizona Cooperative Extension, Herb Care reference sheet (document provided by Alicia Williams, Master Gardener)",
+      "date": "4/6/2019 (accessed 2026-10-20)",
+      "quote": "SAGE – Perennial; likes semi-shade. Drought tolerant; just barely moist soil (dry down to second knuckle). When new growth appears in early spring, cut back each stem on mature plants by a third, making the cut right above a set of leaves. Foliar feed when new growth appears in spring and again around the summer solstice (e.g. June 21st). In early July cut the tips of each stem back 3 inches and dry for winter use. Harvest mature plants at 6- to 8-week intervals beginning in late spring, cutting back 3 to 5 inches.",
+      "note": "Phase 37C (#867). The SAGE entry of the sheet, whole up to the cadence sentence: 6 to 8 weeks between cuts on mature plants, so everyDays 42 to 56. An Arizona Master Gardener sheet on the extension site; no other allowed page found states a cadence for sage, and none disagrees."
     }
   },
   "scallion-evergreen-bunching": {
@@ -3963,6 +4075,20 @@
       "date": "Accessed 2026-10-17",
       "quote": "While thyme can be grown from seed, it is much easier to grow it from divisions or cuttings. As thyme gets older, it can become woody and should be renewed every few years by cutting it back severely in the spring. This will encourage the production of young, tender stems.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "waterNeed": {
+      "url": "https://journals.flvc.org/edis/article/download/129307/132349",
+      "publisher": "UF/IFAS Extension EDIS CIR570, Herbs and Spices in the Florida Garden",
+      "date": "Revised December 2021; accessed 2026-10-20",
+      "quote": "Thyme is drought tolerant.",
+      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads low (NC State Plant Toolbox agrees, \"It is frost and drought-tolerant\"); USDA Farmers' Bulletin 1977 (waterNeed.2) reads medium (\"moderately moist\")."
+    },
+    "waterNeed.2": {
+      "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+      "publisher": "USDA Farmers' Bulletin No. 1977, Savory Herbs: Culture and Use (1946), web reprint by Purdue University Center for New Crops and Plant Products",
+      "date": "1946 bulletin; accessed 2026-10-20",
+      "quote": "Special consideration should be given to the location of a few of the savory herbs that are sensitive to soil-moisture conditions. Sage, rosemary, and thyme require a well-drained moderately moist situation; celery, parsley, chervil, and the mints give best results on soils that retain considerable moisture but have good drainage.",
+      "note": "Phase 37E (#867). Disagrees with UF/IFAS EDIS CIR570 (waterNeed, low), so waterNeed stays empty."
     }
   },
   "tomatillo-de-milpa": {
@@ -6679,6 +6805,20 @@
       "date": "Accessed 2026-10-17",
       "quote": "Catnip prefers a full sun location in soil that is moist but well-drained. It will also tolerate light shade. It can be grown from seed, stem tip cuttings or divisions. As plants age, they can become unsightly so regular division is suggested. Cutting back the plants during the season also helps to maintain a more compact and neater looking plant. Cut back plants in the spring just as growth resumes.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "preserving.dry": {
+      "url": "https://extension.illinois.edu/herbs/catnip",
+      "publisher": "University of Illinois Extension, Herbs: Catnip",
+      "date": "undated page (accessed 2026-10-20)",
+      "quote": "The flavor and aroma of catnip is at its peak when the plant is in full bloom. Cut stems and hang to dry in a cool, well-ventilated location.",
+      "note": "Phase 37C (#867)."
+    },
+    "preserving.fresh": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-20",
+      "quote": "Fresh or dried leaves of herbs such as lemon balm, peppermint, chamomile, rosemary, and catnip can be used to make tea.",
+      "note": "Phase 37C (#867)."
     }
   },
   "chamomile-german": {
@@ -6702,6 +6842,27 @@
       "date": "Publication Date October 11, 2019; accessed 2026-10-17",
       "quote": "VCE 426-420, Herb Culture and Use, Annuals table: \"Herb Culture and Use | Annuals\"; \"Chamomile, German chamomile Matricaria recutita | Grow from seed. Prefers a sandy, well-drained soil with a pH of 7.0-7.5 and lots of sun.\"",
       "note": "NC State Plant Toolbox (Matricaria chamomilla) agrees: annual."
+    },
+    "preserving.fresh": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
+      "date": "Publication Date October 11, 2019; accessed 2026-10-20",
+      "quote": "Fresh or dried leaves of herbs such as lemon balm, peppermint, chamomile, rosemary, and catnip can be used to make tea.",
+      "note": "Phase 37C (#867)."
+    },
+    "preserving.dry": {
+      "url": "https://www.ndsu.edu/agriculture/extension/publications/garden-table-harvesting-herbs-healthy-eating",
+      "publisher": "North Dakota State University Extension H1267, From Garden to Table: Harvesting Herbs for Healthy Eating",
+      "date": "Reviewed Dec. 2021 (accessed 2026-10-20)",
+      "quote": "Chamomile: Often used to make tea. The usual method is to use about 2 teaspoons of dried flowers per cup.",
+      "note": "Phase 37C (#867). About the flowers. VCE 426-420 agrees (\"Leaves and flowers used in tea — two teaspoons dried material per cup\")."
+    },
+    "seasonalTasks.deadhead": {
+      "url": "https://extension.illinois.edu/blogs/flowers-fruits-and-frass/2025-04-04-plant-year-picks-your-garden",
+      "publisher": "University of Illinois Extension, Flowers, Fruits, and Frass blog: “Plant of the Year” Picks for Your Garden",
+      "date": "April 4, 2025 (accessed 2026-10-20)",
+      "quote": "German chamomile is self-seeding in the garden. To prevent seedlings from appearing next year, deadhead any spent flowers to stop the mature seeds from scattering below the plant.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "hyssop-officinalis": {
@@ -6731,6 +6892,20 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Hyssopus officinalis (Hyssop)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "waterNeed": {
+      "url": "https://hort.purdue.edu/newcrop/med-aro/factsheets/HYSSOP.html",
+      "publisher": "Purdue University Center for New Crops and Plant Products, NewCROP factsheet: Hyssop (from Simon, Chadwick and Craker 1984, Herbs: An Indexed Bibliography)",
+      "date": "Last modified 6-Dec-1997; accessed 2026-10-20",
+      "quote": "The reported life zone of hyssop is 7 to 21 degrees centigrade with an annual precipitation of 0.6 to 1.5 meters (4.1-31). The plant grows on dry, rocky, calcareous soils.",
+      "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"dry, rocky\"); words only, never a target factor (R-10). Describes where Hyssopus officinalis grows; the NC State Plant Toolbox (\"Well-established plants are drought-tolerant\") and MU Extension G6470 (Soil: \"Dry\") agree."
+    },
+    "seasonalTasks.spring-trim": {
+      "url": "https://plants.ces.ncsu.edu/plants/hyssopus-officinalis/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Hyssopus officinalis",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Hyssop is a short-lived, semi-evergreen, herbaceous perennial or subshrub in the mint family (Lamiaceae) native to Europe, Asia and Africa, however, it has naturalized in some areas of the USA. ... Trimming in the spring is best and will help maintain a bushy, well-shaped plant that resists breakage.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). Both pieces are from the page's Description section (ruling F867-2). Cornell Home Gardening's hyssop page agrees on spring (\"wait and cut plants back to the ground in spring\") but cuts harder, so the row says only trim."
     }
   },
   "lavender-english-munstead": {
@@ -6855,6 +7030,27 @@
       "date": "Accessed 2026-10-17",
       "quote": "Sweet marjoram is easily grown from seed or cuttings. It prefers a full sun location and requires a well-drained soil. Sweet marjoram tends to be a low spreading plant that benefits from being pruned back when it is 6-8 inches tall to encourage a bushy growth habit.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "waterNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/origanum-majorana/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Origanum majorana",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Plant Sweet Marjoram in average, dry to medium moisture, well-drained soil in the full sun.",
+      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads medium (\"medium moisture\"); USDA Farmers' Bulletin 1977 (waterNeed.2) reads high (\"moist soil\")."
+    },
+    "waterNeed.2": {
+      "url": "https://hort.purdue.edu/newcrop/SavoryHerbs/SavoryHerbs.html",
+      "publisher": "USDA Farmers' Bulletin No. 1977, Savory Herbs: Culture and Use (1946), web reprint by Purdue University Center for New Crops and Plant Products",
+      "date": "1946 bulletin; accessed 2026-10-20",
+      "quote": "The plants grow best in rich moist soil and usually make a growth of only about a foot during the first season. The sweet marjoram can be spaced at intervals of 6 to 8 inches, whereas the pot and wild marjorams should be set a foot or more apart in the row.",
+      "note": "Phase 37E (#867). From the bulletin's marjoram section. Disagrees with the NC State Plant Toolbox (waterNeed, medium), so waterNeed stays empty."
+    },
+    "preserving.dry": {
+      "url": "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation",
+      "publisher": "UMass Amherst Center for Agriculture, Food, and the Environment, Home Lawn and Garden: Herb Preservation",
+      "date": "Last Updated March 26, 2018; accessed 2026-10-20",
+      "quote": "The best culinary herbs for air drying are mint, thyme, lavender, oregano, marjoram, sage, rosemary, savory, lovage, lemon verbena and lemon balm.",
+      "note": "Phase 37C (#867). The Wisconsin Master Gardener \"Drying Herbs\" sheet agrees (\"Sturdy herbs such as ... marjoram are well suited for air-drying\")."
     }
   },
   "stevia-sweetleaf": {
@@ -6885,6 +7081,34 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Stevia rebaudiana (Candy Leaf, Stevia, Sugar Leaf, Sweet Herb of Paraguay\"; \"USDA Plant Hardiness Zone: 10a, 10b, 11a, 11b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "preserving.fresh": {
+      "url": "https://www.uvm.edu/extension/news/growing-herbs-tea",
+      "publisher": "University of Vermont Extension, Growing herbs for tea (Andrea Knepper)",
+      "date": "April 26, 2023; accessed 2026-10-20",
+      "quote": "Both fresh and dried stevia leaves can be enjoyed in your teas.",
+      "note": "Phase 37C (#867)."
+    },
+    "preserving.dry": {
+      "url": "https://www.uvm.edu/extension/news/growing-herbs-tea",
+      "publisher": "University of Vermont Extension, Growing herbs for tea (Andrea Knepper)",
+      "date": "April 26, 2023; accessed 2026-10-20",
+      "quote": "Both fresh and dried stevia leaves can be enjoyed in your teas.",
+      "note": "Phase 37C (#867). The NC State Plant Toolbox agrees (\"dried leaves are usually sweeter than fresh leaves\")."
+    },
+    "seasonalTasks.pinch-tips": {
+      "url": "https://s3.wp.wsu.edu/uploads/sites/2079/2014/02/Stevia.pdf",
+      "publisher": "WSU Clark County Extension, Garden Mastery Tips from Clark County Master Gardeners: Stevia",
+      "date": "August 2008 (accessed 2026-10-20)",
+      "quote": "Stevia can grow 24 to 36 inches tall and 12 to 24 inches wide. It produces hairy stems covered in dark green, toothed leaves. Pinch the tips every 2 to 3 weeks to encourage side branching, resulting in a bushier plant.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "seasonalTasks.pinch-flower-buds": {
+      "url": "https://gardeningsolutions.ifas.ufl.edu/plants/edibles/vegetables/stevia/",
+      "publisher": "UF/IFAS Extension, Gardening Solutions: Stevia",
+      "date": "undated page (accessed 2026-10-20)",
+      "quote": "Pinching off flower buds as soon as they appear will help maximize the quality of the leaves (they are sweetest before flowering occurs). Fall is the best time to harvest the leaves, which can be used fresh or dried. Generally, stevia leaves are sweeter when dried.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). The NC State Plant Toolbox agrees (\"Prune off flowers for better-tasting leaves\")."
     }
   },
   "summer-savory": {
@@ -6921,6 +7145,13 @@
       "publisher": "University of Illinois Extension, Herbs: Savory: Summer",
       "date": "accessed 2026-10-17",
       "quote": "Cut leafy tops when plants start to show buds."
+    },
+    "preserving.fresh": {
+      "url": "https://plants.ces.ncsu.edu/plants/satureja-hortensis/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Satureja hortensis",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Savory is most often used as a culinary herb, but it also has marked medicinal benefits, especially upon the whole digestive system. The plant is grown from seed in early spring and harvested in the summer when in flower and can be used fresh or dried.",
+      "note": "Phase 37C (#867). From the Satureja hortensis page; the next sentence on the page is about winter savory and is left out."
     }
   },
   "tarragon-french": {
@@ -6990,6 +7221,13 @@
       "date": "Accessed 2026-10-17",
       "quote": "Tarragon will not tolerate poorly drained soils especially over the winter as this will lead to plants not overwintering successfully. Plants benefit from division every 3-4 years to keep the planting vigorous and productive. Cut back plants in the spring just as growth resumes. Leaving the tops stand over the winter helps to improve overwintering chances.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "waterNeed": {
+      "url": "https://extension.usu.edu/yardandgarden/research/french-tarragon-in-the-garden",
+      "publisher": "Utah State University Extension, French Tarragon in the Garden",
+      "date": "Published May 2020; accessed 2026-10-20",
+      "quote": "Newly planted French tarragon should be watered regularly until it becomes established. After that, allow the soil to dry out between waterings.",
+      "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"allow the soil to dry\"); words only, never a target factor (R-10). Purdue NewCROP agrees (\"Tarragon grows best in warm, sunny location on dry soils with good drainage\"); Illinois's \"dry side\" is about pots indoors. The sentence after the quote also says \"consistently wet soil\", which is why it is left out."
     }
   },
   "arugula-astro": {
@@ -7058,6 +7296,34 @@
       "date": "Accessed 2026-10-17",
       "quote": "Because chervil goes to flower readily (bolts), it is suggested to make successive sowings of seed through the season at 3-4 week intervals to insure a continuous supply of fresh leaves.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "waterNeed": {
+      "url": "https://journals.flvc.org/edis/article/download/129307/132349",
+      "publisher": "UF/IFAS Extension EDIS CIR570, Herbs and Spices in the Florida Garden",
+      "date": "Revised December 2021; accessed 2026-10-20",
+      "quote": "Chervil grows best in full to part sun and rich, moist soil.",
+      "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"moist soil\"); words only, never a target factor (R-10). USDA Farmers' Bulletin 1977 agrees: chervil is among the herbs that \"give best results on soils that retain considerable moisture but have good drainage\"."
+    },
+    "preserving.fresh": {
+      "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-09/335846.pdf",
+      "publisher": "Colorado State University Extension Fact Sheet No. 9.335, Herbs: Preserving and Using (Bunning, Woo and Kendall), copy hosted by UC ANR",
+      "date": "revised 10/14; accessed 2026-10-20",
+      "quote": "Some herbs are best used fresh— such as burnet, chervil, and parsley—because they have little flavor once dried or frozen.",
+      "note": "Phase 37C (#867)."
+    },
+    "preserving.freeze.notRecorded": {
+      "url": "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation",
+      "publisher": "UMass Amherst Center for Agriculture, Food, and the Environment, Home Lawn and Garden: Herb Preservation",
+      "date": "Last Updated March 26, 2018; accessed 2026-10-20",
+      "quote": "Freezing provides the best flavor for parsley, cilantro, chervil, sweet cicely, chives, tarragon, dill and fennel.",
+      "note": "Sources disagree on how well chervil freezes, so freeze stays empty: UMass (this quote) and Kentucky State (\"retain more flavor if frozen and not dried\") say freezing works; CSU 9.335 says chervil is best used fresh \"because they have little flavor once dried or frozen\"."
+    },
+    "preserving.dry.notRecorded": {
+      "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-09/335846.pdf",
+      "publisher": "Colorado State University Extension Fact Sheet No. 9.335, Herbs: Preserving and Using (Bunning, Woo and Kendall), copy hosted by UC ANR",
+      "date": "revised 10/14; accessed 2026-10-20",
+      "quote": "Some herbs are best used fresh— such as burnet, chervil, and parsley—because they have little flavor once dried or frozen.",
+      "note": "Sources disagree on drying chervil, so dry stays empty: CSU 9.335 (this quote) says it has little flavor once dried, while its own Table 3 says \"Dry or freeze as for basil\" and Illinois Extension says \"Air dry and store leaves in sealed containers\"."
     }
   },
   "endive-frisee": {
@@ -7135,6 +7401,34 @@
       "date": "2026-10-17",
       "quote": "Lovage is grown from either division or seed planted in the spring or fall. It likes a fairly rich, moist soil and light shade improves its quality.",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"moist soil\"); words only, never a target factor (R-10). VCE 426-420 Table \"Herb Culture and Use\" also lists lovage with \"Rich, moist soil.\""
+    },
+    "preserving.dry": {
+      "url": "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation",
+      "publisher": "UMass Amherst Center for Agriculture, Food, and the Environment, Home Lawn and Garden: Herb Preservation",
+      "date": "Last Updated March 26, 2018; accessed 2026-10-20",
+      "quote": "The best culinary herbs for air drying are mint, thyme, lavender, oregano, marjoram, sage, rosemary, savory, lovage, lemon verbena and lemon balm.",
+      "note": "Phase 37C (#867). Illinois Extension agrees (\"Leaves can be dried for later use\"). Kentucky State says lovage keeps more flavor frozen than dried, which ranks the methods but does not rate drying as fair or poor."
+    },
+    "preserving.freeze": {
+      "url": "https://www.kysu.edu/documents/college-of-agriculture-communities-the-sciences/using_herbs_02_2019.pdf",
+      "publisher": "Kentucky State University Cooperative Extension Program fact sheet, Harvesting and Using Herbs (Dr. Leigh Whittinghill)",
+      "date": "file dated 02/2019; accessed 2026-10-20",
+      "quote": "Basil, chervil, chives, cilantro, fennel, lovage and parsley retain more flavor if frozen and not dried.",
+      "note": "Phase 37C (#867). The same sheet says \"Basil and lovage must be blanched\" before freezing."
+    },
+    "seasonalTasks.prune-for-leaves": {
+      "url": "https://plants.ces.ncsu.edu/plants/levisticum-officinale/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Levisticum officinale",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Lovage does best in moist, well-drained deep fertile soil in full sun to part shade. The plant requires pruning during the growing season (late spring to early fall) to encourage a supply of fresh, new leaves and old foliage can be removed in late fall.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "seasonalTasks.remove-old-foliage": {
+      "url": "https://plants.ces.ncsu.edu/plants/levisticum-officinale/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Levisticum officinale",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Lovage does best in moist, well-drained deep fertile soil in full sun to part shade. The plant requires pruning during the growing season (late spring to early fall) to encourage a supply of fresh, new leaves and old foliage can be removed in late fall.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "mache-corn-salad": {
@@ -7321,6 +7615,41 @@
       "date": "2026-10-17",
       "quote": "This is especially important when growing Florence fennel as it prefers uniformly moist soil to develop the best “bulb.”",
       "note": "Phase 37E. Fetched from the page and checked word for word on 2026-10-17. Read through the waterNeed gate word list (\"uniformly moist\"); words only, never a target factor (R-10). The plugin is a bulbing Florence fennel."
+    },
+    "preserving.fresh": {
+      "url": "https://extension.wsu.edu/skagit/2025/07/25/skagit-food-preservation-fennel/",
+      "publisher": "Washington State University Extension, Skagit County: Skagit Food Preservation: Fennel",
+      "date": "July 25, 2025 (accessed 2026-10-20)",
+      "quote": "To prepare fresh fennel, slice the bulb into thin slices and use it raw and crisp in all kinds of salads, or cook it gently and let the flavor mellow and sweeten and the texture turn silky.",
+      "note": "Phase 37C (#867). About the bulb."
+    },
+    "preserving.dry": {
+      "url": "https://extension.wsu.edu/skagit/2025/07/25/skagit-food-preservation-fennel/",
+      "publisher": "Washington State University Extension, Skagit County: Skagit Food Preservation: Fennel",
+      "date": "July 25, 2025 (accessed 2026-10-20)",
+      "quote": "Drying Preparation: Wash the fennel bulb, removing stalks and leaves.",
+      "note": "Phase 37C (#867). The page gives a full drying procedure for the bulb (\"Package dried fennel in moisture/vapor proof containers\"), consistent with USDA recommendations."
+    },
+    "preserving.freeze.notRecorded": {
+      "url": "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf",
+      "publisher": "Purdue Extension FoodLink, Fennel",
+      "date": "undated (accessed 2026-10-20)",
+      "quote": "Due to its high water content, freezing the bulb will change its texture.",
+      "note": "Sources disagree on freezing the bulb, so freeze stays empty: WSU Extension Skagit County gives a blanch-and-freeze method for the bulb; Purdue FoodLink (this quote) says freezing changes its texture (it says stalks and fronds \"freeze well\")."
+    },
+    "seasonalTasks.plant-again": {
+      "url": "https://extension.usu.edu/yardandgarden/research/fennel-in-the-garden",
+      "publisher": "Utah State University Extension, Fennel in the Garden",
+      "date": "Published May 2020; accessed 2026-10-20",
+      "quote": "After plants begin to bulb, thin Florence fennel to 8-12 inches apart. For a continuous supply of bulbs plant 3-4 feet of rowevery 3-4 weeks.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). \"rowevery\" is the page's own typo. Illinois Extension adds that Florence fennel seeding \"is best done from mid-June to July\", since earlier plantings bolt in long, hot days."
+    },
+    "seasonalTasks.mound-soil": {
+      "url": "https://extension.usu.edu/yardandgarden/research/fennel-in-the-garden",
+      "publisher": "Utah State University Extension, Fennel in the Garden",
+      "date": "Published May 2020; accessed 2026-10-20",
+      "quote": "Florence fennel typically matures in 60 to 90 days depending on variety planted. Some gardeners mound soil around the swollen bases to keep the bases from turning green and developing a stronger flavor.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). Illinois Extension agrees: when the bulbs are the size of an egg, \"push soil around the “bulb.” This will produce a paler and tenderer “bulb.\"\"."
     }
   },
   "barley-hulless-streaker": {
@@ -8114,6 +8443,27 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Agastache foeniculum (Anise Hyssop, Hyssop)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "waterNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/agastache-foeniculum/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Agastache foeniculum",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Planted in full or partial sun and mesic to dry conditions, anise hyssop grows 3 to 5 feet tall and should be planted 12 to 36 inches apart in well-drained soil.",
+      "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"dry conditions\"); words only, never a target factor (R-10). Agrees with Wisconsin Horticulture (\"It tolerates drought once established\") and UMD Maryland Grows (\"They tolerate hot, dry weather\")."
+    },
+    "preserving.dry": {
+      "url": "https://www.uvm.edu/extension/news/using-summer-dried-herbs-and-flowers",
+      "publisher": "University of Vermont Extension, Using summer-dried herbs and flowers (Bonnie Kirn Donahue)",
+      "date": "March 24, 2021; accessed 2026-10-20",
+      "quote": "Dried herbs can be used in many ways depending on their variety and flavor profile. Some might be better for sweet dishes, such as lavender and anise hyssop, and some for savory dishes, including dill and tarragon.",
+      "note": "Phase 37C (#867). Wisconsin Horticulture agrees (\"The dried leaves can be used in potpourri\" and the best time to harvest foliage to dry)."
+    },
+    "seasonalTasks.spring-prune": {
+      "url": "https://site.extension.uga.edu/kbb/anise-hyssop/",
+      "publisher": "Keep Bartow Beautiful, Demonstration Garden Plants: Anise Hyssop (UGA Extension site, Bartow County)",
+      "date": "undated page (accessed 2026-10-20)",
+      "quote": "Agastache foeniculum, or anise hyssop, is a perennial plant coming from the mint family. It can reach 2-5 ft. tall and 1-3 ft. wide. They serve best as a perennial border and bloom late summer to early fall. They have a great extended bloom period, making them a good addition for cut flowers. The scent is similar to basil, even though it comes from the mint family. They do best in full sun planted 2 ft. apart, or else it will become lanky. It doesn’t need much attention once planted but can be pruned in early spring to encourage blooming.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "bergamot-monarda": {
@@ -8136,6 +8486,27 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Monarda didyma (Beebalm, Bee Balm, Bee-balm, Bergamont, Bergamot\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b, 9a, 9b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "waterNeed": {
+      "url": "https://yardandgarden.extension.iastate.edu/how-to/growing-bee-balm-home-garden",
+      "publisher": "Iowa State University Extension and Outreach, Yard and Garden: Growing Bee Balm in the Home Garden (Richard Jauron)",
+      "date": "Last reviewed July 2022; accessed 2026-10-20",
+      "quote": "Bee balms perform best in moist, well-drained soils in full sun.",
+      "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"moist, well-drained\"); words only, never a target factor (R-10). The page covers Monarda, naming Monarda didyma. NC State Plant Toolbox (Monarda didyma: \"This plant prefers moist, well-drained soils\") and the USDA NRCS scarlet beebalm plant guide (\"prefers moist but well drained soils\") agree."
+    },
+    "seasonalTasks.divide": {
+      "url": "https://yardandgarden.extension.iastate.edu/how-to/growing-bee-balm-home-garden",
+      "publisher": "Iowa State University Extension and Outreach, Yard and Garden: Growing Bee Balm in the Home Garden (Richard Jauron)",
+      "date": "Last reviewed July 2022; accessed 2026-10-20",
+      "quote": "Bee balms spread rapidly via underground stems or rhizomes. In addition, the centers of the clumps often die out within a few years. To control their spread and rejuvenate plants, it's advisable to dig and divide bee balms every 2 to 3 years. Early spring is the best time to dig and divide bee balms. Dig up plants as soon as they emerge from the ground.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). The USDA NRCS scarlet beebalm plant guide agrees: \"can be divided every 2 to 3 years in early spring while still dormant\"."
+    },
+    "seasonalTasks.fall-cleanup": {
+      "url": "https://yardandgarden.extension.iastate.edu/how-to/growing-bee-balm-home-garden",
+      "publisher": "Iowa State University Extension and Outreach, Yard and Garden: Growing Bee Balm in the Home Garden (Richard Jauron)",
+      "date": "Last reviewed July 2022; accessed 2026-10-20",
+      "quote": "Cultural practices can reduce the severity of powdery mildew. When planting bee balms, select a site in full sun and space plants 2 feet apart. Divide plants every 2 to 3 years and water during dry periods. Remove and destroy disease-infested plant debris in fall. The fungal spores of powdery mildew survive the winter on disease-infested plant debris.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "lemon-balm": {
@@ -8247,6 +8618,13 @@
       "publisher": "University of Illinois Extension, Herbs: Lemon Verbena",
       "date": "accessed 2026-10-17",
       "quote": "Harvest leaves as needed throughout the season."
+    },
+    "preserving.dry": {
+      "url": "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation",
+      "publisher": "UMass Amherst Center for Agriculture, Food, and the Environment, Home Lawn and Garden: Herb Preservation",
+      "date": "Last Updated March 26, 2018; accessed 2026-10-20",
+      "quote": "The best culinary herbs for air drying are mint, thyme, lavender, oregano, marjoram, sage, rosemary, savory, lovage, lemon verbena and lemon balm.",
+      "note": "Phase 37C (#867). Illinois Extension agrees (\"Leaves are used fresh or can be dried\")."
     }
   },
   "cosmos-double-click": {
@@ -8506,16 +8884,33 @@
       "date": "Accessed 2026-10-17",
       "quote": "Cilantro prefers a full sun location and average, well-drained garden soil. It is easily grown from seed that is directly sown in the garden after danger of frost is past. It is difficult to transplant because of its tap root. It has a very short useful garden life and it has a tendency to go to seed (bolt). It is best to make successive sowings every 3-4 weeks to insure a continuous supply of fresh leaves.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "preserving.fresh": {
+      "url": "https://extension.usu.edu/nutrition/research/cilantro",
+      "publisher": "Utah State University Extension, Fruit and Vegetable Guide Series: Cilantro",
+      "date": "March 15, 2023; accessed 2026-10-20",
+      "quote": "Cilantro tastes best when used fresh and added near the end of the cooking time.",
+      "note": "Phase 37C (#867)."
     }
   },
   "lemongrass-east-indian": {
-    "lifecycle.notRecorded": {
-      "reason": "No source on East Indian lemongrass (Cymbopogon flexuosus) was found. Illinois Extension (Lemon Grass) and the NC State Plant Toolbox cover Cymbopogon citratus only (\"Tender Perennial\"; zones 8b to 11b). See docs/research/phase-37-herb-research-prompt.md (Task 1).",
-      "date": "2026-10-17"
+    "preserving.freeze": {
+      "url": "https://extension.psu.edu/freezing-herbs",
+      "publisher": "Penn State Extension, Freezing Herbs",
+      "date": "Updated July 22, 2025 (accessed 2026-10-20)",
+      "quote": "Chop chives and lemon grass before freezing. They are thin and will freeze quickly.",
+      "note": "Phase 37C (#867). Ruling F867-3: a source's own freezing instruction for a named herb says the method works for it. The page names lemon grass in general, not East Indian (Cymbopogon flexuosus) by species; the ruled herb names count either. SDSU Extension agrees (\"Chives and lemon grass should be chopped before freezing\")."
+    },
+    "lifecycle": {
+      "url": "https://hort.purdue.edu/newcrop/med-aro/factsheets/LEMONGRASS.html",
+      "publisher": "Purdue University Center for New Crops and Plant Products, NewCROP factsheet: Lemongrass (from Simon, Chadwick and Craker 1984, Herbs: An Indexed Bibliography)",
+      "date": "Last modified 6-Dec-1997; accessed 2026-10-20",
+      "quote": "Lemongrass, a perennial herb widely cultivated in the tropics and subtropics, designates two different species, East Indian, Cymbopogon flexuosus (DC.) Stapf., and West Indian, Cymbopogon citratus (DC. ex Nees) Stapf.",
+      "note": "Phase 37B (#867). Names East Indian lemongrass, Cymbopogon flexuosus, as a perennial. Wisconsin Horticulture (Lemongrass, naming C. flexuosus) agrees: \"This perennial herb is widely grown in the tropics and subtropics but can also be grown as an annual in cooler climates.\""
     },
     "winterHardyToZone.notRecorded": {
-      "reason": "No source states a zone for East Indian lemongrass (Cymbopogon flexuosus); see docs/research/phase-37-herb-research-prompt.md (Task 1).",
-      "date": "2026-10-17"
+      "reason": "No allowed page names East Indian lemongrass (Cymbopogon flexuosus) with a USDA zone. Purdue NewCROP (Lemongrass) and Wisconsin Horticulture (Lemongrass) name C. flexuosus but give no zone; Illinois Extension (Lemon Grass) and the NC State Plant Toolbox cover Cymbopogon citratus only, which does not count. Checked again 2026-10-20 (#867); see docs/research/phase-37-herb-research-prompt.md (Task 1).",
+      "date": "2026-10-20"
     }
   },
   "mountain-mint": {
@@ -8531,6 +8926,20 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Pycnanthemum muticum (Blunt Mountain Mint, Mountain Mint, Short-toothed Mountain Mint)\"; \"USDA Plant Hardiness Zone: 4a, 4b, 5a, 5b, 6a, 6b, 7a, 7b, 8a, 8b\"",
       "note": "Coldest zone listed. No other fetched source states a zone."
+    },
+    "waterNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/pycnanthemum-muticum/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Pycnanthemum muticum",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Blunt mountain mint grows in full sun to partial shade and in moist soil with good drainage.",
+      "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"moist soil\"); words only, never a target factor (R-10). Blunt mountain mint is Pycnanthemum muticum, the plugin's species."
+    },
+    "seasonalTasks.root-prune": {
+      "url": "https://plants.ces.ncsu.edu/plants/pycnanthemum-muticum/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Pycnanthemum muticum",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "Blunt mountain mint grows in full sun to partial shade and in moist soil with good drainage. It grows 3 to 4 feet tall in a space of 2 to 3 feet. Although blunt mountain mint is not considered invasive, it is a vigorous grower, spreading its rhizomes, in optimum conditions. If spreading is not needed or wanted, the roots should be pruned in the spring with a spade.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
     }
   },
   "perilla-shiso-green": {
@@ -8540,6 +8949,13 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Perilla frutescens (Beefsteak Plant, Perilla, Shiso)\"; \"Beefsteak plant is a flowering, annual, edible in the Lamiaceae (mint) family native to the Himalayas and Southeast Asia.\"",
       "note": "The source names the species or the crop type; the cultivar takes the crop-type value (#591 ruling Q3)."
+    },
+    "seasonalTasks.pinch-flowers": {
+      "url": "https://plants.ces.ncsu.edu/plants/perilla-frutescens/",
+      "publisher": "NC State Extension, North Carolina Extension Gardener Plant Toolbox: Perilla frutescens",
+      "date": "undated web page; accessed 2026-10-20",
+      "quote": "The genus name Perilla comes from the Latin word pera meaning bag in reference to the shape of the fruiting calyx. ... It is listed as invasive in VA WV, TN and KY. ... This plant grows quickly and aggressively up to 3 feet tall and 1 1/2 feet wide. Pinching off the flowers before they go to seed will help slow the spread of their wind-dispersed seeds. When left to its own, it will self-seed prolifically.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). All pieces are from the page's Description section (ruling F867-2). UVM Extension agrees for shiso (\"You can prevent this by removing flowers before they form seeds\")."
     }
   },
   "tulsi-holy-basil-rama": {
@@ -8549,6 +8965,20 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Ocimum tenuiflorum (Holy Basil, Hot Basil, Tulasi, Tulsi)\"; \"Holy basil is an aromatic annual or short-lived pernnial or subshrub in the Lamiaceae (mint) family.\"",
       "note": "The source names annual first and a short-lived perennial; the stored annual stays. \"pernnial\" is the page's spelling."
+    },
+    "preserving.dry": {
+      "url": "https://www.uvm.edu/extension/news/growing-herbs-tea",
+      "publisher": "University of Vermont Extension, Growing herbs for tea (Andrea Knepper)",
+      "date": "April 26, 2023; accessed 2026-10-20",
+      "quote": "Begin harvesting tulsi when the plant starts to develop flowers. Trim stems above a growth node, bundle them together and hang them to dry.",
+      "note": "Phase 37C (#867). UT Gardens agrees (\"It is commonly dried for tea\")."
+    },
+    "seasonalTasks.prune-to-size": {
+      "url": "https://marylandgrows.umd.edu/2019/02/15/tulsi-basil-and-anise-hyssop-easy-useful-and-adaptable/",
+      "publisher": "University of Maryland Extension, Maryland Grows blog: Tulsi Basil and Anise Hyssop: Easy, Useful, and Adaptable (Jon Traunfeld)",
+      "date": "February 15, 2019 (accessed 2026-10-20)",
+      "quote": "Tulsi grows rapidly and blooms continually from June through first frost. Individual plants can easily cover 10 sq. ft. but can be pruned to fit smaller spaces.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). From the article text, not the reader comments under it."
     }
   },
   "calendula-resina": {
@@ -8558,6 +8988,41 @@
       "date": "undated web page; accessed 2026-10-17",
       "quote": "NC State Plant Toolbox: \"Calendula officinalis (Calendula, Calendula (Pot Marigold), Common Marigold\"; \"Marigolds are a popular annual with colorful flowers that are easy to grow in average, moderately fertile, well-drained soils in full sun.\"",
       "note": "The source names the species or the crop type; the cultivar takes the crop-type value (#591 ruling Q3)."
+    },
+    "waterNeed": {
+      "url": "https://extension.unh.edu/resource/how-grow-calendula-calendula-officinalis",
+      "publisher": "University of New Hampshire Extension, How to grow calendula (Calendula officinalis)",
+      "date": "undated page (accessed 2026-10-20)",
+      "quote": "Calendula grows best in evenly moist soil.",
+      "note": "Phase 37E (#867). Sources disagree, so waterNeed stays empty: this quote reads high; Iowa State (waterNeed.2) lists pot marigold among drought tolerant annuals (low)."
+    },
+    "waterNeed.2": {
+      "url": "https://yardandgarden.extension.iastate.edu/faq/what-are-some-good-drought-tolerant-annuals",
+      "publisher": "Iowa State University Extension and Outreach, Yard and Garden FAQ: What are some good drought tolerant annuals?",
+      "date": "undated page (accessed 2026-10-20)",
+      "quote": "Iowa State Yard and Garden FAQ: \"Drought tolerant annuals include:\"; \"pot marigold (Calendula officinalis)\"",
+      "note": "Phase 37E (#867). A list entry under \"Drought tolerant annuals include:\". Disagrees with UNH Extension (waterNeed, high), so waterNeed stays empty."
+    },
+    "preserving.dry": {
+      "url": "https://www.uvm.edu/extension/news/using-summer-dried-herbs-and-flowers",
+      "publisher": "University of Vermont Extension, Using summer-dried herbs and flowers (Bonnie Kirn Donahue)",
+      "date": "March 24, 2021; accessed 2026-10-20",
+      "quote": "Calendula flowers, which dry in vibrant yellows and oranges, can be used for body products, as well as teas, adding a touch of their lovely summer color.",
+      "note": "Phase 37C (#867). About the flowers."
+    },
+    "seasonalTasks.pinch": {
+      "url": "https://hort.extension.wisc.edu/articles/calendula-calendula-officinalis/",
+      "publisher": "University of Wisconsin-Madison Division of Extension, Wisconsin Horticulture: Calendula, Calendula officinalis (Susan Mahr)",
+      "date": "Revised: August 7, 2025 (accessed 2026-10-20)",
+      "quote": "Calendula is easy to grow in any well-drained soil in full sun. Seeds can be sown directly in the garden just before last frost date, but for earlier bloom start seeds indoors about 6 to 8 weeks before last frost. Successive sowings will provide fresh, blooming plants throughout the season. Use fresh seed as viability declines in storage. Sow the seeds ¼ to ½ inches deep; light will inhibit germination. Seeds should germinate in 5 to 15 days. Once the plants are several inches tall, pinch the vegetative buds to promote bushier plants.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "seasonalTasks.deadhead": {
+      "url": "https://hort.extension.wisc.edu/articles/calendula-calendula-officinalis/",
+      "publisher": "University of Wisconsin-Madison Division of Extension, Wisconsin Horticulture: Calendula, Calendula officinalis (Susan Mahr)",
+      "date": "Revised: August 7, 2025 (accessed 2026-10-20)",
+      "quote": "Calendula is easy to grow in any well-drained soil in full sun. Seeds can be sown directly in the garden just before last frost date, but for earlier bloom start seeds indoors about 6 to 8 weeks before last frost. Successive sowings will provide fresh, blooming plants throughout the season. Use fresh seed as viability declines in storage. Sow the seeds ¼ to ½ inches deep; light will inhibit germination. Seeds should germinate in 5 to 15 days. Once the plants are several inches tall, pinch the vegetative buds to promote bushier plants. Plants flower best when they are not heavily fertilized and they prefer moderate watering. Deadhead regularly to encourage blooming. If the flowers are not removed, the plants may self-sow.",
+      "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). Utah State Extension agrees (\"deadhead spent flowers regularly\")."
     }
   }
 }

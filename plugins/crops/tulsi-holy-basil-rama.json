@@ -2,7 +2,7 @@
   "pluginId": "tulsi-holy-basil-rama",
   "type": "crop",
   "displayName": "Tulsi Rama (Holy Basil)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -27,5 +27,21 @@
     "daysFromPlantingMax": 110,
     "beeAttractive": true
   },
-  "archetype": "cut-and-come-again-leafy"
+  "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "dry",
+      "suitability": "good"
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "prune-to-size",
+      "kind": "pruning",
+      "daysAfterPlanting": 45,
+      "windowDays": 60,
+      "title": "Prune tulsi to fit its space",
+      "body": "Tulsi grows fast, and one plant can cover 10 square feet. Prune it back to fit the space you have."
+    }
+  ]
 }

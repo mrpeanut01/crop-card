@@ -128,5 +128,61 @@ export const enSeasonal = {
     'When the plants are 6 to 8 inches tall, prune them back for bushier growth.',
   'seasonal.nasturtium-companion.summer-cut-back.title': 'Cut back leggy nasturtiums',
   'seasonal.nasturtium-companion.summer-cut-back.body':
-    'If the plants decline or get leggy in summer, cut them back lightly for new growth the rest of the season.'
+    'If the plants decline or get leggy in summer, cut them back lightly for new growth the rest of the season.',
+  'seasonal.anise-hyssop.spring-prune.title': 'Prune anise hyssop in early spring',
+  'seasonal.anise-hyssop.spring-prune.body':
+    'Prune the plants in early spring to encourage blooming.',
+  'seasonal.bergamot-monarda.divide.title': 'Divide bee balm every 2 to 3 years',
+  'seasonal.bergamot-monarda.divide.body':
+    'In early spring, as the shoots come up, dig and divide the clumps to control their spread and renew the plants.',
+  'seasonal.bergamot-monarda.fall-cleanup.title': 'Remove bee balm debris in fall',
+  'seasonal.bergamot-monarda.fall-cleanup.body':
+    'Clear away and destroy diseased leaves and stems in fall, since powdery mildew survives the winter on them.',
+  'seasonal.hyssop-officinalis.spring-trim.title': 'Trim hyssop in spring',
+  'seasonal.hyssop-officinalis.spring-trim.body':
+    'Trim the plants in spring to keep them bushy and well shaped.',
+  'seasonal.mountain-mint.root-prune.title': 'Prune mountain mint roots in spring',
+  'seasonal.mountain-mint.root-prune.body':
+    "If you don't want the planting to spread, prune the roots with a spade in spring.",
+  'seasonal.perilla-shiso-green.pinch-flowers.title': 'Pinch off perilla flowers',
+  'seasonal.perilla-shiso-green.pinch-flowers.body':
+    'Pinch off the flowers before they go to seed. Left alone, perilla self-seeds heavily and spreads.',
+  'seasonal.stevia-sweetleaf.pinch-tips.title': 'Pinch stevia tips for a bushier plant',
+  'seasonal.stevia-sweetleaf.pinch-tips.body':
+    'Pinch the stem tips every 2 to 3 weeks so the plant branches out and grows bushier.',
+  'seasonal.stevia-sweetleaf.pinch-flower-buds.title': 'Pinch off stevia flower buds',
+  'seasonal.stevia-sweetleaf.pinch-flower-buds.body':
+    'Pinch off flower buds as soon as they appear. The leaves are sweetest before the plant flowers.',
+  'seasonal.tulsi-holy-basil-rama.prune-to-size.title': 'Prune tulsi to fit its space',
+  'seasonal.tulsi-holy-basil-rama.prune-to-size.body':
+    'Tulsi grows fast, and one plant can cover 10 square feet. Prune it back to fit the space you have.',
+  'seasonal.lovage.prune-for-leaves.title': 'Prune lovage for fresh leaves',
+  'seasonal.lovage.prune-for-leaves.body':
+    'From late spring to early fall, cut the plants back to keep a supply of fresh, new leaves coming.',
+  'seasonal.lovage.remove-old-foliage.title': 'Remove old lovage foliage in late fall',
+  'seasonal.lovage.remove-old-foliage.body': 'In late fall, cut away the old foliage.',
+  'seasonal.fennel-bulb-perfection.plant-again.title': 'Plant more fennel',
+  'seasonal.fennel-bulb-perfection.plant-again.body':
+    'For a steady supply of bulbs, plant a short row again every 3 to 4 weeks.',
+  'seasonal.fennel-bulb-perfection.mound-soil.title': 'Mound soil around fennel bulbs',
+  'seasonal.fennel-bulb-perfection.mound-soil.body':
+    'When the bulbs start to swell, mound soil around them so they stay pale and mild.',
+  'seasonal.fennel-florence-zefa-fino.plant-again.title': 'Plant more fennel',
+  'seasonal.fennel-florence-zefa-fino.plant-again.body':
+    'For a steady supply of bulbs, plant a short row again every 3 to 4 weeks.',
+  'seasonal.fennel-florence-zefa-fino.mound-soil.title': 'Mound soil around fennel bulbs',
+  'seasonal.fennel-florence-zefa-fino.mound-soil.body':
+    'When the bulbs start to swell, mound soil around them so they stay pale and mild.',
+  'seasonal.chamomile-german.deadhead.title': 'Deadhead spent chamomile flowers',
+  'seasonal.chamomile-german.deadhead.body':
+    "Pick off spent flowers so the seeds don't scatter and come up as seedlings next year.",
+  'seasonal.calendula-resina.pinch.title': 'Pinch calendula for bushier plants',
+  'seasonal.calendula-resina.pinch.body':
+    'Once the plants are several inches tall, pinch the growing tips so they branch and grow bushier.',
+  'seasonal.calendula-resina.deadhead.title': 'Deadhead calendula',
+  'seasonal.calendula-resina.deadhead.body':
+    'Remove spent flowers regularly to keep the plants blooming. Flowers left on may self-sow.',
+  'seasonal.rosemary-tuscan-blue.prune-after-bloom.title': 'Prune rosemary after it blooms',
+  'seasonal.rosemary-tuscan-blue.prune-after-bloom.body':
+    'Once the plants finish blooming, you can prune them back to encourage dense, leafy growth.'
 } as const;

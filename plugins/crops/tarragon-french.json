@@ -2,9 +2,10 @@
   "pluginId": "tarragon-french",
   "type": "crop",
   "displayName": "Tarragon French (Artemisia dracunculus sativa)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
+  "waterNeed": "low",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 365,

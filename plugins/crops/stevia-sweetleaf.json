@@ -2,7 +2,7 @@
   "pluginId": "stevia-sweetleaf",
   "type": "crop",
   "displayName": "Stevia Sweetleaf (Stevia rebaudiana)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -34,5 +34,33 @@
     "beeAttractive": true
   },
   "archetype": "cut-and-come-again-leafy",
-  "winterHardyToZone": "10a"
+  "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
+    {
+      "method": "dry",
+      "suitability": "good"
+    }
+  ],
+  "winterHardyToZone": "10a",
+  "seasonalTasks": [
+    {
+      "key": "pinch-tips",
+      "kind": "pruning",
+      "dayOfYear": 160,
+      "windowDays": 60,
+      "title": "Pinch stevia tips for a bushier plant",
+      "body": "Pinch the stem tips every 2 to 3 weeks so the plant branches out and grows bushier."
+    },
+    {
+      "key": "pinch-flower-buds",
+      "kind": "pruning",
+      "dayOfYear": 190,
+      "windowDays": 45,
+      "title": "Pinch off stevia flower buds",
+      "body": "Pinch off flower buds as soon as they appear. The leaves are sweetest before the plant flowers."
+    }
+  ]
 }

@@ -2,9 +2,10 @@
   "pluginId": "anise-hyssop",
   "type": "crop",
   "displayName": "Anise Hyssop (Agastache foeniculum)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
+  "waterNeed": "low",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 90,
@@ -32,5 +33,21 @@
     "beeAttractive": true
   },
   "archetype": "cut-and-come-again-leafy",
-  "winterHardyToZone": "4a"
+  "preserving": [
+    {
+      "method": "dry",
+      "suitability": "good"
+    }
+  ],
+  "winterHardyToZone": "4a",
+  "seasonalTasks": [
+    {
+      "key": "spring-prune",
+      "kind": "pruning",
+      "dayOfYear": 75,
+      "windowDays": 21,
+      "title": "Prune anise hyssop in early spring",
+      "body": "Prune the plants in early spring to encourage blooming."
+    }
+  ]
 }

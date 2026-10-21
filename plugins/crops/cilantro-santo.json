@@ -2,7 +2,7 @@
   "pluginId": "cilantro-santo",
   "type": "crop",
   "displayName": "Cilantro — Santo (slow-bolt)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "apiaceae",
   "daysToMaturity": {
     "min": 35,
@@ -22,6 +22,10 @@
   },
   "archetype": "cut-and-come-again-leafy",
   "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
     {
       "method": "freeze",
       "suitability": "good"

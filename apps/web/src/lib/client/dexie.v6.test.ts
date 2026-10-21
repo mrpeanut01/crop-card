@@ -54,7 +54,7 @@ describe('Dexie v6 upgrade (A-12)', () => {
 
     const d = db();
     await d.open();
-    expect(d.verno).toBe(6);
+    expect(d.verno).toBe(7);
     expect(await d.pendingSprayRecords.toArray()).toEqual(expect.arrayContaining(rows));
     expect(await d.pendingSprayRecords.count()).toBe(3);
     expect(

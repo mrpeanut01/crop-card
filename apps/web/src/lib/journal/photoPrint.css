@@ -1,0 +1,254 @@
+/* The marked photo print sheet (#869, FU869-2). Imported by PhotoMarksPrint
+   so it ships with the /cards chunk and prints styled offline. Uses the
+   Card print pages `cc-letter` and `cc-4x6` from cards/print.css. While a
+   sheet waits to print, the Card's own print sheet is hidden. */
+
+.photo-print-sheet {
+  display: none;
+  color: #000;
+  background: #fff;
+  font-size: 10pt;
+  line-height: 1.3;
+}
+
+.photo-print-sheet.preview {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--color-divider, #ccc);
+  border-radius: var(--radius-input, 8px);
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.photo-print-sheet .sheet-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1in;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.photo-print-sheet .head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.photo-print-sheet .kicker {
+  font-size: 8pt;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.photo-print-sheet .title {
+  margin: 0;
+  font-size: 14pt;
+  overflow-wrap: anywhere;
+}
+
+.photo-print-sheet .meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.photo-print-sheet .body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12in;
+  min-width: 0;
+}
+
+.photo-print-sheet .photo {
+  margin: 0;
+  min-width: 0;
+}
+
+.photo-print-sheet .photo svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+}
+
+.photo-print-sheet .mark .area,
+.photo-print-sheet .mark .badge {
+  stroke: #000;
+}
+
+.photo-print-sheet .mark .area {
+  fill: none;
+}
+
+.photo-print-sheet .mark .area.dashed {
+  stroke-dasharray: 12 8;
+}
+
+.photo-print-sheet .mark .badge {
+  fill: #fff;
+}
+
+.photo-print-sheet .mark[data-shape='diamond'] .badge {
+  stroke-dasharray: 6 4;
+}
+
+.photo-print-sheet .mark text {
+  fill: #000;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+.photo-print-sheet h4 {
+  margin: 0 0 2px;
+  font-size: 10pt;
+}
+
+.photo-print-sheet .lists {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.photo-print-sheet .mark-lines,
+.photo-print-sheet .steps,
+.photo-print-sheet .tips {
+  margin: 0;
+  padding: 0;
+}
+
+.photo-print-sheet .mark-lines {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.photo-print-sheet .mark-lines li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  break-inside: avoid;
+}
+
+.photo-print-sheet .mark-lines .num {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1.5pt solid #000;
+  border-radius: 50%;
+  font-size: 8pt;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.photo-print-sheet .mark-lines .num.shape-diamond {
+  border-radius: 2px;
+  border-style: dashed;
+}
+
+.photo-print-sheet .mark-lines .text {
+  overflow-wrap: anywhere;
+}
+
+.photo-print-sheet .steps,
+.photo-print-sheet .tips {
+  padding-left: 1.4em;
+}
+
+.photo-print-sheet .key,
+.photo-print-sheet .extension {
+  margin: 0;
+  font-size: 9pt;
+}
+
+.photo-print-sheet .extension {
+  font-weight: 600;
+}
+
+.photo-print-sheet .foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 8pt;
+}
+
+@media print {
+  body:has(.photo-print-sheet.printing) .card-print-sheet {
+    display: none !important;
+  }
+
+  body:has(.photo-print-sheet.printing) :has(> #main-content) > :not(#main-content) {
+    display: none !important;
+  }
+
+  body:has(.photo-print-sheet.printing) .no-print {
+    display: none !important;
+  }
+
+  :has(.photo-print-sheet.printing) {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+  }
+
+  .photo-print-sheet.printing {
+    display: block;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .photo-print-sheet.preview {
+    display: none !important;
+  }
+
+  .photo-print-sheet.layout-letter .sheet-page {
+    page: cc-letter;
+    width: 8in;
+    height: 10.4in;
+    overflow: hidden;
+  }
+
+  .photo-print-sheet.layout-letter .photo svg {
+    max-height: 6.2in;
+  }
+
+  .photo-print-sheet.layout-index-4x6 .sheet-page {
+    page: cc-4x6;
+    width: 6in;
+    height: 3.95in;
+    padding: 0.12in;
+    gap: 0.05in;
+    overflow: hidden;
+  }
+
+  .photo-print-sheet.layout-index-4x6 .title {
+    font-size: 11pt;
+  }
+
+  .photo-print-sheet.layout-index-4x6 .body {
+    flex-direction: row;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .photo-print-sheet.layout-index-4x6 .photo {
+    flex: 0 0 3.1in;
+  }
+
+  .photo-print-sheet.layout-index-4x6 .photo svg {
+    max-height: 2.9in;
+  }
+
+  .photo-print-sheet.layout-index-4x6 .lists {
+    flex: 1 1 auto;
+    font-size: 8pt;
+    overflow: hidden;
+  }
+}

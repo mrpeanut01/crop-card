@@ -94,3 +94,61 @@ describe('PhotoMarks', () => {
     expect(screen.queryByTestId('photo-marks-steps')).toBeNull();
   });
 });
+
+describe('PhotoMarks problem marks (#869, FU869-1)', () => {
+  const WITH_PROBLEM: PhotoMark[] = [
+    { kind: 'cut', x: 0.5, y: 0.25, label: 'Cut here' },
+    { kind: 'problem', x: 0.4, y: 0.6, label: 'Yellow lower leaves' },
+    { kind: 'problem', x: 0.1, y: 0.1, w: 0.3, h: 0.2, label: 'Spots on leaves' }
+  ];
+
+  it('draws problem marks as diamonds and dashed boxes, named and keyed in the legend', () => {
+    render(PhotoMarks, { src: '/x.jpg', marks: WITH_PROBLEM, problemTips: [] });
+    observers[0].resize(400, 300);
+    const buttons = screen.getAllByTestId('photo-mark');
+    expect(buttons.map((b) => b.getAttribute('data-shape'))).toEqual([
+      'circle',
+      'diamond',
+      'diamond'
+    ]);
+    expect(buttons[1].getAttribute('aria-label')).toBe('Mark 2: Problem, Yellow lower leaves');
+    const svg = document.querySelector('svg.overlay')!;
+    expect(svg.querySelectorAll('polygon')).toHaveLength(1);
+    expect(svg.querySelector('rect')!.classList.contains('dashed')).toBe(true);
+    expect(svg.querySelectorAll('circle')).toHaveLength(1);
+    const rows = screen.getByTestId('photo-marks-legend').querySelectorAll('li');
+    expect(rows[1].getAttribute('data-shape')).toBe('diamond');
+    expect(rows[1].textContent).toContain('Problem');
+    expect(screen.getByTestId('photo-marks-key-problem').textContent).toContain(
+      'Diamonds and dashed boxes: something that looks wrong.'
+    );
+  });
+
+  it("shows the crop's Care Guide problem tips beside a problem mark", () => {
+    render(PhotoMarks, {
+      src: '/x.jpg',
+      marks: WITH_PROBLEM,
+      problemTips: ['Thin, spindly growth: not enough light.', '  ']
+    });
+    const tips = screen.getByTestId('photo-marks-problem-tips');
+    expect(tips.querySelectorAll('li')).toHaveLength(1);
+    expect(tips.textContent).toContain('Common problems');
+    expect(tips.textContent).toContain('Thin, spindly growth: not enough light.');
+    expect(screen.queryByTestId('photo-marks-extension')).toBeNull();
+  });
+
+  it('shows only the extension office line when the crop has no sourced tips', () => {
+    render(PhotoMarks, { src: '/x.jpg', marks: WITH_PROBLEM });
+    expect(screen.getByTestId('photo-marks-extension').textContent).toBe(
+      'Not sure what this is? Your county extension office can help.'
+    );
+    expect(screen.queryByTestId('photo-marks-problem-tips')).toBeNull();
+  });
+
+  it('shows no key, tips or extension line without a problem mark', () => {
+    render(PhotoMarks, { src: '/x.jpg', marks: MARKS, problemTips: ['A tip.'] });
+    expect(screen.queryByTestId('photo-marks-key')).toBeNull();
+    expect(screen.queryByTestId('photo-marks-problem-tips')).toBeNull();
+    expect(screen.queryByTestId('photo-marks-extension')).toBeNull();
+  });
+});

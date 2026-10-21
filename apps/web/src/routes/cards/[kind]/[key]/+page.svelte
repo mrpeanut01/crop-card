@@ -7,6 +7,8 @@
   import InstallNudge from '$lib/components/cards/InstallNudge.svelte';
   import CareGuideList from '$lib/components/cards/CareGuideList.svelte';
   import PhotoHelp from '$lib/components/cards/PhotoHelp.svelte';
+  import PhotoMarksPrint from '$lib/components/journal/PhotoMarksPrint.svelte';
+  import { photoPrint } from '$lib/journal/photoPrintJob.svelte';
   import { careGuideCardsFor, photoHelpTargets } from '$lib/journal/targets';
   import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
   import { barnPinKeys, buildCard } from '$lib/cards/build';
@@ -155,8 +157,12 @@
     if (cards.isPinned(key)) showNudge = installNudgeWanted();
   }
 
-  function print() {
+  async function print() {
     if (!card) return;
+    if (photoPrint.job) {
+      photoPrint.job = null;
+      await tick();
+    }
     const previous = document.title;
     document.title = card.title;
     window.print();
@@ -286,7 +292,9 @@
   {/if}
 </div>
 
-{#if card && snapshot}
+{#if photoPrint.job}
+  <PhotoMarksPrint job={photoPrint.job} {prefs} />
+{:else if card && snapshot}
   <CardPrintSheet cards={[card]} {layout} {prefs} {now} origin={snapshot.origin} />
 {/if}
 

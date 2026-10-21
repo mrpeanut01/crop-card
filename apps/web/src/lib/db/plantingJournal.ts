@@ -9,6 +9,7 @@ import type {
   JournalKind,
   JournalProvenance
 } from '$lib/journal/model';
+import { JOURNAL_LIST_LIMIT } from '$lib/journal/model';
 
 export interface JournalInput {
   cropId: string;
@@ -74,7 +75,7 @@ export function insertJournalEntry(input: JournalInput): JournalEntry {
   return toEntry(row);
 }
 
-export function listJournalForCrop(cropId: string, limit = 50): JournalEntry[] {
+export function listJournalForCrop(cropId: string, limit = JOURNAL_LIST_LIMIT): JournalEntry[] {
   return db
     .select()
     .from(plantingJournal)

@@ -39,6 +39,10 @@
  *
  * Phase 36 adds the `record-edit` kind (a PATCH to a planting or task) and
  * the non-indexed `editConflict` field, with no version bump.
+ *
+ * #869 (v7): `journalCopies` keeps marked photo journal entries per Owner so
+ * the marks redraw with no signal. Read and written only through
+ * `journalCopyStore.ts`.
  */
 
 import Dexie, { type Table } from 'dexie';
@@ -141,6 +145,20 @@ export interface TaskTimerRow {
   taskTitle?: string;
 }
 
+/** A marked journal entry saved on this device (#869, FU869-3): the entry
+ *  as the journal shows it, its JPEG as a data URL, and when it was last
+ *  saved from the server. `bytes` is what the copy counts toward the cap. */
+export interface JournalCopyRow {
+  ownerId: string;
+  entryId: string;
+  cropId: string;
+  createdAt: number;
+  savedAt: number;
+  bytes: number;
+  entry: unknown;
+  photo: string;
+}
+
 export class CropCardDb extends Dexie {
   pendingSprayRecords!: Table<PendingSprayRecord, string>;
   cachedCatalogs!: Table<CachedCatalog, string>;
@@ -148,6 +166,7 @@ export class CropCardDb extends Dexie {
   pinnedCards!: Table<PinnedCardRow, [string, string]>;
   recordCards!: Table<RecordCardRow, [string, string]>;
   taskTimers!: Table<TaskTimerRow, [string, string]>;
+  journalCopies!: Table<JournalCopyRow, [string, string]>;
 
   constructor() {
     super('cropcard');
@@ -224,6 +243,15 @@ export class CropCardDb extends Dexie {
       pinnedCards: '[ownerId+key], ownerId, [ownerId+pinnedAt]',
       recordCards: '[ownerId+key], ownerId, [ownerId+lastOpenedAt]',
       taskTimers: '[ownerId+userId], ownerId'
+    });
+    this.version(7).stores({
+      pendingSprayRecords: 'id, ownerId, createdAt, [ownerId+createdAt], [ownerId+kind]',
+      cachedCatalogs: 'key, ownerId, [ownerId+catalogKind]',
+      farmSnapshots: 'ownerId',
+      pinnedCards: '[ownerId+key], ownerId, [ownerId+pinnedAt]',
+      recordCards: '[ownerId+key], ownerId, [ownerId+lastOpenedAt]',
+      taskTimers: '[ownerId+userId], ownerId',
+      journalCopies: '[ownerId+entryId], ownerId, [ownerId+cropId]'
     });
   }
 }

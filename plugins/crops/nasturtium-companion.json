@@ -33,6 +33,11 @@
     {
       "method": "dry",
       "suitability": "good"
+    },
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "medium": "vinegar"
     }
   ],
   "seasonalTasks": [
@@ -44,5 +49,6 @@
       "title": "Cut back leggy nasturtiums",
       "body": "If the plants decline or get leggy in summer, cut them back lightly for new growth the rest of the season."
     }
-  ]
+  ],
+  "sunNeed": "part"
 }

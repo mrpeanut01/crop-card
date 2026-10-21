@@ -37,6 +37,11 @@
     {
       "method": "freeze",
       "suitability": "good"
+    },
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "medium": "vinegar"
     }
   ],
   "harvestTiming": [
@@ -83,5 +88,6 @@
       "title": "Divide mint if it is crowded",
       "body": "Divide the plants every 3 to 4 years to keep them vigorous."
     }
-  ]
+  ],
+  "sunNeed": "part"
 }

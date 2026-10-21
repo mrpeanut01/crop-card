@@ -182,34 +182,21 @@ describe('preservingQuoteGaps', () => {
     expect(preservingQuoteGaps([crop([{ method: 'dry', suitability: 'fair' }])], map)).toEqual([]);
   });
 
-  it('infuse needs a note and a .edu safety quote that names botulism', () => {
-    const entry = [{ method: 'infuse' as const, suitability: 'good' as const }];
-    const map = {
-      'basil-genovese': {
-        'preserving.infuse': src('Basil can be used to make herb vinegars.'),
-        'preserving.infuse.safety': src(
-          'Store herbs in oil in the refrigerator.',
-          'https://www.fda.gov/oil'
-        )
-      }
-    };
-    expect(preservingQuoteGaps([crop(entry)], map)).toEqual([
-      'basil-genovese: preserving.infuse needs a note with the safety line',
-      'basil-genovese: preserving.infuse.safety source is not a .edu food-safety page',
-      'basil-genovese: preserving.infuse.safety quote does not name botulism'
-    ]);
+  it('an infuse row is checked per medium (CO-4)', () => {
+    const oil = { method: 'infuse' as const, suitability: 'good' as const, medium: 'oil' as const };
     const ok = {
       'basil-genovese': {
-        'preserving.infuse': src('Basil can be used to make herb vinegars.'),
-        'preserving.infuse.safety': src(
-          'Herbs in oil can support the growth of Clostridium botulinum.',
+        'preserving.infuse.oil': src('Basil can be kept in infused oils.'),
+        'preserving.infuse.oil.safety': src(
+          'Clostridium botulinum is of concern in infused oils. Keep them in the refrigerator and discard them 4 days after making them.',
           'https://nchfp.uga.edu/oil'
         )
       }
     };
-    expect(
-      preservingQuoteGaps([crop([{ ...entry[0], note: 'Keep herbs in oil cold.' }])], ok)
-    ).toEqual([]);
+    expect(preservingQuoteGaps([crop([oil])], ok)).toEqual([]);
+    expect(preservingQuoteGaps([crop([{ method: 'infuse', suitability: 'good' }])], ok)).toEqual([
+      'basil-genovese: preserving.infuse needs a medium (oil or vinegar)'
+    ]);
   });
 });
 

@@ -1176,6 +1176,32 @@
       "date": "undated page (accessed 2026-10-20)",
       "quote": "Leaves are used fresh and can be dried but will discolor and quickly absorb moisture. Chives can also be frozen for later use.",
       "note": "Phase 37C (#867). Drying is not shipped: Illinois (this quote) says the leaves discolor, and CSU 9.335 says chives \"lose their color and flavor when dried\"."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/chives",
+      "publisher": "Illinois Extension, Herb Gardening: Chives",
+      "date": "accessed 2026-10-21",
+      "quote": "Chives prefer a full sun location and are tolerant of a wide variety of soils but will grow best in soils that are high in organic matter.",
+      "note": "Close-out CO-5: Illinois and UMD say full sun; NC State says full sun to partial shade (part). The sunnier value is stored."
+    },
+    "sunNeed.2": {
+      "url": "https://plants.ces.ncsu.edu/plants/allium-schoenoprasum/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Allium schoenoprasum",
+      "date": "accessed 2026-10-21",
+      "quote": "Plant chives in average well-drained soils in full sun to partial shade."
+    },
+    "preserving.infuse.vinegar": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "A variety of herbs and edible flowers can be used to make flavored vinegars—either by themselves or in combinations. Popular herbs and flowers include mint, basil, tarragon, dill, oregano, chives, chive blossoms and nasturtiums."
+    },
+    "preserving.infuse.vinegar.safety": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "For added safety, use only commercially produced vinegars. ... If your flavored vinegar starts to mold at any time or shows signs of fermentations such as bubbling, cloudiness or sliminess, discard the product and do not use any of it that is left. Some harmful bacteria may survive and even multiply slowly in some vinegars. It is important to follow directions carefully, store flavored vinegars in the refrigerator or cool places, and work in a very clean area with sanitary utensils.",
+      "note": "Close-out CO-4: the vinegar safety line. The app says: use commercially made vinegar, keep it in the refrigerator or a cool place, and throw it out without tasting if it molds, bubbles, turns cloudy or turns slimy."
     }
   },
   "clover-red-mammoth": {
@@ -1540,6 +1566,25 @@
       "date": "Accessed 2026-10-17",
       "quote": "To insure a fresh supply of dill leaves, make successive sowing of dill every two weeks through the growing season as plants decline soon after they start to flower (bolt).",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/dill",
+      "publisher": "Illinois Extension, Herb Gardening: Dill",
+      "date": "accessed 2026-10-21",
+      "quote": "Dill performs best in a full sun location in moist, well-drained soil."
+    },
+    "preserving.infuse.vinegar": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "A variety of herbs and edible flowers can be used to make flavored vinegars—either by themselves or in combinations. Popular herbs and flowers include mint, basil, tarragon, dill, oregano, chives, chive blossoms and nasturtiums."
+    },
+    "preserving.infuse.vinegar.safety": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "For added safety, use only commercially produced vinegars. ... If your flavored vinegar starts to mold at any time or shows signs of fermentations such as bubbling, cloudiness or sliminess, discard the product and do not use any of it that is left. Some harmful bacteria may survive and even multiply slowly in some vinegars. It is important to follow directions carefully, store flavored vinegars in the refrigerator or cool places, and work in a very clean area with sanitary utensils.",
+      "note": "Close-out CO-4: the vinegar safety line. The app says: use commercially made vinegar, keep it in the refrigerator or a cool place, and throw it out without tasting if it molds, bubbles, turns cloudy or turns slimy."
     }
   },
   "edamame-midori-giant": {
@@ -1695,6 +1740,13 @@
       "date": "Published May 2020; accessed 2026-10-20",
       "quote": "Florence fennel typically matures in 60 to 90 days depending on variety planted. Some gardeners mound soil around the swollen bases to keep the bases from turning green and developing a stronger flavor.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). Illinois Extension agrees: when the bulbs are the size of an egg, \"push soil around the “bulb.” This will produce a paler and tenderer “bulb.\"\"."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/foeniculum-vulgare-var-azoricum/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Foeniculum vulgare var. azoricum (Florence fennel)",
+      "date": "accessed 2026-10-21",
+      "quote": "Fennel is grown across a wide range of USDA hardiness zones and does best in moist, organically rich, well-drained soils in full sun.",
+      "note": "Close-out CO-5: Illinois agrees for both forms of fennel: \"Both prefer a full sun location in soil that is well prepared with organic matter.\""
     }
   },
   "garlic-german-extra-hardy": {
@@ -2278,6 +2330,26 @@
       "date": "Updated February 25, 2026 (accessed 2026-10-20)",
       "quote": "Harvesting and using spearmint ... For drying, it is best to cut leaves just as flowering begins.",
       "note": "#867 drying hint (rulings DH-1 to DH-8). Fetched with curl on 2026-10-20 and checked word for word, as a normalised substring and with the source-drift checker's quoteFound. The section heading names spearmint (DH-3). The stage is bloom-begins, not before-bloom (DH-2): Illinois Extension agrees for mint, \"Leaves that are to be dried are best taken just as the flowers begin to appear.\" (https://extension.illinois.edu/herbs/mint), as does the same UMD page for peppermint, \"Leaves to be dried are best taken just as flowers begin to appear.\""
+    },
+    "sunNeed": {
+      "url": "https://extension.umd.edu/resource/mint",
+      "publisher": "University of Maryland Extension, Mint",
+      "date": "accessed 2026-10-21",
+      "quote": "Spearmint grows best in a somewhat moist soil and full sun to part shade.",
+      "note": "Close-out CO-5: Illinois agrees: \"Mints are extremely hardy perennials. They prefer a full sun location but will tolerate light shade.\""
+    },
+    "preserving.infuse.vinegar": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "A variety of herbs and edible flowers can be used to make flavored vinegars—either by themselves or in combinations. Popular herbs and flowers include mint, basil, tarragon, dill, oregano, chives, chive blossoms and nasturtiums."
+    },
+    "preserving.infuse.vinegar.safety": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "For added safety, use only commercially produced vinegars. ... If your flavored vinegar starts to mold at any time or shows signs of fermentations such as bubbling, cloudiness or sliminess, discard the product and do not use any of it that is left. Some harmful bacteria may survive and even multiply slowly in some vinegars. It is important to follow directions carefully, store flavored vinegars in the refrigerator or cool places, and work in a very clean area with sanitary utensils.",
+      "note": "Close-out CO-4: the vinegar safety line. The app says: use commercially made vinegar, keep it in the refrigerator or a cool place, and throw it out without tasting if it molds, bubbles, turns cloudy or turns slimy."
     }
   },
   "mustard-greens-southern-giant-curled": {
@@ -2353,6 +2425,26 @@
       "date": "revised 2023 (accessed 2026-10-20)",
       "quote": "Drying nasturtium leaves is another way to preserve the plant's peppery goodness.",
       "note": "Phase 37C (#867). About the leaves."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/nasturtium",
+      "publisher": "Illinois Extension, Herb Gardening: Nasturtium",
+      "date": "accessed 2026-10-21",
+      "quote": "Nasturtium prefers a full sun location but will tolerate some light shade however flowering may be reduced.",
+      "note": "Close-out CO-5: UMD says \"Nasturtiums will grow in full sun but seem to do better in semi-shade.\"; \"semi-shade\" is not a ruled phrase, so that page is not counted."
+    },
+    "preserving.infuse.vinegar": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "A variety of herbs and edible flowers can be used to make flavored vinegars—either by themselves or in combinations. Popular herbs and flowers include mint, basil, tarragon, dill, oregano, chives, chive blossoms and nasturtiums."
+    },
+    "preserving.infuse.vinegar.safety": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "For added safety, use only commercially produced vinegars. ... If your flavored vinegar starts to mold at any time or shows signs of fermentations such as bubbling, cloudiness or sliminess, discard the product and do not use any of it that is left. Some harmful bacteria may survive and even multiply slowly in some vinegars. It is important to follow directions carefully, store flavored vinegars in the refrigerator or cool places, and work in a very clean area with sanitary utensils.",
+      "note": "Close-out CO-4: the vinegar safety line. The app says: use commercially made vinegar, keep it in the refrigerator or a cool place, and throw it out without tasting if it molds, bubbles, turns cloudy or turns slimy."
     }
   },
   "oats-cover-spring": {
@@ -2606,19 +2698,6 @@
       "quote": "UCCE Orange County Master Gardeners, Use and Culture of Culinary Herbs table (Spacing in inches (cm): Row | Plants): \"Spacing in inches (cm) Height Row Plants Propagation Cultural Hints Uses\"; \"oregano (marjoram, wild marjoram) (Origanum vulgare) 24 (60) 18 (45) 9 (22.5)\"",
       "note": "Greek oregano is O. vulgare subsp. hirtum; table row is O. vulgare (species level). UMD oregano page says \"Thin plants 10-12” apart\" (no row axis); VCE 426-420 9\" single \"Plant spacing\" column (not used). Lower end of the between-row figure (#591 ruling Q1)."
     },
-    "preserving.infuse": {
-      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
-      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
-      "date": "December 17, 2024 (accessed 2026-10-17)",
-      "quote": "Researchers from the University of Idaho (see “References” section) developed a safe method to acidify garlic, basil, oregano, or rosemary to a pH of 4.2 or less within 24 hr. This method, if followed properly, allows you to store your infused oils at room temperature."
-    },
-    "preserving.infuse.safety": {
-      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
-      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
-      "date": "December 17, 2024 (accessed 2026-10-17)",
-      "quote": "Oils provide an anaerobic environment, and when combined with low-acid food matrices such as garlic and herbs, this provides the perfect conditions for specific bacteria to thrive. Clostridium botulinum specifically is of concern in infused oils.",
-      "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
-    },
     "preserving.dry.notRecorded": {
       "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
       "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
@@ -2686,6 +2765,39 @@
       "date": "Reviewed Dec. 2021 (accessed 2026-10-20)",
       "quote": "Fresh oregano is unequaled for flavor and aroma enhancement in Italian dishes.",
       "note": "Phase 37C (#867)."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/oregano",
+      "publisher": "Illinois Extension, Herb Gardening: Oregano",
+      "date": "accessed 2026-10-21",
+      "quote": "Oregano must be planted in a full sun location and good drainage is required for best growth and overwintering.",
+      "note": "Close-out CO-5: NC State agrees: \"Oregano does best in average soil including sandy loams, dry to medium moisture with good drainage, and planted in a site with full sun.\""
+    },
+    "preserving.infuse.oil": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "December 17, 2024 (accessed 2026-10-17)",
+      "quote": "Researchers from the University of Idaho (see “References” section) developed a safe method to acidify garlic, basil, oregano, or rosemary to a pH of 4.2 or less within 24 hr. This method, if followed properly, allows you to store your infused oils at room temperature."
+    },
+    "preserving.infuse.oil.safety": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "accessed 2026-10-21",
+      "quote": "Clostridium botulinum specifically is of concern in infused oils. ... Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.",
+      "note": "Close-out CO-4: the oil safety line, with the hazard and the control (refrigeration, discard after 4 days). Published December 17, 2024."
+    },
+    "preserving.infuse.vinegar": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "A variety of herbs and edible flowers can be used to make flavored vinegars—either by themselves or in combinations. Popular herbs and flowers include mint, basil, tarragon, dill, oregano, chives, chive blossoms and nasturtiums."
+    },
+    "preserving.infuse.vinegar.safety": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "For added safety, use only commercially produced vinegars. ... If your flavored vinegar starts to mold at any time or shows signs of fermentations such as bubbling, cloudiness or sliminess, discard the product and do not use any of it that is left. Some harmful bacteria may survive and even multiply slowly in some vinegars. It is important to follow directions carefully, store flavored vinegars in the refrigerator or cool places, and work in a very clean area with sanitary utensils.",
+      "note": "Close-out CO-4: the vinegar safety line. The app says: use commercially made vinegar, keep it in the refrigerator or a cool place, and throw it out without tasting if it molds, bubbles, turns cloudy or turns slimy."
     }
   },
   "ornamental-corn-earth-tones-dent-raw-untreated-non-gmo": {
@@ -2786,6 +2898,13 @@
       "date": "Accessed 2026-10-17",
       "quote": "Parsley can be grown indoors over the winter. After digging parsley plants in the fall, pot them using a prepared potting media. They grow best if given high light and a cool growing location.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/petroselinum-crispum/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Petroselinum crispum",
+      "date": "accessed 2026-10-21",
+      "quote": "Parsley prefers consistently moist, well-drained rich soil in full sun or light shade.",
+      "note": "Close-out CO-5: Illinois says parsley \"will grow in a partially shaded area\"; that is not a ruled phrase, and it agrees."
     }
   },
   "parsnip-hollow-crown": {
@@ -3301,19 +3420,6 @@
       "quote": "Rosemary and thyme can also be frozen on the stem.",
       "note": "OSU HYG-5360 agrees: \"freezing is used for more hearty herbs such as thyme and rosemary.\""
     },
-    "preserving.infuse": {
-      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
-      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
-      "date": "December 17, 2024 (accessed 2026-10-17)",
-      "quote": "Researchers from the University of Idaho (see “References” section) developed a safe method to acidify garlic, basil, oregano, or rosemary to a pH of 4.2 or less within 24 hr. This method, if followed properly, allows you to store your infused oils at room temperature."
-    },
-    "preserving.infuse.safety": {
-      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
-      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
-      "date": "December 17, 2024 (accessed 2026-10-17)",
-      "quote": "Oils provide an anaerobic environment, and when combined with low-acid food matrices such as garlic and herbs, this provides the perfect conditions for specific bacteria to thrive. Clostridium botulinum specifically is of concern in infused oils.",
-      "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
-    },
     "lifecycle": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
       "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
@@ -3373,6 +3479,32 @@
       "date": "Updated April 22, 2026 (accessed 2026-10-20)",
       "quote": "Herb Garden Plants: Rosemary ... Prior to blossoming, harvest leaves for drying.",
       "note": "#867 drying hint (rulings DH-1 to DH-8). Fetched with curl on 2026-10-20 and checked word for word, as a normalised substring and with the source-drift checker's quoteFound. The sentence sits under the page's Harvesting heading and does not name the herb, so the page title is the name piece (DH-3, as F867-2). Wisconsin Horticulture agrees: \"For drying, cut sprigs or branches before the plant flowers.\" (https://hort.extension.wisc.edu/articles/rosemary/)."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/rosemary",
+      "publisher": "Illinois Extension, Herb Gardening: Rosemary",
+      "date": "accessed 2026-10-21",
+      "quote": "In the garden, rosemary prefers a full sun location with a soil that is well amended with compost and well-drained.",
+      "note": "Close-out CO-5: Illinois says full sun; NC State says full sun and that it tolerates partial shade (part). The sunnier value is stored."
+    },
+    "sunNeed.2": {
+      "url": "https://plants.ces.ncsu.edu/plants/salvia-rosmarinus/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Salvia rosmarinus",
+      "date": "accessed 2026-10-21",
+      "quote": "Rosemary does best in light, slightly acidic, dry to medium, well-drained soils in full sun. It tolerates drought, partial shade, salt, heavy pruning, and most soil types except clay."
+    },
+    "preserving.infuse.oil": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "December 17, 2024 (accessed 2026-10-17)",
+      "quote": "Researchers from the University of Idaho (see “References” section) developed a safe method to acidify garlic, basil, oregano, or rosemary to a pH of 4.2 or less within 24 hr. This method, if followed properly, allows you to store your infused oils at room temperature."
+    },
+    "preserving.infuse.oil.safety": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "accessed 2026-10-21",
+      "quote": "Clostridium botulinum specifically is of concern in infused oils. ... Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.",
+      "note": "Close-out CO-4: the oil safety line, with the hazard and the control (refrigeration, discard after 4 days). Published December 17, 2024."
     }
   },
   "sage-broadleaf": {
@@ -3455,6 +3587,13 @@
       "date": "4/6/2019 (accessed 2026-10-20)",
       "quote": "SAGE – Perennial; likes semi-shade. Drought tolerant; just barely moist soil (dry down to second knuckle). When new growth appears in early spring, cut back each stem on mature plants by a third, making the cut right above a set of leaves. Foliar feed when new growth appears in spring and again around the summer solstice (e.g. June 21st). In early July cut the tips of each stem back 3 inches and dry for winter use. Harvest mature plants at 6- to 8-week intervals beginning in late spring, cutting back 3 to 5 inches.",
       "note": "Phase 37C (#867). The SAGE entry of the sheet, whole up to the cadence sentence: 6 to 8 weeks between cuts on mature plants, so everyDays 42 to 56. An Arizona Master Gardener sheet on the extension site; no other allowed page found states a cadence for sage, and none disagrees."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/sage",
+      "publisher": "Illinois Extension, Herb Gardening: Sage",
+      "date": "accessed 2026-10-21",
+      "quote": "Sage prefers a full sun location in soils that are well prepared with compost.",
+      "note": "Close-out CO-5: UMD (\"Plant sage where it will receive full sun in very well-drained soil.\") and NC State (\"Common sage prefers full sun\") agree."
     }
   },
   "scallion-evergreen-bunching": {
@@ -4106,6 +4245,12 @@
     },
     "harvestTiming.notRecorded": {
       "reason": "Sources disagree on when to cut thyme, so no harvestTiming ships (DH-6). Before flowering: Illinois Extension, Penn State, the NC State Plant Toolbox and Iowa State \"All About Thyme\" (which also allows \"when the first blossoms begin to open\"). At or in bloom: UMD (\"when first blossoms open\"), WSU C159 (\"when in full bloom\"), MU G6470 (\"while in flower\"), Montana State (\"normally at bloom\") and Purdue NewCROP (\"during the bloom period\"). Per-source detail in docs/design/phase-37-followups/867.md."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/thyme",
+      "publisher": "Illinois Extension, Herb Gardening: Thyme",
+      "date": "accessed 2026-10-21",
+      "quote": "Thyme prefers a full sun location in soil that is well amended with organic matter and well drained."
     }
   },
   "tomatillo-de-milpa": {
@@ -6836,6 +6981,12 @@
       "date": "Publication Date October 11, 2019; accessed 2026-10-20",
       "quote": "Fresh or dried leaves of herbs such as lemon balm, peppermint, chamomile, rosemary, and catnip can be used to make tea.",
       "note": "Phase 37C (#867)."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/catnip",
+      "publisher": "Illinois Extension, Herb Gardening: Catnip",
+      "date": "accessed 2026-10-21",
+      "quote": "Catnip prefers a full sun location in soil that is moist but well-drained. It will also tolerate light shade."
     }
   },
   "chamomile-german": {
@@ -6880,6 +7031,12 @@
       "date": "April 4, 2025 (accessed 2026-10-20)",
       "quote": "German chamomile is self-seeding in the garden. To prevent seedlings from appearing next year, deadhead any spent flowers to stop the mature seeds from scattering below the plant.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/matricaria-chamomilla/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Matricaria chamomilla",
+      "date": "accessed 2026-10-21",
+      "quote": "This plant thrives in full sun and moist to dry, well-drained, sandy, loamy soil, but it is best to avoid soils that are rich, heavy, or wet. It is poor-soil tolerant. German chamomile can be propagated from seeds, but tends not to transplant well."
     }
   },
   "hyssop-officinalis": {
@@ -6923,6 +7080,15 @@
       "date": "undated web page; accessed 2026-10-20",
       "quote": "Hyssop is a short-lived, semi-evergreen, herbaceous perennial or subshrub in the mint family (Lamiaceae) native to Europe, Asia and Africa, however, it has naturalized in some areas of the USA. ... Trimming in the spring is best and will help maintain a bushy, well-shaped plant that resists breakage.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). Both pieces are from the page's Description section (ruling F867-2). Cornell Home Gardening's hyssop page agrees on spring (\"wait and cut plants back to the ground in spring\") but cuts harder, so the row says only trim."
+    },
+    "sunNeed.notRecorded": {
+      "reason": "No allowed page states a ruled sun phrase in a passage that names hyssop: the NC State Plant Toolbox lists Light only as a field, Illinois has no hyssop page, VCE 426-420 and UMD do not cover it.",
+      "checked": [
+        "https://plants.ces.ncsu.edu/plants/hyssopus-officinalis/",
+        "https://extension.illinois.edu/herbs/hyssop",
+        "https://www.pubs.ext.vt.edu/426/426-420/426-420.html"
+      ],
+      "date": "2026-10-21"
     }
   },
   "lavender-english-munstead": {
@@ -6999,6 +7165,12 @@
       "date": "Accessed 2026-10-17",
       "quote": "Lavender also likes to be mulched with inorganic mulches such as rock or pea gravel. This helps keep the crown dry and prevents excess moisture form causing foliage diseases. Do not cut back plants in the fall. Wait until some new growth starts to appear in the spring before doing any pruning.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/lavender",
+      "publisher": "Illinois Extension, Herb Gardening: Lavender",
+      "date": "accessed 2026-10-21",
+      "quote": "Lavender is demanding of two things: full sun and extremely well drained soil."
     }
   },
   "marjoram-sweet": {
@@ -7068,6 +7240,12 @@
       "date": "Last Updated March 26, 2018; accessed 2026-10-20",
       "quote": "The best culinary herbs for air drying are mint, thyme, lavender, oregano, marjoram, sage, rosemary, savory, lovage, lemon verbena and lemon balm.",
       "note": "Phase 37C (#867). The Wisconsin Master Gardener \"Drying Herbs\" sheet agrees (\"Sturdy herbs such as ... marjoram are well suited for air-drying\")."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/marjoram-sweet",
+      "publisher": "Illinois Extension, Herb Gardening: Marjoram, Sweet",
+      "date": "accessed 2026-10-21",
+      "quote": "Sweet marjoram is easily grown from seed or cuttings. It prefers a full sun location and requires a well-drained soil."
     }
   },
   "stevia-sweetleaf": {
@@ -7126,6 +7304,15 @@
       "date": "undated page (accessed 2026-10-20)",
       "quote": "Pinching off flower buds as soon as they appear will help maximize the quality of the leaves (they are sweetest before flowering occurs). Fall is the best time to harvest the leaves, which can be used fresh or dried. Generally, stevia leaves are sweeter when dried.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). The NC State Plant Toolbox agrees (\"Prune off flowers for better-tasting leaves\")."
+    },
+    "sunNeed.notRecorded": {
+      "reason": "NC State names the plant only as \"Sweet leaf\" (\"Sweet leaf prefers full sun and will tolerate partial shade\"), which is not a ruled name for stevia, and UF/IFAS's sun sentence says \"This shrub\" and \"It\".",
+      "checked": [
+        "https://plants.ces.ncsu.edu/plants/stevia-rebaudiana/",
+        "https://gardeningsolutions.ifas.ufl.edu/plants/edibles/vegetables/stevia/",
+        "https://extension.illinois.edu/herbs/stevia"
+      ],
+      "date": "2026-10-21"
     }
   },
   "summer-savory": {
@@ -7169,6 +7356,12 @@
       "date": "undated web page; accessed 2026-10-20",
       "quote": "Savory is most often used as a culinary herb, but it also has marked medicinal benefits, especially upon the whole digestive system. The plant is grown from seed in early spring and harvested in the summer when in flower and can be used fresh or dried.",
       "note": "Phase 37C (#867). From the Satureja hortensis page; the next sentence on the page is about winter savory and is left out."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/satureja-hortensis/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Satureja hortensis",
+      "date": "accessed 2026-10-21",
+      "quote": "Summer Savory is easy to grow in rich light soil with plenty of moisture, full sun and alkaline soil, although it is not fussy."
     }
   },
   "tarragon-french": {
@@ -7245,6 +7438,26 @@
       "date": "Published May 2020; accessed 2026-10-20",
       "quote": "Newly planted French tarragon should be watered regularly until it becomes established. After that, allow the soil to dry out between waterings.",
       "note": "Phase 37E (#867). Read through the waterNeed gate word list (\"allow the soil to dry\"); words only, never a target factor (R-10). Purdue NewCROP agrees (\"Tarragon grows best in warm, sunny location on dry soils with good drainage\"); Illinois's \"dry side\" is about pots indoors. The sentence after the quote also says \"consistently wet soil\", which is why it is left out."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/tarragon-french",
+      "publisher": "Illinois Extension, Herb Gardening: Tarragon, French",
+      "date": "accessed 2026-10-21",
+      "quote": "French tarragon prefers a full sun location but will tolerate some light shade.",
+      "note": "Close-out CO-5: UMD says \"Tarragon will grow in full sun but seems to do better in semishade.\"; \"semishade\" is not a ruled phrase, so that page is not counted."
+    },
+    "preserving.infuse.vinegar": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "A variety of herbs and edible flowers can be used to make flavored vinegars—either by themselves or in combinations. Popular herbs and flowers include mint, basil, tarragon, dill, oregano, chives, chive blossoms and nasturtiums."
+    },
+    "preserving.infuse.vinegar.safety": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "For added safety, use only commercially produced vinegars. ... If your flavored vinegar starts to mold at any time or shows signs of fermentations such as bubbling, cloudiness or sliminess, discard the product and do not use any of it that is left. Some harmful bacteria may survive and even multiply slowly in some vinegars. It is important to follow directions carefully, store flavored vinegars in the refrigerator or cool places, and work in a very clean area with sanitary utensils.",
+      "note": "Close-out CO-4: the vinegar safety line. The app says: use commercially made vinegar, keep it in the refrigerator or a cool place, and throw it out without tasting if it molds, bubbles, turns cloudy or turns slimy."
     }
   },
   "arugula-astro": {
@@ -7341,6 +7554,15 @@
       "date": "revised 10/14; accessed 2026-10-20",
       "quote": "Some herbs are best used fresh— such as burnet, chervil, and parsley—because they have little flavor once dried or frozen.",
       "note": "Sources disagree on drying chervil, so dry stays empty: CSU 9.335 (this quote) says it has little flavor once dried, while its own Table 3 says \"Dry or freeze as for basil\" and Illinois Extension says \"Air dry and store leaves in sealed containers\"."
+    },
+    "sunNeed.notRecorded": {
+      "reason": "NC State's \"in partial to full sun\" is said of \"This plant\" and \"partial to full sun\" is not a ruled phrase, VCE 426-420 gives \"Partial shade.\" only in a table cell without the name, and Illinois states no sun need.",
+      "checked": [
+        "https://plants.ces.ncsu.edu/plants/anthriscus-cerefolium/",
+        "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+        "https://extension.illinois.edu/herbs/chervil"
+      ],
+      "date": "2026-10-21"
     }
   },
   "endive-frisee": {
@@ -7446,6 +7668,13 @@
       "date": "undated web page; accessed 2026-10-20",
       "quote": "Lovage does best in moist, well-drained deep fertile soil in full sun to part shade. The plant requires pruning during the growing season (late spring to early fall) to encourage a supply of fresh, new leaves and old foliage can be removed in late fall.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/levisticum-officinale/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Levisticum officinale",
+      "date": "accessed 2026-10-21",
+      "quote": "Lovage does best in moist, well-drained deep fertile soil in full sun to part shade.",
+      "note": "Close-out CO-5: Illinois agrees: \"It likes a fairly rich, moist soil and light shade improves its quality.\""
     }
   },
   "mache-corn-salad": {
@@ -7667,6 +7896,13 @@
       "date": "Published May 2020; accessed 2026-10-20",
       "quote": "Florence fennel typically matures in 60 to 90 days depending on variety planted. Some gardeners mound soil around the swollen bases to keep the bases from turning green and developing a stronger flavor.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). Illinois Extension agrees: when the bulbs are the size of an egg, \"push soil around the “bulb.” This will produce a paler and tenderer “bulb.\"\"."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/foeniculum-vulgare-var-azoricum/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Foeniculum vulgare var. azoricum (Florence fennel)",
+      "date": "accessed 2026-10-21",
+      "quote": "Fennel is grown across a wide range of USDA hardiness zones and does best in moist, organically rich, well-drained soils in full sun.",
+      "note": "Close-out CO-5: Illinois agrees for both forms of fennel: \"Both prefer a full sun location in soil that is well prepared with organic matter.\""
     }
   },
   "barley-hulless-streaker": {
@@ -8481,6 +8717,12 @@
       "date": "undated page (accessed 2026-10-20)",
       "quote": "Agastache foeniculum, or anise hyssop, is a perennial plant coming from the mint family. It can reach 2-5 ft. tall and 1-3 ft. wide. They serve best as a perennial border and bloom late summer to early fall. They have a great extended bloom period, making them a good addition for cut flowers. The scent is similar to basil, even though it comes from the mint family. They do best in full sun planted 2 ft. apart, or else it will become lanky. It doesn’t need much attention once planted but can be pruned in early spring to encourage blooming.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/agastache-foeniculum/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Agastache foeniculum",
+      "date": "accessed 2026-10-21",
+      "quote": "Planted in full or partial sun and mesic to dry conditions, anise hyssop grows 3 to 5 feet tall and should be planted 12 to 36 inches apart in well-drained soil."
     }
   },
   "bergamot-monarda": {
@@ -8524,6 +8766,13 @@
       "date": "Last reviewed July 2022; accessed 2026-10-20",
       "quote": "Cultural practices can reduce the severity of powdery mildew. When planting bee balms, select a site in full sun and space plants 2 feet apart. Divide plants every 2 to 3 years and water during dry periods. Remove and destroy disease-infested plant debris in fall. The fungal spores of powdery mildew survive the winter on disease-infested plant debris.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "sunNeed": {
+      "url": "https://yardandgarden.extension.iastate.edu/how-to/growing-bee-balm-home-garden",
+      "publisher": "Iowa State University Extension and Outreach, Yard and Garden: Growing Bee Balm in the Home Garden",
+      "date": "accessed 2026-10-21",
+      "quote": "Bee balms perform best in moist, well-drained soils in full sun.",
+      "note": "Close-out CO-5: NC State's Monarda didyma page says \"full sun but will tolerate some shade\" in a sentence that does not name the plant, so it is not counted."
     }
   },
   "lemon-balm": {
@@ -8600,6 +8849,12 @@
       "date": "Accessed 2026-10-17",
       "quote": "While mint can spread rapidly by underground stems, lemon balm spreads by setting lots of seed and can, if allowed to go unchecked start to overtake the garden. To prevent spreading, prune flowering stalks before they have a chance to set seed. To keep plants vigorous, thin plants out in mid-summer by cutting out stems to open up the plant to better air circulation.",
       "note": "Phase 37D herb seasonal row. Quote copied from the page text on 2026-10-17. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/lemon-balm",
+      "publisher": "Illinois Extension, Herb Gardening: Lemon Balm",
+      "date": "accessed 2026-10-21",
+      "quote": "Lemon balm can be grown in full sun to partial shade in soils that are moist but well drained."
     }
   },
   "lemon-verbena": {
@@ -8642,6 +8897,12 @@
       "date": "Last Updated March 26, 2018; accessed 2026-10-20",
       "quote": "The best culinary herbs for air drying are mint, thyme, lavender, oregano, marjoram, sage, rosemary, savory, lovage, lemon verbena and lemon balm.",
       "note": "Phase 37C (#867). Illinois Extension agrees (\"Leaves are used fresh or can be dried\")."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/aloysia-citriodora/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Aloysia citriodora",
+      "date": "accessed 2026-10-21",
+      "quote": "Lemon verbena will grow 6 to 8 feet tall and wide in the ground but 2 to 4 feet tall and wide in a pot. It prefers full sun in well-drained moist fertile light soils."
     }
   },
   "cosmos-double-click": {
@@ -8813,19 +9074,6 @@
       "quote": "Freezing is another method of preserving basil and usually results in a product with a flavor more like fresh basil.",
       "note": "Agrees with OSU HYG-5360 (\"Best Herbs for Freezing: basil ...\") and Penn State (\"Freezing works well for herbs like ... basil\")."
     },
-    "preserving.infuse": {
-      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
-      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
-      "date": "December 17, 2024 (accessed 2026-10-17)",
-      "quote": "Researchers from the University of Idaho (see “References” section) developed a safe method to acidify garlic, basil, oregano, or rosemary to a pH of 4.2 or less within 24 hr. This method, if followed properly, allows you to store your infused oils at room temperature."
-    },
-    "preserving.infuse.safety": {
-      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
-      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
-      "date": "December 17, 2024 (accessed 2026-10-17)",
-      "quote": "Oils provide an anaerobic environment, and when combined with low-acid food matrices such as garlic and herbs, this provides the perfect conditions for specific bacteria to thrive. Clostridium botulinum specifically is of concern in infused oils.",
-      "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
-    },
     "preserving.dry.notRecorded": {
       "url": "https://extension.umn.edu/vegetables/growing-basil",
       "publisher": "University of Minnesota Extension, Growing basil",
@@ -8886,6 +9134,38 @@
       "date": "New 1/85 (accessed 2026-10-20)",
       "quote": "Where basil is grown for its dried leaves and the extraction of essential or volatile oil, it is cut just prior to the appearance of flowers.",
       "note": "#867 drying hint (rulings DH-1 to DH-8 in docs/design/phase-37-followups/drying-hint.md). Fetched with curl on 2026-10-20 and checked word for word, as a normalised substring and with the source-drift checker's quoteFound. A commercial production guide; the University of Maryland Extension basil page agrees for the home garden: \"Harvesting and using basil ... It is best to cut leaves for drying just before flowers open.\" (https://extension.umd.edu/resource/basil, updated February 25, 2026). Timing only: how well basil dries stays not recorded (preserving.dry.notRecorded)."
+    },
+    "sunNeed": {
+      "url": "https://extension.umd.edu/resource/basil",
+      "publisher": "University of Maryland Extension, Basil",
+      "date": "accessed 2026-10-21",
+      "quote": "Plant basil in a full sun location, where it receives 6 or more hours of direct sun daily in summer."
+    },
+    "preserving.infuse.oil": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "December 17, 2024 (accessed 2026-10-17)",
+      "quote": "Researchers from the University of Idaho (see “References” section) developed a safe method to acidify garlic, basil, oregano, or rosemary to a pH of 4.2 or less within 24 hr. This method, if followed properly, allows you to store your infused oils at room temperature."
+    },
+    "preserving.infuse.oil.safety": {
+      "url": "https://fieldreport.caes.uga.edu/publications/C1334/how-to-safely-make-infused-oils/",
+      "publisher": "University of Georgia Cooperative Extension Circular 1334, How to Safely Make Infused Oils",
+      "date": "accessed 2026-10-21",
+      "quote": "Clostridium botulinum specifically is of concern in infused oils. ... Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.",
+      "note": "Close-out CO-4: the oil safety line, with the hazard and the control (refrigeration, discard after 4 days). Published December 17, 2024."
+    },
+    "preserving.infuse.vinegar": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "A variety of herbs and edible flowers can be used to make flavored vinegars—either by themselves or in combinations. Popular herbs and flowers include mint, basil, tarragon, dill, oregano, chives, chive blossoms and nasturtiums."
+    },
+    "preserving.infuse.vinegar.safety": {
+      "url": "https://extension.oregonstate.edu/catalog/sp-50-736-flavored-vinegars-sp-50-736",
+      "publisher": "Oregon State University Extension Service, SP 50-736 Flavored Vinegars (revised December 2025), quoting So Easy to Preserve (UGA Bulletin 989) for its safety section",
+      "date": "accessed 2026-10-21",
+      "quote": "For added safety, use only commercially produced vinegars. ... If your flavored vinegar starts to mold at any time or shows signs of fermentations such as bubbling, cloudiness or sliminess, discard the product and do not use any of it that is left. Some harmful bacteria may survive and even multiply slowly in some vinegars. It is important to follow directions carefully, store flavored vinegars in the refrigerator or cool places, and work in a very clean area with sanitary utensils.",
+      "note": "Close-out CO-4: the vinegar safety line. The app says: use commercially made vinegar, keep it in the refrigerator or a cool place, and throw it out without tasting if it molds, bubbles, turns cloudy or turns slimy."
     }
   },
   "cilantro-santo": {
@@ -8915,6 +9195,12 @@
       "date": "March 15, 2023; accessed 2026-10-20",
       "quote": "Cilantro tastes best when used fresh and added near the end of the cooking time.",
       "note": "Phase 37C (#867)."
+    },
+    "sunNeed": {
+      "url": "https://extension.illinois.edu/herbs/cilantro",
+      "publisher": "Illinois Extension, Herb Gardening: Cilantro/Coriander",
+      "date": "accessed 2026-10-21",
+      "quote": "Cilantro prefers a full sun location and average, well-drained garden soil."
     }
   },
   "lemongrass-east-indian": {
@@ -8935,6 +9221,15 @@
     "winterHardyToZone.notRecorded": {
       "reason": "No allowed page names East Indian lemongrass (Cymbopogon flexuosus) with a USDA zone. Purdue NewCROP (Lemongrass) and Wisconsin Horticulture (Lemongrass) name C. flexuosus but give no zone; Illinois Extension (Lemon Grass) and the NC State Plant Toolbox cover Cymbopogon citratus only, which does not count. Checked again 2026-10-20 (#867); see docs/research/phase-37-herb-research-prompt.md (Task 1).",
       "date": "2026-10-20"
+    },
+    "sunNeed.notRecorded": {
+      "reason": "Illinois covers Cymbopogon citratus grown in containers, Purdue NewCROP's \"The plants need a warm, humid climate in full sun.\" does not name the crop, and the NC State Plant Toolbox has no Cymbopogon flexuosus page.",
+      "checked": [
+        "https://extension.illinois.edu/herbs/lemon-grass",
+        "https://hort.purdue.edu/newcrop/med-aro/factsheets/LEMONGRASS.html",
+        "https://plants.ces.ncsu.edu/plants/cymbopogon-flexuosus/"
+      ],
+      "date": "2026-10-21"
     }
   },
   "mountain-mint": {
@@ -8964,6 +9259,12 @@
       "date": "undated web page; accessed 2026-10-20",
       "quote": "Blunt mountain mint grows in full sun to partial shade and in moist soil with good drainage. It grows 3 to 4 feet tall in a space of 2 to 3 feet. Although blunt mountain mint is not considered invasive, it is a vigorous grower, spreading its rhizomes, in optimum conditions. If spreading is not needed or wanted, the roots should be pruned in the spring with a spade.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22)."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/pycnanthemum-muticum/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Pycnanthemum muticum",
+      "date": "accessed 2026-10-21",
+      "quote": "Blunt mountain mint grows in full sun to partial shade and in moist soil with good drainage."
     }
   },
   "perilla-shiso-green": {
@@ -8980,6 +9281,12 @@
       "date": "undated web page; accessed 2026-10-20",
       "quote": "The genus name Perilla comes from the Latin word pera meaning bag in reference to the shape of the fruiting calyx. ... It is listed as invasive in VA WV, TN and KY. ... This plant grows quickly and aggressively up to 3 feet tall and 1 1/2 feet wide. Pinching off the flowers before they go to seed will help slow the spread of their wind-dispersed seeds. When left to its own, it will self-seed prolifically.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). All pieces are from the page's Description section (ruling F867-2). UVM Extension agrees for shiso (\"You can prevent this by removing flowers before they form seeds\")."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/perilla-frutescens/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Perilla frutescens",
+      "date": "accessed 2026-10-21",
+      "quote": "The genus name Perilla comes from the Latin word pera meaning bag in reference to the shape of the fruiting calyx. While the specific epithet frutescens means shrubby or bushy. It grows best in full sun to partial shade in rich, moist to dry soil."
     }
   },
   "tulsi-holy-basil-rama": {
@@ -9003,6 +9310,12 @@
       "date": "February 15, 2019 (accessed 2026-10-20)",
       "quote": "Tulsi grows rapidly and blooms continually from June through first frost. Individual plants can easily cover 10 sq. ft. but can be pruned to fit smaller spaces.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). From the article text, not the reader comments under it."
+    },
+    "sunNeed": {
+      "url": "https://plants.ces.ncsu.edu/plants/ocimum-tenuiflorum/",
+      "publisher": "NC State Extension Gardener Plant Toolbox, Ocimum tenuiflorum",
+      "date": "accessed 2026-10-21",
+      "quote": "While holy basil is a close relative of culinary basil, its leaves tend to have a purple cast, its flowers are not as large, and it is shorter-lived. This erect multistemmed subshrub grows rapidly to a height of 3 feet and easily propagates itself by seed. It prefers full sun in moist, well drained soil."
     }
   },
   "calendula-resina": {
@@ -9047,6 +9360,13 @@
       "date": "Revised: August 7, 2025 (accessed 2026-10-20)",
       "quote": "Calendula is easy to grow in any well-drained soil in full sun. Seeds can be sown directly in the garden just before last frost date, but for earlier bloom start seeds indoors about 6 to 8 weeks before last frost. Successive sowings will provide fresh, blooming plants throughout the season. Use fresh seed as viability declines in storage. Sow the seeds ¼ to ½ inches deep; light will inhibit germination. Seeds should germinate in 5 to 15 days. Once the plants are several inches tall, pinch the vegetative buds to promote bushier plants. Plants flower best when they are not heavily fertilized and they prefer moderate watering. Deadhead regularly to encourage blooming. If the flowers are not removed, the plants may self-sow.",
       "note": "Phase 37D herb seasonal row (#867). Quote copied from the page text on 2026-10-20. The page states the action; the dayOfYear or daysAfterPlanting placement is shown as typical timing (OP-22). Utah State Extension agrees (\"deadhead spent flowers regularly\")."
+    },
+    "sunNeed": {
+      "url": "https://hort.extension.wisc.edu/articles/calendula-calendula-officinalis/",
+      "publisher": "University of Wisconsin-Madison Extension, Wisconsin Horticulture: Calendula, Calendula officinalis",
+      "date": "accessed 2026-10-21",
+      "quote": "Calendula is easy to grow in any well-drained soil in full sun.",
+      "note": "Close-out CO-5: NC State's Calendula officinalis page says \"in full sun\" of \"Marigolds\", which is not a ruled name for calendula, so it is not counted."
     }
   }
 }

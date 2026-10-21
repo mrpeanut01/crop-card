@@ -51,7 +51,13 @@
     {
       "method": "infuse",
       "suitability": "good",
-      "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes."
+      "note": "Herbs in oil can grow Clostridium botulinum. Follow a tested method: keep oil infused with unacidified herbs in the refrigerator and discard it 4 days after making it, or acidify the herbs first exactly as UGA Extension Circular 1334 describes.",
+      "medium": "oil"
+    },
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "medium": "vinegar"
     }
   ],
   "harvestTiming": [
@@ -72,5 +78,6 @@
       "title": "Pinch off basil flower buds",
       "body": "Pinch stem tips for a bushier plant, and pinch off flower buds as soon as you see them. Left on, buds change the flavor of the leaves."
     }
-  ]
+  ],
+  "sunNeed": "full"
 }

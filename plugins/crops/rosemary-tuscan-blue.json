@@ -2,7 +2,7 @@
   "pluginId": "rosemary-tuscan-blue",
   "type": "crop",
   "displayName": "Rosemary — Tuscan Blue",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "herb-culinary",
   "daysToMaturity": {
     "min": 365,
@@ -55,5 +55,15 @@
       "title": "The tender tips and foliage can be cut as needed throughout the growing season."
     }
   ],
-  "growthHabit": "woody"
+  "growthHabit": "woody",
+  "seasonalTasks": [
+    {
+      "key": "prune-after-bloom",
+      "kind": "pruning",
+      "dayOfYear": 165,
+      "windowDays": 30,
+      "title": "Prune rosemary after it blooms",
+      "body": "Once the plants finish blooming, you can prune them back to encourage dense, leafy growth."
+    }
+  ]
 }

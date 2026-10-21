@@ -2,7 +2,7 @@
   "pluginId": "nasturtium-companion",
   "type": "crop",
   "displayName": "Nasturtium",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "cropFamily": "broadleaf-companion",
   "daysToMaturity": {
     "min": 50,
@@ -29,6 +29,12 @@
   "agronomy": {
     "lifecycle": "annual"
   },
+  "preserving": [
+    {
+      "method": "dry",
+      "suitability": "good"
+    }
+  ],
   "seasonalTasks": [
     {
       "key": "summer-cut-back",

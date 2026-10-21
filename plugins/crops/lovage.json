@@ -2,7 +2,7 @@
   "pluginId": "lovage",
   "type": "crop",
   "displayName": "Lovage (Levisticum officinale)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "apiaceae",
   "waterNeed": "high",
@@ -33,12 +33,40 @@
     "beeAttractive": true
   },
   "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "dry",
+      "suitability": "good"
+    },
+    {
+      "method": "freeze",
+      "suitability": "good"
+    }
+  ],
   "winterHardyToZone": "4a",
   "careTasks": [
     {
       "key": "harvest-young-leaves",
       "topic": "harvest",
       "title": "Harvest young leaves as they are more tender."
+    }
+  ],
+  "seasonalTasks": [
+    {
+      "key": "prune-for-leaves",
+      "kind": "pruning",
+      "dayOfYear": 140,
+      "windowDays": 120,
+      "title": "Prune lovage for fresh leaves",
+      "body": "From late spring to early fall, cut the plants back to keep a supply of fresh, new leaves coming."
+    },
+    {
+      "key": "remove-old-foliage",
+      "kind": "cultural",
+      "dayOfYear": 310,
+      "windowDays": 21,
+      "title": "Remove old lovage foliage in late fall",
+      "body": "In late fall, cut away the old foliage."
     }
   ]
 }

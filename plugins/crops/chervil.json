@@ -2,9 +2,10 @@
   "pluginId": "chervil",
   "type": "crop",
   "displayName": "Chervil (Anthriscus cerefolium)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "apiaceae",
+  "waterNeed": "high",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 40,
@@ -32,6 +33,12 @@
     "beeAttractive": true
   },
   "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    }
+  ],
   "careTasks": [
     {
       "key": "harvest-open-leaves",

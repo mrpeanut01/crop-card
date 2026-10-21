@@ -2,7 +2,7 @@
   "pluginId": "marjoram-sweet",
   "type": "crop",
   "displayName": "Marjoram Sweet (Origanum majorana)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -32,6 +32,12 @@
     "beeAttractive": true
   },
   "archetype": "cut-and-come-again-leafy",
+  "preserving": [
+    {
+      "method": "dry",
+      "suitability": "good"
+    }
+  ],
   "careTasks": [
     {
       "key": "prune-at-six-inches",

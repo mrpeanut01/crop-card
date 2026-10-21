@@ -25,6 +25,7 @@ export const SOURCED_LIFECYCLES: Readonly<Record<string, SourcedLifecycle>> = Ob
   'lavender-english-munstead': { lifecycle: 'perennial', winterHardyToZone: '5a' },
   'lemon-balm': { lifecycle: 'perennial', winterHardyToZone: '3a' },
   'lemon-verbena': { lifecycle: 'perennial', winterHardyToZone: '8a' },
+  'lemongrass-east-indian': { lifecycle: 'perennial' },
   'marjoram-sweet': { lifecycle: 'annual' },
   'mountain-mint': { lifecycle: 'perennial', winterHardyToZone: '4a' },
   'perilla-shiso-green': { lifecycle: 'annual' },

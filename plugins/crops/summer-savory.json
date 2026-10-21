@@ -2,7 +2,7 @@
   "pluginId": "summer-savory",
   "type": "crop",
   "displayName": "Summer Savory (Satureja hortensis)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "culinary-herb",
   "preHarvestIntervalDays": 1,
@@ -33,6 +33,10 @@
   },
   "archetype": "cut-and-come-again-leafy",
   "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
     {
       "method": "dry",
       "suitability": "good"

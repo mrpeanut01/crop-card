@@ -86,7 +86,9 @@ async function get(farm: Farm, role: 'owner' | 'helper' | 'inspector' | null, qu
   });
 }
 
-const BRIEF = { storageGoals: [{ goal: 'freeze-dry', target: 'oregano for the year' }, 'can-or-jelly'] };
+const BRIEF = {
+  storageGoals: [{ goal: 'freeze-dry', target: 'oregano for the year' }, 'can-or-jelly']
+};
 
 describe('GET /api/garden/harvest-schedule', () => {
   it('gives every role the herb schedule and the brief goals as not known', async () => {

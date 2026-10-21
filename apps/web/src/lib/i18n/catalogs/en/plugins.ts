@@ -121,7 +121,7 @@ export const enPlugins = {
     'Your cards have not been saved on this device yet. Open CropCard once with signal and they will be ready.',
   'cardsui.one.printThis': 'Print this card',
   'cardsui.one.printingCopy':
-    'Printing the copy saved at {time}. Your latest change may not be on it yet.',
+    'Printing the copy saved {at}. Your latest change may not be on it yet.',
   'cardsui.one.titleBare': 'Card · CropCard',
   'cardsui.one.titleNamed': '{title} · Cards · CropCard',
   'cardsui.paper': 'Paper',

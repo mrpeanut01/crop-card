@@ -29,9 +29,9 @@ export const esHerbse: Partial<Record<MessageKey, string>> = {
   'herbse.need.medium': 'una humedad moderada',
   'herbse.need.high': 'el suelo húmedo',
 
-  'herbse.when.today': 'hoy a las {time}',
-  'herbse.when.tomorrow': 'mañana a las {time}',
-  'herbse.when.day': 'el {day} a las {time}',
+  'herbse.when.today': 'hoy {at}',
+  'herbse.when.tomorrow': 'mañana {at}',
+  'herbse.when.day': 'el {day} {at}',
 
   'herbse.timer.next': '{timer} riega {inches} {when}.',
   'herbse.timer.nextNoAmount': '{timer} riega {when} durante {minutes} min.',
@@ -45,7 +45,7 @@ export const esHerbse: Partial<Record<MessageKey, string>> = {
   'herbse.timer.skipError': 'No se guardó. Inténtalo de nuevo.',
 
   'herbse.schedule.everyDay': 'Todos los días',
-  'herbse.schedule.summary': '{days} a las {start} durante {minutes} min',
+  'herbse.schedule.summary': '{days} {at} durante {minutes} min',
   'herbse.schedule.line': '{label}: {summary}',
   'herbse.schedule.lineInches': '{label}: {summary}, {inches} por riego',
   'herbse.schedule.factLabel': 'Temporizadores',

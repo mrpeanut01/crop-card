@@ -6,6 +6,7 @@
   import type { SubmitFunction } from '$app/forms';
   import { createT, type MessageKey } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
+  import { atText } from '$lib/i18n/atTime';
   import Banner from '$lib/components/ui/Banner.svelte';
 
   import {
@@ -99,7 +100,9 @@
 
 <Banner tone="sky">
   <span data-testid="demo-banner">
-    {tr('entry.demo.banner', { time: fmt.instant(demo.expiresAt, 'time') })}
+    {tr('entry.demo.banner', {
+      at: atText(fmt.instant(demo.expiresAt, 'time'), page.data?.locale)
+    })}
   </span>
   {#if daysAhead > 0}
     <p class="ff-today" data-testid="demo-date">

@@ -17,6 +17,7 @@ import {
 } from './waterBalance';
 import { WATER_TARGET_SOURCE } from './waterSources';
 import { cropDisplayName } from '$lib/i18n/cropName';
+import { atText } from '$lib/i18n/atTime';
 import { ymdInZone } from '$lib/prefs';
 import type { TimerSkipReason, TodayAdviceAction, TodayAdviceSkip } from '$lib/today/advice';
 
@@ -373,7 +374,7 @@ export function skipWhenText(ms: number, timeZone: string, locale?: Loc): string
     minute: '2-digit',
     timeZone
   }).format(new Date(ms));
-  return t(locale, 'herbse.when.day', { day, time });
+  return t(locale, 'herbse.when.day', { day, at: atText(time, locale) });
 }
 
 /** One line per logged skip of the Area's timers, with an Undo the viewer
@@ -464,11 +465,12 @@ export function runWhenText(ms: number, nowMs: number, timeZone: string, locale?
     timeZone
   }).format(new Date(ms));
   const day = ymdInZone(ms, timeZone);
-  if (day === ymdInZone(nowMs, timeZone)) return t(locale, 'herbse.when.today', { time });
+  const at = atText(time, locale);
+  if (day === ymdInZone(nowMs, timeZone)) return t(locale, 'herbse.when.today', { at });
   if (day === ymdInZone(nowMs + 86_400_000, timeZone)) {
-    return t(locale, 'herbse.when.tomorrow', { time });
+    return t(locale, 'herbse.when.tomorrow', { at });
   }
-  return t(locale, 'herbse.when.day', { day: weekdayText(ms, timeZone, locale), time });
+  return t(locale, 'herbse.when.day', { day: weekdayText(ms, timeZone, locale), at });
 }
 
 /** Lines and one-tap actions for the Area's automatic waterers: "Drip timer

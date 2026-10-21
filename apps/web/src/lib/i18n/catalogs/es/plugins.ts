@@ -127,7 +127,7 @@ export const esPlugins: Partial<Record<MessageKey, string>> = {
     'Tus tarjetas aún no se han guardado en este dispositivo. Abre CropCard una vez con señal y quedarán listas.',
   'cardsui.one.printThis': 'Imprimir esta tarjeta',
   'cardsui.one.printingCopy':
-    'Imprimiendo la copia guardada a las {time}. Es posible que tu último cambio aún no esté en ella.',
+    'Imprimiendo la copia guardada {at}. Es posible que tu último cambio aún no esté en ella.',
   'cardsui.one.titleBare': 'Tarjeta · CropCard',
   'cardsui.one.titleNamed': '{title} · Tarjetas · CropCard',
   'cardsui.paper': 'Papel',

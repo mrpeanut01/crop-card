@@ -326,7 +326,7 @@ export const enSprayui = {
   'sprayui.fun.noPlugins': 'No fungicide plugins installed. Add JSON files under',
   'sprayui.fun.products': 'Tank-mix products',
   'sprayui.fun.gateTitle': 'Disease + FRAC',
-  'sprayui.fun.fetched': 'NWS forecast · fetched {time}',
+  'sprayui.fun.fetched': 'NWS forecast · fetched {at}',
   'sprayui.fun.locFarm': '· farm location (no block map)',
   'sprayui.fun.locFarmDefault': '· farm default location (no block map)',
   'sprayui.fun.locNearest': '· nearest mapped block',

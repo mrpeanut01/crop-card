@@ -755,7 +755,7 @@
                   steps={c.entry.answer.steps}
                   {problemTips}
                 />
-                {#if c.entry.text}<p>{c.entry.text}</p>{/if}
+                {#if c.entry.text}<p>{askedText('photo_help', c.entry.text)}</p>{/if}
                 <button
                   type="button"
                   class="btn ghost small"

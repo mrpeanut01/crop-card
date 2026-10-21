@@ -9,7 +9,7 @@ const frost = {
   lastSpringFrostMs: Date.UTC(2027, 3, 16),
   firstFallFrostMs: Date.UTC(2027, 9, 25)
 };
-const today = Date.UTC(2026, 9, 7);
+const today = new Date(2026, 9, 7).getTime();
 
 function plugin(opts: {
   id: string;

@@ -67,8 +67,6 @@ export const enHerbse = {
   'herbse.editor.inchesHint':
     "Type the inches each run gives. Without it, runs count as watering with the amount not known, and the advice can't say the beds had enough.",
   'herbse.editor.gpm': 'Gallons per minute (optional)',
-  'herbse.editor.gpmHint':
-    'Gallons count only when the timer waters one Area or bed, and that Area or bed has a size.',
   'herbse.editor.inchesSet': '{inches} in a run',
   'herbse.editor.noInches': 'Inches per run not set',
   'herbse.editor.save': 'Save schedule',

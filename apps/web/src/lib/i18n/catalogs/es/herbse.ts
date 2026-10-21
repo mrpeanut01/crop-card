@@ -67,8 +67,6 @@ export const esHerbse: Partial<Record<MessageKey, string>> = {
   'herbse.editor.inchesHint':
     'Escribe las pulgadas que da cada riego. Sin ese dato, los riegos cuentan como agua sin cantidad conocida y el consejo no puede decir si las camas tuvieron suficiente.',
   'herbse.editor.gpm': 'Galones por minuto (opcional)',
-  'herbse.editor.gpmHint':
-    'Los galones solo cuentan cuando el temporizador riega una sola Área o cama, y esa Área o cama tiene tamaño.',
   'herbse.editor.inchesSet': '{inches} in por riego',
   'herbse.editor.noInches': 'Pulgadas por riego sin anotar',
   'herbse.editor.save': 'Guardar horario',

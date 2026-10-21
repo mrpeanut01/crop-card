@@ -232,7 +232,8 @@
         queued: queued.get(t.id) ?? null,
         asOf: data.nowMs,
         assignee: t.assignee ? memberNameIn(t.assignee.name, data.locale) : null,
-        href: taskPlanHref(t.blockId ?? planting?.blockId ?? null)
+        href: taskPlanHref(t.blockId ?? planting?.blockId ?? null),
+        harvestTiming: t.cropId ? (data.harvestTiming[t.cropId] ?? null) : null
       },
       { now: data.nowMs, prefs }
     );

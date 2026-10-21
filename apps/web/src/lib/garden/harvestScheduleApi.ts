@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import type { CutKind, GoalLine, ScheduleEnd } from './harvestSchedule';
 import type { PreservingMethod, PreservingSuitability } from './preserving';
+import type { HarvestTimingHint } from './harvestTiming';
 
 export const harvestScheduleQuerySchema = z.strictObject({
   areaId: z
@@ -41,6 +42,9 @@ export interface SchedulePlantingView {
     suitability: PreservingSuitability;
     note?: string;
   }>;
+  /** #867: when to cut for each method the brief's goals name, from the
+   *  crop's sourced `harvestTiming`; empty when none applies. */
+  timing: HarvestTimingHint[];
 }
 
 export interface HarvestScheduleResponse {

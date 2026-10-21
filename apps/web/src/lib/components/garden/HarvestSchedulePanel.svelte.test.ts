@@ -35,7 +35,8 @@ const schedule: HarvestScheduleResponse = {
       firstWindowOnly: true,
       cutCount: 1,
       nextCut: null,
-      preserving: []
+      preserving: [],
+      timing: []
     }
   ],
   goals: [
@@ -63,6 +64,30 @@ describe('HarvestSchedulePanel', () => {
     const goal = screen.getByTestId('goal-line');
     expect(goal.dataset.status).toBe('not-known');
     expect(goal.textContent).toContain('Drying: Not known.');
+  });
+
+  it('shows the sourced cutting stage per planting, and hides it when asked (#867)', () => {
+    const withTiming: HarvestScheduleResponse = {
+      ...schedule,
+      plantings: [
+        { ...schedule.plantings[0], timing: [{ method: 'dry', stage: 'before-bloom' }] },
+        {
+          ...schedule.plantings[0],
+          plantingId: 'p2',
+          cropPluginId: 'oregano-greek',
+          cropName: 'Oregano'
+        }
+      ]
+    };
+    const { unmount } = render(HarvestSchedulePanel, { schedule: withTiming });
+    const lines = screen.getAllByTestId('harvest-timing');
+    expect(lines).toHaveLength(1);
+    expect(lines[0].textContent).toContain('For drying');
+    expect(lines[0].textContent).toContain('Cut just before it flowers.');
+    expect(lines[0].dataset.stage).toBe('before-bloom');
+    unmount();
+    render(HarvestSchedulePanel, { schedule: withTiming, showTiming: false });
+    expect(screen.queryByTestId('harvest-timing')).toBeNull();
   });
 
   it('hides goals when asked and fetches its own schedule for an Area', async () => {

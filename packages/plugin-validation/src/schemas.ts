@@ -971,6 +971,27 @@ export const harvestCadenceSchema = z.strictObject({
   from: z.literal("first-cut"),
 });
 export type HarvestCadence = z.infer<typeof harvestCadenceSchema>;
+
+// Phase 37 follow-up (#867): when to cut for one preserving method, as a
+// source states it for this crop. Each row needs a source under
+// `harvestTiming.<method>` in apps/web/scripts/crop-data-sources.json whose
+// quote names the crop, the method and the stage. The app words the line,
+// and a row never says how well the crop keeps by that method.
+export const HARVEST_TIMING_STAGES = ["before-bloom", "bloom-begins"] as const;
+export type HarvestTimingStage = (typeof HARVEST_TIMING_STAGES)[number];
+export const harvestTimingSchema = z
+  .array(
+    z.strictObject({
+      method: z.enum(CROP_PRESERVING_METHODS),
+      stage: z.enum(HARVEST_TIMING_STAGES),
+    }),
+  )
+  .min(1)
+  .max(CROP_PRESERVING_METHODS.length)
+  .refine((rows) => new Set(rows.map((r) => r.method)).size === rows.length, {
+    message: "one harvestTiming row per method",
+  });
+export type CropHarvestTiming = z.infer<typeof harvestTimingSchema>[number];
 // Phase 37F: crop-level care steps and the growth habit the photo help
 // drawing follows. Each care task needs a source under `careTasks.<key>` in
 // apps/web/scripts/crop-data-sources.json whose quote holds its title and
@@ -1187,6 +1208,9 @@ export const cropPluginSchema = pluginBase.extend({
   // Phase 37C
   preserving: preservingSchema.optional(),
   harvestCadence: harvestCadenceSchema.optional(),
+  /** #867: sourced cutting stage per preserving method ("for drying, cut
+   *  just before it flowers"). */
+  harvestTiming: harvestTimingSchema.optional(),
   // Phase 37B: the coldest USDA zone a perennial survives, as its source
   // prints it ("7" or "7a"); quoted under `winterHardyToZone`.
   winterHardyToZone: z

@@ -192,6 +192,7 @@ export function cropFactPaths(c: CropPlugin): string[] {
   if (isHerbGardenCrop(c.pluginId))
     for (const r of c.seasonalTasks ?? []) paths.push(`seasonalTasks.${r.key}`);
   paths.push(...herbHarvestFactPaths(c)); // Phase 37C
+  paths.push(...harvestTimingFactPaths(c)); // #867 drying hint
   if (c.winterHardyToZone) paths.push('winterHardyToZone');
   return paths;
 }
@@ -1070,6 +1071,88 @@ export function harvestCadenceQuoteGaps(
           ? `${c.pluginId}: harvestCadence quote gives no number ("a few weeks" never counts)`
           : `${c.pluginId}: harvestCadence quote does not state ${min}-${max} days`
       );
+    }
+  }
+  return gaps;
+}
+
+// ─── #867: when to cut for a preserving method ─────────────────────────
+
+/** Why a crop has no `harvestTiming` although a source was read (sources
+ *  disagree): `{ reason }` under `harvestTiming.notRecorded`. */
+export const HARVEST_TIMING_NOT_RECORDED_KEY = 'harvestTiming.notRecorded';
+
+/** The source key for each `harvestTiming` row. */
+export function harvestTimingFactPaths(c: Pick<CropPlugin, 'harvestTiming'>): string[] {
+  return (c.harvestTiming ?? []).map((r) => `harvestTiming.${r.method}`);
+}
+
+type HarvestTimingStageKey = NonNullable<CropPlugin['harvestTiming']>[number]['stage'];
+
+const FLOWER_WORD = String.raw`(?:flowers?|flowering|blooms?|blooming|blossoms?|blossoming)`;
+
+/** The words a source uses for each stage. "Before" covers "prior to the
+ *  appearance of flowers" and "before the plant flowers"; "begins" covers
+ *  "just as flowering begins" and "when the first flowers open". */
+const HARVEST_TIMING_STAGE_WORDS: Record<HarvestTimingStageKey, RegExp> = {
+  'before-bloom': new RegExp(
+    String.raw`\b(?:before|prior to)\s+(?:(?:the|its|it|any)\s+)?(?:(?:appearance|opening)\s+of\s+(?:the\s+)?)?(?:plants?\s+)?${FLOWER_WORD}\b`,
+    'i'
+  ),
+  'bloom-begins': new RegExp(
+    String.raw`\bjust\s+as\s+(?:the\s+)?(?:flowers?\s+(?:begin|begins|start|starts)\s+to\s+(?:appear|open)|flowering\s+(?:begins|starts))\b|\bwhen\s+(?:the\s+)?first\s+(?:flowers|blossoms|blooms)\s+(?:begin\s+to\s+)?(?:appear|open)\b`,
+    'i'
+  )
+};
+
+/** Timing words for a stage the field has no value for (in or after bloom).
+ *  A quote holding them, or the words of two stages, reads both ways. */
+const OTHER_BLOOM_TIMING_WORDS =
+  /\bin\s+(?:full\s+)?(?:bloom|flower)\b|\bwhile\s+in\s+flower\b|\bduring\s+(?:the\s+)?(?:bloom|blooming|flowering)\b|\bat\s+(?:full\s+)?bloom\b|\bafter\s+(?:flowering|blooming|bloom|blossoming)\b/i;
+
+/** #867 (rulings DH-1 to DH-8 in docs/design/phase-37-followups/drying-hint.md):
+ *  each `harvestTiming.<method>` quote comes from an extension or government
+ *  page, names the crop, the method and the stage, and states no other
+ *  stage, so a source that allows "before or when the first blossoms open"
+ *  never counts. A crop recorded as `harvestTiming.notRecorded` (sources
+ *  disagree) carries no row. Returns "pluginId: problem" lines; a missing
+ *  source is `checkSources`' report. */
+export function harvestTimingQuoteGaps(
+  crops: ReadonlyArray<Pick<CropPlugin, 'pluginId' | 'displayName' | 'harvestTiming'>>,
+  sources: SourceMap
+): string[] {
+  const gaps: string[] = [];
+  for (const c of crops) {
+    const rows = c.harvestTiming ?? [];
+    if (
+      rows.length > 0 &&
+      notRecordedReason(sources, c.pluginId, HARVEST_TIMING_NOT_RECORDED_KEY)
+    ) {
+      gaps.push(`${c.pluginId}: harvestTiming is set; drop ${HARVEST_TIMING_NOT_RECORDED_KEY}`);
+    }
+    for (const r of rows) {
+      const key = `harvestTiming.${r.method}`;
+      const entry = sourceEntrySchema.safeParse(sources[c.pluginId]?.[key]);
+      if (!entry.success) continue;
+      const quote = entry.data.quote;
+      if (!isAllowedSpacingSource(entry.data.url)) {
+        gaps.push(`${c.pluginId}: ${key} source is not an extension or government page`);
+      }
+      if (!quoteNamesCrop(quote, c)) {
+        gaps.push(`${c.pluginId}: ${key} quote does not name the crop`);
+      }
+      if (!namesMethod(quote, r.method)) {
+        gaps.push(`${c.pluginId}: ${key} quote does not name the method`);
+      }
+      if (!HARVEST_TIMING_STAGE_WORDS[r.stage].test(quote)) {
+        gaps.push(`${c.pluginId}: ${key} quote does not state ${r.stage}`);
+      }
+      const others = (Object.keys(HARVEST_TIMING_STAGE_WORDS) as HarvestTimingStageKey[]).filter(
+        (s) => s !== r.stage && HARVEST_TIMING_STAGE_WORDS[s].test(quote)
+      );
+      if (others.length > 0 || OTHER_BLOOM_TIMING_WORDS.test(quote)) {
+        gaps.push(`${c.pluginId}: ${key} quote also states another stage`);
+      }
     }
   }
   return gaps;

@@ -1663,6 +1663,38 @@
       ],
       "additionalProperties": false
     },
+    "harvestTiming": {
+      "minItems": 1,
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "fresh",
+              "dry",
+              "freeze",
+              "freeze-dry",
+              "infuse"
+            ]
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "before-bloom",
+              "bloom-begins"
+            ]
+          }
+        },
+        "required": [
+          "method",
+          "stage"
+        ],
+        "additionalProperties": false
+      }
+    },
     "winterHardyToZone": {
       "type": "string",
       "pattern": "^(1[0-3]|[1-9])[ab]?$"

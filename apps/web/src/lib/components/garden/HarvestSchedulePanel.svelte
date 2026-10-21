@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import HarvestTimingLine from './HarvestTimingLine.svelte';
   import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import { goalLineText } from '$lib/garden/pantryText';
@@ -14,9 +15,12 @@
     areaId?: string | null;
     /** Show the brief's goal lines under the weeks. */
     showGoals?: boolean;
+    /** Show each planting's sourced cutting stage (#867); off where the
+     *  page already shows it per herb. */
+    showTiming?: boolean;
   }
 
-  const { schedule = null, areaId = null, showGoals = true }: Props = $props();
+  const { schedule = null, areaId = null, showGoals = true, showTiming = true }: Props = $props();
 
   const tr = $derived(createT(page.data?.locale));
   const locale = $derived(page.data?.locale ?? null);
@@ -91,6 +95,7 @@
                 ? tr('herbsc.sched.endsSeason')
                 : tr('herbsc.sched.endsFrost')}
             </span>
+            {#if showTiming}<HarvestTimingLine hints={p.timing ?? []} />{/if}
           </li>
         {/each}
       </ul>

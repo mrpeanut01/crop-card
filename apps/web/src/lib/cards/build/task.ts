@@ -10,6 +10,13 @@ import {
 import { taskDisplayBody, taskDisplayTitle } from '$lib/tasks/title';
 import { isTypicalTimingTask } from '$lib/schedule/typicalTiming';
 import {
+  harvestTimingHints,
+  harvestTimingLabel,
+  harvestTimingText,
+  isHarvestTask,
+  type HarvestTimingHint
+} from '$lib/garden/harvestTiming';
+import {
   cardHref,
   cardKey,
   plantingCardHref,
@@ -59,6 +66,9 @@ export interface TaskCardContext {
   href?: string;
   /** The assignee's name through `memberName`, when the task has one. */
   assignee?: string | null;
+  /** #867: the planting's sourced cutting stage for each method the brief
+   *  names (`harvestTimingHints`); shown only on an open harvest task. */
+  harvestTiming?: readonly HarvestTimingHint[] | null;
 }
 
 const KIND_KICKER = {
@@ -139,6 +149,14 @@ export function buildTaskCardFrom(
   if (ctx.equipmentLabel) facts.push({ label: tr('cards.task.equipment'), value: ctx.equipmentLabel });
   if (ctx.assignee?.trim())
     facts.push({ label: tr('cards.task.assignedTo'), value: ctx.assignee.trim() });
+  if (status !== 'done' && status !== 'skipped' && isHarvestTask(task)) {
+    for (const h of ctx.harvestTiming ?? [])
+      facts.push({
+        label: harvestTimingLabel(h.method, opts.prefs.locale),
+        value: harvestTimingText(h.stage, opts.prefs.locale),
+        provenance: 'plugin'
+      });
+  }
   if (status === 'skipped' && task.abortReason?.trim())
     facts.push({
       label: tr('cards.task.whySkipped'),
@@ -220,7 +238,13 @@ export function buildTaskCardFromSnapshot(
       where: where || null,
       equipmentLabel: equipment?.label ?? null,
       asOf: snapshot.generatedAt,
-      assignee: snapshotAssigneeName(snapshot, task.assigneeUserId)
+      assignee: snapshotAssigneeName(snapshot, task.assigneeUserId),
+      harvestTiming: planting
+        ? harvestTimingHints(
+            snapshot.cropPlugins[planting.cropPluginId],
+            (snapshot.pantry?.goals ?? []).map((g) => g.goal)
+          )
+        : null
     },
     opts
   );

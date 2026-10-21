@@ -63,6 +63,7 @@ import { activeReEntryItems, reEntryReadStart } from '$lib/today/reEntryCard';
 import { longestLibraryReiHours } from '$lib/spray/herbicideReEntry';
 import { HERB_CALENDAR_SETTING_KEYS, herbContextFor } from '$lib/calendar/herbCalendarContext';
 import { loadHerbCalendarInputs } from '$lib/server/herbCalendar.server';
+import { harvestTimingByPlanting } from '$lib/garden/harvestTiming';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;
@@ -327,14 +328,28 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const coveredLogs = isOwner ? coveredLogAlerts(await healthPlugins(), careTimeZone, now) : [];
 
   const plantingNames: Record<string, { name: string; blockId: string }> = {};
+  const cropPluginOf = new Map<string, string>();
   for (const b of blocks)
-    for (const p of b.plantings)
+    for (const p of b.plantings) {
       plantingNames[p.id] = { name: p.varietyDisplayName, blockId: b.id };
+      cropPluginOf.set(p.id, p.cropPluginId);
+    }
   const olderPlantingIds = [
     ...new Set(deckTasks.flatMap((t) => (t.cropId && !plantingNames[t.cropId] ? [t.cropId] : [])))
   ];
-  for (const p of listPlantingsForCardsByIds(olderPlantingIds))
+  for (const p of listPlantingsForCardsByIds(olderPlantingIds)) {
     plantingNames[p.id] = { name: p.varietyDisplayName, blockId: p.blockId };
+    cropPluginOf.set(p.id, p.cropPluginId);
+  }
+  const harvestTiming = harvestTimingByPlanting(
+    deckTasks,
+    cropPluginOf,
+    (id) => {
+      const rec = registry.get(id);
+      return rec?.plugin.type === 'crop' ? rec.plugin : null;
+    },
+    herbInputs.goals
+  );
 
   const dayCandidates = view === 'day' ? eventsToday(allEvents, now) : [];
   const upcomingCandidates = dropPlantedSuggestions(upcomingEvents(allEvents, 14, now), [
@@ -416,6 +431,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     season,
     blockNames: Object.fromEntries(blocks.map((b) => [b.id, b.name])),
     plantingNames,
+    harvestTiming,
     equipmentLabels: Object.fromEntries(equipment.map((e) => [e.id, e.label])),
     // #280 — lift `category` into the projection so the /today template
     // can resolve a /inventory/[type]/[id] link via the canonical

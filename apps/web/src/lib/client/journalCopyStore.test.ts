@@ -27,8 +27,8 @@ function setActive(id: string | null) {
   else sessionStorage.removeItem(ACTIVE_KEY);
 }
 
-function jpeg(size = 64): Uint8Array {
-  const bytes = new Uint8Array(size);
+function jpeg(size = 64): Uint8Array<ArrayBuffer> {
+  const bytes = new Uint8Array(new ArrayBuffer(size));
   bytes.set([0xff, 0xd8, 0xff, 0xe0]);
   bytes[size - 2] = 0xff;
   bytes[size - 1] = 0xd9;
@@ -238,7 +238,7 @@ describe('journalCopyStore (#869, FU869-3)', () => {
 });
 
 describe('fetchJournalPhoto and saveShownJournalCopies', () => {
-  const ok = (bytes: Uint8Array) => new Response(bytes, { status: 200 });
+  const ok = (bytes: Uint8Array<ArrayBuffer>) => new Response(bytes, { status: 200 });
 
   it('reads a JPEG into a data URL and refuses anything else', async () => {
     expect(await fetchJournalPhoto('c', 'e', async () => ok(jpeg()))).toBe(PHOTO);

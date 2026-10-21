@@ -25,6 +25,7 @@ import { esHerbsc } from './es/herbsc';
 import { esHerbsd } from './es/herbsd';
 import { esHerbse } from './es/herbse';
 import { esHerbsf } from './es/herbsf';
+import { esHerbsh } from './es/herbsh';
 
 /**
  * Spanish (F5-8). Machine-drafted, then corrected and signed off by the
@@ -61,7 +62,8 @@ export const ES_PARTS: ReadonlyArray<Partial<Record<MessageKey, string>>> = [
   esHerbsc,
   esHerbsd,
   esHerbse,
-  esHerbsf
+  esHerbsf,
+  esHerbsh
 ];
 
 export const es: Partial<Record<MessageKey, string>> = Object.assign({}, ...ES_PARTS);

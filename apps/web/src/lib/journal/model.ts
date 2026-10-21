@@ -25,8 +25,9 @@ export interface JournalAnswerSection {
   provenance?: 'plugin' | 'fallback';
 }
 
-/** Kinds of mark drawn over a photo (Phase 37F, R-13). */
-export const PHOTO_MARK_KINDS = ['cut', 'pinch', 'harvest', 'leave'] as const;
+/** Kinds of mark drawn over a photo (Phase 37F, R-13). `problem` (#869,
+ *  FU869-1) points at something visible and never names its cause or fix. */
+export const PHOTO_MARK_KINDS = ['cut', 'pinch', 'harvest', 'leave', 'problem'] as const;
 export type PhotoMarkKind = (typeof PHOTO_MARK_KINDS)[number];
 
 /** One mark on a photo. `x`, `y`, `w` and `h` are 0 to 1 of the stored
@@ -76,6 +77,8 @@ export interface JournalEntry {
 }
 
 export const MAX_JOURNAL_TEXT = 2000;
+/** How many entries `GET /api/plantings/[id]/journal` returns, newest first. */
+export const JOURNAL_LIST_LIMIT = 50;
 export const MAX_PHOTO_QUESTION = 500;
 
 export function questionText(question: PhotoQuestion, text: string): string {

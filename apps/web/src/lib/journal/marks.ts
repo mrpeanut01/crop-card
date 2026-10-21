@@ -1,10 +1,12 @@
 /** Marks Claude places over a photo (Phase 37F, R-13 and R-14). Pure and
  *  client-safe. One bad mark refuses the whole set, so a grower never sees
  *  half an answer drawn on their plant. Labels go through the one spray
- *  advice guard in `photoHelp.ts` (C-8). */
+ *  advice guard in `photoHelp.ts` (C-8), then the diagnosis check, and a
+ *  `problem` label through the treatment check too (`markGuard.ts`, #869). */
 
 import { PHOTO_MARK_KINDS, type PhotoMark, type PhotoMarkKind } from './model';
 import { asksForSprayAdvice } from './photoHelp';
+import { namesDiagnosis, namesTreatment } from './markGuard';
 
 export const MAX_PHOTO_MARKS = 12;
 export const MAX_MARK_LABEL = 40;
@@ -19,7 +21,9 @@ export type MarksRefusal =
   | 'bad-coordinate'
   | 'bad-size'
   | 'bad-label'
-  | 'spray-label';
+  | 'spray-label'
+  | 'diagnosis-label'
+  | 'treatment-label';
 
 export type ParsedMarks = { ok: true; marks: PhotoMark[] } | { ok: false; reason: MarksRefusal };
 
@@ -40,7 +44,11 @@ export function isUnsafeMarkLabel(label: string, sprayTerms?: readonly string[])
   return asksForSprayAdvice(label, sprayTerms);
 }
 
-function oneMark(raw: unknown, sprayTerms?: readonly string[]): PhotoMark | MarksRefusal {
+function oneMark(
+  raw: unknown,
+  sprayTerms?: readonly string[],
+  diagnosisTerms?: readonly string[]
+): PhotoMark | MarksRefusal {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return 'not-an-object';
   const m = raw as Record<string, unknown>;
   if (typeof m.kind !== 'string' || !KINDS.has(m.kind)) return 'bad-kind';
@@ -53,6 +61,8 @@ function oneMark(raw: unknown, sprayTerms?: readonly string[]): PhotoMark | Mark
   const label = m.label.replace(/\s+/g, ' ').trim();
   if (label.length < 1 || label.length > MAX_MARK_LABEL) return 'bad-label';
   if (isUnsafeMarkLabel(label, sprayTerms)) return 'spray-label';
+  if (namesDiagnosis(label, diagnosisTerms)) return 'diagnosis-label';
+  if (m.kind === 'problem' && namesTreatment(label)) return 'treatment-label';
   const mark: PhotoMark = { kind: m.kind as PhotoMarkKind, x: m.x, y: m.y, label };
   if (m.w !== undefined) mark.w = m.w as number;
   if (m.h !== undefined) mark.h = m.h as number;
@@ -61,13 +71,19 @@ function oneMark(raw: unknown, sprayTerms?: readonly string[]): PhotoMark | Mark
 
 /** The validated marks, or why the whole set was refused. Coordinates are 0
  *  to 1 of the stored photo; `w` and `h`, when given, keep the box inside it.
- *  Every label goes through `isUnsafeMarkLabel`. */
-export function parseMarks(raw: unknown, sprayTerms?: readonly string[]): ParsedMarks {
+ *  Every label goes through `isUnsafeMarkLabel` and `namesDiagnosis` (with
+ *  the library's `markDiagnosisTerms`); a `problem` label also through
+ *  `namesTreatment`. */
+export function parseMarks(
+  raw: unknown,
+  sprayTerms?: readonly string[],
+  diagnosisTerms?: readonly string[]
+): ParsedMarks {
   if (!Array.isArray(raw)) return { ok: false, reason: 'not-a-list' };
   if (raw.length > MAX_PHOTO_MARKS) return { ok: false, reason: 'too-many' };
   const marks: PhotoMark[] = [];
   for (const item of raw) {
-    const out = oneMark(item, sprayTerms);
+    const out = oneMark(item, sprayTerms, diagnosisTerms);
     if (typeof out === 'string') return { ok: false, reason: out };
     marks.push(out);
   }

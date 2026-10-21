@@ -12,7 +12,7 @@ import { answerPhotoHelp } from '$lib/server/photoHelp';
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { writeRecord } from '$lib/server/recordWrite';
 import { getRegistry } from '$lib/server/registry';
-import { sprayTermsFor } from '$lib/server/sprayTerms';
+import { markDiagnosisTermsFor, sprayTermsFor } from '$lib/server/sprayTerms';
 import { t } from '$lib/i18n';
 
 export const _requestSchema = photoHelpSchema;
@@ -21,7 +21,7 @@ export const _requestSchema = photoHelpSchema;
  *  is on, otherwise the matching Care Guide section. Never spray advice.
  *  The ask is saved to the planting journal either way, at most once per
  *  client record id (R-23). With `wantMarks` and a photo, Claude also places
- *  marks on it (37F). */
+ *  marks on it (37F), problem marks included (#869). */
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const who = await journalWriter(event);
   if (!who.ok) return who.response;
@@ -50,6 +50,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
         wantMarks: parsed.data.wantMarks === true
       },
       sprayTerms: sprayTermsFor(registry),
+      diagnosisTerms: markDiagnosisTermsFor(registry),
       locale: event.locals?.locale,
       write: (fn) => writeRecord(event, fn)
     })

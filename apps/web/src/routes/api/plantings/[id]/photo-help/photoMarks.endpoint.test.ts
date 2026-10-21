@@ -34,7 +34,11 @@ import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { fakeJpeg, toDataUrl } from '$lib/journal/jpegFixture';
 import type { JournalAnswer } from '$lib/journal/model';
 import type { PhotoHelpResponse } from '$lib/server/photoHelp';
-import { PHOTO_MARKS_FIXTURE_ANSWER } from '$lib/server/aiFixture/photoMarks';
+import {
+  PHOTO_MARKS_DIAGNOSIS_ANSWER,
+  PHOTO_MARKS_FIXTURE_ANSWER,
+  PHOTO_MARKS_PROBLEM_ANSWER
+} from '$lib/server/aiFixture/photoMarks';
 import { POST } from './+server';
 
 const OK = { ok: true, spend: { monthlyUsdSoFar: 0, cap: 5, warnAt80: false } };
@@ -123,7 +127,8 @@ describe('photo help with marks (37F)', () => {
       (c) => c.type === 'text'
     )!.text!;
     expect(prompt).toContain('CROPCARD_FIXTURE:photo-marks');
-    expect(prompt).toContain('"cut", "pinch", "harvest" or "leave"');
+    expect(prompt).toContain('"cut", "pinch", "harvest", "leave" or "problem"');
+    expect(prompt).toContain('Never say what caused it or how to fix or treat it.');
     expect(prompt).toContain('Pinch stems as they lengthen to promote bushy, compact growth.');
   });
 
@@ -182,6 +187,73 @@ describe('photo help with marks (37F)', () => {
     expect(byStep.answer.steps).toEqual(['Cut the tall stem.', 'Pinch the tip.']);
     expect(byStep.answer.sprayRedirect).toBe(true);
     expect(byStep.message).toMatch(/Spray flow.*Claude could not place marks/);
+  });
+
+  it('keeps a problem mark that only describes what is visible (#869)', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    m.create.mockResolvedValue(aiReply(JSON.stringify(PHOTO_MARKS_PROBLEM_ANSWER)));
+    const owner = seedOwner();
+    const body = await ask(owner, { question: 'leaves', text: '', photo: PHOTO, wantMarks: true });
+    expect(body.marksProvenance).toBe('ai');
+    expect(body.answer.marks?.map((mk) => mk.kind)).toEqual(['cut', 'problem']);
+    expect(saved(owner)[0].marks?.[1]).toMatchObject({
+      kind: 'problem',
+      label: 'Yellow lower leaves'
+    });
+  });
+
+  it('drops the whole set when a problem label names a disease, a pest or a fix (#869)', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    const owner = seedOwner();
+    const withLabel = (label: string, kind = 'problem') =>
+      JSON.stringify({
+        steps: ['Placeholder step one.', 'Placeholder step two.'],
+        marks: [
+          { kind: 'cut', x: 0.3, y: 0.3, label: 'Mark one' },
+          { kind, x: 0.6, y: 0.6, label }
+        ]
+      });
+    for (const raw of [
+      JSON.stringify(PHOTO_MARKS_DIAGNOSIS_ANSWER),
+      withLabel('Early blight spots'),
+      withLabel('Aphids under the leaf'),
+      withLabel('Remove these leaves'),
+      withLabel('Nitrogen deficiency'),
+      withLabel('Cut out the canker', 'cut')
+    ]) {
+      m.create.mockResolvedValueOnce(aiReply(raw));
+      const body = await ask(owner, {
+        question: 'leaves',
+        text: '',
+        photo: PHOTO,
+        wantMarks: true
+      });
+      expect(body.provenance, raw).toBe('ai');
+      expect(body.marksProvenance, raw).toBe('fallback');
+      expect(body.answer.marks, raw).toBeUndefined();
+      expect(body.answer.steps, raw).toEqual((JSON.parse(raw) as { steps: string[] }).steps);
+      expect(body.message, raw).toBe('Claude could not place marks on this photo.');
+    }
+  });
+
+  it("refuses a label naming a pest from the library's own labels", async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    m.create.mockResolvedValue(
+      aiReply(
+        JSON.stringify({
+          steps: ['Placeholder step one.'],
+          marks: [{ kind: 'problem', x: 0.5, y: 0.5, label: 'Leafroller rolled leaf' }]
+        })
+      )
+    );
+    const body = await ask(seedOwner(), {
+      question: 'leaves',
+      text: '',
+      photo: PHOTO,
+      wantMarks: true
+    });
+    expect(body.answer.marks).toBeUndefined();
+    expect(body.marksProvenance).toBe('fallback');
   });
 
   it('falls back to the Care Guide when the answer is broken JSON', async () => {

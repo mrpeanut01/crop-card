@@ -3,18 +3,29 @@
   import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   import AiLimitNudge from '$lib/components/billing/AiLimitNudge.svelte';
   import type { AiLimit } from '$lib/billing/aiLimit';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
+  import Modal from '$lib/components/ui/Modal.svelte';
   import {
+    JOURNAL_LIST_LIMIT,
     PHOTO_QUESTION_LABEL,
     journalPhotoUrl,
     questionText,
     type JournalAnswer,
     type JournalAnswerSection,
     type JournalEntry,
+    type PhotoMark,
     type PhotoQuestion
   } from '$lib/journal/model';
+  import PhotoMarksPrint from '$lib/components/journal/PhotoMarksPrint.svelte';
+  import {
+    PHOTO_PRINT_LAYOUTS,
+    photoPrint,
+    type PhotoPrintJob,
+    type PhotoPrintLayout
+  } from '$lib/journal/photoPrintJob.svelte';
+  import type { JournalCopy } from '$lib/client/journalCopyStore';
   import {
     CARE_SECTION,
     SPRAY_REDIRECT,
@@ -70,6 +81,22 @@
   const target = $derived(targets.find((t) => t.cropId === cropId) ?? null);
   const canWrite = $derived(role !== 'inspector');
   const isOwner = $derived(role === 'owner');
+  /** The Owner the journal is read for; saved copies are kept only under it. */
+  const ownerId = $derived(
+    (page.data?.activeOwner?.id as string | undefined) ??
+      (page.data?.user?.activeOwnerId as string | undefined) ??
+      null
+  );
+  /** The crop's sourced Care Guide "Common problems" tips, shown beside a
+   *  problem mark (#869, FU869-1 d). */
+  const problemTips = $derived.by(() => {
+    const title = tr('cards.care.problems');
+    const section = target?.careGuide?.sections.find((s) => s.title === title);
+    return section ? filterSprayAdviceItems(section.items, sprayTerms) : [];
+  });
+  const plantingTitle = $derived(
+    target ? cropDisplayNameByEnglish(target.label, page.data?.locale) : ''
+  );
 
   let chip = $state<Exclude<PhotoQuestion, 'other'> | null>(null);
   let typed = $state('');
@@ -112,24 +139,70 @@
     return typeof navigator === 'undefined' || navigator.onLine !== false;
   }
 
+  let savedCopies = $state<JournalCopy[]>([]);
+
+  /** The marked entries saved on this phone, shown when the live journal
+   *  cannot load (#869, FU869-3). */
+  async function loadCopies(id: string): Promise<void> {
+    try {
+      const { listJournalCopies } = await import('$lib/client/journalCopyStore');
+      const next = await listJournalCopies(id);
+      if (id === cropId) savedCopies = next;
+    } catch {
+      if (id === cropId) savedCopies = [];
+    }
+  }
+
+  /** Keeps the phone's copies in step with what the server just listed:
+   *  copies of deleted entries go, marked entries shown here are saved. */
+  async function syncCopies(id: string, listed: JournalEntry[] | null): Promise<void> {
+    const owner = ownerId;
+    try {
+      const store = await import('$lib/client/journalCopyStore');
+      if (listed === null) {
+        await store.forgetJournalCopiesFor(id, owner);
+        return;
+      }
+      await store.reconcileJournalCopies(id, listed, listed.length < JOURNAL_LIST_LIMIT, owner);
+      await store.saveShownJournalCopies(listed, owner);
+    } catch {
+      /* IndexedDB unavailable → nothing kept on this phone */
+    }
+  }
+
   async function loadJournal(): Promise<void> {
     const id = cropId;
     if (!id) return;
     if (!online()) {
       journalState = 'offline';
+      await loadCopies(id);
       return;
     }
     journalState = 'loading';
     try {
       const res = await fetch(`/api/plantings/${encodeURIComponent(id)}/journal`);
+      if (res.status === 404) await syncCopies(id, null);
       if (!res.ok) throw new Error(String(res.status));
       const next = ((await res.json()) as { entries: JournalEntry[] }).entries;
       if (id !== cropId) return;
       entries = next;
+      savedCopies = [];
       journalState = 'ready';
+      void syncCopies(id, next);
     } catch {
       if (id !== cropId) return;
       journalState = online() ? 'error' : 'offline';
+      await loadCopies(id);
+    }
+  }
+
+  async function saveNewCopy(entry: JournalEntry): Promise<void> {
+    const owner = ownerId;
+    try {
+      const { saveShownJournalCopies } = await import('$lib/client/journalCopyStore');
+      await saveShownJournalCopies([entry], owner);
+    } catch {
+      /* IndexedDB unavailable → nothing kept on this phone */
     }
   }
 
@@ -157,18 +230,125 @@
       void refreshQueued();
     };
     window.addEventListener('online', back);
+    const printed = () => (photoPrint.job = null);
+    window.addEventListener('afterprint', printed);
     const timer = setInterval(refreshQueued, 4000);
     return () => {
       window.removeEventListener('online', back);
+      window.removeEventListener('afterprint', printed);
       clearInterval(timer);
+      photoPrint.job = null;
     };
   });
+
+  let printDraft = $state<PhotoPrintJob | null>(null);
+  let printLayout = $state<PhotoPrintLayout>('letter');
+  const PRINT_LAYOUT_KEYS = {
+    letter: { label: 'herbsh.print.letter', hint: 'herbsh.print.letterHint' },
+    'index-4x6': { label: 'herbsh.print.index', hint: 'herbsh.print.indexHint' }
+  } as const satisfies Record<PhotoPrintLayout, { label: string; hint: string }>;
+
+  /** The photo as a data URL so it is decoded before the print dialog
+   *  opens; the journal URL when it cannot be read now. */
+  async function printablePhoto(id: string, entryId: string): Promise<string> {
+    try {
+      const { fetchJournalPhoto } = await import('$lib/client/journalCopyStore');
+      const photo = await fetchJournalPhoto(id, entryId);
+      if (photo && photo !== 'gone') return photo;
+    } catch {
+      /* fall through to the URL */
+    }
+    return journalPhotoUrl(id, entryId);
+  }
+
+  function draft(
+    src: string,
+    marks: readonly PhotoMark[],
+    steps: readonly string[],
+    takenAt: number,
+    provenance: PhotoPrintJob['provenance'],
+    savedCopyAt: number | null
+  ): PhotoPrintJob {
+    return {
+      src,
+      marks: marks.map((m) => ({ ...m })),
+      steps: [...steps],
+      title: plantingTitle,
+      takenAt,
+      provenance,
+      asOf: savedCopyAt ?? Date.now(),
+      savedCopyAt,
+      problemTips: [...problemTips],
+      layout: printLayout
+    };
+  }
+
+  async function openPrintEntry(e: JournalEntry) {
+    const id = cropId;
+    if (!id || !e.answer?.marks?.length) return;
+    const src = await printablePhoto(id, e.id);
+    printDraft = draft(
+      src,
+      e.answer.marks,
+      e.answer.steps ?? [],
+      e.createdAt,
+      PROV_BY_ENTRY[e.provenance],
+      null
+    );
+  }
+
+  function openPrintCopy(c: JournalCopy) {
+    printDraft = draft(
+      c.photo,
+      c.entry.answer.marks,
+      c.entry.answer.steps,
+      c.entry.createdAt,
+      PROV_BY_ENTRY[c.entry.provenance],
+      c.savedAt
+    );
+  }
+
+  async function decoded(src: string): Promise<void> {
+    if (typeof Image === 'undefined') return;
+    const im = new Image();
+    im.src = src;
+    try {
+      await im.decode();
+    } catch {
+      /* print what loaded */
+    }
+  }
+
+  async function printNow() {
+    const next = printDraft;
+    if (!next) return;
+    const job: PhotoPrintJob = {
+      ...next,
+      layout: printLayout,
+      asOf: next.savedCopyAt ?? Date.now()
+    };
+    printDraft = null;
+    await decoded(job.src);
+    photoPrint.job = job;
+    await tick();
+    await new Promise<void>((r) =>
+      typeof requestAnimationFrame === 'undefined' ? r() : requestAnimationFrame(() => r())
+    );
+    const previous = document.title;
+    document.title = job.title || previous;
+    try {
+      window.print();
+    } finally {
+      document.title = previous;
+    }
+  }
 
   function pickTarget(id: string) {
     chosenId = id;
     entries = [];
     shown = null;
     queuedNotes = [];
+    savedCopies = [];
     confirmDelete = null;
     void loadJournal();
     void refreshQueued();
@@ -325,6 +505,7 @@
         photo: sentPhoto
       };
       if (body.entry && askedFor === cropId) entries = [body.entry, ...entries];
+      if (body.entry) void saveNewCopy(body.entry);
       photo = null;
       chip = null;
       typed = '';
@@ -380,6 +561,10 @@
     ).catch(() => null);
     if (res?.ok) {
       entries = entries.filter((e) => e.id !== entry.id);
+      const owner = ownerId;
+      void import('$lib/client/journalCopyStore')
+        .then((s) => s.forgetJournalCopy(entry.id, owner))
+        .catch(() => undefined);
     } else {
       noteMessage =
         res?.status === 403 ? tr('cardsui.photo.ownerDelete') : tr('cardsui.photo.deleteFailed');
@@ -472,6 +657,7 @@
               src={shown.photo}
               marks={shown.answer.marks}
               steps={shown.answer.steps ?? []}
+              {problemTips}
             />
           {:else if shown.answer.text}
             <p class="ai-text">{shown.answer.text}</p>
@@ -548,6 +734,42 @@
         </ul>
       {/if}
 
+      {#if (journalState === 'offline' || journalState === 'error') && savedCopies.length}
+        <section class="saved-copies" aria-labelledby="journal-saved-heading">
+          <h4 id="journal-saved-heading">{tr('herbsh.copy.heading')}</h4>
+          <ul class="entries" data-testid="journal-saved-copies">
+            {#each savedCopies as c (c.entry.id)}
+              <li class="entry" data-testid="journal-saved-copy">
+                <div class="entry-head">
+                  <span class="when">{formatInstant(c.entry.createdAt, prefs, 'datetime')}</span>
+                  <Provenance source={PROV_BY_ENTRY[c.entry.provenance]} compact />
+                </div>
+                <p class="hint" role="note" data-testid="journal-saved-note">
+                  {tr('herbsh.copy.savedFrom', {
+                    date: formatInstant(c.savedAt, prefs, 'datetime')
+                  })}
+                </p>
+                <PhotoMarks
+                  src={c.photo}
+                  marks={c.entry.answer.marks}
+                  steps={c.entry.answer.steps}
+                  {problemTips}
+                />
+                {#if c.entry.text}<p>{c.entry.text}</p>{/if}
+                <button
+                  type="button"
+                  class="btn ghost small"
+                  aria-label={tr('herbsh.print.openFor', {
+                    date: formatInstant(c.entry.createdAt, prefs, 'datetime')
+                  })}
+                  data-testid="photo-print-open"
+                  onclick={() => openPrintCopy(c)}>{tr('herbsh.print.open')}</button
+                >
+              </li>
+            {/each}
+          </ul>
+        </section>
+      {/if}
       {#if journalState === 'offline'}
         <p class="hint">{tr('cardsui.photo.jOffline')}</p>
       {:else if journalState === 'error'}
@@ -568,7 +790,17 @@
                   src={journalPhotoUrl(cropId, e.id)}
                   marks={e.answer.marks}
                   steps={e.answer.steps ?? []}
+                  {problemTips}
                 />
+                <button
+                  type="button"
+                  class="btn ghost small"
+                  aria-label={tr('herbsh.print.openFor', {
+                    date: formatInstant(e.createdAt, prefs, 'datetime')
+                  })}
+                  data-testid="photo-print-open"
+                  onclick={() => openPrintEntry(e)}>{tr('herbsh.print.open')}</button
+                >
               {:else if e.hasPhoto && cropId}
                 <img
                   class="thumb"
@@ -620,6 +852,34 @@
       {/if}
     </section>
   </section>
+
+  <Modal
+    open={printDraft !== null}
+    onClose={() => (printDraft = null)}
+    title={tr('herbsh.print.title')}
+  >
+    {#if printDraft}
+      <fieldset class="paper">
+        <legend>{tr('cardsui.paper')}</legend>
+        {#each PHOTO_PRINT_LAYOUTS as l (l)}
+          <label class="opt">
+            <input type="radio" name="photo-print-layout" value={l} bind:group={printLayout} />
+            <span class="opt-label">{tr(PRINT_LAYOUT_KEYS[l].label)}</span>
+            <span class="hint">{tr(PRINT_LAYOUT_KEYS[l].hint)}</span>
+          </label>
+        {/each}
+      </fieldset>
+      <PhotoMarksPrint job={{ ...printDraft, layout: printLayout }} {prefs} preview />
+    {/if}
+    {#snippet footer()}
+      <button type="button" class="btn ghost" onclick={() => (printDraft = null)}
+        >{tr('cardsui.photo.cancel')}</button
+      >
+      <button type="button" class="btn primary" data-testid="photo-print-go" onclick={printNow}
+        >{tr('herbsh.print.go')}</button
+      >
+    {/snippet}
+  </Modal>
 {/if}
 
 <style>
@@ -836,5 +1096,45 @@
     flex-direction: column;
     gap: var(--space-2);
     margin-top: var(--space-2);
+  }
+  .saved-copies {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .saved-copies h4 {
+    margin: 0;
+    font-size: var(--font-size-body);
+  }
+  .paper {
+    border: 0;
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .paper legend {
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+  }
+  .opt {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: var(--space-2);
+    align-items: center;
+    min-height: 48px;
+    cursor: pointer;
+  }
+  .opt input {
+    width: 24px;
+    height: 24px;
+    margin: 0;
+  }
+  .opt-label {
+    font-weight: 600;
+  }
+  .opt .hint {
+    grid-column: 2;
   }
 </style>

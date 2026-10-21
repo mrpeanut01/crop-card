@@ -4,7 +4,11 @@ You are working in a local checkout of `mrpeanut01/crop-card` (SvelteKit + TypeS
 
 Read `CLAUDE.md` first. Invariants 2 (plugins are data only), 7 (AI assists, never gates) and 9 (bilingual) matter most here, and the "Crop agronomy gaps" follow-up describes the overlap rule (#551) these tasks reuse.
 
-## Status after the Phase 37 close-out (2026-10-21, cluster D1)
+## Status after the Phase 37 close-out (2026-10-21)
+
+The close-out is integrated and #867 is closed: every Phase 37 herb field is filled or recorded, the vinegar infusion rows (CO-4) and the optional `sunNeed` (CO-5) ship, and a gap reopens only through a new issue when a qualifying page appears. Cluster D2's additions to the block below: `preserving.infuse` rows need a `medium` (`oil` or `vinegar`) and a safety quote under `preserving.infuse.<medium>.safety` (the oil quote states botulism, refrigeration and a time limit; the vinegar quote states commercially produced vinegar, discard on mold or fermentation and cool storage), each row's quote names its own medium; `sunNeed` needs a phrase from `SUN_NEED_PHRASES` in a passage naming the herb on an allowed host, and the sunniest reading across sources is stored (per-herb table in [`docs/design/phase-37-followups/close-out-d2.md`](../design/phase-37-followups/close-out-d2.md)); bee balm, chervil, hyssop and calendula carry `sunNeed.notRecorded`.
+
+### Cluster D1 (gates and data)
 
 Close-out rulings CO-1 to CO-9 are in `docs/design/PHASE_37_HERB_GARDEN_PLAN.md`; the per-herb outcome is in [`docs/design/phase-37-followups/close-out-d1.md`](../design/phase-37-followups/close-out-d1.md). Read this block before the older ones below.
 

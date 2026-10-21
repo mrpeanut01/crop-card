@@ -2,7 +2,7 @@
   "pluginId": "oregano-greek",
   "type": "crop",
   "displayName": "Oregano — Greek (Origanum vulgare hirtum)",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "cropFamily": "herb-culinary",
   "waterNeed": "low",
   "daysToMaturity": {
@@ -24,6 +24,10 @@
     {
       "method": "fresh",
       "suitability": "good"
+    },
+    {
+      "method": "dry",
+      "suitability": "fair"
     },
     {
       "method": "freeze",

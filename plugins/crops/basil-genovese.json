@@ -2,7 +2,7 @@
   "pluginId": "basil-genovese",
   "type": "crop",
   "displayName": "Basil — Genovese",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "cropFamily": "herb-culinary",
   "waterNeed": "high",
   "daysToMaturity": {
@@ -43,6 +43,10 @@
     {
       "method": "fresh",
       "suitability": "good"
+    },
+    {
+      "method": "dry",
+      "suitability": "fair"
     },
     {
       "method": "freeze",

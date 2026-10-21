@@ -1676,11 +1676,12 @@
       "note": "Phase 37C (#867). The page gives a full drying procedure for the bulb (\"Package dried fennel in moisture/vapor proof containers\"), consistent with USDA recommendations."
     },
     "preserving.freeze.notRecorded": {
-      "reason": "Sources disagree on freezing the bulb, so freeze stays empty: WSU Extension Skagit County gives a blanch-and-freeze method for the bulb; Purdue FoodLink (this quote) says freezing changes its texture (it says stalks and fronds \"freeze well\").",
+      "reason": "Sources disagree on freezing the bulb, so freeze stays empty (CO-1 applied 2026-10-21). WSU Extension Skagit County gives a blanch-and-freeze method for the bulb, which reads good (F867-3). Purdue FoodLink says \"Due to its high water content, freezing the bulb will change its texture.\" That caution carries none of the gate's fair or poor words, so no lower rating can ship from it, and a good row would be a higher rating than the caution allows (it says stalks and fronds \"freeze well\"). Purdue FoodLink was read on 2026-10-20 and did not load on 2026-10-21.",
       "checked": [
+        "https://extension.wsu.edu/skagit/2025/07/25/skagit-food-preservation-fennel/",
         "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf"
       ],
-      "date": "2026-10-20",
+      "date": "2026-10-21",
       "quotes": [
         {
           "url": "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf",
@@ -2627,19 +2628,6 @@
       "quote": "Oils provide an anaerobic environment, and when combined with low-acid food matrices such as garlic and herbs, this provides the perfect conditions for specific bacteria to thrive. Clostridium botulinum specifically is of concern in infused oils.",
       "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
     },
-    "preserving.dry.notRecorded": {
-      "reason": "Sources disagree on how well oregano dries, so dry stays empty: OSU HYG-5360 lists oregano under \"Best Herbs for Drying\", while NCHFP (this quote) groups it with the tender-leaf herbs that will mold if not dried quickly.",
-      "checked": ["https://nchfp.uga.edu/how/dry/recipes/herbs"],
-      "date": "2026-10-20",
-      "quotes": [
-        {
-          "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
-          "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
-          "date": "2014 (accessed 2026-10-17)",
-          "quote": "Tender-Leaf Herbs — Basil, oregano, tarragon, lemon balm and the mints have a high moisture content and will mold if not dried quickly."
-        }
-      ]
-    },
     "lifecycle": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
       "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
@@ -2700,6 +2688,13 @@
       "date": "Reviewed Dec. 2021 (accessed 2026-10-20)",
       "quote": "Fresh oregano is unequaled for flavor and aroma enhancement in Italian dishes.",
       "note": "Phase 37C (#867)."
+    },
+    "preserving.dry": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-21)",
+      "quote": "Tender-Leaf Herbs — Basil, oregano, tarragon, lemon balm and the mints have a high moisture content and will mold if not dried quickly.",
+      "note": "CO-1 (2026-10-21): the least favourable rating a counted quote states, in the gate's words (\"will mold\"). Dry it quickly: NCHFP says the tender-leaf herbs \"will mold if not dried quickly\". OSU HYG-5360 lists oregano under \"Best Herbs for Drying\" and UMass names it among \"The best culinary herbs for air drying\"; both rate it higher. Re-read on the pages 2026-10-21."
     }
   },
   "ornamental-corn-earth-tones-dent-raw-untreated-non-gmo": {
@@ -7377,33 +7372,19 @@
       "quote": "Some herbs are best used fresh— such as burnet, chervil, and parsley—because they have little flavor once dried or frozen.",
       "note": "Phase 37C (#867)."
     },
-    "preserving.freeze.notRecorded": {
-      "reason": "Sources disagree on how well chervil freezes, so freeze stays empty: UMass (this quote) and Kentucky State (\"retain more flavor if frozen and not dried\") say freezing works; CSU 9.335 says chervil is best used fresh \"because they have little flavor once dried or frozen\".",
-      "checked": [
-        "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation"
-      ],
-      "date": "2026-10-20",
-      "quotes": [
-        {
-          "url": "https://www.umass.edu/agriculture-food-environment/home-lawn-garden/fact-sheets/herb-preservation",
-          "publisher": "UMass Amherst Center for Agriculture, Food, and the Environment, Home Lawn and Garden: Herb Preservation",
-          "date": "Last Updated March 26, 2018; accessed 2026-10-20",
-          "quote": "Freezing provides the best flavor for parsley, cilantro, chervil, sweet cicely, chives, tarragon, dill and fennel."
-        }
-      ]
+    "preserving.dry": {
+      "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-09/335846.pdf",
+      "publisher": "Colorado State University Extension Fact Sheet No. 9.335, Herbs: Preserving and Using (Bunning, Woo and Kendall), copy hosted by UC ANR",
+      "date": "revised 10/14; accessed 2026-10-21",
+      "quote": "Some herbs are best used fresh— such as burnet, chervil, and parsley—because they have little flavor once dried or frozen.",
+      "note": "CO-1 (2026-10-21): the least favourable rating a counted quote states for drying as a whole, in the gate's words (\"best used fresh\"). Higher: the same fact sheet's Table 3 (\"Dry or freeze as for basil\") and Illinois Extension (\"Air dry and store leaves in sealed containers\"). Re-read on the page 2026-10-21."
     },
-    "preserving.dry.notRecorded": {
-      "reason": "Sources disagree on drying chervil, so dry stays empty: CSU 9.335 (this quote) says it has little flavor once dried, while its own Table 3 says \"Dry or freeze as for basil\" and Illinois Extension says \"Air dry and store leaves in sealed containers\".",
-      "checked": ["https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-09/335846.pdf"],
-      "date": "2026-10-20",
-      "quotes": [
-        {
-          "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-09/335846.pdf",
-          "publisher": "Colorado State University Extension Fact Sheet No. 9.335, Herbs: Preserving and Using (Bunning, Woo and Kendall), copy hosted by UC ANR",
-          "date": "revised 10/14; accessed 2026-10-20",
-          "quote": "Some herbs are best used fresh— such as burnet, chervil, and parsley—because they have little flavor once dried or frozen."
-        }
-      ]
+    "preserving.freeze": {
+      "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-09/335846.pdf",
+      "publisher": "Colorado State University Extension Fact Sheet No. 9.335, Herbs: Preserving and Using (Bunning, Woo and Kendall), copy hosted by UC ANR",
+      "date": "revised 10/14; accessed 2026-10-21",
+      "quote": "Some herbs are best used fresh— such as burnet, chervil, and parsley—because they have little flavor once dried or frozen.",
+      "note": "CO-1 (2026-10-21): the least favourable rating a counted quote states for freezing as a whole, in the gate's words (\"best used fresh\"). Higher: UMass (\"Freezing provides the best flavor for parsley, cilantro, chervil, sweet cicely, chives, tarragon, dill and fennel.\"), Kentucky State (\"retain more flavor if frozen and not dried\", a comparison, F867-4) and the fact sheet's own Table 3. Re-read on the pages 2026-10-21."
     }
   },
   "endive-frisee": {
@@ -7711,11 +7692,12 @@
       "note": "Phase 37C (#867). The page gives a full drying procedure for the bulb (\"Package dried fennel in moisture/vapor proof containers\"), consistent with USDA recommendations."
     },
     "preserving.freeze.notRecorded": {
-      "reason": "Sources disagree on freezing the bulb, so freeze stays empty: WSU Extension Skagit County gives a blanch-and-freeze method for the bulb; Purdue FoodLink (this quote) says freezing changes its texture (it says stalks and fronds \"freeze well\").",
+      "reason": "Sources disagree on freezing the bulb, so freeze stays empty (CO-1 applied 2026-10-21). WSU Extension Skagit County gives a blanch-and-freeze method for the bulb, which reads good (F867-3). Purdue FoodLink says \"Due to its high water content, freezing the bulb will change its texture.\" That caution carries none of the gate's fair or poor words, so no lower rating can ship from it, and a good row would be a higher rating than the caution allows (it says stalks and fronds \"freeze well\"). Purdue FoodLink was read on 2026-10-20 and did not load on 2026-10-21.",
       "checked": [
+        "https://extension.wsu.edu/skagit/2025/07/25/skagit-food-preservation-fennel/",
         "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf"
       ],
-      "date": "2026-10-20",
+      "date": "2026-10-21",
       "quotes": [
         {
           "url": "https://extension.purdue.edu/foodlink/includes/pubs/Print1perpaper/Vegetables/FENNEL.pdf",
@@ -8897,19 +8879,6 @@
       "quote": "Oils provide an anaerobic environment, and when combined with low-acid food matrices such as garlic and herbs, this provides the perfect conditions for specific bacteria to thrive. Clostridium botulinum specifically is of concern in infused oils.",
       "note": "Phase 37C food-safety line for infuse (R-6). The plugin note paraphrases this page: \"Since acidification is not used to prevent bacteria from growing, infused oils made with this method must be kept in the refrigerator and discarded 4 days after being made.\""
     },
-    "preserving.dry.notRecorded": {
-      "reason": "Sources disagree on how well basil dries, so dry stays empty: Illinois Extension says \"Basil is easily dried for storing and future use\"; NCHFP and NC State say basil will (or may) mold if not dried quickly; UMN (this quote) says the leaves turn brown when air-dried.",
-      "checked": ["https://extension.umn.edu/vegetables/growing-basil"],
-      "date": "2026-10-20",
-      "quotes": [
-        {
-          "url": "https://extension.umn.edu/vegetables/growing-basil",
-          "publisher": "University of Minnesota Extension, Growing basil",
-          "date": "Reviewed in 2026 (accessed 2026-10-17)",
-          "quote": "Basil leaves turn an unpleasant brown color when air-dried. Freezing is a better method."
-        }
-      ]
-    },
     "lifecycle": {
       "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
       "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University), 426-420 Herbs",
@@ -8963,6 +8932,13 @@
       "date": "New 1/85 (accessed 2026-10-20)",
       "quote": "Where basil is grown for its dried leaves and the extraction of essential or volatile oil, it is cut just prior to the appearance of flowers.",
       "note": "#867 drying hint (rulings DH-1 to DH-8 in docs/design/phase-37-followups/drying-hint.md). Fetched with curl on 2026-10-20 and checked word for word, as a normalised substring and with the source-drift checker's quoteFound. A commercial production guide; the University of Maryland Extension basil page agrees for the home garden: \"Harvesting and using basil ... It is best to cut leaves for drying just before flowers open.\" (https://extension.umd.edu/resource/basil, updated February 25, 2026). Timing only: how well basil dries stays not recorded (preserving.dry.notRecorded)."
+    },
+    "preserving.dry": {
+      "url": "https://nchfp.uga.edu/how/dry/recipes/herbs",
+      "publisher": "National Center for Home Food Preservation (University of Georgia), Drying Herbs, from So Easy to Preserve, 6th ed.",
+      "date": "2014 (accessed 2026-10-21)",
+      "quote": "Tender-Leaf Herbs — Basil, oregano, tarragon, lemon balm and the mints have a high moisture content and will mold if not dried quickly.",
+      "note": "CO-1 (2026-10-21): the least favourable rating a counted quote states for drying as a whole, in the gate's words (\"will mold\"). NC State agrees: \"Basil, tarragon, and mints may mold and discolor if not dried quickly.\" Illinois Extension rates it higher (\"Basil is easily dried for storing and future use\"). UMN's \"Basil leaves turn an unpleasant brown color when air-dried. Freezing is a better method.\" ties the failure to air-drying and compares methods, so it is a note, not a rating; OSU HYG-5360 likewise names basil only as a tender herb for freezing. Re-read on the pages 2026-10-21."
     }
   },
   "cilantro-santo": {

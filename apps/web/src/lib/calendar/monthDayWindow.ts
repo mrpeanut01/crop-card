@@ -1,15 +1,17 @@
 import type { MonthDay } from '../plugins/schemas';
+import { zonedDayStartMs } from '$lib/exports/dateRange';
 
 export interface MonthDayWindow {
   start: MonthDay;
   end: MonthDay;
 }
 
-/** `local` counts days in the process time zone, `utc` in UTC. `endOfDay`
+/** `local` counts days in the process time zone, `utc` in UTC and
+ *  `{ timeZone }` in that IANA zone. `endOfDay`
  *  ends the window 1 ms before the day after `end`; `startOfDay` ends it at
  *  the start of `end`. */
 export interface MonthDayWindowBasis {
-  zone: 'local' | 'utc';
+  zone: 'local' | 'utc' | { timeZone: string };
   end: 'endOfDay' | 'startOfDay';
 }
 
@@ -25,7 +27,9 @@ function dayStartMs(
   month: number,
   day: number
 ): number {
-  return zone === 'utc' ? Date.UTC(year, month - 1, day) : new Date(year, month - 1, day).getTime();
+  if (zone === 'utc') return Date.UTC(year, month - 1, day);
+  if (zone === 'local') return new Date(year, month - 1, day).getTime();
+  return zonedDayStartMs(year, month, day, zone.timeZone);
 }
 
 /** The yearly window that starts in `year`, as epoch ms. */

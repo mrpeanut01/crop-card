@@ -25,6 +25,7 @@ import {
   projectPerennialStages,
   projectPerennialHarvestTargets,
   projectHarvestSeason,
+  dayOfYearStartMs,
   type ProjectedStage
 } from './stageProjection';
 import { projectCropStages } from './cropStages';
@@ -35,7 +36,7 @@ import {
   type ShadeTarget
 } from './shadeModel';
 import { dayOfYear } from './solar';
-import { formatCalendarDate } from '$lib/prefs';
+import { formatCalendarDate, ymdInZone } from '$lib/prefs';
 import { geojsonCentroid } from '$lib/geo/area';
 import { bringIndoorsEvents, restartEvents, type HerbEventContext } from './herbEvents';
 
@@ -143,6 +144,12 @@ export interface EventContext {
    * and `restart` events.
    */
   herb?: HerbEventContext;
+  /**
+   * IANA zone that yearly windows (seasonal tasks, perennial stages, sourced
+   * harvest seasons) start their days in and take their years from.
+   * Defaults to the process zone.
+   */
+  timeZone?: string;
 }
 
 /**
@@ -473,14 +480,14 @@ export function eventsForPlanting(
     // also explicitly declare `agronomy.lifecycle: 'perennial'` to opt in
     // outside the family default set.
     const years = agronomy.isPerennial
-      ? orchardSeasonYears(plant, ctx.now)
-      : [new Date(plant).getFullYear()];
-    const plantYear = new Date(plant).getFullYear();
+      ? orchardSeasonYears(plant, ctx.now, ctx.timeZone)
+      : [yearOf(plant, ctx.timeZone)];
+    const plantYear = yearOf(plant, ctx.timeZone);
     for (const year of years) {
       for (const task of crop.seasonalTasks) {
         if (task.category === 'plant' && year === plantYear) continue;
         const start = task.dayOfYear
-          ? dayOfYearToMs(year, task.dayOfYear)
+          ? dayOfYearStartMs(year, task.dayOfYear, ctx.timeZone)
           : plant + (task.daysAfterPlanting ?? 0) * DAY_MS;
         events.push({
           kind: 'seasonal-task',
@@ -512,16 +519,16 @@ export function eventsForPlanting(
   // stage (and gives stone fruit, which has no template, a window).
   const harvestSeason = agronomy.isPerennial ? crop.harvestSeason : undefined;
   if (harvestSeason) {
-    for (const year of orchardSeasonYears(plant, ctx.now)) {
-      const w = projectHarvestSeason(harvestSeason, year);
+    for (const year of orchardSeasonYears(plant, ctx.now, ctx.timeZone)) {
+      const w = projectHarvestSeason(harvestSeason, year, ctx.timeZone);
       if (w.endMs < bearingFrom) continue;
       perennialHarvestTargets.push({ ...w, label: 'Harvest', sourced: true });
     }
   }
   if (perennialTemplate) {
-    const years = orchardSeasonYears(plant, ctx.now);
+    const years = orchardSeasonYears(plant, ctx.now, ctx.timeZone);
     for (const year of years) {
-      const projP = projectPerennialStages(perennialTemplate, year);
+      const projP = projectPerennialStages(perennialTemplate, year, ctx.timeZone);
       for (const s of projP) {
         events.push({
           kind: 'stage-window',
@@ -640,7 +647,7 @@ export function eventsForPlanting(
       varietyDisplayName: planting.varietyDisplayName
     };
     for (const e of [
-      ...bringIndoorsEvents(planting, ctx.herb, orchardSeasonYears(plant, ctx.now)),
+      ...bringIndoorsEvents(planting, ctx.herb, orchardSeasonYears(plant, ctx.now, ctx.timeZone)),
       ...restartEvents(planting, crop, ctx.herb, ctx.blockPlantings)
     ]) {
       events.push({ ...base, ...e });
@@ -653,9 +660,17 @@ export function eventsForPlanting(
 /** For a perennial planting at `plantedAtMs`, the years we render seasonal
  *  tasks and stages for: three years starting with last year (so a window
  *  that runs into January stays visible), never before the planting year. */
-function orchardSeasonYears(plantedAtMs: number, now: number = Date.now()): number[] {
-  const start = Math.max(new Date(plantedAtMs).getFullYear(), new Date(now).getFullYear() - 1);
+function orchardSeasonYears(
+  plantedAtMs: number,
+  now: number = Date.now(),
+  timeZone?: string
+): number[] {
+  const start = Math.max(yearOf(plantedAtMs, timeZone), yearOf(now, timeZone) - 1);
   return [start, start + 1, start + 2];
+}
+
+function yearOf(ms: number, timeZone?: string): number {
+  return timeZone ? Number(ymdInZone(ms, timeZone).slice(0, 4)) : new Date(ms).getFullYear();
 }
 
 function nextPlantingAfter(
@@ -667,14 +682,6 @@ function nextPlantingAfter(
   return (ctx.blockPlantings ?? [])
     .filter((p) => p.id !== planting.id && p.plantingDate != null && p.plantingDate > plant)
     .sort((a, b) => a.plantingDate! - b.plantingDate!)[0];
-}
-
-function dayOfYearToMs(year: number, dayOfYear: number): number {
-  // Day 1 = January 1 at local midnight.
-  const d = new Date(year, 0, 1);
-  d.setDate(d.getDate() + (dayOfYear - 1));
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
 }
 
 /**
@@ -822,9 +829,11 @@ function buildEmitterFromShadeSource(source: ShadeSource, year: number): ShadeEm
   // sources (band only shows when there's meaningful canopy). Evergreens get
   // the full year via the default fall-through in shadeModel.clampWindow.
   const canopyStartMs = source.isDeciduous
-    ? dayOfYearToMs(year, source.leafOnDayOfYear)
+    ? dayOfYearStartMs(year, source.leafOnDayOfYear)
     : undefined;
-  const canopyEndMs = source.isDeciduous ? dayOfYearToMs(year, source.leafOffDayOfYear) : undefined;
+  const canopyEndMs = source.isDeciduous
+    ? dayOfYearStartMs(year, source.leafOffDayOfYear)
+    : undefined;
   return {
     id: `source:${source.id}`,
     kind: source.kind,

@@ -20,6 +20,7 @@ import type {
 } from '$lib/plugins/schemas';
 import type { PerennialStageTemplate } from '$lib/plugins/growthStageTemplates';
 import { projectMonthDayWindow, type MonthDayWindowBasis } from './monthDayWindow';
+import { zonedDayStartMs } from '$lib/exports/dateRange';
 
 const HARVEST_SEASON_BASIS: MonthDayWindowBasis = { zone: 'local', end: 'endOfDay' };
 
@@ -131,14 +132,15 @@ export function projectHarvestTargets(
  */
 export function projectPerennialStages(
   template: PerennialStageTemplate,
-  year: number
+  year: number,
+  timeZone?: string
 ): ProjectedStage[] {
   const harvestCodes = new Set([template.harvestStageCode]);
   return template.stages.map((s) => ({
     code: s.code,
     name: s.name,
-    startMs: dayOfYearToMs(year, s.dayOfYearStart),
-    endMs: dayOfYearToMs(year, s.dayOfYearEnd) + 24 * 60 * 60 * 1000 - 1,
+    startMs: dayOfYearStartMs(year, s.dayOfYearStart, timeZone),
+    endMs: dayOfYearStartMs(year, s.dayOfYearEnd, timeZone) + 24 * 60 * 60 * 1000 - 1,
     inspect: s.inspect,
     bodyKind: s.bodyKind,
     isHarvestTargetStage: harvestCodes.has(s.code)
@@ -163,16 +165,24 @@ export function projectPerennialHarvestTargets(
 }
 
 /** #686: a sourced harvest season (month and day) as one window starting in
- *  `year`, local midnight to the end of the last day. An end before the start
- *  runs into the next year. */
+ *  `year`, midnight in `timeZone` (else the process zone) to the end of the
+ *  last day. An end before the start runs into the next year. */
 export function projectHarvestSeason(
   season: HarvestSeason,
-  year: number
+  year: number,
+  timeZone?: string
 ): { startMs: number; endMs: number } {
-  return projectMonthDayWindow(season, year, HARVEST_SEASON_BASIS);
+  return projectMonthDayWindow(
+    season,
+    year,
+    timeZone ? { ...HARVEST_SEASON_BASIS, zone: { timeZone } } : HARVEST_SEASON_BASIS
+  );
 }
 
-function dayOfYearToMs(year: number, dayOfYear: number): number {
+/** Midnight starting day `dayOfYear` (Jan 1 = 1) of `year` in `timeZone`,
+ *  else in the process zone. */
+export function dayOfYearStartMs(year: number, dayOfYear: number, timeZone?: string): number {
+  if (timeZone) return zonedDayStartMs(year, 1, dayOfYear, timeZone);
   const d = new Date(year, 0, 1);
   d.setDate(d.getDate() + (dayOfYear - 1));
   d.setHours(0, 0, 0, 0);

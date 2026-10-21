@@ -225,6 +225,7 @@ One PR per open issue, built in parallel worktrees; rulings and as-built notes p
 - [#875](https://github.com/mrpeanut01/crop-card/pull/875) for #869: `problem` marks, the numbered print sheet and offline copies of marked entries, superseding R-13's deferral of `problem`, R-14's deferral of the print layout and R-23's "no Dexie copy" ([`869.md`](phase-37-followups/869.md)).
 - [#876](https://github.com/mrpeanut01/crop-card/pull/876) for #870: waterer gallons with several targets, undo a skip, "running since" and the stored brief transcript ([`870.md`](phase-37-followups/870.md)).
 - [#877](https://github.com/mrpeanut01/crop-card/pull/877) for #867: the second herb data pass ([`867.md`](phase-37-followups/867.md)).
+- [#879](https://github.com/mrpeanut01/crop-card/pull/879) for #867: the per-method drying hint, `harvestTiming` on basil, rosemary and spearmint ([`drying-hint.md`](phase-37-followups/drying-hint.md)).
 
 ### Still open after 37
 

@@ -174,7 +174,7 @@ pnpm db:migrate                                        # apply migrations
 
 - Finished work goes on its own branch off `main` → commit → PR → auto-merge (squash) once CI is green. Don't ask first.
 - Merging to `main` deploys automatically: `ci` passes on the push → `.github/workflows/deploy.yml` builds the image (with `BUILD_SHA`) and runs `scripts/deploy-azure.sh --apply --ci`. That's the only deploy logic; the manual `./scripts/deploy-azure.sh --apply` runs the same path. The workflow succeeds only once production's `/api/health` reports the merged SHA as `version`.
-- After a merge, run `./scripts/watch-deploy.sh <pr-number>` in the background. It waits for the merge, CI on `main` and the deploy, confirms the live `version`, then prints the `✅ LIVE IN PRODUCTION` banner. Relay that banner in chat only when the script prints it. A green workflow or a moved `main` is not "live". If it exits non-zero, report the reason and fix it.
+- After a merge, run `./scripts/watch-deploy.sh <pr-number>` in the background. It waits for the merge, CI on `main` and the deploy, confirms the live `version`, then prints the `✅ LIVE IN PRODUCTION` banner. Relay that banner in chat only when the script prints it. A green workflow or a moved `main` is not "live". If it exits non-zero, report the reason and fix it. Where a proxy refuses the tunnel to production (a Claude Code cloud session), it prints `✅  LIVE IN PRODUCTION (health check by the deploy workflow)` instead once the deploy run titled with the commit (or a newer one containing it) is green, and that banner counts as live too, because the deploy workflow only succeeds after production's `/api/health` reports the deployed SHA.
 
 ## Code style
 

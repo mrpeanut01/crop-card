@@ -1,8 +1,11 @@
 name: deploy
+run-name: deploy ${{ github.event.workflow_run.head_sha || github.sha }}
 
 # Deploys main to Azure Container Apps after `ci` passes on it, and succeeds
 # only when the live app's /api/health reports the deployed SHA.
-# scripts/watch-deploy.sh follows a merge through to that point.
+# scripts/watch-deploy.sh follows a merge through to that point. The run title
+# names the deployed SHA because the API labels a workflow_run run with main's
+# newest commit instead; watch-deploy.sh reads it when it cannot reach the app.
 #
 # Auth is GitHub OIDC → the `cropcard-github-deploy` Entra app, federated to
 # this repo's `production` environment (no Azure credentials in GitHub). App

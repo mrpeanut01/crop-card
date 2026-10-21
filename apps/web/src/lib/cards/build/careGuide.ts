@@ -165,6 +165,13 @@ export function buildCareGuideCard(
   }
   const lifecycle = lifecycleFact(snapshot, cropPluginId, opts);
   if (lifecycle) facts.push(lifecycle);
+  if (plugin.sunNeed) {
+    facts.push({
+      label: tr('cards.fact.sun'),
+      value: tr(`cards.fact.sun.${plugin.sunNeed}`),
+      provenance: 'plugin'
+    });
+  }
   if (guide?.seedDepthIn) {
     facts.push({
       label: tr('cards.fact.seedDepth'),

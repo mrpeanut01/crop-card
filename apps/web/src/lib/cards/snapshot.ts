@@ -270,6 +270,17 @@ export interface SnapshotCropPlugin {
   growthHabit?: 'woody' | 'clumping';
   /** #867: sourced cutting stage per preserving method. */
   harvestTiming?: CropHarvestTiming[];
+  /** Close-out CO-10: how the herb keeps (the Planting card's goal lines),
+   *  each infuse row with its medium. */
+  preserving?: Array<{
+    method: 'fresh' | 'dry' | 'freeze' | 'freeze-dry' | 'infuse';
+    suitability: 'good' | 'fair' | 'poor';
+    medium?: 'oil' | 'vinegar';
+  }>;
+  /** Phase 37E: sourced watering need. */
+  waterNeed?: 'low' | 'medium' | 'high';
+  /** Close-out CO-5: sourced sun need (Care Guide fact). */
+  sunNeed?: 'full' | 'part' | 'shade';
 }
 
 export interface SnapshotTreeSizeClass {

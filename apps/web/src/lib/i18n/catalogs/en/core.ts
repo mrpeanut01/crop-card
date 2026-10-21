@@ -42,6 +42,10 @@ export const enCore = {
     'You can change it any time in Settings or with the EN / ES button at the top.',
 
   'core.docTitle': '{title} · CropCard',
+  'core.at.one': 'at {time}',
+  'core.at.other': 'at {time}',
+  'core.clock.one': '{time}',
+  'core.clock.other': '{time}',
   'account.pageTitle': 'Account & sign-in · CropCard',
   'account.title': 'Account & sign-in',
   'account.kicker': 'Owner profile',

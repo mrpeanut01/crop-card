@@ -30,10 +30,10 @@ function fakePlugin(opts: {
 // fixtures never become stale as the calendar rolls forward.
 const PLAN_YEAR = new Date().getFullYear() + 1;
 function lastSpring(year: number = PLAN_YEAR) {
-  return new Date(year, 3, 15).getTime(); // Apr 15
+  return Date.UTC(year, 3, 15); // Apr 15
 }
 function firstFall(year: number = PLAN_YEAR) {
-  return new Date(year, 9, 15).getTime(); // Oct 15
+  return Date.UTC(year, 9, 15); // Oct 15
 }
 
 describe('hardinessOf', () => {
@@ -174,7 +174,7 @@ describe('scheduleCandidacy windows', () => {
       id: 'c1',
       blockId: 'b1',
       cropPluginId: 'other',
-      plantingDate: new Date(PLAN_YEAR, 4, 1).getTime(), // May 1 of plan year
+      plantingDate: Date.UTC(PLAN_YEAR, 4, 1), // May 1 of plan year
       status: 'planned'
     } as unknown as Crop;
     const otherPlug = fakePlugin({ id: 'other', family: 'leafy-green', dtm: [40, 60] });
@@ -205,7 +205,7 @@ describe('scheduleCandidacy windows', () => {
       id: 'c1',
       blockId: 'b1',
       cropPluginId: 'other',
-      plantingDate: new Date(PLAN_YEAR, 4, 1).getTime(),
+      plantingDate: Date.UTC(PLAN_YEAR, 4, 1),
       status: 'harvested'
     } as unknown as Crop;
     const windows = scheduleCandidacy({
@@ -252,7 +252,7 @@ describe('today-floor — earliestMs never falls in the past', () => {
       year: PLAN_YEAR,
       nowMs: todayMs
     });
-    const expectedTomorrow = new Date(PLAN_YEAR, 4, 11).getTime();
+    const expectedTomorrow = Date.UTC(PLAN_YEAR, 4, 11);
     expect(windows[0].earliestMs).toBe(expectedTomorrow);
   });
 
@@ -306,7 +306,7 @@ describe('today-floor — earliestMs never falls in the past', () => {
 
 describe('formatDateMs', () => {
   it('emits YYYY-MM-DD', () => {
-    expect(formatDateMs(new Date(2026, 4, 1).getTime())).toBe('2026-05-01');
+    expect(formatDateMs(Date.UTC(2026, 4, 1))).toBe('2026-05-01');
   });
 });
 
@@ -318,7 +318,7 @@ describe('block occupancy follows the garden designer rule', () => {
       ...fakePlugin({ id: 'lettuce', family: 'leafy-green', dtm: [40, 50] }),
       archetype: 'cut-and-come-again-leafy'
     } as CropPlugin;
-    const plantedMs = new Date(PLAN_YEAR, 3, 20).getTime();
+    const plantedMs = Date.UTC(PLAN_YEAR, 3, 20);
     const existing = {
       id: 'c1',
       blockId: 'b1',
@@ -382,7 +382,7 @@ describe('scheduleCandidacy for a season that crosses the new year', () => {
   });
 
   it('still frees the bed after a continuous-harvest crop ends at the January frost', () => {
-    const planted = new Date(year, 2, 1).getTime();
+    const planted = Date.UTC(year, 2, 1);
     const busy = {
       id: 'c1',
       blockId: 'b1',
@@ -467,8 +467,8 @@ describe('scheduleCandidacy frostByBlock (Phase 32E)', () => {
   });
 
   it('skips hardiness offsets for a frost-free bed', () => {
-    const jan1 = new Date(PLAN_YEAR, 0, 1).getTime();
-    const dec31 = new Date(PLAN_YEAR, 11, 31).getTime();
+    const jan1 = Date.UTC(PLAN_YEAR, 0, 1);
+    const dec31 = Date.UTC(PLAN_YEAR, 11, 31);
     const [w] = scheduleCandidacy({
       assignments: [assignment],
       pluginIndex: { tomato },

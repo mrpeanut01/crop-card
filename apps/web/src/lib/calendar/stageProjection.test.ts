@@ -202,6 +202,15 @@ describe('projectPerennialStages', () => {
     expect(new Date(harvest.startMs).getFullYear()).toBe(2026);
   });
 
+  it('starts each stage at midnight in a passed zone', () => {
+    const utc = projectPerennialStages(grapeTemplate, 2026, 'UTC');
+    const ny = projectPerennialStages(grapeTemplate, 2026, 'America/New_York');
+    for (const [i, s] of utc.entries()) {
+      expect(s.startMs % 86_400_000).toBe(0);
+      expect([4, 5]).toContain((ny[i].startMs - s.startMs) / 3_600_000);
+    }
+  });
+
   it('marks the harvest stage as harvest-target', () => {
     const stages = projectPerennialStages(grapeTemplate, 2026);
     const targets = projectPerennialHarvestTargets(grapeTemplate, stages);

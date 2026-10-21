@@ -14,4 +14,7 @@ export interface LifecycleVerdict {
   provenance: 'plugin' | 'manual' | 'fallback';
   /** The farm zone came from the wide lookup and equals the crop's zone. */
   nearLimit?: boolean;
+  /** CO-8: a perennial with no sourced zone; whether it survives winter
+   *  here is not known, so it gets the bring-indoors reminder. */
+  winterUnknown?: boolean;
 }

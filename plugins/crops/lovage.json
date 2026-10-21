@@ -2,7 +2,7 @@
   "pluginId": "lovage",
   "type": "crop",
   "displayName": "Lovage (Levisticum officinale)",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "apiaceae",
   "waterNeed": "high",
@@ -34,6 +34,10 @@
   },
   "archetype": "cut-and-come-again-leafy",
   "preserving": [
+    {
+      "method": "fresh",
+      "suitability": "good"
+    },
     {
       "method": "dry",
       "suitability": "good"
@@ -68,5 +72,6 @@
       "title": "Remove old lovage foliage in late fall",
       "body": "In late fall, cut away the old foliage."
     }
-  ]
+  ],
+  "sunNeed": "part"
 }

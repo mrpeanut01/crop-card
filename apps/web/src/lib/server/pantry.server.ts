@@ -31,6 +31,7 @@ import { zonedDayStartMs } from '$lib/exports/dateRange';
 import { cropDisplayName } from '$lib/i18n/cropName';
 import type { HarvestScheduleResponse } from '$lib/garden/harvestScheduleApi';
 import { harvestTimingHints } from '$lib/garden/harvestTiming';
+import { pantryCutTaskText } from '$lib/garden/pantryCutTask';
 
 const DAY_MS = 86_400_000;
 const LIVE = new Set(['planned', 'active']);
@@ -240,6 +241,17 @@ export function nextCutFor(
 export async function harvestScheduleResponse(
   scope: ScheduleScope & { locale?: string | null }
 ): Promise<HarvestScheduleResponse> {
+  return (await harvestScheduleWithCutTasks(scope)).schedule;
+}
+
+/** The schedule plus, per planting, the English title and notes that
+ *  "Schedule the next cut" saves (#868), whatever `locale` the page is in. */
+export async function harvestScheduleWithCutTasks(
+  scope: ScheduleScope & { locale?: string | null }
+): Promise<{
+  schedule: HarvestScheduleResponse;
+  cutTasks: Record<string, { title: string; body: string }>;
+}> {
   const now = scope.now ?? Date.now();
   const loaded = await loadHarvestSchedule({ ...scope, now });
   const briefGoals = loadBriefGoals();
@@ -248,7 +260,11 @@ export async function harvestScheduleResponse(
   const byId = new Map(loaded.plantings.map((p) => [p.plantingId, p]));
   const name = (p: ScheduledPlanting) =>
     cropDisplayName(p.cropPluginId, p.varietyDisplayName, scope.locale);
-  return {
+  const cutTasks: Record<string, { title: string; body: string }> = {};
+  for (const p of loaded.plantings) {
+    cutTasks[p.plantingId] = pantryCutTaskText(p.varietyDisplayName.trim() || p.cropPluginId);
+  }
+  const schedule: HarvestScheduleResponse = {
     year: loaded.year,
     weeks: loaded.schedule.weeks.map((w) => ({
       week: w.week,
@@ -280,6 +296,7 @@ export async function harvestScheduleResponse(
         preserving: p.preserving.map((r) => ({
           method: r.method,
           suitability: r.suitability,
+          ...(r.medium ? { medium: r.medium } : {}),
           ...(r.note ? { note: r.note } : {})
         })),
         timing: harvestTimingHints(p, goalIds)
@@ -287,4 +304,5 @@ export async function harvestScheduleResponse(
     }),
     goals
   };
+  return { schedule, cutTasks };
 }

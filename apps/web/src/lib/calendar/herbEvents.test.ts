@@ -103,6 +103,24 @@ describe('bring-indoors (R-8)', () => {
     expect(bringIndoorsEvents(notHerb, ctx('tender-perennial'), [2026])).toEqual([]);
   });
 
+  it('a perennial whose winter survival is not known gets it as typical timing (CO-8)', () => {
+    const lemongrass = { ...rosemary, pluginId: 'lemongrass-east-indian' } as CropPlugin;
+    const events = eventsForPlanting(planting(lemongrass, plant), lemongrass, {
+      now: plant,
+      herb: { ...ctx('unknown'), winterUnknown: true }
+    }).filter((e) => e.kind === 'bring-indoors');
+    expect(events.map((e) => e.endMs)[0]).toBe(Date.UTC(2026, 9, 15));
+    expect(events[0].startMs).toBe(Date.UTC(2026, 9, 1));
+    expect(events[0].detail).toMatchObject({
+      herbEvent: 'bring-indoors',
+      provenance: 'fallback',
+      typicalTiming: true,
+      winterUnknown: true
+    });
+    expect(isTypicalTimingEvent(events[0])).toBe(true);
+    expect(bringIndoorsEvents(planting(lemongrass, plant), ctx('unknown'), [2026])).toEqual([]);
+  });
+
   it('never opens before the planting date', () => {
     const late = planting(rosemary, Date.UTC(2026, 9, 10));
     const ev = bringIndoorsEvents(late, ctx('tender-perennial'), [2026, 2027]);

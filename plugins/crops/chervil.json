@@ -2,7 +2,7 @@
   "pluginId": "chervil",
   "type": "crop",
   "displayName": "Chervil (Anthriscus cerefolium)",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "apiaceae",
   "waterNeed": "high",
@@ -37,6 +37,14 @@
     {
       "method": "fresh",
       "suitability": "good"
+    },
+    {
+      "method": "dry",
+      "suitability": "poor"
+    },
+    {
+      "method": "freeze",
+      "suitability": "poor"
     }
   ],
   "careTasks": [

@@ -20,7 +20,7 @@
   import { installNudgeWanted } from '$lib/client/offlineStorage';
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { cardViewParams, snapshotOlderThan, withoutPrintParam } from '$lib/cards/viewParams';
-  import { formatInstant } from '$lib/prefs';
+  import { atTime } from '$lib/i18n/atTime';
   import { outsideWindowNote, periodTodayHref } from '$lib/cards/build/calendar';
   import FlockQuickActions from '$lib/components/animals/FlockQuickActions.svelte';
   import SeedStartPanel from '$lib/components/cards/SeedStartPanel.svelte';
@@ -112,9 +112,7 @@
     if (older && !freshWaitOver) return;
     autoPrinted = true;
     printNotice = older
-      ? tr('cardsui.one.printingCopy', {
-          time: formatInstant(snapshot.generatedAt, prefs, 'time')
-        })
+      ? tr('cardsui.one.printingCopy', { at: atTime(snapshot.generatedAt, prefs) })
       : '';
     replaceState(withoutPrintParam(new URL(page.url.href)), page.state);
     void tick().then(print);

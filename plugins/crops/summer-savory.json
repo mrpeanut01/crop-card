@@ -48,5 +48,6 @@
       "topic": "harvest",
       "title": "Cut leafy tops when plants start to show buds."
     }
-  ]
+  ],
+  "sunNeed": "full"
 }

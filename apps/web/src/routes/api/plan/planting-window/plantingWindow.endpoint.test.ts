@@ -48,7 +48,7 @@ vi.mock('$lib/db/blocks', () => ({
   getBlock: (id: string) => (id === 'bed-covered' ? { id } : undefined)
 }));
 vi.mock('$lib/server/blockFrost.server', () => ({
-  localDay: (ms: number) => new Date(ms).toISOString().slice(0, 10),
+  calendarDay: (ms: number) => new Date(ms).toISOString().slice(0, 10),
   loadEffectiveFrostByBlock: () => ({
     'bed-covered': {
       lastSpringFrostMs: Date.parse('2027-03-25T00:00:00Z'),

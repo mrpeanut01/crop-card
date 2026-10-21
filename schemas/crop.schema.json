@@ -1593,7 +1593,7 @@
     },
     "preserving": {
       "minItems": 1,
-      "maxItems": 5,
+      "maxItems": 6,
       "type": "array",
       "items": {
         "type": "object",
@@ -1614,6 +1614,13 @@
               "good",
               "fair",
               "poor"
+            ]
+          },
+          "medium": {
+            "type": "string",
+            "enum": [
+              "oil",
+              "vinegar"
             ]
           },
           "note": {
@@ -1749,6 +1756,14 @@
         "low",
         "medium",
         "high"
+      ]
+    },
+    "sunNeed": {
+      "type": "string",
+      "enum": [
+        "full",
+        "part",
+        "shade"
       ]
     },
     "planting": {

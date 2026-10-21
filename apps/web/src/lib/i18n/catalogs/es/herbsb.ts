@@ -14,7 +14,8 @@ export const esHerbsb: Partial<Record<MessageKey, string>> = {
   'herbsb.line.biennial': 'Dos años; las hojas se cosechan el primer año.',
   'herbsb.line.noLifecycle': 'Aún no se sabe si es anual o perenne.',
   'herbsb.line.noFarmZone': 'Perenne en zonas cálidas; no se conoce la zona de esta granja.',
-  'herbsb.line.noCropZone': 'Perenne; aún no se sabe la zona más fría que resiste.',
+  'herbsb.line.noCropZone':
+    'No se sabe si sobrevive el invierno aquí; planea llevarla adentro antes de la helada.',
   'herbsb.line.nearLimit': 'Aquí está cerca de su límite.',
   'herbsb.line.notChecked': 'Aún no se ha comprobado con una fuente.',
   'herbsb.line.typedZone': 'Se usa la zona que ingresaste: {zone}.'

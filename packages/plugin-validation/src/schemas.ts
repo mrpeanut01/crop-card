@@ -934,8 +934,9 @@ export const nitrogenNeedSchema = z
 export type NitrogenNeed = z.infer<typeof nitrogenNeedSchema>;
 
 // Phase 37C: how an herb keeps and how often it can be cut. Each entry needs
-// a source under `preserving.<method>` (and `preserving.infuse.safety` for
-// infuse) or `harvestCadence` in apps/web/scripts/crop-data-sources.json.
+// a source under `preserving.<method>` (an infuse row under
+// `preserving.infuse.<medium>` and `preserving.infuse.<medium>.safety`) or
+// `harvestCadence` in apps/web/scripts/crop-data-sources.json.
 // The method list equals PRESERVING_METHODS in apps/web/src/lib/garden/preserving.ts.
 export const CROP_PRESERVING_METHODS = [
   "fresh",
@@ -946,19 +947,33 @@ export const CROP_PRESERVING_METHODS = [
 ] as const;
 export const CROP_PRESERVING_SUITABILITY = ["good", "fair", "poor"] as const;
 
+// Close-out CO-4: an infuse row says what the herb goes into. Required on
+// infuse, refused on every other method, one row per method and medium.
+export const INFUSE_MEDIA = ["oil", "vinegar"] as const;
+export type InfuseMedium = (typeof INFUSE_MEDIA)[number];
+
 export const preservingSchema = z
   .array(
     z.strictObject({
       method: z.enum(CROP_PRESERVING_METHODS),
       suitability: z.enum(CROP_PRESERVING_SUITABILITY),
+      medium: z.enum(INFUSE_MEDIA).optional(),
       note: z.string().trim().min(1).max(300).optional(),
     }),
   )
   .min(1)
-  .max(CROP_PRESERVING_METHODS.length)
-  .refine((rows) => new Set(rows.map((r) => r.method)).size === rows.length, {
-    message: "one preserving entry per method",
-  });
+  .max(CROP_PRESERVING_METHODS.length + INFUSE_MEDIA.length - 1)
+  .refine(
+    (rows) =>
+      rows.every((r) => (r.method === "infuse") === (r.medium !== undefined)),
+    { message: "an infuse entry needs a medium (oil or vinegar); no other method takes one" },
+  )
+  .refine(
+    (rows) =>
+      new Set(rows.map((r) => `${r.method}:${r.medium ?? ""}`)).size ===
+      rows.length,
+    { message: "one preserving entry per method and medium" },
+  );
 export type CropPreserving = z.infer<typeof preservingSchema>[number];
 
 export const harvestCadenceSchema = z.strictObject({
@@ -1020,6 +1035,11 @@ export type GrowthHabit = (typeof GROWTH_HABITS)[number];
 // the same value. Shown beside the watering verdict; never changes it (R-10).
 export const WATER_NEEDS = ["low", "medium", "high"] as const;
 export type WaterNeed = (typeof WATER_NEEDS)[number];
+// Close-out CO-5: how much sun the crop wants, as an extension page words
+// it. Needs a source under `sunNeed` that `sunNeedQuoteGaps` reads as the
+// same value. Ranks the garden brief's shortlist; never filters it.
+export const SUN_NEEDS = ["full", "part", "shade"] as const;
+export type SunNeed = (typeof SUN_NEEDS)[number];
 
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
@@ -1225,6 +1245,8 @@ export const cropPluginSchema = pluginBase.extend({
   // Phase 37E
   /** Sourced watering need: low (dry), medium (moderate) or high (moist). */
   waterNeed: z.enum(WATER_NEEDS).optional(),
+  /** Close-out CO-5: sourced sun need: full sun, part shade or shade. */
+  sunNeed: z.enum(SUN_NEEDS).optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

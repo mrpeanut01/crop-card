@@ -3,7 +3,7 @@ import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { cropDisplayName } from '$lib/i18n/cropName';
-import { briefSaved, harvestScheduleResponse, loadKeptTotals } from '$lib/server/pantry.server';
+import { briefSaved, harvestScheduleWithCutTasks, loadKeptTotals } from '$lib/server/pantry.server';
 
 /** Phase 37C pantry: this season's kept harvests by crop and method, the
  *  brief's goals and what the herbs will give. Owners and helpers schedule
@@ -12,7 +12,7 @@ export const load: PageServerLoad = async (event) => {
   const locale = event.locals?.locale;
   const user = currentUser(event);
   const role = user?.role ?? null;
-  const schedule = await harvestScheduleResponse({ herbsOnly: true, locale });
+  const { schedule, cutTasks } = await harvestScheduleWithCutTasks({ herbsOnly: true, locale });
   const registry = await getRegistry();
   const kept = loadKeptTotals(schedule.year).map((k) => ({
     ...k,
@@ -24,6 +24,7 @@ export const load: PageServerLoad = async (event) => {
   }));
   return {
     schedule,
+    cutTasks,
     kept,
     hasBrief: briefSaved(),
     canWrite: role !== null && canMutate(role)

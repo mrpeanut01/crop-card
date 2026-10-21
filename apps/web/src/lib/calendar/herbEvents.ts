@@ -50,6 +50,9 @@ export function isHerbEventKind(kind: unknown): kind is HerbEventKind {
 export interface HerbEventContext {
   /** The 37B verdict for this planting on this farm. */
   lifecycle: LifecycleHere | null;
+  /** CO-8: a perennial herb with no sourced zone; it gets the bring-indoors
+   *  event tagged `fallback` as typical timing. */
+  winterUnknown?: boolean;
   /** The garden brief's storage goals. */
   goals: ReadonlySet<BriefStorageGoal>;
   /** The farm's saved frost dates as `MM-DD`; a missing one uses the
@@ -101,7 +104,9 @@ function firstFallFrosts(years: readonly number[], frost: HerbEventContext['fros
  * `bring-indoors` once a season for a tender perennial herb: from
  * `BRING_INDOORS_LEAD_DAYS` before the first fall frost to the frost itself,
  * never before the planting date. `years` are the season years the caller
- * renders (the engine's perennial years).
+ * renders (the engine's perennial years). A perennial whose winter survival
+ * here is not known (CO-8) gets the same event tagged `fallback` and typical
+ * timing, since no source says it needs it.
  */
 export function bringIndoorsEvents(
   planting: Pick<PlantingRecord, 'plantingDate' | 'varietyDisplayName' | 'cropPluginId'>,
@@ -109,7 +114,8 @@ export function bringIndoorsEvents(
   years: readonly number[]
 ): HerbEventOut[] {
   if (planting.plantingDate == null) return [];
-  if (ctx.lifecycle !== 'tender-perennial' || !isHerbGardenCrop(planting.cropPluginId)) return [];
+  const tender = ctx.lifecycle === 'tender-perennial';
+  if ((!tender && !ctx.winterUnknown) || !isHerbGardenCrop(planting.cropPluginId)) return [];
   const plant = planting.plantingDate;
   const out: HerbEventOut[] = [];
   const seen = new Set<number>();
@@ -128,7 +134,9 @@ export function bringIndoorsEvents(
         herbEvent: 'bring-indoors',
         firstFallFrostMs: frostMs,
         leadDays: BRING_INDOORS_LEAD_DAYS,
-        provenance: BRING_INDOORS_LEAD_PROVENANCE,
+        ...(tender
+          ? { provenance: BRING_INDOORS_LEAD_PROVENANCE }
+          : { provenance: 'fallback', typicalTiming: true, winterUnknown: true }),
         sourceKey: BRING_INDOORS_SOURCE.key
       }
     });

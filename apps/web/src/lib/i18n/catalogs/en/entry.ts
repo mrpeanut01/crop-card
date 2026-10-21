@@ -10,7 +10,7 @@ export const enEntry = {
   'entry.demo.errBusy': 'The demo is busy right now. Try again in a few minutes.',
   'entry.demo.errOff': 'The demo is not available right now.',
   'entry.demo.banner':
-    "You're exploring a demo farm. Change anything you like; this copy is yours alone and is cleared at {time}.",
+    "You're exploring a demo farm. Change anything you like; this copy is yours alone and is cleared {at}.",
   'entry.demo.reset': 'Reset demo',
   'entry.demo.resetConfirm': 'Start over with a fresh demo farm? Your changes will be cleared.',
   'entry.demo.scratch': 'Start from scratch',

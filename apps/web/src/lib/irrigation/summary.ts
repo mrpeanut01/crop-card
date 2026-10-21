@@ -2,6 +2,7 @@
  *  English without a locale. */
 
 import { t } from '$lib/i18n';
+import { atText } from '$lib/i18n/atTime';
 import { dateTimeFormat } from '$lib/intlCache';
 import { intlLocale } from '$lib/prefs';
 import type { IrrigationSchedule } from './apiSchemas';
@@ -36,7 +37,7 @@ export function scheduleSummary(
           .join(', ');
   return t(locale, 'herbse.schedule.summary', {
     days,
-    start: startText(schedule.start),
+    at: atText(startText(schedule.start), locale, 'clock'),
     minutes: String(schedule.minutes)
   });
 }

@@ -83,7 +83,9 @@ function verdict(
  * The lifecycle is the plugin's own; a family default reads `unknown`. It
  * is tagged `plugin` only when it is the quoted value, otherwise the same
  * verdict is tagged `fallback`. A perennial is compared with the farm
- * zone: colder than the crop's coldest zone reads `tender-perennial`. The
+ * zone: colder than the crop's coldest zone reads `tender-perennial`. A
+ * perennial with no sourced zone reads `unknown` with `winterUnknown`
+ * whatever the farm zone (CO-8): nobody knows if it survives winter. The
  * owner's typed zone is trusted and tags the comparison `manual`. A farm
  * zone from the wide lookup that equals the crop's adds `nearLimit`.
  */
@@ -99,15 +101,15 @@ export function lifecycleHere(
   if (lifecycle === 'annual') return verdict('annual', 'annual', tagged, sourced);
   if (lifecycle === 'biennial') return verdict('biennial', 'biennial', tagged, sourced);
 
+  const cropZone = sourcedCropZone(plugin, sources);
+  if (!cropZone) {
+    return verdict('unknown', 'no-crop-zone', 'fallback', sourced, { winterUnknown: true });
+  }
   const farmOrder = farmZone ? zoneOrder(farmZone.zone) : null;
   if (!farmZone || farmOrder === null) {
     return verdict('unknown', 'no-farm-zone', 'fallback', sourced);
   }
   const seen = { zone: farmZone.zone, provenance: farmZone.provenance };
-  const cropZone = sourcedCropZone(plugin, sources);
-  if (!cropZone) {
-    return verdict('unknown', 'no-crop-zone', 'fallback', sourced, { farmZone: seen });
-  }
   const cropOrder = zoneOrder(cropZone)!;
   const compared: LifecycleVerdict['provenance'] = !sourced
     ? 'fallback'

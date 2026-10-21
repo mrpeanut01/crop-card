@@ -4,6 +4,32 @@ You are working in a local checkout of `mrpeanut01/crop-card` (SvelteKit + TypeS
 
 Read `CLAUDE.md` first. Invariants 2 (plugins are data only), 7 (AI assists, never gates) and 9 (bilingual) matter most here, and the "Crop agronomy gaps" follow-up describes the overlap rule (#551) these tasks reuse.
 
+## Status after the Phase 37 close-out (2026-10-21)
+
+The close-out is integrated and #867 is closed: every Phase 37 herb field is filled or recorded, the vinegar infusion rows (CO-4) and the optional `sunNeed` (CO-5) ship, and a gap reopens only through a new issue when a qualifying page appears. Cluster D2's additions to the block below: `preserving.infuse` rows need a `medium` (`oil` or `vinegar`) and a safety quote under `preserving.infuse.<medium>.safety` (the oil quote states botulism, refrigeration and a time limit; the vinegar quote states commercially produced vinegar, discard on mold or fermentation and cool storage), each row's quote names its own medium; `sunNeed` needs a phrase from `SUN_NEED_PHRASES` in a passage naming the herb on an allowed host, and the sunniest reading across sources is stored (per-herb table in [`docs/design/phase-37-followups/close-out-d2.md`](../design/phase-37-followups/close-out-d2.md)); bee balm, chervil, hyssop and calendula carry `sunNeed.notRecorded`.
+
+### Cluster D1 (gates and data)
+
+Close-out rulings CO-1 to CO-9 are in `docs/design/PHASE_37_HERB_GARDEN_PLAN.md`; the per-herb outcome is in [`docs/design/phase-37-followups/close-out-d1.md`](../design/phase-37-followups/close-out-d1.md). Read this block before the older ones below.
+
+- **Every Phase 37 herb field is now either filled or recorded.** A recorded field carries `<field>.notRecorded: { reason, checked: [url...], date }` in `crop-data-sources.json`, enforced by `apps/web/src/lib/plugins/herbData.coverage.test.ts` (CO-7). The fields are lifecycle, perennial zone, each preserving method, harvestCadence, waterNeed and harvestTiming. To fill a recorded value, delete its `notRecorded` entry in the same change; the gates refuse a value beside one. A gap reopens only through a new issue, once a qualifying page appears.
+- **Gate changes a new quote must meet (CO-9, CO-6):**
+  - `waterNeed`: a range reads as every need it spans; a negated phrase is refused; one passage only (no "..." or separate quoted pieces, save the ruled hyssop title); the stored value is the one need every counted source allows. Disagreeing quotes go in `waterNeed.notRecorded.quotes`, never in `waterNeed.2`.
+  - Crop names: a whole word, never inside a longer herb name ("mountain mint" never names spearmint).
+  - `preserving`: a `good` quote carries no fair or poor words in its crop sentence; a bare "do not" or "less" never qualifies.
+  - `harvestTiming`: "before the flowers fade" and similar are not before bloom.
+  - `harvestCadence`: needs a cut or harvest verb; pinching and pruning never count.
+- **Filled in this pass:**
+  - Preserving: basil and Greek oregano `dry: fair`, chervil `dry` and `freeze: poor` (CO-1); `fresh: good` on sage, rosemary, French tarragon, tulsi, dill, sweet marjoram and lovage; cilantro `dry: good`.
+  - waterNeed: Greek oregano low and calendula high (CO-3); sage medium.
+- **Recorded, still empty:**
+  - `waterNeed` on rosemary, thyme and marjoram (both quotes kept).
+  - Thyme `harvestTiming`, with the split recounted over the quotes that name drying (CO-2).
+  - Florence fennel `freeze`.
+  - Every herb's `freeze-dry`.
+  - Vinegar `infuse`, which waits on CO-4 (cluster D2).
+- **Hosts that did not load from the cloud container on 2026-10-21:** `extension.umd.edu`, `www.pubs.ext.vt.edu` and `extension.purdue.edu` (certificate error), and `marylandgrows.umd.edu` (403). Re-read them from a local checkout when one of their values is in doubt.
+
 ## Status after the #867 pass (2026-10-20)
 
 A second pass fetched and checked pages for every item below. The herb-by-field table, the pages read and rulings F867-1 to F867-5 are in [`docs/design/phase-37-followups/867.md`](../design/phase-37-followups/867.md). Each task's "Still missing" table below keeps its original text; read it with this status.
@@ -31,6 +57,7 @@ A second pass fetched and checked pages for every item below. The herb-by-field 
   - rosemary pruning after bloom.
 
   Not attempted: the mint mid-season cut-back and the cilantro heat rows, which are outside #867.
+
 - **Task 4:**
   - `waterNeed` filled on 6 more herbs: anise hyssop low, bee balm high, hyssop low, mountain mint high, tarragon low and chervil high.
   - Disagreements recorded with both sources: oregano, rosemary, thyme, marjoram and calendula.
@@ -40,6 +67,7 @@ A second pass fetched and checked pages for every item below. The herb-by-field 
   - WSU, MU, Montana State and Purdue NewCROP side with UMD (at or in bloom).
 
   Other care tasks are outside #867.
+
 - **Task 6:** not built. Candidate pages are listed in the follow-up doc.
 
 ## Ground rules (every task)

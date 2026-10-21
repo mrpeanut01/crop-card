@@ -232,6 +232,46 @@ describe('OP-27 apple thinning is a seasonal row', () => {
     expect(events.filter((e) => e.kind === 'seasonal-task')).toHaveLength(3);
     expect(events.some((e) => (e.kind as string) === 'orchard-task')).toBe(false);
   });
+
+  it('starts each window at midnight in the passed zone, whatever the process zone', () => {
+    const events = eventsForPlanting(planting(apple, Date.UTC(2026, 0, 15)), apple, {
+      now: Date.UTC(2026, 5, 1),
+      timeZone: 'America/New_York'
+    });
+    expect(events.filter((e) => e.kind === 'seasonal-task').map((e) => e.startMs)).toEqual([
+      Date.UTC(2026, 4, 20, 4),
+      Date.UTC(2027, 4, 20, 4),
+      Date.UTC(2028, 4, 19, 4)
+    ]);
+  });
+});
+
+describe('seasonal task years follow the passed zone', () => {
+  const lettuce: CropPlugin = {
+    pluginId: 'lettuce-tz',
+    type: 'crop',
+    displayName: 'Lettuce',
+    version: '1.0.0',
+    cropFamily: 'leafy-green',
+    harvestStyle: 'cut-and-come-again',
+    bloomWindow: { monthsOfYear: [6], beeAttractive: false },
+    seasonalTasks: [
+      { key: 'mulch', kind: 'cultural', dayOfYear: 10, windowDays: 7, title: 'Mulch' }
+    ]
+  };
+  const lateNewYearsEveInVirginia = Date.UTC(2027, 0, 1, 2);
+
+  it('an annual planted on Dec 31 farm time takes that year, not the UTC one', () => {
+    const at = (timeZone: string) =>
+      eventsForPlanting(planting(lettuce, lateNewYearsEveInVirginia), lettuce, {
+        now: lateNewYearsEveInVirginia,
+        timeZone
+      })
+        .filter((e) => e.kind === 'seasonal-task')
+        .map((e) => e.startMs);
+    expect(at('America/New_York')).toEqual([Date.UTC(2026, 0, 10, 5)]);
+    expect(at('UTC')).toEqual([Date.UTC(2027, 0, 10)]);
+  });
 });
 
 describe('FR-08 eventsForHarvest curing reminders', () => {

@@ -2,9 +2,10 @@
   "pluginId": "calendula-resina",
   "type": "crop",
   "displayName": "Calendula Resina (medicinal)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "broadleaf-companion",
+  "waterNeed": "high",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 60,
@@ -51,5 +52,6 @@
       "title": "Deadhead calendula",
       "body": "Remove spent flowers regularly to keep the plants blooming. Flowers left on may self-sow."
     }
-  ]
+  ],
+  "sunNeed": "full"
 }

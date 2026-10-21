@@ -363,7 +363,8 @@ export function buildPlantingCard(
     p.cropPluginId,
     (id) =>
       cropDisplayName(id, snapshot.cropPlugins[id]?.displayName ?? id, opts.prefs.locale),
-    loc
+    loc,
+    snapshot.cropPlugins[p.cropPluginId]?.preserving
   );
   if (goalLines.length) {
     sections.push({

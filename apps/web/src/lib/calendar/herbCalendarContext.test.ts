@@ -124,6 +124,21 @@ describe('server verdict and its e2e hook', () => {
     ).toEqual(lifecycleHere(rosemary, null));
   });
 
+  it('passes an unknown-zone perennial on to the engine as winterUnknown (CO-8)', () => {
+    const lemongrass = crop({
+      pluginId: 'lemongrass-east-indian',
+      agronomy: { lifecycle: 'perennial' }
+    } as Partial<CropPlugin>);
+    const inputs = herbCalendarInputs(reader({}), serverHerbVerdict({}, '7a'));
+    expect(
+      herbContextFor(
+        { cropPluginId: 'lemongrass-east-indian', varietyDisplayName: 'Lemongrass' },
+        lemongrass,
+        inputs
+      )
+    ).toMatchObject({ lifecycle: 'unknown', winterUnknown: true });
+  });
+
   it("reads the owner's typed zone from the same batch", () => {
     expect(
       manualZoneFromReader(

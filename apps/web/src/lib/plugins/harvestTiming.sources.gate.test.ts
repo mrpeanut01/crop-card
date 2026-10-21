@@ -166,6 +166,30 @@ describe('harvestTimingQuoteGaps', () => {
     ]);
   });
 
+  it('reads words after "before the flowers" that mean in or after bloom (CO-9)', () => {
+    const lavender: TimingCrop = {
+      pluginId: 'lavender-english-munstead',
+      displayName: 'Lavender — English Munstead',
+      harvestTiming: [{ method: 'dry', stage: 'before-bloom' }]
+    };
+    for (const quote of [
+      'For drying, cut lavender before the flowers fade.',
+      'For drying, cut lavender before the flowers are fully open.',
+      'For drying, cut lavender before the blooms open fully.',
+      'For drying, cut lavender at full flower.',
+      'For drying, cut lavender before the flowers go to seed.'
+    ]) {
+      expect(gaps(quote, lavender), quote).toContain(
+        'lavender-english-munstead: harvestTiming.dry quote also states another stage'
+      );
+    }
+    expect(gaps('For drying, cut lavender before the flowers fade.', lavender)).toEqual([
+      'lavender-english-munstead: harvestTiming.dry quote does not state before-bloom',
+      'lavender-english-munstead: harvestTiming.dry quote also states another stage'
+    ]);
+    expect(gaps('For drying, cut lavender just before the flowers open.', lavender)).toEqual([]);
+  });
+
   it('does not read "just before" a bloom stage as the start of bloom', () => {
     const begins: TimingCrop = {
       ...basil,
@@ -191,7 +215,11 @@ describe('harvestTimingQuoteGaps', () => {
     const map = {
       'basil-genovese': {
         'harvestTiming.dry': src('For drying basil, cut just before the flowers open.'),
-        [HARVEST_TIMING_NOT_RECORDED_KEY]: { reason: 'Sources disagree on before or at bloom.' }
+        [HARVEST_TIMING_NOT_RECORDED_KEY]: {
+          reason: 'Sources disagree on before or at bloom.',
+          checked: [URL_OK],
+          date: '2026-10-21'
+        }
       }
     };
     expect(harvestTimingQuoteGaps([basil], map)).toEqual([

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { CutKind, GoalLine, ScheduleEnd } from './harvestSchedule';
 import type { PreservingMethod, PreservingSuitability } from './preserving';
 import type { HarvestTimingHint } from './harvestTiming';
+import type { InfuseMedium } from './infuse';
 
 export const harvestScheduleQuerySchema = z.strictObject({
   areaId: z
@@ -35,11 +36,12 @@ export interface SchedulePlantingView {
   firstWindowOnly: boolean;
   cutCount: number;
   nextCut: { fromMs: number; week: string } | null;
-  /** An infuse row carries its food-safety line as `note` (the gate makes
-   *  sure of it). */
+  /** An infuse row names its medium; the page shows that medium's
+   *  food-safety line (`infuseSafetyLine`, CO-4). */
   preserving: Array<{
     method: PreservingMethod;
     suitability: PreservingSuitability;
+    medium?: InfuseMedium;
     note?: string;
   }>;
   /** #867: when to cut for each method the brief's goals name, from the

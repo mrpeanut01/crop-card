@@ -86,12 +86,15 @@ test.describe('annual, biennial or perennial here', () => {
     const lemongrass = await plant(page, blockId, 'lemongrass-east-indian', 0);
     const rosemary = await plant(page, blockId, 'rosemary-tuscan-blue', 24);
 
-    // #867: lemongrass's lifecycle is now sourced, but no page gives its zone.
+    // #867: lemongrass's lifecycle is now sourced, but no page gives its zone,
+    // so whether it survives winter is not known whatever the farm zone (CO-8).
     const noZone = await plantingCard(page, lemongrass);
     await expect(noZone).toContainText('Annual or perennial here');
-    await expect(noZone).toContainText('Perennial; the coldest zone it survives is not known yet.');
+    await expect(noZone).toContainText(
+      'Not known whether it survives winter here; plan to bring it indoors before frost.'
+    );
     await expect(noZone).not.toContainText('Not yet checked against a source.');
-    await expect(noZone).toContainText('Using the zone you entered, 7b.');
+    await expect(noZone).not.toContainText('Using the zone you entered');
 
     const tender = await plantingCard(page, rosemary);
     await expect(tender).toContainText(

@@ -157,6 +157,42 @@ test.describe('pantry (37C)', () => {
     );
   });
 
+  test('an infuse goal shows the safety line of each medium, on track or not (CO-4, CO-10)', async ({
+    page
+  }) => {
+    await signInNewUser(page, 'infuse-media');
+    await createOnboardedFarm(page, { growing: ['garden'] });
+    const { block } = await post<{ block: { id: string } }>(page, '/api/blocks', {
+      name: 'Herb bed'
+    });
+    const plantingDate = Date.now() - 30 * 86_400_000;
+    for (const cropPluginId of ['basil-genovese', 'rosemary-tuscan-blue']) {
+      await post(page, `/api/blocks/${block.id}/plantings`, { cropPluginId, plantingDate });
+    }
+    saveBrief(block.id, { storageGoals: [{ goal: 'infuse', provenance: 'manual' }] });
+
+    await page.goto('/plan/pantry');
+    await page.waitForLoadState('networkidle');
+    const goal = page.getByTestId('pantry-goals').getByTestId('goal-line');
+    await expect(goal).toHaveCount(1);
+    await expect(goal).toContainText('Vinegars and oils');
+    await expect(goal.getByTestId('infuse-safety').first()).toBeVisible();
+
+    const herb = (name: string) => page.getByTestId('pantry-herb').filter({ hasText: name });
+    const basil = herb('Basil');
+    await expect(basil).toContainText('Infused in oil');
+    await expect(basil).toContainText('Infused in vinegar');
+    await expect(basil.locator('[data-testid="infuse-safety"][data-medium="oil"]')).toContainText(
+      'Herb oil can cause botulism. Keep it in the refrigerator and throw it out 4 days after you make it.'
+    );
+    await expect(
+      basil.locator('[data-testid="infuse-safety"][data-medium="vinegar"]')
+    ).toContainText('Use only store-bought vinegar.');
+    const rosemary = herb('Rosemary');
+    await expect(rosemary.getByTestId('infuse-safety')).toHaveCount(1);
+    await expect(rosemary.getByTestId('infuse-safety')).toHaveAttribute('data-medium', 'oil');
+  });
+
   test('a farm with no herbs gets the empty state', async ({ page }) => {
     await provisionEmptyFarm(page);
     await page.goto('/plan/pantry');

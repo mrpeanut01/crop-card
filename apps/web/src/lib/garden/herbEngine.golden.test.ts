@@ -29,7 +29,7 @@ describe('calendar engine output for every herb', () => {
         plantingDate: PLANTED
       },
       crop!,
-      { blockPlantings: [], companionSystems: [], now: READ_AT }
+      { blockPlantings: [], companionSystems: [], now: READ_AT, timeZone: 'UTC' }
     );
     expect(events).toMatchSnapshot();
   });

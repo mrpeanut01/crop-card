@@ -121,9 +121,8 @@ export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] 
   // fallback proposing dates that have already passed (e.g., picking Apr 21
   // when today is May 10). This keeps the suggested plan actionable.
   const nowMs = input.nowMs ?? Date.now();
-  const startOfToday = new Date(nowMs);
-  startOfToday.setHours(0, 0, 0, 0);
-  const tomorrowMs = startOfToday.getTime() + ONE_DAY_MS;
+  const today = new Date(nowMs);
+  const tomorrowMs = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
   for (const a of assignments) {
     const plug = pluginIndex[a.cropPluginId];
@@ -308,5 +307,5 @@ export function freeSubWindowsForBlock(
 
 export function formatDateMs(ms: number): string {
   const d = new Date(ms);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }

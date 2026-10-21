@@ -365,7 +365,7 @@ describe('seasonFrostMs', () => {
           const server = frostDatesFromMmDd(year, mmdd(lm, ld), mmdd(fm, fd));
           const day = (ms: number) => {
             const d = new Date(ms);
-            return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+            return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
           };
           expect(offline).toEqual({
             lastSpringFrostMs: day(server.lastSpringFrostMs),

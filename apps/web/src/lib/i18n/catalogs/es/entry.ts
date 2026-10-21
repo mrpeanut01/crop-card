@@ -15,7 +15,7 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
     'La demostración está ocupada ahora mismo. Inténtalo de nuevo en unos minutos.',
   'entry.demo.errOff': 'La demostración no está disponible ahora mismo.',
   'entry.demo.banner':
-    'Estás explorando una granja de demostración. Cambia lo que quieras; esta copia es solo tuya y se borra a las {time}.',
+    'Estás explorando una granja de demostración. Cambia lo que quieras; esta copia es solo tuya y se borra {at}.',
   'entry.demo.reset': 'Reiniciar demostración',
   'entry.demo.resetConfirm':
     '¿Empezar de nuevo con una granja de demostración nueva? Se borrarán tus cambios.',

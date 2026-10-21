@@ -38,6 +38,19 @@ describe('projectMonthDayWindow', () => {
     });
   });
 
+  it('counts days in a named zone, whatever the process zone', () => {
+    const w = { start: { month: 11, day: 1 }, end: { month: 11, day: 3 } };
+    const ny = { zone: { timeZone: 'America/New_York' }, end: 'endOfDay' } as const;
+    expect(projectMonthDayWindow(w, 2026, ny)).toEqual({
+      startMs: Date.UTC(2026, 10, 1, 4),
+      endMs: Date.UTC(2026, 10, 4, 5) - 1
+    });
+    expect(projectHarvestSeason(w, 2026, 'UTC')).toEqual({
+      startMs: Date.UTC(2026, 10, 1),
+      endMs: Date.UTC(2026, 10, 4) - 1
+    });
+  });
+
   it('treats a one-day window as not crossing the new year', () => {
     expect(crossesNewYear({ start: { month: 3, day: 1 }, end: { month: 3, day: 1 } })).toBe(false);
   });

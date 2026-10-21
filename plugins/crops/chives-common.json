@@ -39,6 +39,11 @@
     {
       "method": "freeze",
       "suitability": "good"
+    },
+    {
+      "method": "infuse",
+      "suitability": "good",
+      "medium": "vinegar"
     }
   ],
   "agronomy": {
@@ -80,5 +85,6 @@
       "title": "Remove chive flowers before they fade",
       "body": "Cut off the flowers before they fade, or chives self-sow and spread through the garden."
     }
-  ]
+  ],
+  "sunNeed": "full"
 }

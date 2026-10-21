@@ -19,7 +19,7 @@ import {
   type FrostDatesIso
 } from '$lib/plan/plantingWindow';
 import { getBlock } from '$lib/db/blocks';
-import { loadEffectiveFrostByBlock, localDay } from '$lib/server/blockFrost.server';
+import { calendarDay, loadEffectiveFrostByBlock } from '$lib/server/blockFrost.server';
 import { effectiveFrostSummary, type EffectiveFrost } from '$lib/climate/effectiveFrost';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { t } from '$lib/i18n';
@@ -63,7 +63,10 @@ export const POST: RequestHandler = async (event) => {
   const frost: FrostDatesIso & { frostFree?: boolean } = bed
     ? bed.frostFree
       ? { lastSpring: `${year}-01-01`, firstFall: `${year}-12-31`, frostFree: true }
-      : { lastSpring: localDay(bed.lastSpringFrostMs), firstFall: localDay(bed.firstFallFrostMs) }
+      : {
+          lastSpring: calendarDay(bed.lastSpringFrostMs),
+          firstFall: calendarDay(bed.firstFallFrostMs)
+        }
     : farmFrost;
   const cropFacts = plantingWindowCropOf(crop);
   const baseline = deterministicPlantingWindow(cropFacts, frost);

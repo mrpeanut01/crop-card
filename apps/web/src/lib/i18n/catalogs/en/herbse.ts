@@ -29,9 +29,9 @@ export const enHerbse = {
   'herbse.need.medium': 'moderate moisture',
   'herbse.need.high': 'moist soil',
 
-  'herbse.when.today': 'today at {time}',
-  'herbse.when.tomorrow': 'tomorrow at {time}',
-  'herbse.when.day': '{day} at {time}',
+  'herbse.when.today': 'today {at}',
+  'herbse.when.tomorrow': 'tomorrow {at}',
+  'herbse.when.day': '{day} {at}',
 
   'herbse.timer.next': '{timer} gives {inches} {when}.',
   'herbse.timer.nextNoAmount': '{timer} runs {when} for {minutes} min.',
@@ -45,7 +45,7 @@ export const enHerbse = {
   'herbse.timer.skipError': 'That did not save. Try again.',
 
   'herbse.schedule.everyDay': 'Every day',
-  'herbse.schedule.summary': '{days} {start} for {minutes} min',
+  'herbse.schedule.summary': '{days} {at} for {minutes} min',
   'herbse.schedule.line': '{label}: {summary}',
   'herbse.schedule.lineInches': '{label}: {summary}, {inches} a run',
   'herbse.schedule.factLabel': 'Timers',

@@ -6,6 +6,8 @@
   import { createT } from '$lib/i18n';
   import { fmt } from '$lib/prefsState.svelte';
   import { goalLineText } from '$lib/garden/pantryText';
+  import { infuseGoalMedia } from '$lib/garden/harvestSchedule';
+  import { infuseSafetyLine } from '$lib/garden/infuse';
   import type { HarvestScheduleResponse } from '$lib/garden/harvestScheduleApi';
 
   interface Props {
@@ -107,6 +109,11 @@
           <li data-testid="goal-line" data-status={g.status}>
             <span>{goalLineText(g, (id) => names.get(id) ?? id, locale)}</span>
             <Provenance source={g.provenance} compact />
+            {#each infuseGoalMedia(g, data.plantings) as m (m)}
+              <span class="safety" data-testid="infuse-safety" data-medium={m}
+                >{infuseSafetyLine(m, locale)}</span
+              >
+            {/each}
           </li>
         {/each}
       </ul>
@@ -155,5 +162,11 @@
   }
   .crop {
     font-weight: 600;
+  }
+  .safety {
+    display: block;
+    flex-basis: 100%;
+    color: var(--color-ink);
+    font-size: 0.92rem;
   }
 </style>

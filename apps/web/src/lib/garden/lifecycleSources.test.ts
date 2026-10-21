@@ -20,7 +20,9 @@ const source = (quote: string, url = 'https://pubs.ext.vt.edu/426/426-420/426-42
 });
 const REASON = {
   reason:
-    'No source fetched in Phase 37; see docs/research/phase-37-herb-research-prompt.md (Task 1)'
+    'No source fetched in Phase 37; see docs/research/phase-37-herb-research-prompt.md (Task 1)',
+  checked: ['https://pubs.ext.vt.edu/426/426-420/426-420.html'],
+  date: '2026-10-21'
 };
 
 describe('quote helpers', () => {

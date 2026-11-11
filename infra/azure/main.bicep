@@ -364,6 +364,7 @@ var passThroughEnv = [
   { secret: 'stripe-price-farm-annual', env: 'STRIPE_PRICE_FARM_ANNUAL' }
   { secret: 'pingram-webhook-secret', env: 'PINGRAM_WEBHOOK_SECRET' }
   { secret: 'github-feedback-token', env: 'GITHUB_FEEDBACK_TOKEN' }
+  { secret: 'ops-report-to', env: 'OPS_REPORT_TO' }
 ]
 var passThrough = filter(
   passThroughEnv,

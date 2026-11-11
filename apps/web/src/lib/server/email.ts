@@ -107,14 +107,25 @@ export interface DigestEmail {
   locale?: string | null;
 }
 
+/** The weekly operator usage report (`lib/server/ops/usageReport.ts`).
+ *  Sent only to the addresses in `OPS_REPORT_TO`, in English. */
+export interface OpsReportEmail {
+  kind: 'ops-report';
+  to: string;
+  subject: string;
+  body: string;
+  locale?: null;
+}
+
 export type OutboundEmail =
-  InviteEmail | MagicLinkEmail | ContactCodeEmail | AlertEmail | DigestEmail;
+  InviteEmail | MagicLinkEmail | ContactCodeEmail | AlertEmail | DigestEmail | OpsReportEmail;
 
 export type OptInEmail = AlertEmail | DigestEmail;
 
 /**
  * Transactional mail answers something the person just did (asked to sign
- * in, was invited, confirms an address) and never needs consent. Everything
+ * in, was invited, confirms an address) and never needs consent, as does the
+ * operator usage report, which goes only to the operator's own OPS_REPORT_TO. Everything
  * else is opt-in and must carry a working unsubscribe. Stripe sends billing
  * receipts itself, so CropCard sends no billing mail.
  */
@@ -123,7 +134,8 @@ export const EMAIL_KIND_CLASS: Record<OutboundEmail['kind'], 'transactional' | '
   'magic-link': 'transactional',
   'contact-code': 'transactional',
   'field-alert': 'opt-in',
-  'weekly-digest': 'opt-in'
+  'weekly-digest': 'opt-in',
+  'ops-report': 'transactional'
 };
 
 /** Pingram notification type per kind. Unsubscribes on Pingram's side apply
@@ -133,7 +145,8 @@ export const PINGRAM_TYPE: Record<OutboundEmail['kind'], string> = {
   'magic-link': 'magic-link',
   'contact-code': 'contact-code',
   'field-alert': 'field-alerts',
-  'weekly-digest': 'weekly-digest'
+  'weekly-digest': 'weekly-digest',
+  'ops-report': 'ops-report'
 };
 
 export function isOptInEmail(email: OutboundEmail): email is OptInEmail {
@@ -398,6 +411,8 @@ function subjectFor(email: OutboundEmail): string {
       return t(loc, 'email.subject.alert', { title: email.title, farm: email.farmName });
     case 'weekly-digest':
       return t(loc, 'email.subject.digest', { weekOf: email.weekOf, farm: email.farmName });
+    case 'ops-report':
+      return email.subject;
   }
 }
 
@@ -505,5 +520,7 @@ function bodyFor(email: OutboundEmail): string {
       return alertBody(email);
     case 'weekly-digest':
       return digestBody(email);
+    case 'ops-report':
+      return email.body;
   }
 }

@@ -2,13 +2,14 @@
 
 CropCard sends two kinds of email, and the difference decides whether consent is needed.
 
-| Kind (`OutboundEmail.kind`) | Class         | Pingram `type`  | Why                                                                                             |
-| --------------------------- | ------------- | --------------- | ----------------------------------------------------------------------------------------------- |
-| `magic-link`                | transactional | `magic-link`    | The person just asked to sign in.                                                               |
-| `contact-code`              | transactional | `contact-code`  | The person is adding this address.                                                              |
-| `helper-invite`             | transactional | `helper-invite` | An owner invited this address to their farm.                                                    |
-| `field-alert`               | opt-in        | `field-alerts`  | Decon due, record lock closing, spring calibration, frost tonight, and the Settings test email. |
-| `weekly-digest`             | opt-in        | `weekly-digest` | The Monday summary (Phase 32F), under its own consent category `weekly-digest`.                 |
+| Kind (`OutboundEmail.kind`) | Class         | Pingram `type`  | Why                                                                                               |
+| --------------------------- | ------------- | --------------- | ------------------------------------------------------------------------------------------------- |
+| `magic-link`                | transactional | `magic-link`    | The person just asked to sign in.                                                                 |
+| `contact-code`              | transactional | `contact-code`  | The person is adding this address.                                                                |
+| `helper-invite`             | transactional | `helper-invite` | An owner invited this address to their farm.                                                      |
+| `field-alert`               | opt-in        | `field-alerts`  | Decon due, record lock closing, spring calibration, frost tonight, and the Settings test email.   |
+| `weekly-digest`             | opt-in        | `weekly-digest` | The Monday summary (Phase 32F), under its own consent category `weekly-digest`.                   |
+| `ops-report`                | transactional | `ops-report`    | Operator usage report, sent only to the addresses in `OPS_REPORT_TO` (Key Vault `ops-report-to`). |
 
 Billing receipts come from Stripe, not from CropCard. There is no marketing mail. The class table lives in `EMAIL_KIND_CLASS` (`apps/web/src/lib/server/email.ts`); a test fails if a new kind is added without a class.
 

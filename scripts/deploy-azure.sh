@@ -35,6 +35,8 @@
 #   pingram-webhook-secret                             Pingram events webhook (unsubscribes, bounces)
 #   github-feedback-token                              "Send to GitHub" on /admin/feedback (repo is the
 #                                                      githubFeedbackRepo param); without it triage stays in-app
+#   ops-report-to                                      weekly usage report email (addresses, comma-separated);
+#                                                      without it the report shows only on /admin/usage
 # Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
 # Web Push keys: ./scripts/set-azure-secret.sh vapid --generate
 #
@@ -193,6 +195,7 @@ PASS_THROUGH=(
   stripe-price-farm-monthly stripe-price-farm-annual
   pingram-webhook-secret
   github-feedback-token
+  ops-report-to
 )
 PRESENT=()
 for s in "${PASS_THROUGH[@]}"; do kv_has "$s" && PRESENT+=("$s"); done
@@ -207,6 +210,7 @@ if [ "$BILLING" = true ] && { ! present_has stripe-webhook-secret || [ "$STRIPE_
 fi
 echo "pingram hook : $(present_has pingram-webhook-secret && [ "$HAS_PINGRAM" = true ] && echo true || echo false)"
 echo "gh feedback  : $(present_has github-feedback-token && echo true || echo false)"
+echo "usage report : $(present_has ops-report-to && echo true || echo false)"
 
 # ─── Custom domain readiness ────────────────────────────────────────────
 # Zone and host labels come from the .bicepparam so the template and this

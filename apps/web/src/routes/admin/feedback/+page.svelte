@@ -24,6 +24,8 @@
     <a href="/admin/owners">Owners</a>
     <span aria-hidden="true">·</span>
     <a href="/admin/feedback" aria-current="page">Feedback</a>
+    <span aria-hidden="true">·</span>
+    <a href="/admin/usage">Usage</a>
   </nav>
   <h1>Feedback</h1>
   <p class="hint">

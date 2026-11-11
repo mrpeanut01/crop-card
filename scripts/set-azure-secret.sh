@@ -7,6 +7,7 @@
 #   ./scripts/set-azure-secret.sh pingram-webhook-secret       # from the Pingram webhook page
 #   ./scripts/set-azure-secret.sh postmark-token
 #   ./scripts/set-azure-secret.sh github-feedback-token        # fine-grained PAT, Issues: write on one repo
+#   ./scripts/set-azure-secret.sh ops-report-to                # weekly usage report recipient(s), comma-separated
 #   ./scripts/set-azure-secret.sh stripe-secret-key            # sk_live_… / rk_live_…
 #   ./scripts/set-azure-secret.sh stripe-webhook-secret        # whsec_…
 #   ./scripts/set-azure-secret.sh stripe-price-grower-monthly  # price_… (also -grower-annual, -farm-monthly, -farm-annual)
@@ -27,10 +28,10 @@ set -euo pipefail
 
 GROUP="${CROPCARD_GROUP:-cropcard-dev-rg}"
 NAME="${1:-}"
-usage() { sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 case "$NAME" in
   auth-secret|postmark-token|pingram-api-key|pingram-webhook-secret|anthropic-api-key|marketplace-seed-credential|push-tick-secret) ;;
-  stripe-secret-key|stripe-webhook-secret|github-feedback-token) ;;
+  stripe-secret-key|stripe-webhook-secret|github-feedback-token|ops-report-to) ;;
   stripe-price-grower-monthly|stripe-price-grower-annual|stripe-price-farm-monthly|stripe-price-farm-annual) ;;
   vapid) [ "${2:-}" = "--generate" ] || { echo "usage: $0 vapid --generate [--force]" >&2; exit 2; } ;;
   *) usage ;;
@@ -78,6 +79,7 @@ case "$NAME" in
   stripe-secret-key) PATTERN='^(sk|rk)_(live|test)_[A-Za-z0-9]+$' ;;
   stripe-webhook-secret) PATTERN='^whsec_[A-Za-z0-9+/=]+$' ;;
   stripe-price-*) PATTERN='^price_[A-Za-z0-9]+$' ;;
+  ops-report-to) PATTERN='^[^@ ,]+@[^@ ,]+\.[^@ ,]+(, ?[^@ ,]+@[^@ ,]+\.[^@ ,]+)*$' ;;
   *) PATTERN='' ;;
 esac
 if [ -n "$PATTERN" ] && ! printf '%s' "$VALUE" | grep -Eq "$PATTERN"; then

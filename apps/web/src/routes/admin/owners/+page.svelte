@@ -39,7 +39,10 @@
 </svelte:head>
 
 <div class="admin">
-  <p class="admin-links"><a href="/admin/feedback">Feedback inbox →</a></p>
+  <p class="admin-links">
+    <a href="/admin/feedback">Feedback inbox →</a>
+    <a href="/admin/usage">Usage report →</a>
+  </p>
   <h1>All Owners</h1>
   <p class="hint">
     Cross-tenant view. Every action you take is appended to the superadmin audit log.
@@ -155,6 +158,11 @@
 </div>
 
 <style>
+  .admin-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
   .admin-links a {
     display: inline-flex;
     align-items: center;

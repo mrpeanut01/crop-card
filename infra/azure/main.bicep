@@ -163,9 +163,10 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
   }
 }
 
-// Previous versions are kept 30 days (longer than Litestream's 7-day
-// retention and the 14-day soft delete), except the handoff lease records,
-// which are rewritten every 20 s while the app runs, and farm documents: a
+// Previous versions are kept 30 days (longer than Litestream's 24-hour
+// retention, so older restore points stay recoverable by hand, and longer
+// than the 14-day soft delete), except the handoff lease records, which are
+// rewritten every 20 s while the app runs, and farm documents: a
 // deleted or wiped file's previous version goes after 1 day, then the
 // account-wide 14-day soft delete. /settings/documents promises 30 days.
 resource blobLifecycle 'Microsoft.Storage/storageAccounts/managementPolicies@2023-05-01' = {

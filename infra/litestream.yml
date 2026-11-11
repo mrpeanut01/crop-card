@@ -18,7 +18,12 @@ dbs:
         account-key: ${AZURE_STORAGE_KEY}
         bucket: ${AZURE_BLOB_CONTAINER}
         path: cropcard.db
-        retention: 168h          # 7 days of point-in-time restore
+        # 24 hours of point-in-time restore. Every cold start begins a new
+        # generation, and each restore lists every generation it keeps, so a
+        # 7-day window (about 420 generations at 60 starts a day) cost about
+        # $65 a month in ListBlobs calls. Older points are still recoverable
+        # from the 30-day blob versions (docs/ops/restore-runbook.md).
+        retention: 24h
         # Hourly snapshots: the app scales to zero, so every cold start is a
         # restore, and restore time grows with the WAL since the last snapshot.
         snapshot-interval: 1h
@@ -35,6 +40,6 @@ dbs:
         account-key: ${AZURE_STORAGE_KEY}
         bucket: ${AZURE_BLOB_CONTAINER}
         path: marketplace.db
-        retention: 168h
+        retention: 24h
         snapshot-interval: 1h
         sync-interval: 1s

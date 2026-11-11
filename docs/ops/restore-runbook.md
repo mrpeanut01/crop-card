@@ -13,9 +13,17 @@ only durable copy is the Litestream replica in Azure Blob Storage:
 
 Protection: blob versioning, 14-day blob soft delete, 14-day container soft
 delete, previous versions kept 30 days (lifecycle policy), and Litestream's
-own 7-day retention with an hourly snapshot. Point-in-time restore therefore
-reaches back 7 days through Litestream, and a deleted or overwritten blob is
-recoverable for 14 to 30 days through Azure.
+own 24-hour retention with an hourly snapshot. Point-in-time restore therefore
+reaches back 24 hours through Litestream, and a deleted or overwritten blob is
+recoverable for 14 to 30 days through Azure. To reach a point older than 24
+hours, undelete that generation's snapshot and WAL blobs from their previous
+versions first, then run `litestream restore -generation <id> -timestamp <t>`.
+
+Retention was 7 days until 2026-11. Every cold start (about 60 a day) begins a
+new generation, and `litestream restore` lists the snapshots and WAL of every
+generation it keeps, so the 7-day window meant about 420 generations listed on
+each boot: 7.9 million ListBlobs calls and about $65 of the storage bill a
+month.
 
 ## How a container boots
 

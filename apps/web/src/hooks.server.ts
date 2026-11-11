@@ -20,6 +20,7 @@ import { isFenced, startHandoffWatcher, trackMutation } from '$lib/server/ops/ha
 import { fenceResponse } from '$lib/server/ops/fenceResponse';
 import { startRuntimeMetrics, withServerTiming } from '$lib/server/runtimeMetrics';
 import { scheduleBootMaintenance } from '$lib/server/dbMaintenance';
+import { touchLastSeen } from '$lib/server/ops/lastSeen';
 import { scheduleBootHoldBackfill } from '$lib/server/holdParamsBoot';
 import { DEFAULT_LOCALE, enabledLocales } from '$lib/i18n/locales';
 import {
@@ -699,7 +700,8 @@ export function revalidateCookieUser(
       phone: users.phone,
       isSuperadmin: users.isSuperadmin,
       locale: users.locale,
-      sessionsValidAfter: users.sessionsValidAfter
+      sessionsValidAfter: users.sessionsValidAfter,
+      lastSeenAt: users.lastSeenAt
     })
     .from(users)
     .where(eq(users.id, user.id))
@@ -708,6 +710,7 @@ export function revalidateCookieUser(
   if (row.sessionsValidAfter && (user.sessionIssuedAt ?? 0) < row.sessionsValidAfter.getTime()) {
     return null;
   }
+  touchLastSeen(user.id, row.lastSeenAt);
   const fresh = {
     ...user,
     email: row.email,

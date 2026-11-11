@@ -14,6 +14,7 @@ import { runPushTick, type PushTickDeps, type PushTickSummary } from './schedule
 import { emailAlertOrigin } from './emailAlerts';
 import { readVapidConfig } from './webPush';
 import { runDbMaintenance, type MaintenanceResult } from '$lib/server/dbMaintenance';
+import { runWeeklyUsageReport, type WeeklyReportResult } from '$lib/server/ops/usageReport';
 
 export const INTERNAL_TICK_PATH = '/api/internal/push-tick';
 export const TICK_SECRET_HEADER = 'x-push-tick-secret';
@@ -53,6 +54,8 @@ export interface TickResult {
   durationMs: number;
   push: TickPushResult;
   maintenance: TickMaintenanceResult;
+  /** The Monday operator usage report (`lib/server/ops/usageReport.ts`). */
+  usageReport: WeeklyReportResult;
   /** True when this call joined a tick that was already running. */
   joined: boolean;
 }
@@ -80,11 +83,13 @@ async function runOnce(deps: ScheduledTickDeps): Promise<Omit<TickResult, 'joine
     console.error('[db-maintenance] failed', err);
     maintenance = { ran: false, failed: true };
   }
+  const usageReport = await runWeeklyUsageReport({ now: started, env });
   return {
     startedAt: new Date(started).toISOString(),
     durationMs: now() - started,
     push,
-    maintenance
+    maintenance,
+    usageReport
   };
 }
 

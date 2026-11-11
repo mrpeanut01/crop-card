@@ -71,15 +71,27 @@ afterEach(() => {
 });
 
 describe('email classification', () => {
-  it('classifies every kind, and only sign-in, invite and address codes skip consent', () => {
+  it('classifies every kind, and only sign-in, invite, address codes and the operator report skip consent', () => {
     expect(Object.keys(EMAIL_KIND_CLASS).sort()).toEqual(
-      ['contact-code', 'field-alert', 'helper-invite', 'magic-link', 'weekly-digest'].sort()
+      [
+        'contact-code',
+        'field-alert',
+        'helper-invite',
+        'magic-link',
+        'ops-report',
+        'weekly-digest'
+      ].sort()
     );
     const transactionalKinds = Object.entries(EMAIL_KIND_CLASS)
       .filter(([, c]) => c === 'transactional')
       .map(([k]) => k)
       .sort();
-    expect(transactionalKinds).toEqual(['contact-code', 'helper-invite', 'magic-link']);
+    expect(transactionalKinds).toEqual([
+      'contact-code',
+      'helper-invite',
+      'magic-link',
+      'ops-report'
+    ]);
   });
 
   it('never shares a Pingram type between transactional and opt-in mail', () => {

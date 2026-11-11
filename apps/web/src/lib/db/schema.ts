@@ -70,6 +70,9 @@ export const users = sqliteTable('users', {
   /** "Sign out everywhere": session cookies issued before this instant are
    *  refused by `revalidateCookieUser`. Null accepts every unexpired cookie. */
   sessionsValidAfter: integer('sessions_valid_after', { mode: 'timestamp_ms' }),
+  /** Last signed-in request, written at most once an hour per user by
+   *  `revalidateCookieUser`. Read only by the operator usage report. */
+  lastSeenAt: integer('last_seen_at', { mode: 'timestamp_ms' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)

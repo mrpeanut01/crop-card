@@ -518,7 +518,7 @@ const paths = {
     post: {
       summary: 'Finish a passkey sign-in',
       description:
-        'Public. Verifies the browser\'s WebAuthn response and sets the session cookie. Every failure answers the same message.',
+        "Public. Verifies the browser's WebAuthn response and sets the session cookie. Every failure answers the same message.",
       security: [],
       requestBody: jsonBody(passkeyAuthenticationSchema),
       responses: {

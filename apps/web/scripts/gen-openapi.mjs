@@ -153,6 +153,11 @@ import {
   ledgerEntryCreateSchema,
   ledgerEntryPatchSchema
 } from '../src/lib/finance/apiSchemas.ts';
+import {
+  passkeyAuthenticationSchema,
+  passkeyRegistrationSchema,
+  passkeyRenameSchema
+} from '../src/lib/auth/apiSchemas.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const APP_ROOT = resolve(__dirname, '..');
@@ -487,6 +492,154 @@ const paths = {
           description: 'OpenAPI 3.1 document.',
           content: { 'application/json': { schema: { type: 'object' } } }
         }
+      }
+    }
+  },
+
+  '/api/auth/passkey/login/options': {
+    post: {
+      summary: 'Start a passkey sign-in (Phase 38)',
+      description:
+        'Public. Returns WebAuthn request options with no credential list, so the browser offers any passkey it holds or the phone/QR option. The challenge is kept in a signed, HttpOnly cookie for five minutes. Rate limited per client address.',
+      security: [],
+      responses: {
+        200: jsonResponse('WebAuthn request options.', {
+          type: 'object',
+          required: ['options'],
+          properties: { options: { type: 'object' } }
+        }),
+        429: errorResponse('Too many attempts.'),
+        503: errorResponse('Passkeys are not configured.')
+      }
+    }
+  },
+
+  '/api/auth/passkey/login/verify': {
+    post: {
+      summary: 'Finish a passkey sign-in',
+      description:
+        'Public. Verifies the browser\'s WebAuthn response and sets the session cookie. Every failure answers the same message.',
+      security: [],
+      requestBody: jsonBody(passkeyAuthenticationSchema),
+      responses: {
+        200: jsonResponse('Signed in.', {
+          type: 'object',
+          required: ['next', 'crossDevice'],
+          properties: {
+            next: { type: 'string', description: 'The page to open next.' },
+            crossDevice: {
+              type: 'boolean',
+              description: 'True when a phone or security key answered for this device.'
+            }
+          }
+        }),
+        400: errorResponse('Unreadable response.'),
+        401: errorResponse('The passkey did not verify.'),
+        429: errorResponse('Too many attempts.')
+      }
+    }
+  },
+
+  '/api/auth/passkey/register/options': {
+    post: {
+      summary: 'Start adding a passkey',
+      description:
+        'Cookie session only, within ten minutes of signing in; never a Bearer token, impersonation or a demo farm.',
+      security: [{ cookieSession: [] }],
+      responses: {
+        200: jsonResponse('WebAuthn creation options.', {
+          type: 'object',
+          required: ['options'],
+          properties: { options: { type: 'object' } }
+        }),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('`REAUTH_REQUIRED`, `DEMO_DISABLED`, or not a browser session.')
+      }
+    }
+  },
+
+  '/api/auth/passkey/register/verify': {
+    post: {
+      summary: 'Store a new passkey',
+      security: [{ cookieSession: [] }],
+      requestBody: jsonBody(passkeyRegistrationSchema),
+      responses: {
+        201: jsonResponse('Added.', {
+          type: 'object',
+          required: ['ok', 'id'],
+          properties: { ok: { const: true }, id: { type: 'string' } }
+        }),
+        400: errorResponse('The passkey did not verify.'),
+        403: errorResponse('`REAUTH_REQUIRED`, `DEMO_DISABLED`, or not a browser session.'),
+        409: errorResponse('This passkey is already on the account.')
+      }
+    }
+  },
+
+  '/api/auth/passkey/offer': {
+    delete: {
+      summary: 'Dismiss the add-a-passkey card for this sign-in',
+      security: [{ cookieSession: [] }],
+      responses: {
+        200: jsonResponse('Dismissed.', {
+          type: 'object',
+          properties: { ok: { const: true } }
+        })
+      }
+    }
+  },
+
+  '/api/account/passkeys': {
+    get: {
+      summary: "The signed-in person's passkeys",
+      description: 'Names and dates only, never key material.',
+      security: [{ cookieSession: [] }],
+      responses: {
+        200: jsonResponse('Passkeys.', {
+          type: 'object',
+          required: ['passkeys'],
+          properties: {
+            passkeys: {
+              type: 'array',
+              items: {
+                type: 'object',
+                required: ['id', 'name', 'provider', 'backedUp', 'createdAt', 'lastUsedAt'],
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: ['string', 'null'] },
+                  provider: { type: ['string', 'null'] },
+                  backedUp: { type: 'boolean' },
+                  createdAt: { type: 'integer' },
+                  lastUsedAt: { type: ['integer', 'null'] }
+                }
+              }
+            }
+          }
+        }),
+        403: errorResponse('Not a browser session.')
+      }
+    }
+  },
+
+  '/api/account/passkeys/{id}': {
+    patch: {
+      summary: 'Rename one of your passkeys',
+      security: [{ cookieSession: [] }],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      requestBody: jsonBody(passkeyRenameSchema),
+      responses: {
+        200: jsonResponse('Renamed.', { type: 'object', properties: { ok: { const: true } } }),
+        404: errorResponse('Not one of your passkeys.')
+      }
+    },
+    delete: {
+      summary: 'Remove one of your passkeys',
+      description: 'Sessions stay signed in; use Sign out everywhere to end them.',
+      security: [{ cookieSession: [] }],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: jsonResponse('Removed.', { type: 'object', properties: { ok: { const: true } } }),
+        404: errorResponse('Not one of your passkeys.')
       }
     }
   },

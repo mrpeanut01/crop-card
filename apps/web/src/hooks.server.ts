@@ -122,6 +122,8 @@ const ANONYMOUS_PATHS = new Set([
   '/demo', // Starts a throwaway demo farm; rate limited in lib/server/demo/lifecycle.ts.
   '/api/email/pingram-webhook', // Pingram POSTs delivery events; the signature is the auth.
   '/api/email/unsubscribe', // RFC 8058 one-click from the mail client; the signed token is the auth.
+  '/api/auth/passkey/login/options', // Phase 38 — passkey sign-in challenge; rate limited.
+  '/api/auth/passkey/login/verify', // Phase 38 — the passkey is the auth.
   // Phase 30F — the /cards route renders with ssr=false, so this path is a
   // data-free HTML shell the service worker precaches at install. Its data
   // (/cards/__data.json, /api/cards/snapshot) still needs a session; see
@@ -184,12 +186,30 @@ const PARTIAL_SESSION_PATHS = new Set([
   '/api/session/switch-owner',
   '/api/geocode',
   '/api/feedback', // #466: anyone signed in can send feedback, farm or not.
-  '/api/me/locale' // language choice touches no farm data.
+  '/api/me/locale', // language choice touches no farm data.
+  '/api/auth/passkey/register/options', // Phase 38: a passkey is the person's, not a farm's.
+  '/api/auth/passkey/register/verify',
+  '/api/auth/passkey/offer'
 ]);
 
 /** API writes open to every role, inspector included: they touch no farm
  *  data. Feedback (#466) lands in a global triage queue. */
-export const ANY_ROLE_API_WRITES = new Set(['/api/feedback', '/api/me/locale']);
+export const ANY_ROLE_API_WRITES = new Set([
+  '/api/feedback',
+  '/api/me/locale',
+  '/api/auth/passkey/register/options',
+  '/api/auth/passkey/register/verify',
+  '/api/auth/passkey/offer'
+]);
+
+/** Phase 38: managing your own passkeys touches no farm data, so every
+ *  role may, inspectors included. */
+const ANY_ROLE_API_WRITE_PREFIXES = ['/api/account/passkeys/'];
+
+export function isAnyRoleApiWrite(pathname: string): boolean {
+  if (ANY_ROLE_API_WRITES.has(pathname)) return true;
+  return ANY_ROLE_API_WRITE_PREFIXES.some((p) => pathname.startsWith(p));
+}
 
 export function allowsPartialSession(pathname: string, isSuperadmin: boolean): boolean {
   if (PARTIAL_SESSION_PATHS.has(pathname)) return true;
@@ -310,7 +330,7 @@ export function suspendedTenantGate(
 ): SuspendedTenantGate {
   if (billingStatus !== 'suspended') return 'allow';
   if (pathname.startsWith('/api/billing/')) return 'allow';
-  if (ANY_ROLE_API_WRITES.has(pathname)) return 'allow';
+  if (isAnyRoleApiWrite(pathname)) return 'allow';
   if (underPath(pathname, '/settings/billing') || pathname === '/signout') return 'allow';
   const read = method === 'GET' || method === 'HEAD';
   if (read) {
@@ -569,7 +589,7 @@ const handleRequest: Handle = async ({ event, resolve: resolvePage }) => {
     !canMutate(user.role) &&
     MUTATION_METHODS.has(event.request.method) &&
     path.startsWith('/api/') &&
-    !ANY_ROLE_API_WRITES.has(path)
+    !isAnyRoleApiWrite(path)
   ) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
   }

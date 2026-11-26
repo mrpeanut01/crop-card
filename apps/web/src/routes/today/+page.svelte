@@ -35,6 +35,7 @@
   import GettingStartedCard from '$lib/components/today/GettingStartedCard.svelte';
   import ReEntryCard from '$lib/components/today/ReEntryCard.svelte';
   import AlphaWelcome from '$lib/components/feedback/AlphaWelcome.svelte';
+  import AddPasskeyCard from '$lib/components/auth/AddPasskeyCard.svelte';
   import { buildTaskCard } from '$lib/cards/build/task';
   import { isTypicalTimingEvent } from '$lib/schedule/typicalTiming';
   import TypicalTimingNote from '$lib/components/tasks/TypicalTimingNote.svelte';
@@ -719,6 +720,8 @@
 <ReEntryCard items={data.reEntry} />
 
 <AlphaWelcome suppressed={(data.dirtySprayers?.length ?? 0) > 0} />
+
+<AddPasskeyCard />
 
 {#if data.gettingStarted}
   <GettingStartedCard facts={data.gettingStarted.facts} dismissed={data.gettingStarted.dismissed} />

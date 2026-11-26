@@ -5,6 +5,7 @@
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
   import SignInMethods from '$lib/components/settings/SignInMethods.svelte';
+  import PasskeyList from '$lib/components/settings/PasskeyList.svelte';
   import AvatarUpload from '$lib/components/settings/AvatarUpload.svelte';
   import { DISPLAY_NAME_MAX, DISPLAY_UNITS, TIME_ZONES } from '$lib/profile';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -118,6 +119,14 @@
 
   <SettingsSection title={tr('account.signIn.title')} sub={tr('account.signIn.sub')}>
     <SignInMethods email={data.account.email} phone={data.account.phone} />
+  </SettingsSection>
+
+  <SettingsSection title={tr('passkey.settings.title')} sub={tr('passkey.settings.lede')}>
+    <PasskeyList
+      passkeys={data.passkeys.list}
+      canAdd={data.passkeys.canAdd}
+      readOnly={data.passkeys.readOnly}
+    />
   </SettingsSection>
 
   <SettingsSection title={tr('account.sessions.title')} sub={tr('account.sessions.sub')}>

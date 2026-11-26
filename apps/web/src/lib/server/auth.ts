@@ -27,6 +27,7 @@ import {
   writeSession,
   type SessionRole
 } from './session';
+import { markPasskeyOffer } from './passkeyOffer';
 
 export interface AuthenticatedUser {
   id: string;
@@ -178,7 +179,9 @@ export function loginByIdentity(
   }
   const row =
     existing ?? (db.insert(users).values(insert).returning().get() as typeof users.$inferSelect);
-  return startSession(event, row);
+  const result = startSession(event, row);
+  markPasskeyOffer(event.cookies);
+  return result;
 }
 
 export function loginByEmail(
@@ -279,13 +282,16 @@ export function refreshSessionIdentity(event: RequestEvent, user: AuthenticatedU
 /** Throws a SvelteKit redirect to the canonical next-step path. Centralizes
  *  the routing so /signin actions don't have to duplicate the mapping. */
 export function redirectFromLogin(next: LoginResult['next']): never {
-  const path =
-    next === 'onboarding'
-      ? '/onboarding'
-      : next === 'picker'
-        ? '/owner-picker'
-        : next === 'admin'
-          ? '/admin/owners'
-          : '/today';
-  throw redirect(303, path);
+  throw redirect(303, loginNextPath(next));
+}
+
+/** The page a LoginResult lands on; JSON sign-in endpoints return it. */
+export function loginNextPath(next: LoginResult['next']): string {
+  return next === 'onboarding'
+    ? '/onboarding'
+    : next === 'picker'
+      ? '/owner-picker'
+      : next === 'admin'
+        ? '/admin/owners'
+        : '/today';
 }

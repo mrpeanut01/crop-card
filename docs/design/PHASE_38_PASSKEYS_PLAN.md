@@ -1,6 +1,6 @@
 # Phase 38: Sign in with a passkey
 
-Status: proposed, 2026-11-26. Nothing in this plan is built yet.
+Status: built, 2026-11-26. What changed from the plan during the build is under "As built" at the end.
 
 ## Why
 
@@ -145,3 +145,18 @@ All new text ships in English and Spanish in `lib/i18n/catalogs/{en,es}/auth.ts`
 ## Size
 
 One focused phase in two clusters that can run in parallel worktrees once the migration and session fields land in a foundations commit: (A) server, migration, export and unit tests; (B) sign-in page, card, settings, catalogs and e2e. Adds two dependencies, `@simplewebauthn/server` and `@simplewebauthn/browser`. No safety-rule change; `RULES_VERSION` stays 0.7.11. /today gains no query, because `via` rides in the session cookie.
+
+## As built (2026-11-26)
+
+Built in one pass on the plan's branch. Where the build differs from the plan above, this section is what the code does.
+
+- **Freshness uses the existing `iat`.** P38-5 reads `SessionPayload.iat`, which is already the sign-in time and is kept by every re-mint (Owner switch, onboarding, invite, impersonation exit). No `proofAt` field was added. `addRefusal` in `lib/server/passkeyOffer.ts` answers `stale` past 10 minutes and `demo` for a demo visitor.
+- **No `via` in the session.** The card is driven by an `HttpOnly` cookie, `cc_pk_offer`, that lives as long as the add window (10 minutes). `loginByIdentity` sets it, so the email link, the email code, the SMS code and direct sign-in all do. A passkey sign-in sets it when `authenticatorAttachment` is `cross-platform` and clears it otherwise. Adding a passkey or "Not now" (`DELETE /api/auth/passkey/offer`) clears it. The root layout's `passkeyOffer` is true only for an interactive cookie session with the cookie and a fresh sign-in, so no session re-mint changed and /today gains no query.
+- **P38-11 is stricter.** @simplewebauthn/server refuses a sign counter that goes backwards. Synced passkeys always report 0 and pass, so the plan's worry does not arise. Tests cover both.
+- **Names.** `passkeys.name` is nullable. With no name the list shows the provider from a small AAGUID map (iCloud Keychain, Google Password Manager, Windows Hello, 1Password, Bitwarden, Samsung Pass), else "Passkey".
+- **Relying party.** `relyingParty()` in `lib/server/passkeys.ts`: `PASSKEY_RP_ID` (set from `dnsZoneName` in `main.bicep`) when `ORIGIN`'s host is that domain or under it, else `ORIGIN`'s host; origins are `ORIGIN` plus each `REDIRECT_HOSTS` host under the RP ID. Production without `ORIGIN` answers 503. Dev uses the request origin.
+- **Gates.** The two login routes are anonymous. Register options and verify and the offer route work for a partial session (onboarding) and for every role; `/api/account/passkeys/**` is open to every role through `isAnyRoleApiWrite` in `hooks.server.ts`. Every add and manage route goes through `requireInteractiveUser` (no Bearer, no impersonation). `DEMO_BLOCKED_WRITES` lists `/api/auth/passkey/register` and `/api/account/passkeys`, and a demo user's passkey can never sign in.
+- **Usage report.** A passkey keeps only its last use, so the weekly report adds "People who signed in with a passkey" (`signIns.passkeyUsers`) beside the email and SMS counts instead of a sign-in count.
+- **Export.** GDPR export 1.8.0 adds `operator.passkeys` (name or provider, synced, created, last used).
+- **Files.** Server: `lib/server/passkeys.ts`, `passkeyOffer.ts`, `passkeyRoutes.ts`; schemas in `lib/auth/apiSchemas.ts`; browser: `lib/client/passkey.ts`, `components/auth/PasskeySignIn.svelte` (sign-in page, autofill plus the **Use a passkey** button), `components/auth/AddPasskeyCard.svelte` (/today and onboarding screen 1), `components/settings/PasskeyList.svelte` (/settings/account). Text in `lib/i18n/catalogs/{en,es}/passkey.ts`; Spanish uses "llave de acceso" and goes to the proofreader with the rest.
+- **Tests.** `lib/server/__fixtures__/softAuthenticator.ts` is a software ES256 authenticator that makes real registration and sign-in responses. `passkeys.test.ts` (32) and `routes/api/auth/passkey/passkeyRoutes.test.ts` (13) run in the Node environment, because the library's byte parsing fails under jsdom. `tests/e2e/passkey-signin.spec.ts` runs on the magic-link preview (it sets `ORIGIN`) with Chromium's virtual authenticator.

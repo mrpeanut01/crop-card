@@ -25,6 +25,8 @@ import { formatInstant } from '$lib/prefs';
 import { LOCALE_NAMES, enabledLocales, t } from '$lib/i18n';
 import { applyLocaleChoice } from '$lib/server/localeChoice';
 import { signOutEverywhere } from '$lib/server/auth';
+import { listPasskeys } from '$lib/server/passkeys';
+import { addRefusal } from '$lib/server/passkeyOffer';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -69,6 +71,11 @@ export const load: PageServerLoad = ({ locals }) => {
       ? { id: activeOwner.id, name: activeOwner.name, slug: activeOwner.slug }
       : null,
     otherOwnerCount: Math.max(0, assignments.length - (user.activeOwnerId ? 1 : 0)),
+    passkeys: {
+      list: listPasskeys(user.id),
+      canAdd: locals.authVia === 'cookie' && !user.impersonating && addRefusal(user) === null,
+      readOnly: locals.authVia !== 'cookie' || user.impersonating === true
+    },
     language:
       enabled.length > 1
         ? {

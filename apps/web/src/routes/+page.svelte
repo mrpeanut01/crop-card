@@ -3,6 +3,7 @@
   import type { SubmitFunction } from '$app/forms';
   import type { SignInChannel } from '$lib/identity';
   import AlphaBanner from '$lib/components/feedback/AlphaBanner.svelte';
+  import PasskeySignIn from '$lib/components/auth/PasskeySignIn.svelte';
   import type { ActionData, PageData } from './$types';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -333,7 +334,7 @@
                 name="identifier"
                 required
                 defaultValue={enteredBefore}
-                autocomplete="email"
+                autocomplete="username webauthn"
                 inputmode="email"
                 placeholder={tr('signin.placeholderEmail')}
                 autocapitalize="off"
@@ -364,6 +365,10 @@
             {/if}
           </button>
         </form>
+
+        {#key via}
+          <PasskeySignIn inviteToken={data.inviteToken} autofill={via === 'email'} />
+        {/key}
 
         <div class="alt-path">
           {#if via === 'phone'}

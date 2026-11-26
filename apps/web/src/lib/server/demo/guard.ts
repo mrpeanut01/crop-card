@@ -12,6 +12,8 @@ export const DEMO_BLOCKED_WRITES = [
   '/api/auth/token',
   '/settings/api-tokens',
   '/api/account/identity',
+  '/api/auth/passkey/register',
+  '/api/account/passkeys',
   '/api/billing/checkout',
   '/api/billing/portal',
   '/settings/billing',

@@ -67,6 +67,10 @@ export interface UsageReport {
     byNewUsers: number;
     email: number;
     sms: number;
+    /** Phase 38: people whose passkey was last used in the window. A
+     *  passkey keeps only its last use, so these are people, not sign-ins,
+     *  and are not in `total`. */
+    passkeyUsers: number;
     previous: number;
   };
   farms: {
@@ -194,6 +198,18 @@ function signInEvents(
   ];
 }
 
+function passkeyUsers(start: number, end: number): number {
+  unscopedQueryNote('operator usage report counts passkey use across every farm');
+  const row = sqliteHandle()
+    .prepare(
+      `SELECT count(DISTINCT p.user_id) AS n
+         FROM passkeys p JOIN users u ON u.id = p.user_id
+        WHERE p.last_used_at >= ? AND p.last_used_at < ? AND (u.email IS NULL OR u.email NOT LIKE ?)`
+    )
+    .get(start, end, `%@${DEMO_EMAIL_DOMAIN}`) as Row | undefined;
+  return num(row?.n);
+}
+
 function signInCounts(start: number, end: number): UsageReport['signIns'] {
   const events = signInEvents(start, end);
   const distinct = new Set(events.map((e) => e.userId).filter((id): id is string => !!id));
@@ -205,6 +221,7 @@ function signInCounts(start: number, end: number): UsageReport['signIns'] {
     byNewUsers: events.length - byExisting,
     email: events.filter((e) => e.channel === 'email').length,
     sms: events.filter((e) => e.channel === 'sms').length,
+    passkeyUsers: passkeyUsers(start, end),
     previous: signInEvents(start - REPORT_WINDOW_MS, start).length
   };
 }
@@ -417,6 +434,7 @@ export function usageReportText(r: UsageReport): string {
     `By existing users: ${r.signIns.byExistingUsers}; by new users: ${r.signIns.byNewUsers}`,
     `Distinct people signing in: ${r.signIns.distinctUsers}`,
     `By email: ${r.signIns.email}; by text message: ${r.signIns.sms}`,
+    `People who signed in with a passkey: ${r.signIns.passkeyUsers}`,
     `Sessions last 7 days, so a person who stays signed in shows as active without a new sign-in.`,
     ``,
     `FARMS`,

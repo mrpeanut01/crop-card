@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AddPasskeyCard from '$lib/components/auth/AddPasskeyCard.svelte';
   import { enhance } from '$app/forms';
   import { browser } from '$app/env';
   import { untrack } from 'svelte';
@@ -138,6 +139,8 @@
         </div>
       {/if}
     </header>
+
+    <AddPasskeyCard />
 
     <form method="POST" action="?/farm" use:enhance={submitEnhance} class="form">
       {#if form && 'error' in form && form.error}

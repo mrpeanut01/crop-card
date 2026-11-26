@@ -9,6 +9,7 @@
  * owner's export only; a helper's export leaves `documents` out.
  */
 
+import { listPasskeys } from './passkeys';
 import { nutrientFromStorage } from '$lib/fertility/applicationMath';
 import type { RequestEvent } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
@@ -152,7 +153,7 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
   const journalPhotos = journalPhotoFacts();
 
   return {
-    schemaVersion: '1.7.0',
+    schemaVersion: '1.8.0',
     generatedAt: new Date().toISOString(),
     generator: `CropCard v${APP_VERSION}`,
     rulesVersion: RULES_VERSION,
@@ -168,7 +169,14 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
       displayUnits: prefs.units,
       avatarUrl: avatarUrl(user.id, avatarVersion(user.id)),
       emailAlertConsents: listConsentHistoryForUser(user.id),
-      feedback: listFeedbackForUser(user.id)
+      feedback: listFeedbackForUser(user.id),
+      // Phase 38: names and dates only, never key material or credential ids.
+      passkeys: listPasskeys(user.id).map((p) => ({
+        name: p.name ?? p.provider,
+        synced: p.backedUp,
+        createdAt: new Date(p.createdAt).toISOString(),
+        lastUsedAt: p.lastUsedAt ? new Date(p.lastUsedAt).toISOString() : null
+      }))
     },
     activeOwner: ownerRow
       ? {

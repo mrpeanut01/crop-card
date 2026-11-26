@@ -20,8 +20,10 @@ import { animalsNavLabel } from '$lib/animals/profile.server';
 import { enabledLocales } from '$lib/i18n/locales';
 import { demoExpiryFor, demoFarmState } from '$lib/server/demo/lifecycle';
 import type { DemoFarmKind } from '$lib/demo/fastForward';
+import { hasPasskeyOffer } from '$lib/server/passkeyOffer';
+import { addRefusal } from '$lib/server/passkeyOffer';
 
-export const load: LayoutServerLoad = ({ locals }) => {
+export const load: LayoutServerLoad = ({ locals, cookies }) => {
   // A sprayer is "dirty" when it has carried chemistry that has not yet been
   // followed by a decon. Surfaced as a site-wide banner so an operator can't
   // forget — the kernel will block the next spray on this sprayer anyway,
@@ -191,6 +193,20 @@ export const load: LayoutServerLoad = ({ locals }) => {
     activeOwner,
     availableOwners,
     billingGrace,
-    demo
+    demo,
+    passkeyOffer: passkeyOfferFor(locals, cookies)
   };
 };
+
+/** Phase 38 (P38-6): the add-a-passkey card shows after an email or SMS
+ *  sign-in, or a passkey from another device, while a passkey may still be
+ *  added (P38-5). Interactive cookie sessions only, never a demo. */
+function passkeyOfferFor(
+  locals: App.Locals,
+  cookies: Parameters<typeof hasPasskeyOffer>[0]
+): boolean {
+  const user = locals.user;
+  if (!user || locals.authVia !== 'cookie' || user.impersonating) return false;
+  if (!hasPasskeyOffer(cookies)) return false;
+  return addRefusal(user) === null;
+}

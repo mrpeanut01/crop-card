@@ -270,6 +270,33 @@ export const loginTokens = sqliteTable(
   })
 );
 
+/** Phase 38 passkeys (WebAuthn credentials). Identity-level like
+ *  `login_tokens`: a passkey belongs to a person, not a farm (P38-9), so
+ *  every query is unscoped and the farm wipe never touches it. */
+export const passkeys = sqliteTable(
+  'passkeys',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    credentialId: text('credential_id').notNull(),
+    publicKey: blob('public_key', { mode: 'buffer' }).notNull(),
+    signCount: integer('sign_count').notNull().default(0),
+    transports: text('transports'),
+    aaguid: text('aaguid'),
+    backedUp: integer('backed_up', { mode: 'boolean' }).notNull().default(false),
+    /** Typed by the person; null shows the provider name from `aaguid`. */
+    name: text('name'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' })
+  },
+  (table) => ({
+    credentialIdx: uniqueIndex('passkeys_credential_id_idx').on(table.credentialId),
+    userIdx: index('passkeys_user_idx').on(table.userId, table.createdAt)
+  })
+);
+
 /** Short numeric sign-in / contact-verification codes (email or SMS).
  *  Identity-level like `login_tokens`, so unscoped. `destination` is the
  *  normalized address the code was sent to; `purpose='link'` rows carry the

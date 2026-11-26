@@ -460,6 +460,8 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
               { name: 'CROPCARD_LOCALES', value: 'en,es' }
               { name: 'ORIGIN', value: appOrigin }
               { name: 'REDIRECT_HOSTS', value: domainTls ? join(skip(customFqdns, 1), ',') : '' }
+              // Phase 38 (P38-3): passkeys bind to the zone, so they survive host moves.
+              { name: 'PASSKEY_RP_ID', value: dnsZoneName }
               { name: 'ADDRESS_HEADER', value: 'X-Forwarded-For' }
               { name: 'XFF_DEPTH', value: '1' }
               { name: 'AZURE_STORAGE_ACCOUNT', value: storage.name }

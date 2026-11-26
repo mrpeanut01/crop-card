@@ -32,6 +32,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
+    "@simplewebauthn/browser": "14.0.0",
     "@sveltejs/adapter-node": "^6.0.0",
     "@sveltejs/kit": "^3.0.1",
     "@sveltejs/vite-plugin-svelte": "^7.3.0",
@@ -67,6 +68,7 @@
     "@anthropic-ai/sdk": "^0.133.0",
     "@cropcard/plugin-validation": "workspace:*",
     "@geoman-io/leaflet-geoman-free": "^2.20.2",
+    "@simplewebauthn/server": "14.0.3",
     "@zxing/library": "^0.23.0",
     "better-sqlite3": "^13.0.3",
     "dexie": "^4.4.6",

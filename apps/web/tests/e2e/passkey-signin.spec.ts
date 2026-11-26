@@ -71,8 +71,11 @@ test('add a passkey after an email sign-in, then sign in with one tap', async ({
   expect(credentials).toHaveLength(1);
   expect(credentials[0].isResidentCredential).toBe(true);
 
+  // The phone path turns autofill off, so the button is the only way in.
+  // On the email path Chromium's virtual authenticator answers the autofill
+  // request by itself.
   await page.context().clearCookies();
-  await page.goto('/');
+  await page.goto('/?via=phone');
   const button = page.getByRole('button', { name: 'Use a passkey' });
   await expect(button).toBeVisible();
   await expect(page.getByTestId('passkey-signin')).toContainText('Use a phone or tablet');
@@ -89,4 +92,16 @@ test('"Not now" hides the card for this sign-in', async ({ page, request }) => {
   await expect(card).toHaveCount(0);
   await page.reload();
   await expect(page.getByTestId('add-passkey-card')).toHaveCount(0);
+});
+
+test('autofill signs in with a saved passkey', async ({ page, request }) => {
+  await virtualAuthenticator(page);
+  await signInByEmail(page, request, `passkey-auto-${Date.now()}@example.test`);
+  await page.getByTestId('add-passkey-card').getByRole('button', { name: 'Add a passkey' }).click();
+  await expect(page.getByTestId('add-passkey-card').getByRole('status')).toHaveText(
+    /Passkey added/
+  );
+  await page.context().clearCookies();
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/onboarding/);
 });

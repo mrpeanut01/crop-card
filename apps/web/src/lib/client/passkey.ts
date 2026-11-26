@@ -77,7 +77,10 @@ async function finishLogin(
   try {
     response = await startAuthentication({ optionsJSON, useBrowserAutofill: autofill });
   } catch (e) {
-    if (isCancel(e)) return { ok: false, cancelled: true };
+    // The autofill request runs in the background, so its failures (no
+    // passkey here, the form was sent, the page moved on) say nothing to
+    // the person; only a sign-in they picked can fail out loud.
+    if (autofill || isCancel(e)) return { ok: false, cancelled: true };
     return { ok: false, cancelled: false, errorKey: 'passkey.err.signinFailed' };
   }
   const verify = await postJson('/api/auth/passkey/login/verify', response);

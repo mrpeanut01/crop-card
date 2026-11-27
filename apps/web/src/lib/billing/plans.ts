@@ -34,6 +34,7 @@ const FREE_QUOTA: DailyQuota = {
   'garden-fill': 3,
   'photo-help': 3,
   'garden-brief': 8,
+  'site-finder': 1,
   inputs: 2,
   shortNames: 2,
   'scan-barcode': 10,
@@ -55,6 +56,7 @@ const GROWER_QUOTA: DailyQuota = {
   'garden-fill': 10,
   'photo-help': 10,
   'garden-brief': 20,
+  'site-finder': 5,
   inputs: 10,
   shortNames: 5,
   'scan-barcode': 40,
@@ -76,6 +78,7 @@ const FARM_QUOTA: DailyQuota = {
   'garden-fill': 20,
   'photo-help': 20,
   'garden-brief': 40,
+  'site-finder': 10,
   inputs: 20,
   shortNames: 10,
   'scan-barcode': 60,
@@ -143,6 +146,13 @@ const DAY_MS = 86_400_000;
 const SONNET_PLAN = 0.25;
 const WEB_SEARCH = 0.25;
 const VISION = 0.03;
+// Find a spot sends one 1024 x 1024 px aerial photo to the Sonnet tier
+// ($3 per million input tokens, $15 per million output tokens in
+// aiPlanning.ts). The photo is about 1024 * 1024 / 750 = 1,400 input tokens
+// and the prompt about 700, so input is about 2,100 tokens = $0.0063. The
+// answer is capped at 1,500 output tokens = $0.0225. Worst case $0.029,
+// held as $0.04 for headroom on the image token estimate.
+const SONNET_VISION = 0.04;
 const HAIKU = 0.02;
 
 /** Worst-case cost of one call, checked against the budget before the call
@@ -157,6 +167,7 @@ export const AI_RESERVE_USD: Record<AiEndpointName, number> = {
   'scan-label': VISION,
   'plugin-scan': VISION,
   'photo-help': VISION,
+  'site-finder': SONNET_VISION,
   'scan-url': 0.05,
   inputs: 0.03,
   suggest: HAIKU,

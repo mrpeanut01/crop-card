@@ -223,6 +223,11 @@
         />
         {tr('herbsa.q.notSure')}
       </label>
+      {#if q === 'sun'}
+        <a class="find-spot" href="/plan/site-finder" data-testid="brief-find-spot"
+          >{tr('sitefinder.entry.briefLink')}</a
+        >
+      {/if}
     </fieldset>
   {/each}
 
@@ -403,5 +408,12 @@
     margin: 0 0 var(--space-2);
     color: var(--color-ink-soft);
     font-size: 0.9rem;
+  }
+  .find-spot {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--color-forest);
+    font-weight: 600;
   }
 </style>

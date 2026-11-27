@@ -94,6 +94,8 @@ export const enEntry = {
   'entry.land.do.garden.2': 'Answer a few questions and get a short list of herbs to grow.',
   'entry.land.do.garden.3': 'Get a planting calendar built from your own frost dates.',
   'entry.land.do.garden.4': 'See when a bed may need water, based on recent rain.',
+  'entry.land.do.garden.5':
+    'Get help picking a spot, from the sun, the shade, your water and the soil survey.',
   'entry.land.do.fields.title': 'For your fields',
   'entry.land.do.fields.1': 'Plan which crop goes in which field, step by step.',
   'entry.land.do.fields.2':

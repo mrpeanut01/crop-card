@@ -202,6 +202,7 @@ test.describe('language picker, flag on', () => {
       '/today',
       '/plan',
       '/plan/farm',
+      '/plan/site-finder',
       '/plan/calendar',
       '/inventory',
       '/equipment',

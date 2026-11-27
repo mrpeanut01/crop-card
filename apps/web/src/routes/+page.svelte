@@ -54,7 +54,7 @@
   }
 
   const GROUPS = [
-    { id: 'garden', items: [1, 2, 3, 4] },
+    { id: 'garden', items: [1, 2, 3, 4, 5] },
     { id: 'fields', items: [1, 2, 3, 4, 5] },
     { id: 'animals', items: [1, 2, 3, 4] },
     { id: 'records', items: [1, 2, 3, 4] }

@@ -40,6 +40,7 @@ The monthly budget is the real brake. The daily caps only stop a whole month bei
 | planting-window (cached per crop, year)  | 10   | 40     | 40   |
 | garden-fill                              | 3    | 10     | 20   |
 | photo-help                               | 3    | 10     | 20   |
+| site-finder (aerial photo reading, O-3)  | 1    | 5      | 10   |
 | inputs                                   | 2    | 10     | 20   |
 | shortNames                               | 2    | 5      | 10   |
 | scan-barcode                             | 10   | 40     | 60   |

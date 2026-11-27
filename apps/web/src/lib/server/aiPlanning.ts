@@ -41,7 +41,10 @@ export type AiTask =
   | 'inputs'
   | 'plantingWindow'
   | 'gardenFill'
-  | 'photoHelp';
+  | 'photoHelp'
+  /** Find a spot (38D): reading an aerial photo is harder than label OCR,
+   *  so it runs on the Sonnet tier. */
+  | 'siteFinder';
 
 export interface ModelChoice {
   model: string;
@@ -63,7 +66,13 @@ const SONNET: ModelChoice = {
 };
 
 export function selectModel(task: AiTask): ModelChoice {
-  if (task === 'optimize' || task === 'rationale' || task === 'allocate' || task === 'groups')
+  if (
+    task === 'optimize' ||
+    task === 'rationale' ||
+    task === 'allocate' ||
+    task === 'groups' ||
+    task === 'siteFinder'
+  )
     return SONNET;
   return HAIKU;
 }
@@ -203,8 +212,13 @@ const MAX_TOKENS_BY_TASK: Record<AiTask, number> = {
   inputs: 3000,
   plantingWindow: 400,
   gardenFill: 1500,
-  photoHelp: 400
+  photoHelp: 400,
+  siteFinder: 1500
 };
+
+export function maxTokensFor(task: AiTask): number {
+  return MAX_TOKENS_BY_TASK[task];
+}
 
 export interface PlanWithAIOptions {
   /** Phase 17 (Track 3.4) — when threading is enabled and a session id

@@ -103,6 +103,8 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'entry.land.do.garden.3':
     'Recibe un calendario de siembra armado con tus propias fechas de helada.',
   'entry.land.do.garden.4': 'Ve cuándo una cama puede necesitar agua, según la lluvia reciente.',
+  'entry.land.do.garden.5':
+    'Recibe ayuda para elegir un lugar, según el sol, la sombra, tu agua y el estudio de suelos.',
   'entry.land.do.fields.title': 'Para tus campos',
   'entry.land.do.fields.1': 'Planea qué cultivo va en cada campo, paso a paso.',
   'entry.land.do.fields.2':

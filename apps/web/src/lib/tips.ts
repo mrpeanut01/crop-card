@@ -23,7 +23,8 @@ export const TIP_IDS = [
   'cards',
   'fertility',
   'animals',
-  'calendar'
+  'calendar',
+  'site_finder'
 ] as const;
 
 export type TipId = (typeof TIP_IDS)[number];
@@ -57,7 +58,8 @@ const TIPS: Record<TipId, TipDef> = {
   cards: {},
   fertility: { otherBody: true },
   animals: { action: { href: '/animals/add', ownerOnly: true }, otherBody: true },
-  calendar: { action: { href: '/plan', ownerOnly: true }, otherBody: true }
+  calendar: { action: { href: '/plan', ownerOnly: true }, otherBody: true },
+  site_finder: { otherBody: true }
 };
 
 const ROUTE_TIPS: Record<string, TipId> = {
@@ -76,7 +78,8 @@ const ROUTE_TIPS: Record<string, TipId> = {
   '/cards': 'cards',
   '/fertility': 'fertility',
   '/animals': 'animals',
-  '/plan/calendar': 'calendar'
+  '/plan/calendar': 'calendar',
+  '/plan/site-finder': 'site_finder'
 };
 
 /** The tip for a route, or null. A page that refused the visitor (the

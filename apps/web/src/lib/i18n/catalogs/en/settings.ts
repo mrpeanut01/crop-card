@@ -708,6 +708,7 @@ export const enSettings = {
   'settings.ai.ep.planting-window': 'Planting date helper',
   'settings.ai.ep.garden-fill': 'Fill this bed',
   'settings.ai.ep.photo-help': 'Ask about a photo',
+  'settings.ai.ep.site-finder': 'Find a spot: aerial photo reading',
   'settings.ai.pageTitle': 'AI assistant · CropCard',
   'settings.ai.title': 'AI planning assistant',
   'settings.ai.kicker': 'Integrations · Claude',

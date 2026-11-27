@@ -60,7 +60,8 @@
       quota: q['planting-window'] ?? 0
     },
     { key: 'garden-fill', label: 'settings.ai.ep.garden-fill', quota: q['garden-fill'] ?? 0 },
-    { key: 'photo-help', label: 'settings.ai.ep.photo-help', quota: q['photo-help'] ?? 0 }
+    { key: 'photo-help', label: 'settings.ai.ep.photo-help', quota: q['photo-help'] ?? 0 },
+    { key: 'site-finder', label: 'settings.ai.ep.site-finder', quota: q['site-finder'] ?? 0 }
   ]);
   const upgradeName = $derived(data.spend.upgrade ? PLANS[data.spend.upgrade].name : null);
 </script>

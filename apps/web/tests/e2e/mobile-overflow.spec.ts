@@ -5,6 +5,7 @@ const ROUTES = [
   '/today',
   '/plan',
   '/plan/farm',
+  '/plan/site-finder',
   '/plan/calendar',
   '/spray/fungicide',
   '/inventory',

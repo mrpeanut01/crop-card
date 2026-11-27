@@ -739,6 +739,7 @@ export const esSettings: Partial<Record<MessageKey, string>> = {
   'settings.ai.ep.planting-window': 'Ayuda para la fecha de siembra',
   'settings.ai.ep.garden-fill': 'Llenar esta cama',
   'settings.ai.ep.photo-help': 'Preguntar sobre una foto',
+  'settings.ai.ep.site-finder': 'Buscar un lugar: lectura de la foto aérea',
   'settings.ai.pageTitle': 'Asistente de IA · CropCard',
   'settings.ai.title': 'Asistente de planificación con IA',
   'settings.ai.kicker': 'Integraciones · Claude',

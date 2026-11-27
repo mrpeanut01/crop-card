@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Map as MapIcon, Ruler, PencilLine, Sprout, Sparkle } from 'lucide-svelte';
+  import { Compass, Map as MapIcon, Ruler, PencilLine, Sprout, Sparkle } from 'lucide-svelte';
   import type { SetupArea } from '$lib/setup/types';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
@@ -106,6 +106,13 @@
           <Ruler size={22} strokeWidth={1.75} aria-hidden="true" />
           <span class="choice-title">{tr('planui.where.sketchTitle')}</span>
           <span class="choice-hint">{tr('planui.where.sketchHint')}</span>
+        </a>
+      </li>
+      <li>
+        <a class="choice" href="/plan/site-finder" data-testid="plan-where-find-spot">
+          <Compass size={22} strokeWidth={1.75} aria-hidden="true" />
+          <span class="choice-title">{tr('sitefinder.entry.title')}</span>
+          <span class="choice-hint">{tr('sitefinder.entry.hint')}</span>
         </a>
       </li>
       <li>

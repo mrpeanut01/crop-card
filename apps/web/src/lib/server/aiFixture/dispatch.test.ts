@@ -19,11 +19,12 @@ const ask = (text: string, system?: string): CreateParams => ({
 });
 
 describe('fixture dispatch table', () => {
-  it('lists allocation, garden brief and photo marks once each', () => {
+  it('lists allocation, garden brief, photo marks and site finder once each', () => {
     expect(FIXTURE_ENTRIES.map((e) => e.name)).toEqual([
       'allocation',
       'garden-brief',
-      'photo-marks'
+      'photo-marks',
+      'site-finder'
     ]);
     expect(FIXTURE_ENTRIES).toContain(gardenBriefFixture);
     expect(FIXTURE_ENTRIES).toContain(photoMarksFixture);

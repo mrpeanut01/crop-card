@@ -8,7 +8,8 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { db } from '$lib/db/client';
-import { helperAssignments, owners, ownerSubscriptions, users } from '$lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { helperAssignments, owners, ownerSubscriptions, userHints, users } from '$lib/db/schema';
 import { runWithTenant } from '$lib/db/tenant';
 import { seedDemoFarm } from '$lib/db/demo/seed';
 import { writeSession } from '$lib/server/session';
@@ -124,6 +125,27 @@ describe('/today query budget (E0-11, F0-8)', () => {
       const warm = await todayQueries(role);
       console.info(`[today-query-budget] ${role}: ${warm} queries`);
       expect(warm).toBeLessThanOrEqual(TODAY_QUERY_CAP);
+    }
+  );
+
+  it.each(['owner', 'helper'] as const)(
+    'beginner tips add no statement to /today for the %s',
+    async (role) => {
+      await todayQueries(role);
+      const off = await todayQueries(role);
+      db.update(users).set({ beginnerTips: true }).where(eq(users.id, userIds[role])).run();
+      db.insert(userHints)
+        .values({ userId: userIds[role], hintKey: 'tip_plan', seenAt: new Date() })
+        .run();
+      try {
+        await todayQueries(role);
+        const on = await todayQueries(role);
+        console.info(`[today-query-budget] ${role} with beginner tips: ${on} queries`);
+        expect(on).toBe(off);
+      } finally {
+        db.delete(userHints).where(eq(userHints.userId, userIds[role])).run();
+        db.update(users).set({ beginnerTips: null }).where(eq(users.id, userIds[role])).run();
+      }
     }
   );
 });

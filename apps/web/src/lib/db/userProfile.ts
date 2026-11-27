@@ -19,6 +19,11 @@ export function setUserLocale(userId: string, locale: string | null): void {
   db.update(users).set({ locale }).where(eq(users.id, userId)).run();
 }
 
+/** Beginner tips for this user, on any farm. Null means never asked. */
+export function setBeginnerTips(userId: string, enabled: boolean | null): void {
+  db.update(users).set({ beginnerTips: enabled }).where(eq(users.id, userId)).run();
+}
+
 export function avatarVersion(userId: string): number | null {
   const row = db
     .select({ updatedAt: userAvatars.updatedAt })

@@ -42,6 +42,7 @@ import {
 } from '$lib/server/demo/lifecycle';
 import { DEMO_TTL_MS } from '$lib/demo/identity';
 import { realNow } from '$lib/server/clock';
+import { setBeginnerTips } from '$lib/db/userProfile';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals, url }) => {
@@ -211,6 +212,9 @@ export const actions: Actions = {
           .values({ ownerId, planCode: 'free', status: 'trial', createdAt: now, updatedAt: now })
           .run();
       });
+
+    const firstTime = String(fd.get('firstTime') ?? '');
+    if (firstTime === 'yes' || firstTime === 'no') setBeginnerTips(user.id, firstTime === 'yes');
 
     runWithTenant(ownerId, () => {
       setOnboardingStatus('in-progress');

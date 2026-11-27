@@ -38,6 +38,9 @@ describe('Start from scratch demo', () => {
   it('creates a farmless demo user that expires on the demo clock', () => {
     const now = Date.now();
     const { userId, email } = createBlankDemoUser(now);
+    expect(
+      db.select({ v: users.beginnerTips }).from(users).where(eq(users.id, userId)).get()?.v
+    ).toBe(true);
     const user = asUser(userId, email, null);
     expect(demoExpiryFor(user)).toBe(now + DEMO_TTL_MS);
     expect(demoSessionExpired(user, now + 1000)).toBe(false);

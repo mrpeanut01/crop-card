@@ -170,6 +170,8 @@ export const load: LayoutServerLoad = ({ locals }) => {
   return {
     locale: locals.locale ?? 'en',
     locales: [...enabledLocales()],
+    beginnerTips: locals.user?.beginnerTips === true,
+    seenTips: locals.user?.beginnerTips === true ? (locals.user.seenTips ?? []) : [],
     pluginLoadFailures,
     user: locals.user
       ? {

@@ -5,12 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
 import {
   claimHint,
+  forgetTips,
   hasSeenHint,
   hintState,
   initHints,
   markHintSeen,
   releaseHint,
-  resetHintsForTest
+  resetHintsForTest,
+  setTipShowing
 } from './hints';
 
 type Call = { url: string; init?: RequestInit };
@@ -116,5 +118,70 @@ describe('hints', () => {
     await markHintSeen('map_add', f.fn);
     expect(get(hintState).active).toBeNull();
     expect(claimHint('map_filter')).toBe(true);
+  });
+
+  it('an anchored hint waits while a beginner tip is on screen', async () => {
+    await initHints('u1', fakeFetch().fn);
+    expect(claimHint('map_add')).toBe(true);
+    setTipShowing('tip_plan', true);
+    expect(get(hintState).active).toBeNull();
+    expect(claimHint('map_add')).toBe(false);
+    setTipShowing('tip_today', false);
+    expect(get(hintState).tip).toBe('tip_plan');
+    setTipShowing('tip_plan', false);
+    expect(claimHint('map_add')).toBe(true);
+  });
+
+  it('keeps the tip on screen through the first load of the hint list', async () => {
+    setTipShowing('tip_today', true);
+    await initHints('u1', fakeFetch().fn);
+    expect(get(hintState).tip).toBe('tip_today');
+  });
+
+  it('forgetTips clears tip keys on this device and nothing else', async () => {
+    const f = fakeFetch({ offline: true });
+    await initHints('u1', f.fn);
+    await markHintSeen('tip_today', f.fn);
+    await markHintSeen('tip_start_read', f.fn);
+    await markHintSeen('map_add', f.fn);
+    forgetTips();
+    expect(hasSeenHint('tip_today')).toBe(false);
+    expect(hasSeenHint('tip_start_read')).toBe(false);
+    expect(hasSeenHint('map_add')).toBe(true);
+    expect(JSON.parse(localStorage.getItem('cropcard.hints.seen.u1')!)).toEqual(['map_add']);
+    expect(JSON.parse(localStorage.getItem('cropcard.hints.pending.u1')!)).toEqual(['map_add']);
+  });
+
+  it('dismisses a tip offline and uploads it later', async () => {
+    const offline = fakeFetch({ offline: true });
+    await initHints('u1', offline.fn);
+    await markHintSeen('tip_spray', offline.fn);
+    expect(hasSeenHint('tip_spray')).toBe(true);
+    resetHintsForTest();
+    const online = fakeFetch();
+    await initHints('u1', online.fn);
+    expect(online.server.has('tip_spray')).toBe(true);
+    expect(hasSeenHint('tip_spray')).toBe(true);
+  });
+
+  it('lets the server decide which tips are dismissed, so a reset reaches other devices', async () => {
+    localStorage.setItem(
+      'cropcard.hints.seen.u1',
+      JSON.stringify(['tip_today', 'tip_plan', 'map_add'])
+    );
+    await initHints('u1', fakeFetch({ serverSeen: ['tip_plan'] }).fn);
+    expect(hasSeenHint('tip_today')).toBe(false);
+    expect(hasSeenHint('tip_plan')).toBe(true);
+    expect(hasSeenHint('map_add')).toBe(true);
+    expect(JSON.parse(localStorage.getItem('cropcard.hints.seen.u1')!).sort()).toEqual([
+      'map_add',
+      'tip_plan'
+    ]);
+  });
+
+  it('keeps locally dismissed tips when the server cannot be reached', async () => {
+    localStorage.setItem('cropcard.hints.seen.u1', JSON.stringify(['tip_today']));
+    await initHints('u1', fakeFetch({ offline: true }).fn);
+    expect(hasSeenHint('tip_today')).toBe(true);
   });
 });

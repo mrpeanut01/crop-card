@@ -4,6 +4,7 @@
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
+  import BeginnerTipsSetting from '$lib/components/settings/BeginnerTipsSetting.svelte';
   import SignInMethods from '$lib/components/settings/SignInMethods.svelte';
   import AvatarUpload from '$lib/components/settings/AvatarUpload.svelte';
   import { DISPLAY_NAME_MAX, DISPLAY_UNITS, TIME_ZONES } from '$lib/profile';
@@ -115,6 +116,13 @@
       {/if}
     </SettingsSection>
   {/if}
+
+  <SettingsSection title={tr('tips.settings.title')} sub={tr('tips.settings.sub')}>
+    <BeginnerTipsSetting
+      enabled={data.beginnerTips === true}
+      canChange={data.account.role !== 'inspector'}
+    />
+  </SettingsSection>
 
   <SettingsSection title={tr('account.signIn.title')} sub={tr('account.signIn.sub')}>
     <SignInMethods email={data.account.email} phone={data.account.phone} />

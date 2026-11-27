@@ -81,6 +81,7 @@ function insertDemoUser(
       email,
       displayName: demoLocalizer(locale)('Demo visitor'),
       ...(locale && locale !== 'en' ? { locale } : {}),
+      beginnerTips: true,
       createdAt
     })
     .run();

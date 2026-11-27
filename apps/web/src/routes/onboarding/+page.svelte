@@ -30,6 +30,7 @@
   let geoBusy = $state(false);
   let geoError = $state<string | null>(null);
 
+  let firstTime = $state<'yes' | 'no'>('yes');
   let picked = $state<string[]>([]);
   let pickedAnimals = $state<string[]>([]);
 
@@ -266,6 +267,20 @@
         <FrostPanel {lat} {lon} mode="auto" bind:blocked={frostBlocked} />
       </Card>
 
+      <Card loose>
+        <fieldset class="first-time" data-testid="first-time">
+          <legend class="serif">{tr('tips.onboard.question')}</legend>
+          {#each ['yes', 'no'] as const as v (v)}
+            <label class="ft-choice" class:on={firstTime === v}>
+              <input type="radio" name="firstTime" value={v} bind:group={firstTime} />
+              <span class="ft-dot" aria-hidden="true"></span>
+              <span>{tr(`tips.onboard.${v}`)}</span>
+            </label>
+          {/each}
+          <p class="ft-note">{tr('tips.onboard.note')}</p>
+        </fieldset>
+      </Card>
+
       <p class="why">
         {tr('onboard.why')}
       </p>
@@ -487,6 +502,66 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+  }
+  .first-time {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .first-time legend {
+    padding: 0;
+    margin: 0 0 10px;
+    font-size: 20px;
+    color: var(--color-forest-deep);
+  }
+  .ft-choice {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 8px 16px;
+    border: 1.5px solid var(--color-divider);
+    border-radius: var(--radius-card);
+    background: var(--color-paper);
+    font-weight: 600;
+    color: var(--color-forest-deep);
+    cursor: pointer;
+  }
+  .ft-choice.on {
+    border-color: var(--color-forest);
+    background: var(--pill-forest-bg);
+  }
+  .ft-choice:focus-within {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 2px;
+  }
+  .ft-choice input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+  .ft-dot {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1.5px solid var(--color-divider);
+    background: var(--color-paper);
+  }
+  .ft-choice.on .ft-dot {
+    border-color: var(--color-forest);
+    background: radial-gradient(var(--color-forest) 0 45%, var(--color-paper) 50%);
+  }
+  .ft-note {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-ink-soft);
+    line-height: 1.5;
   }
   .why {
     margin: 0;

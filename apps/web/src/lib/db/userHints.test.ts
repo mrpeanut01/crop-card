@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db } from './client';
 import { userHints, users } from './schema';
-import { listSeen, markSeen } from './userHints';
+import { forgetTips, listSeen, markSeen } from './userHints';
 import { MAX_HINTS_PER_USER } from '$lib/hints';
 
 function seedUser(): string {
@@ -58,5 +58,22 @@ describe('userHints repo', () => {
     markSeen(u, 'map_filter');
     db.delete(users).where(eq(users.id, u)).run();
     expect(listSeen(u)).toEqual([]);
+  });
+
+  it("forgetTips removes only this user's tip keys", () => {
+    const a = seedUser();
+    const b = seedUser();
+    for (const k of ['tip_today', 'tip_start_read', 'map_add', 'tipping_point', 'atip_x']) {
+      markSeen(a, k);
+    }
+    markSeen(b, 'tip_today');
+    expect(forgetTips(a)).toBe(2);
+    expect(
+      listSeen(a)
+        .map((h) => h.key)
+        .sort()
+    ).toEqual(['atip_x', 'map_add', 'tipping_point']);
+    expect(listSeen(b).map((h) => h.key)).toEqual(['tip_today']);
+    expect(forgetTips(a)).toBe(0);
   });
 });

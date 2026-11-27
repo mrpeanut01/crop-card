@@ -3,6 +3,7 @@
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
   import { claimHint, hintState, initHints, markHintSeen, releaseHint } from '$lib/client/hints';
+  import { safetyStopOnScreen } from '$lib/client/safetyStop';
   import type { HintKey } from '$lib/hints';
 
   interface Props {
@@ -17,7 +18,6 @@
   const { key, text, anchor, suppressed = false }: Props = $props();
   const tr = $derived(createT(page.data?.locale));
 
-  const SAFETY_STOP = '[data-safety-stop], [role="alertdialog"], .stop[role="alert"]';
   const WIDTH = 280;
   const GAP = 10;
   const MARGIN = 8;
@@ -33,6 +33,7 @@
     mounted &&
       $hintState.ready &&
       !$hintState.seen.has(key) &&
+      $hintState.tip === null &&
       !suppressed &&
       !stopOnScreen &&
       !busy &&
@@ -53,7 +54,7 @@
 
   function scan() {
     anchorEl = document.querySelector<HTMLElement>(anchor);
-    stopOnScreen = document.querySelector(SAFETY_STOP) !== null;
+    stopOnScreen = safetyStopOnScreen();
     const busyEl = document.querySelector<HTMLElement>('[data-hint-busy]');
     busy = busyEl !== null && !(anchorEl && busyEl.contains(anchorEl));
     place();

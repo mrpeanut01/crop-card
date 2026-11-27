@@ -10,6 +10,7 @@ import { getSetting, type SettingReader } from '$lib/db/settings';
 import { ASSISTANT_SKIPPED_SETTING, type GettingStartedFacts } from './gettingStarted';
 import { getFarmAnimals, getFarmHerbs, getFarmProfile } from './state.server';
 import { hasGardenBrief } from '$lib/server/garden/briefStore';
+import { START_READ_KEY } from '$lib/tips';
 import { hasAnyAnimalRecord } from '$lib/db/animals';
 
 function onMap(a: { geometryGeojson?: string; widthFt?: number; lengthFt?: number }): boolean {
@@ -27,6 +28,9 @@ export function loadGettingStartedFacts(input: {
   hasLocation?: boolean;
   aiEnabled?: boolean;
   settings?: SettingReader;
+  /** From the per-request user read, so the card costs no extra query. */
+  beginnerTips?: boolean;
+  seenTips?: readonly string[];
 }): GettingStartedFacts {
   const read = input.settings ?? getSetting;
   const areas = listFields();
@@ -56,6 +60,8 @@ export function loadGettingStartedFacts(input: {
     hasPinnedCards: null,
     hasGardenBrief: hasGardenBrief(read),
     herbsAnswered: getFarmHerbs(read),
+    beginnerTips: input.beginnerTips === true,
+    startRead: (input.seenTips ?? []).includes(START_READ_KEY),
     ...animalFacts(read)
   };
 }

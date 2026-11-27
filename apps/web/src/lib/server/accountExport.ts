@@ -166,6 +166,7 @@ export async function buildAccountExport(event: RequestEvent): Promise<Record<st
       displayName: userRow?.displayName ?? null,
       timeZone: prefs.timeZone,
       displayUnits: prefs.units,
+      beginnerTips: userRow?.beginnerTips ?? null,
       avatarUrl: avatarUrl(user.id, avatarVersion(user.id)),
       emailAlertConsents: listConsentHistoryForUser(user.id),
       feedback: listFeedbackForUser(user.id)

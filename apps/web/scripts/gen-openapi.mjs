@@ -49,7 +49,7 @@ import {
   recipeRequestSchema,
   successionRequestSchema
 } from '../src/lib/garden/api.ts';
-import { hintsPostSchema } from '../src/lib/hints.ts';
+import { beginnerTipsPostSchema, hintsPostSchema } from '../src/lib/hints.ts';
 import { bedLayoutRequestSchema } from '../src/lib/plan/bedLayoutApi.ts';
 import { keepInOneBedRequestSchema } from '../src/lib/plan/keepInOneBed.ts';
 import { gardenBriefChatSchema, gardenBriefPutSchema } from '../src/lib/garden/brief/schema.ts';
@@ -3837,6 +3837,32 @@ const paths = {
         400: errorResponse('Invalid body.'),
         401: errorResponse('Authentication required.'),
         409: errorResponse('Too many hints recorded for this user.')
+      }
+    }
+  },
+  '/api/me/beginner-tips': {
+    post: {
+      summary: 'Turn beginner tips on or off, or show them all again',
+      description:
+        'Per user, on every farm. `enabled` sets `users.beginner_tips`, which decides whether a short tip shows at the top of each main screen. `reset: true` forgets every dismissed tip (hint keys that start `tip_`) and leaves other hints alone. Send either or both. Inspectors are refused like any other API write.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(beginnerTipsPostSchema),
+      responses: {
+        200: jsonResponse(
+          'The setting, how many tips were forgotten and the dismissed hint keys.',
+          {
+            type: 'object',
+            required: ['enabled', 'forgotten', 'hints'],
+            properties: {
+              enabled: { type: 'boolean' },
+              forgotten: { type: 'integer' },
+              hints: { type: 'array', items: { type: 'string' } }
+            }
+          }
+        ),
+        400: errorResponse('Invalid body.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Inspector accounts are read-only.')
       }
     }
   },

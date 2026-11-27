@@ -3,11 +3,11 @@
  * control once, on whichever farm they meet it. Holds no farm data.
  */
 
-import { and, count, eq } from 'drizzle-orm';
+import { and, count, eq, sql } from 'drizzle-orm';
 import { db } from './client';
 import { userHints } from './schema';
 import { unscopedQueryNote } from './tenant';
-import { MAX_HINTS_PER_USER } from '$lib/hints';
+import { MAX_HINTS_PER_USER, TIP_PREFIX } from '$lib/hints';
 
 export interface SeenHint {
   key: string;
@@ -40,4 +40,20 @@ export function markSeen(userId: string, key: string, at: Date = new Date()): bo
   if (total >= MAX_HINTS_PER_USER) return false;
   db.insert(userHints).values({ userId, hintKey: key, seenAt: at }).onConflictDoNothing().run();
   return true;
+}
+
+/** "Show all tips again": forgets every dismissed beginner tip (keys that
+ *  start `tip_`) and leaves the other hints as they are. Returns how many
+ *  were forgotten. */
+export function forgetTips(userId: string): number {
+  unscopedQueryNote('per-user UI hint state');
+  return db
+    .delete(userHints)
+    .where(
+      and(
+        eq(userHints.userId, userId),
+        sql`substr(${userHints.hintKey}, 1, ${TIP_PREFIX.length}) = ${TIP_PREFIX}`
+      )
+    )
+    .run().changes;
 }

@@ -50,6 +50,11 @@ import {
   successionRequestSchema
 } from '../src/lib/garden/api.ts';
 import { beginnerTipsPostSchema, hintsPostSchema } from '../src/lib/hints.ts';
+import {
+  soilAreaResponseSchema,
+  soilLookupSchema,
+  soilSurveyQuerySchema
+} from '../src/lib/soil/apiSchemas.ts';
 import { bedLayoutRequestSchema } from '../src/lib/plan/bedLayoutApi.ts';
 import { keepInOneBedRequestSchema } from '../src/lib/plan/keepInOneBed.ts';
 import { gardenBriefChatSchema, gardenBriefPutSchema } from '../src/lib/garden/brief/schema.ts';
@@ -4011,6 +4016,46 @@ const paths = {
         ...AUTH_ERRORS,
         404: errorResponse('Planting not found.'),
         409: errorResponse('`NO_CALENDAR`.')
+      }
+    }
+  },
+  '/api/soil/survey': {
+    get: {
+      summary: 'USDA NRCS soil survey at a map point',
+      description:
+        'Any signed-in role. The USDA NRCS soil survey (SSURGO, read through Soil Data Access) for the map unit at a WGS84 point: its name, farmland class, drainage class, slope, depth to a water table and to bedrock, flooding frequency, and each major soil with the texture, typical pH range and organic matter of its top mineral layer. Depths are in cm and slope in percent. `status` is `ok` with a `survey`, `no-data` when the survey has nothing at the point (open water, outside the survey), or `unavailable` when the service could not be reached; all three answer 200. `notSoil` is true when the dominant soil is Urban land, Water and the like, with no soil properties. Reference data for display only: the survey is mapped at a broad scale, a lab soil test describes the ground itself, and nothing in the safety kernel, the Inputs Plan or the fertility math reads it. Answers are cached per point for 180 days. Limited to 20 lookups a minute per user.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: Object.keys(soilSurveyQuerySchema.shape).map((name) => ({
+        name,
+        in: 'query',
+        required: true,
+        description: name === 'lat' ? 'Latitude, decimal degrees.' : 'Longitude, decimal degrees.',
+        schema: {
+          type: 'number',
+          minimum: name === 'lat' ? -90 : -180,
+          maximum: name === 'lat' ? 90 : 180
+        }
+      })),
+      responses: {
+        200: jsonResponse('The lookup.', fromZod(soilLookupSchema)),
+        400: errorResponse('Missing or out-of-range `lat` or `lon`.'),
+        401: errorResponse('Authentication required.'),
+        429: errorResponse('Too many lookups; try again in a minute.')
+      }
+    }
+  },
+  '/api/soil/areas/{id}': {
+    parameters: [idPath('id', 'Area id.')],
+    get: {
+      summary: 'USDA NRCS soil survey for an Area',
+      description:
+        "Any signed-in role. The same lookup as `/api/soil/survey`, at the centre of the Area's drawn outline. An Area that is not drawn uses the farm's saved location and answers `approximate: true`; with no saved location either, the answer is `located: false`. Another farm's Area is 404.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The lookup for the Area.', fromZod(soilAreaResponseSchema)),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('Area not found.'),
+        429: errorResponse('Too many lookups; try again in a minute.')
       }
     }
   },

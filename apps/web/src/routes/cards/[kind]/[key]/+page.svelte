@@ -26,6 +26,8 @@
   import SeedStartPanel from '$lib/components/cards/SeedStartPanel.svelte';
   import PlantingHours from '$lib/components/cards/PlantingHours.svelte';
   import OrchardPanel from '$lib/components/orchard/OrchardPanel.svelte';
+  import SoilSurveyPanel from '$lib/components/soil/SoilSurveyPanel.svelte';
+  import { showsSoilSurvey } from '$lib/soil/areas';
   import TaskTimer from '$lib/components/tasks/TaskTimer.svelte';
   import { isClosedStatus, type TaskStatus } from '$lib/tasks/status';
 
@@ -267,7 +269,11 @@
       <OrchardPanel cropId={key.slice(key.indexOf('_') + 1)} {snapshot} />
     {/if}
     {#if card.kind === 'area' && snapshot}
-      <OrchardPanel areaId={key.slice(key.indexOf('_') + 1)} {snapshot} />
+      {@const cardAreaId = key.slice(key.indexOf('_') + 1)}
+      <OrchardPanel areaId={cardAreaId} {snapshot} />
+      {#if showsSoilSurvey(snapshot.areas.find((a) => a.id === cardAreaId)?.kind)}
+        {#key cardAreaId}<SoilSurveyPanel areaId={cardAreaId} collapsed />{/key}
+      {/if}
     {/if}
     <CareGuideList cards={careCards} {prefs} {now} />
     {#key key}

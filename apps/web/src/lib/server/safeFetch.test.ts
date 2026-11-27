@@ -331,7 +331,103 @@ describe('safeFetch', () => {
   });
 });
 
+describe('safeFetch POST', () => {
+  it('sends GET with no body unless POST is asked for', async () => {
+    const connector = routes({ 'https://api.example/q': response(200) });
+    await safeFetch('https://api.example/q', { resolver: publicResolver, connector });
+    expect(connector.calls[0].method).toBeUndefined();
+    expect(connector.calls[0].body).toBeUndefined();
+  });
+
+  it('ignores a body on GET', async () => {
+    const connector = routes({ 'https://api.example/q': response(200) });
+    await safeFetch('https://api.example/q', {
+      resolver: publicResolver,
+      connector,
+      body: 'x=1'
+    });
+    expect(connector.calls[0].body).toBeUndefined();
+  });
+
+  it('passes the method and body to the pinned connection', async () => {
+    const connector = routes({ 'https://api.example/q': response(200, {}, body('ok')) });
+    const res = await safeFetch('https://api.example/q', {
+      resolver: publicResolver,
+      connector,
+      method: 'POST',
+      body: '{"a":1}',
+      headers: { 'content-type': 'application/json' }
+    });
+    expect(connector.calls[0]).toMatchObject({
+      method: 'POST',
+      body: '{"a":1}',
+      address: PUBLIC_V4,
+      headers: { 'content-type': 'application/json' }
+    });
+    expect((await res.readText()).text).toBe('ok');
+  });
+
+  it('still refuses private addresses for a POST', async () => {
+    const connector = routes({});
+    await expectCode(
+      safeFetch('http://169.254.169.254/latest', { connector, method: 'POST', body: 'x' }),
+      'blocked-address'
+    );
+    const resolver: Resolver = async () => [{ address: '10.0.0.5', family: 4 }];
+    await expectCode(
+      safeFetch('https://rebind.example/', { resolver, connector, method: 'POST', body: 'x' }),
+      'blocked-address'
+    );
+    expect(connector.calls).toHaveLength(0);
+  });
+
+  it.each([301, 302, 303, 307, 308])('never follows a %i redirect with a POST', async (status) => {
+    const connector = routes({
+      'https://api.example/q': response(status, { location: 'https://other.example/q' })
+    });
+    await expectCode(
+      safeFetch('https://api.example/q', {
+        resolver: publicResolver,
+        connector,
+        method: 'POST',
+        body: 'secret'
+      }),
+      'too-many-redirects'
+    );
+    expect(connector.calls).toHaveLength(1);
+  });
+});
+
 describe('nodeConnector', () => {
+  it('posts the body with its length to the pinned address', async () => {
+    const server = http.createServer((req, res) => {
+      let got = '';
+      req.on('data', (c) => (got += c));
+      req.on('end', () => {
+        res.writeHead(200, { 'content-type': 'text/plain' });
+        res.end(`${req.method} ${req.headers['content-length']} ${got}`);
+      });
+    });
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+    const { port } = server.address() as AddressInfo;
+    try {
+      const res = await nodeConnector({
+        url: new URL(`http://api.example:${port}/q`),
+        address: '127.0.0.1',
+        family: 4,
+        headers: { 'content-type': 'application/json' },
+        signal: new AbortController().signal,
+        method: 'POST',
+        body: '{"é":1}'
+      });
+      let text = '';
+      for await (const c of res.body) text += new TextDecoder().decode(c);
+      expect(text).toBe('POST 8 {"é":1}');
+    } finally {
+      server.close();
+    }
+  });
+
   it('connects to the pinned address while sending the original Host header', async () => {
     const server = http.createServer((req, res) => {
       res.writeHead(200, { 'content-type': 'text/html' });

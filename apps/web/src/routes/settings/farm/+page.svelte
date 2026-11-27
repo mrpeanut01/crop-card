@@ -10,6 +10,7 @@
   import { fmt } from '$lib/prefsState.svelte';
   import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
   import ZoneChip from '$lib/components/farm/ZoneChip.svelte';
+  import SoilSurveyPanel from '$lib/components/soil/SoilSurveyPanel.svelte';
   import { kindStyle } from '$lib/farm/kindStyle';
   import EmergencyContactsEditor from '$lib/components/settings/EmergencyContactsEditor.svelte';
   import LocationPickerModal from '$lib/components/farm/LocationPickerModal.svelte';
@@ -129,6 +130,7 @@
         editable
       />
     </div>
+    <SoilSurveyPanel lat={finite(lat)} lon={finite(lon)} farmLocation collapsed />
   </SettingsSection>
 
   <SettingsSection

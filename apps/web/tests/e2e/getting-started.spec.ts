@@ -105,6 +105,8 @@ test.describe('first-use hints', () => {
       return (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05);
     });
     expect(ratio).toBeGreaterThanOrEqual(4.5);
+    // The hint is fixed beside its anchor, so bring the anchor on screen first.
+    await page.locator('[data-hint-anchor=plan_first_crop]').first().scrollIntoViewIfNeeded();
     await tip.getByRole('button', { name: 'Got it' }).click();
     await expect(tip).toHaveCount(0);
 

@@ -1,6 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import OrchardPanel from '$lib/components/orchard/OrchardPanel.svelte';
+  import SoilSurveyPanel from '$lib/components/soil/SoilSurveyPanel.svelte';
+  import { showsSoilSurvey } from '$lib/soil/areas';
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
   import { cropDisplayName } from '$lib/i18n/cropName';
@@ -413,6 +415,9 @@
         {#if areaCard}
           <CardView card={areaCard} {prefs} showAsOf={false} />
           <OrchardPanel areaId={selectedAreaId} />
+          {#if showsSoilSurvey(selectedArea?.kind)}
+            {#key selectedAreaId}<SoilSurveyPanel areaId={selectedAreaId} collapsed />{/key}
+          {/if}
         {/if}
         <div class="block-cards-head">
           <h2 class="section-title">

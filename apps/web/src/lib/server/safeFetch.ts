@@ -1,5 +1,6 @@
 /**
- * SSRF-hardened outbound GET for user-supplied URLs (#298).
+ * SSRF-hardened outbound GET for user-supplied URLs (#298), plus a POST
+ * with a fixed body for host-pinned public APIs that only take one.
  *
  * Every hop is validated before a socket opens: scheme must be http(s), no
  * userinfo, and EVERY address the hostname resolves to must be public
@@ -59,6 +60,10 @@ export interface ConnectArgs {
   family: 4 | 6;
   headers: Record<string, string>;
   signal: AbortSignal;
+  /** Defaults to GET. */
+  method?: SafeFetchMethod;
+  /** Sent only with POST. */
+  body?: string;
 }
 
 export interface RawResponse {
@@ -70,7 +75,14 @@ export interface RawResponse {
 
 export type Connector = (args: ConnectArgs) => Promise<RawResponse>;
 
+export type SafeFetchMethod = 'GET' | 'POST';
+
 export interface SafeFetchOptions {
+  /** Defaults to GET. A POST is never redirected: any redirect answer fails
+   *  with `too-many-redirects`, so the body only ever reaches the URL given. */
+  method?: SafeFetchMethod;
+  /** Request body for a POST; ignored for GET. */
+  body?: string;
   headers?: Record<string, string>;
   timeoutMs?: number;
   maxBytes?: number;
@@ -291,14 +303,27 @@ function decode(res: http.IncomingMessage): Readable {
   return res;
 }
 
-export const nodeConnector: Connector = ({ url, address, family, headers, signal }) =>
+export const nodeConnector: Connector = ({
+  url,
+  address,
+  family,
+  headers,
+  signal,
+  method = 'GET',
+  body
+}) =>
   new Promise((resolve, reject) => {
     const mod = url.protocol === 'https:' ? https : http;
+    const payload = method === 'POST' ? Buffer.from(body ?? '', 'utf8') : null;
     const req = mod.request(
       url,
       {
-        method: 'GET',
-        headers: { 'Accept-Encoding': 'gzip, deflate, br', ...headers },
+        method,
+        headers: {
+          'Accept-Encoding': 'gzip, deflate, br',
+          ...headers,
+          ...(payload ? { 'Content-Length': String(payload.byteLength) } : {})
+        },
         lookup: pinnedLookup(address, family),
         signal,
         agent: false
@@ -318,7 +343,7 @@ export const nodeConnector: Connector = ({ url, address, family, headers, signal
       }
     );
     req.on('error', reject);
-    req.end();
+    req.end(payload ?? undefined);
   });
 
 // ─── safeFetch ─────────────────────────────────────────────────────────
@@ -361,6 +386,8 @@ export async function safeFetch(
   const maxRedirects = opts.maxRedirects ?? DEFAULT_MAX_REDIRECTS;
   const resolver = opts.resolver ?? defaultResolver;
   const connector = opts.connector ?? nodeConnector;
+  const method: SafeFetchMethod = opts.method === 'POST' ? 'POST' : 'GET';
+  const post = method === 'POST' ? { method, body: opts.body ?? '' } : {};
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -372,13 +399,16 @@ export async function safeFetch(
     for (let hop = 0; ; hop++) {
       const { address, family } = await abortable(resolveValidated(url, resolver), signal);
       const res = await abortable(
-        connector({ url, address, family, headers: { ...opts.headers }, signal }),
+        connector({ url, address, family, headers: { ...opts.headers }, signal, ...post }),
         signal
       );
       if (REDIRECT_STATUSES.has(res.status)) {
         res.destroy();
         const location = headerValue(res.headers, 'location');
         if (!location) throw new SafeFetchError('network', 'Redirect without a Location');
+        if (method === 'POST') {
+          throw new SafeFetchError('too-many-redirects', 'A POST is never redirected');
+        }
         if (hop >= maxRedirects) {
           throw new SafeFetchError('too-many-redirects', `More than ${maxRedirects} redirects`);
         }

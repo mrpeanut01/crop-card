@@ -6,6 +6,7 @@
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import SetupSoilTest from '$lib/components/setup/SetupSoilTest.svelte';
+  import SoilSurveyPanel from '$lib/components/soil/SoilSurveyPanel.svelte';
   import type { SetupSoilTestResult } from '$lib/fertility/soilTestForm';
   import DocumentAttach from '$lib/components/documents/DocumentAttach.svelte';
   import OrganicInputNotice from '$lib/components/organic/OrganicInputNotice.svelte';
@@ -56,6 +57,7 @@
   let stockNotes = $state<string[]>([]);
 
   onMount(() => {
+    if (page.url.searchParams.get('soilTest') === '1') soilSheetOpen = true;
     try {
       const raw = sessionStorage.getItem(FLASH_KEY);
       if (raw) {
@@ -122,6 +124,7 @@
   let creditUseDefaults = $state(true);
 
   let soilSheetOpen = $state(false);
+  const soilAreaId = $derived(data.blocks.find((b) => b.id === blockId)?.areaId ?? null);
 
   const organicProducts = $derived.by(() => {
     const source = appSource.trim();
@@ -531,6 +534,11 @@
   <button type="button" class="primary" onclick={() => (soilSheetOpen = true)}>
     {tr('fert.soil.add')}
   </button>
+  {#if soilAreaId}
+    {#key soilAreaId}
+      <SoilSurveyPanel areaId={soilAreaId} heading="here" soilTestLink={false} />
+    {/key}
+  {/if}
 </section>
 
 <SetupSheet

@@ -117,6 +117,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     blocks: blocks.map((b) => ({
       id: b.id,
       name: b.name,
+      areaId: b.fieldId ?? null,
       acres: b.acres ?? null,
       plantings: b.plantings.map((p) => ({
         cropPluginId: p.cropPluginId,

@@ -68,6 +68,8 @@ import { _requestSchema as organicReview } from '../organic/treatment-reviews/+s
 import { _requestSchema as organicPack } from '../organic/pack.zip/+server';
 import { _requestSchema as treatmentLogCsv } from '../animals/treatments.csv/+server';
 import { _requestSchema as treatmentLogPdf } from '../animals/treatments.pdf/+server';
+import { _requestSchema as soilSurveyQuery } from '../soil/survey/+server';
+import { soilAreaResponseSchema, soilLookupSchema } from '$lib/soil/apiSchemas';
 
 interface Operation {
   parameters?: { $ref?: string; name?: string; in?: string }[];
@@ -211,6 +213,23 @@ describe('openapi.json', () => {
     expect(names.sort()).toEqual(Object.keys(schema.shape).sort());
     const responses = JSON.stringify(doc.paths[path].get.responses);
     expect(responses).toContain('OWNER_OR_INSPECTOR_ONLY');
+  });
+
+  it('publishes the soil survey reads from the schemas the routes use', () => {
+    const survey = doc.paths['/api/soil/survey']?.get;
+    expect(survey).toBeDefined();
+    const names = (survey.parameters ?? []).filter((p) => p.in === 'query').map((p) => p.name);
+    expect(names.sort()).toEqual(Object.keys(soilSurveyQuery.shape).sort());
+    const body = (op: Operation) =>
+      (op.responses['200'] as { content: { 'application/json': { schema: unknown } } }).content[
+        'application/json'
+      ].schema;
+    expect(body(survey)).toEqual(generated(soilLookupSchema));
+    const area = doc.paths['/api/soil/areas/{id}']?.get;
+    expect(area).toBeDefined();
+    expect(body(area)).toEqual(generated(soilAreaResponseSchema));
+    for (const status of ['401', '404', '429']) expect(area.responses[status]).toBeDefined();
+    expect(survey.responses['429']).toBeDefined();
   });
 
   it('lists the Phase 32F task reads', () => {

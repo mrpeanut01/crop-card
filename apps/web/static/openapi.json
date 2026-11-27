@@ -21541,6 +21541,734 @@
         }
       }
     },
+    "/api/soil/survey": {
+      "get": {
+        "summary": "USDA NRCS soil survey at a map point",
+        "description": "Any signed-in role. The USDA NRCS soil survey (SSURGO, read through Soil Data Access) for the map unit at a WGS84 point: its name, farmland class, drainage class, slope, depth to a water table and to bedrock, flooding frequency, and each major soil with the texture, typical pH range and organic matter of its top mineral layer. Depths are in cm and slope in percent. `status` is `ok` with a `survey`, `no-data` when the survey has nothing at the point (open water, outside the survey), or `unavailable` when the service could not be reached; all three answer 200. `notSoil` is true when the dominant soil is Urban land, Water and the like, with no soil properties. Reference data for display only: the survey is mapped at a broad scale, a lab soil test describes the ground itself, and nothing in the safety kernel, the Inputs Plan or the fertility math reads it. Answers are cached per point for 180 days. Limited to 20 lookups a minute per user.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "description": "Latitude, decimal degrees.",
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "description": "Longitude, decimal degrees.",
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The lookup.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "const": "ok"
+                        },
+                        "survey": {
+                          "type": "object",
+                          "properties": {
+                            "mapUnitKey": {
+                              "type": "string"
+                            },
+                            "mapUnitSymbol": {
+                              "type": "string"
+                            },
+                            "mapUnitName": {
+                              "type": "string"
+                            },
+                            "farmlandClass": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "drainageClass": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "excessively",
+                                    "somewhat-excessively",
+                                    "well",
+                                    "moderately-well",
+                                    "somewhat-poorly",
+                                    "poorly",
+                                    "very-poorly"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "slopePct": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "waterTableDepthCm": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "bedrockDepthCm": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "hydrologicGroup": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "floodFrequency": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "availableWaterCm": {
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "components": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "percent": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "drainageClass": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "excessively",
+                                          "somewhat-excessively",
+                                          "well",
+                                          "moderately-well",
+                                          "somewhat-poorly",
+                                          "poorly",
+                                          "very-poorly"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "slopePct": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "hydric": {
+                                    "type": [
+                                      "boolean",
+                                      "null"
+                                    ]
+                                  },
+                                  "surfaceTexture": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "sandPct": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "siltPct": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "clayPct": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "organicMatterPct": {
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "ph": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "low": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          },
+                                          "typical": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          },
+                                          "high": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "low",
+                                          "typical",
+                                          "high"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "percent",
+                                  "drainageClass",
+                                  "slopePct",
+                                  "hydric",
+                                  "surfaceTexture",
+                                  "sandPct",
+                                  "siltPct",
+                                  "clayPct",
+                                  "organicMatterPct",
+                                  "ph"
+                                ]
+                              }
+                            },
+                            "notSoil": {
+                              "type": "boolean"
+                            },
+                            "source": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "const": "USDA NRCS Soil Survey (SSURGO)"
+                                },
+                                "fetchedAt": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "fetchedAt"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "mapUnitKey",
+                            "mapUnitSymbol",
+                            "mapUnitName",
+                            "farmlandClass",
+                            "drainageClass",
+                            "slopePct",
+                            "waterTableDepthCm",
+                            "bedrockDepthCm",
+                            "hydrologicGroup",
+                            "floodFrequency",
+                            "availableWaterCm",
+                            "components",
+                            "notSoil",
+                            "source"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "survey"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "const": "no-data"
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "const": "unavailable"
+                        }
+                      },
+                      "required": [
+                        "status"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or out-of-range `lat` or `lon`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many lookups; try again in a minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/soil/areas/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Area id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "USDA NRCS soil survey for an Area",
+        "description": "Any signed-in role. The same lookup as `/api/soil/survey`, at the centre of the Area's drawn outline. An Area that is not drawn uses the farm's saved location and answers `approximate: true`; with no saved location either, the answer is `located: false`. Another farm's Area is 404.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The lookup for the Area.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "located": {
+                          "type": "boolean",
+                          "const": false
+                        }
+                      },
+                      "required": [
+                        "located"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "located": {
+                          "type": "boolean",
+                          "const": true
+                        },
+                        "approximate": {
+                          "type": "boolean"
+                        },
+                        "lookup": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "const": "ok"
+                                },
+                                "survey": {
+                                  "type": "object",
+                                  "properties": {
+                                    "mapUnitKey": {
+                                      "type": "string"
+                                    },
+                                    "mapUnitSymbol": {
+                                      "type": "string"
+                                    },
+                                    "mapUnitName": {
+                                      "type": "string"
+                                    },
+                                    "farmlandClass": {
+                                      "type": [
+                                        "string",
+                                        "null"
+                                      ]
+                                    },
+                                    "drainageClass": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "excessively",
+                                            "somewhat-excessively",
+                                            "well",
+                                            "moderately-well",
+                                            "somewhat-poorly",
+                                            "poorly",
+                                            "very-poorly"
+                                          ]
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "slopePct": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "waterTableDepthCm": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "bedrockDepthCm": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "hydrologicGroup": {
+                                      "type": [
+                                        "string",
+                                        "null"
+                                      ]
+                                    },
+                                    "floodFrequency": {
+                                      "type": [
+                                        "string",
+                                        "null"
+                                      ]
+                                    },
+                                    "availableWaterCm": {
+                                      "type": [
+                                        "number",
+                                        "null"
+                                      ]
+                                    },
+                                    "components": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "name": {
+                                            "type": "string"
+                                          },
+                                          "percent": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          },
+                                          "drainageClass": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string",
+                                                "enum": [
+                                                  "excessively",
+                                                  "somewhat-excessively",
+                                                  "well",
+                                                  "moderately-well",
+                                                  "somewhat-poorly",
+                                                  "poorly",
+                                                  "very-poorly"
+                                                ]
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "slopePct": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          },
+                                          "hydric": {
+                                            "type": [
+                                              "boolean",
+                                              "null"
+                                            ]
+                                          },
+                                          "surfaceTexture": {
+                                            "type": [
+                                              "string",
+                                              "null"
+                                            ]
+                                          },
+                                          "sandPct": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          },
+                                          "siltPct": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          },
+                                          "clayPct": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          },
+                                          "organicMatterPct": {
+                                            "type": [
+                                              "number",
+                                              "null"
+                                            ]
+                                          },
+                                          "ph": {
+                                            "anyOf": [
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "low": {
+                                                    "type": [
+                                                      "number",
+                                                      "null"
+                                                    ]
+                                                  },
+                                                  "typical": {
+                                                    "type": [
+                                                      "number",
+                                                      "null"
+                                                    ]
+                                                  },
+                                                  "high": {
+                                                    "type": [
+                                                      "number",
+                                                      "null"
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "low",
+                                                  "typical",
+                                                  "high"
+                                                ]
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "name",
+                                          "percent",
+                                          "drainageClass",
+                                          "slopePct",
+                                          "hydric",
+                                          "surfaceTexture",
+                                          "sandPct",
+                                          "siltPct",
+                                          "clayPct",
+                                          "organicMatterPct",
+                                          "ph"
+                                        ]
+                                      }
+                                    },
+                                    "notSoil": {
+                                      "type": "boolean"
+                                    },
+                                    "source": {
+                                      "type": "object",
+                                      "properties": {
+                                        "name": {
+                                          "type": "string",
+                                          "const": "USDA NRCS Soil Survey (SSURGO)"
+                                        },
+                                        "fetchedAt": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "name",
+                                        "fetchedAt"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "mapUnitKey",
+                                    "mapUnitSymbol",
+                                    "mapUnitName",
+                                    "farmlandClass",
+                                    "drainageClass",
+                                    "slopePct",
+                                    "waterTableDepthCm",
+                                    "bedrockDepthCm",
+                                    "hydrologicGroup",
+                                    "floodFrequency",
+                                    "availableWaterCm",
+                                    "components",
+                                    "notSoil",
+                                    "source"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "status",
+                                "survey"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "const": "no-data"
+                                }
+                              },
+                              "required": [
+                                "status"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "const": "unavailable"
+                                }
+                              },
+                              "required": [
+                                "status"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "located",
+                        "approximate",
+                        "lookup"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many lookups; try again in a minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/orchard/areas/{id}": {
       "parameters": [
         {

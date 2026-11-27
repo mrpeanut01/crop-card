@@ -1,6 +1,9 @@
 /**
  * Find a spot (Phase 38D). The deterministic result (sun math, the owner's
- * map and the USDA soil survey) is always computed first. When the owner
+ * map, the USDA soil survey and, since Phase 38E, the ground's slope and
+ * facing direction from USGS 3DEP elevation) is always computed first. The
+ * elevation lookup is not an AI call and runs on every search; when it
+ * fails the ground is treated as level. When the owner
  * asks for it, Claude also reads one USDA NAIP aerial photo through
  * `tryAiWithGuard`; what it saw is added as `ai` obstacles and the engine
  * ranks again. The order is always the engine's. Any reason the reading
@@ -27,6 +30,7 @@ import {
   type SeenItem,
   type SiteFinderRequest,
   type SiteFinderResponse,
+  type SiteFinderTerrain,
   type SiteFinderWhy
 } from '$lib/siteFinder/apiSchemas';
 import {
@@ -46,6 +50,7 @@ import {
   photoExtentFor,
   toLocal
 } from '$lib/siteFinder/geometry';
+import { TERRAIN_SOURCE_NAME, type OwnerSlope, type TerrainLookup } from '$lib/siteFinder/terrain';
 import {
   FALLBACK_SEASON,
   type AreaShape,
@@ -56,6 +61,7 @@ import {
 } from '$lib/siteFinder/types';
 import { readSitePhoto, SiteReadRefusedError, type SiteReadResult } from './aiSiteRead';
 import { naipPhotoFor, type NaipFetcher, type NaipPhoto } from './naip.server';
+import { allowTerrainLookup, terrainGridFor } from './terrain.server';
 
 export const SITE_FINDER_TIMEOUT_MS = 30_000;
 /** At most this many soil survey lookups per run: the box centre and the
@@ -130,6 +136,8 @@ export interface SiteData {
   obstacles: Obstacle[];
   water: WaterPoint[];
   season: SunSeason;
+  /** Drawn blocks whose owner typed both a slope and the way it faces. */
+  ownerSlopes: OwnerSlope[];
 }
 
 /** Everything the finder reads from the active Owner's farm. Tenant-scoped
@@ -137,6 +145,7 @@ export interface SiteData {
 export function loadSiteData(): SiteData {
   const areas: AreaShape[] = [];
   const obstacles: Obstacle[] = [];
+  const ownerSlopes: OwnerSlope[] = [];
   const fields = listFields();
   const kindOf = new Map(fields.map((f) => [f.id, f.kind]));
   for (const f of fields) {
@@ -173,6 +182,20 @@ export function loadSiteData(): SiteData {
       kind: (b.fieldId && kindOf.get(b.fieldId)) || 'field',
       ring: g.ring
     });
+    if (
+      typeof b.slopePercent === 'number' &&
+      typeof b.slopeAspectDeg === 'number' &&
+      Number.isFinite(b.slopePercent) &&
+      Number.isFinite(b.slopeAspectDeg) &&
+      b.slopePercent >= 0
+    ) {
+      ownerSlopes.push({
+        id: b.id,
+        ring: g.ring,
+        slopePct: b.slopePercent,
+        aspectDeg: b.slopeAspectDeg
+      });
+    }
   }
   for (const s of listShadeSources()) {
     const o = shadeObstacle(s);
@@ -186,7 +209,7 @@ export function loadSiteData(): SiteData {
     const [lon, lat] = m.geometry.coordinates;
     water.push({ id: m.id, name: m.name, point: [lon, lat] });
   }
-  return { areas, obstacles, water, season: sunSeasonFromSettings() };
+  return { areas, obstacles, water, season: sunSeasonFromSettings(), ownerSlopes };
 }
 
 const WHY_KEY: Record<SiteFinderWhy, MessageKey> = {
@@ -220,7 +243,28 @@ export interface RunArgs {
   /** Test seams. */
   naipFetcher?: NaipFetcher;
   soilAt?: (lat: number, lon: number) => Promise<SoilLookup>;
+  terrainFor?: (box: SiteFinderRequest['box']) => Promise<TerrainLookup>;
   sprayTerms?: readonly string[];
+}
+
+/** The elevation grid for the search box. Any failure, and a user past the
+ *  per-minute limit, is "unavailable": the ground is then treated as level. */
+async function terrainFor(args: RunArgs): Promise<TerrainLookup> {
+  if (!allowTerrainLookup(args.userId)) return { status: 'unavailable' };
+  try {
+    return await (args.terrainFor ?? terrainGridFor)(args.req.box);
+  } catch {
+    return { status: 'unavailable' };
+  }
+}
+
+function terrainSummary(lookup: TerrainLookup): SiteFinderTerrain {
+  const resolutionM = lookup.status === 'ok' ? lookup.grid.resolutionM : null;
+  return {
+    status: lookup.status,
+    source: TERRAIN_SOURCE_NAME,
+    ...(resolutionM !== null ? { resolutionM } : {})
+  };
 }
 
 async function soilFor(args: RunArgs, lon: number, lat: number): Promise<SoilLookup> {
@@ -317,7 +361,10 @@ export async function runSiteFinder(args: RunArgs): Promise<SiteFinderResponse> 
   const { req, userId, locale } = args;
   const data = loadSiteData();
   const center = boxCenter(req.box);
-  const soil = await soilFor(args, center[0], center[1]);
+  const [soil, terrain] = await Promise.all([
+    soilFor(args, center[0], center[1]),
+    terrainFor(args)
+  ]);
   const base: FinderInput = {
     goal: req.goal,
     box: req.box,
@@ -328,10 +375,15 @@ export async function runSiteFinder(args: RunArgs): Promise<SiteFinderResponse> 
     water: data.water,
     soil,
     season: data.season,
-    shadeChecked: data.obstacles.length > 0
+    shadeChecked: data.obstacles.length > 0,
+    terrain:
+      terrain.status === 'ok' || data.ownerSlopes.length > 0
+        ? { grid: terrain.status === 'ok' ? terrain.grid : null, ownerSlopes: data.ownerSlopes }
+        : null
   };
   const common = {
     soil,
+    terrain: terrainSummary(terrain),
     season: data.season,
     hasWaterPoint: data.water.length > 0,
     hasHouse: data.areas.some((a) => a.kind === 'residence')

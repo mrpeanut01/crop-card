@@ -55,7 +55,8 @@
 
   // The stock chip words ("Your data", "You typed") do not fit a survey
   // fact, something drawn on the map or an app estimate.
-  function provLabel(p: FactorProvenance): string | undefined {
+  function provLabel(p: FactorProvenance, source?: 'elevation'): string | undefined {
+    if (source === 'elevation') return tr('sitefinder.prov.elevation');
     if (p === 'data') return tr('sitefinder.prov.survey');
     if (p === 'manual') return tr('sitefinder.prov.map');
     if (p === 'fallback') return tr('sitefinder.prov.estimate');
@@ -88,13 +89,17 @@
         data-verdict={line.verdict}
         data-factor={line.id}
         data-provenance={line.provenance}
+        data-source={line.source}
       >
         <span class="mark" aria-hidden="true"></span>
         <span class="text">
           {#if line.id === 'ai-note'}<span lang="en">{line.text}</span>{:else}{line.text}{/if}
           {#if !(line.verdict === 'unknown' && line.provenance === 'manual')}
             <span class="prov"
-              ><Provenance source={line.provenance} label={provLabel(line.provenance)} /></span
+              ><Provenance
+                source={line.provenance}
+                label={provLabel(line.provenance, line.source)}
+              /></span
             >
           {/if}
         </span>

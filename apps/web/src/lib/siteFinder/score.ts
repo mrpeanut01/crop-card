@@ -7,7 +7,9 @@
 
 import { soilSitingFlags, slopeBand, surveySlopePct, type SlopeBand } from '$lib/soil/siting';
 import type { SoilLookup, SoilSitingFlag } from '$lib/soil/types';
+import type { Compass } from './geometry';
 import { FULL_SUN_HOURS, PART_SUN_HOURS, sunBand } from './sun';
+import { compassOf, type SpotTerrain } from './terrain';
 import type {
   Confidence,
   Factor,
@@ -42,6 +44,13 @@ export const SLOPE_VALUE: Record<SlopeBand, number> = {
   steep: 0.3,
   'very-steep': 0.1
 };
+/** The way the ground faces, from the strength of the spring and fall sun on
+ *  it next to level ground: at least GOOD reads as good, at least OK as
+ *  fair, lower as poor. The value slides from 1 at level-ground strength
+ *  down to 0 at FLOOR. */
+export const FACING_GOOD_STRENGTH = 0.98;
+export const FACING_OK_STRENGTH = 0.85;
+export const FACING_FLOOR_STRENGTH = 0.6;
 export const FLAG_CAUTION_VALUE = 0.15;
 export const FLAG_NOTE_VALUE = 0.55;
 export const DROUGHTY_VALUE = 0.7;
@@ -189,7 +198,28 @@ export function depthScore(soil: SoilLookup): FactorScore {
   };
 }
 
-export function slopeScore(soil: SoilLookup): FactorScore {
+/** How steep the ground is. The spot's own slope (the owner's value for the
+ *  block, or the elevation data) is used when it is known; otherwise the
+ *  soil survey's figure for the whole map unit. */
+export function slopeScore(soil: SoilLookup, terrain: SpotTerrain | null = null): FactorScore {
+  if (terrain) {
+    const band = slopeBand(terrain.slopePct);
+    const value = SLOPE_VALUE[band];
+    return {
+      id: 'slope',
+      value,
+      factors: [
+        {
+          id: 'slope',
+          verdict: verdictOf(value),
+          key: `slope.here.${band}`,
+          params: { coarse: terrain.coarse ? 1 : 0 },
+          provenance: terrain.provenance,
+          ...(terrain.provenance === 'data' ? { source: 'elevation' as const } : {})
+        }
+      ]
+    };
+  }
   const pct = soil.status === 'ok' && !soil.survey.notSoil ? surveySlopePct(soil.survey) : null;
   if (pct === null) return { id: 'slope', value: null, factors: [] };
   const band = slopeBand(pct);
@@ -204,6 +234,52 @@ export function slopeScore(soil: SoilLookup): FactorScore {
         key: `slope.${band}`,
         params: {},
         provenance: 'data'
+      }
+    ]
+  };
+}
+
+export function facingValue(relativeStrength: number): number {
+  return clamp01((relativeStrength - FACING_FLOOR_STRENGTH) / (1 - FACING_FLOOR_STRENGTH));
+}
+
+export function facingVerdict(relativeStrength: number): FactorVerdict {
+  if (relativeStrength >= FACING_GOOD_STRENGTH) return 'good';
+  if (relativeStrength >= FACING_OK_STRENGTH) return 'ok';
+  return 'poor';
+}
+
+const FACING_GROUP: Record<Compass, 'north' | 'south' | 'east' | 'west'> = {
+  n: 'north',
+  ne: 'north',
+  nw: 'north',
+  s: 'south',
+  se: 'south',
+  sw: 'south',
+  e: 'east',
+  w: 'west'
+};
+
+/** Which way the ground faces. Level ground counts in full and says
+ *  nothing more than the slope line already does. */
+export function facingScore(
+  terrain: SpotTerrain,
+  sun: Pick<SunEstimate, 'relativeStrength'>
+): FactorScore {
+  if (terrain.aspectDeg === null) return { id: 'facing', value: 1, factors: [] };
+  const strength = sun.relativeStrength ?? 1;
+  const dir = compassOf(terrain.aspectDeg);
+  return {
+    id: 'facing',
+    value: facingValue(strength),
+    factors: [
+      {
+        id: 'facing',
+        verdict: facingVerdict(strength),
+        key: `facing.${FACING_GROUP[dir]}`,
+        params: { dir },
+        provenance: terrain.provenance,
+        ...(terrain.provenance === 'data' ? { source: 'elevation' as const } : {})
       }
     ]
   };

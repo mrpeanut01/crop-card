@@ -265,6 +265,9 @@
     if (!result) return [];
     const keys: string[] = [];
     if (!result.shadeChecked) keys.push('unchecked.shade');
+    keys.push('unchecked.outside');
+    if (result.terrain.status === 'unavailable') keys.push('unchecked.terrainUnavailable');
+    else if (result.terrain.status === 'no-data') keys.push('unchecked.terrainNoData');
     if (!result.hasWaterPoint) keys.push('unchecked.water');
     if (result.soil.status === 'unavailable') keys.push('unchecked.soilUnavailable');
     else if (result.soil.status === 'no-data' || result.soil.survey.notSoil) {
@@ -582,6 +585,11 @@
           </ul>
           {#if result.imagery.used}
             <p class="note small">{tr('sitefinder.results.photoSource')}</p>
+          {/if}
+          {#if result.terrain.status === 'ok'}
+            <p class="note small" data-testid="site-finder-elevation-source">
+              {tr('sitefinder.results.elevationSource')}
+            </p>
           {/if}
         </section>
       </section>

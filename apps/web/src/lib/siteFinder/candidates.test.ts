@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import type { SoilLookup } from '$lib/soil/types';
-import { survey } from './testSupport';
+import { spotLabel } from './explain';
+import { planeGrid, survey } from './testSupport';
 import {
   MAX_GRID_CELLS,
   MAX_SPOTS,
@@ -26,6 +27,7 @@ import {
 } from './geometry';
 import {
   FALLBACK_SEASON,
+  GOALS,
   PLANTING_GOALS,
   type AreaShape,
   type Candidate,
@@ -305,5 +307,158 @@ describe('whyBlocked and nearObstacle', () => {
     expect(nearObstacle(box, ll([10, 5]), o, 3)).toBe(true);
     expect(nearObstacle(box, ll([20, 5]), o, 3)).toBe(false);
     expect(rectOf([0, 0], 2, 2)).toBeTruthy();
+  });
+});
+
+describe('sloping ground', () => {
+  const box = boxAround(CENTER, 60);
+  const onSlope = (slopePct: number, aspectDeg: number, patch: Partial<FinderInput> = {}) =>
+    findSpots(
+      input({ terrain: { grid: planeGrid(box, slopePct, aspectDeg), ownerSlopes: [] }, ...patch })
+    );
+  const factor = (c: Candidate, id: string) => c.factors.find((f) => f.id === id);
+
+  it('with no terrain every spot is exactly what it was on level ground', () => {
+    const before = findSpots(input({ obstacles: [circle('t', 'tree', [10, -12], 5)] }));
+    for (const terrain of [null, undefined, { grid: null, ownerSlopes: [] }]) {
+      const got = findSpots(input({ obstacles: [circle('t', 'tree', [10, -12], 5)], terrain }));
+      expect(got).toEqual(before);
+    }
+    expect(before.candidates.every((c) => !c.factors.some((f) => f.id === 'facing'))).toBe(true);
+    expect(factor(before.candidates[0], 'slope')).toMatchObject({ key: 'slope.flat' });
+  });
+
+  it('says which way each spot faces, from the elevation grid', () => {
+    const north = onSlope(12, 0);
+    expect(north.candidates).toHaveLength(MAX_SPOTS);
+    for (const c of north.candidates) {
+      expect(factor(c, 'slope')).toMatchObject({
+        key: 'slope.here.moderate',
+        provenance: 'data',
+        source: 'elevation'
+      });
+      expect(factor(c, 'facing')).toMatchObject({
+        key: 'facing.north',
+        params: { dir: 'n' },
+        verdict: 'ok',
+        provenance: 'data',
+        source: 'elevation'
+      });
+      // The sun line itself stays an app estimate.
+      expect(factor(c, 'sun')).toMatchObject({ provenance: 'fallback' });
+    }
+    expect(factor(onSlope(12, 180).candidates[0], 'facing')).toMatchObject({
+      key: 'facing.south',
+      verdict: 'good'
+    });
+    expect(factor(onSlope(12, 90).candidates[0], 'facing')?.key).toBe('facing.east');
+    expect(factor(onSlope(12, 270).candidates[0], 'facing')?.key).toBe('facing.west');
+  });
+
+  it('level ground from the grid has the slope line and no facing line', () => {
+    const level = onSlope(1, 45).candidates[0];
+    expect(factor(level, 'slope')).toMatchObject({ key: 'slope.here.flat', source: 'elevation' });
+    expect(factor(level, 'facing')).toBeUndefined();
+  });
+
+  it('turning the same slope from north-facing to south-facing never lowers the score', () => {
+    const goals = PLANTING_GOALS.filter((g) => GOALS[g].weights.facing > 0);
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...goals),
+        fc.double({ min: 2, max: 40, noNaN: true }),
+        fc.array(fc.tuple(xy, fc.double({ min: 1, max: 6, noNaN: true })), { maxLength: 3 }),
+        (goal, slopePct, trees) => {
+          const obstacles = trees.map(([c, r], i) => circle(`t${i}`, 'tree', c, r));
+          const footprint = GOALS[goal].defaultFootprint;
+          const size = goal === 'fruit-trees' ? 120 : 60;
+          const b = boxAround(CENTER, size);
+          const run = (aspectDeg: number) =>
+            findSpots(
+              input({
+                goal,
+                box: b,
+                footprint,
+                obstacles,
+                shadeChecked: true,
+                terrain: { grid: planeGrid(b, slopePct, aspectDeg), ownerSlopes: [] }
+              })
+            );
+          const north = run(0);
+          const south = run(180);
+          const southById = new Map(south.candidates.map((c) => [c.id, c]));
+          // The best south-facing spot is at least as good as the best
+          // north-facing one, and so is each spot both runs offer.
+          if (north.candidates.length > 0) {
+            expect(south.candidates[0].score).toBeGreaterThanOrEqual(north.candidates[0].score);
+          }
+          for (const n of north.candidates) {
+            const same = southById.get(n.id);
+            if (same) expect(same.score).toBeGreaterThanOrEqual(n.score);
+          }
+        }
+      ),
+      { numRuns: 30 }
+    );
+  });
+
+  it('a steep north-facing spot is never the best match, however well the rest scores', () => {
+    const steep = onSlope(25, 0);
+    for (const [rank, c] of steep.candidates.entries()) {
+      expect(factor(c, 'facing')?.verdict).toBe('poor');
+      expect(
+        spotLabel(
+          c.score,
+          rank,
+          c.factors.some((f) => f.verdict === 'poor')
+        )
+      ).toBe('look');
+    }
+  });
+
+  it("the owner's own slope for a drawn block wins, tagged manual", () => {
+    const got = findSpots(
+      input({
+        terrain: {
+          grid: planeGrid(box, 20, 0),
+          ownerSlopes: [
+            {
+              id: 'b1',
+              ring: square('b1', 'field', [0, 0], 29.9).ring,
+              slopePct: 5,
+              aspectDeg: 180
+            }
+          ]
+        }
+      })
+    );
+    const inside = got.candidates.find((c) => factor(c, 'slope')?.provenance === 'manual');
+    expect(inside).toBeDefined();
+    expect(factor(inside!, 'slope')).toMatchObject({ key: 'slope.here.gentle' });
+    expect(factor(inside!, 'slope')?.source).toBeUndefined();
+    expect(factor(inside!, 'facing')).toMatchObject({ key: 'facing.south', provenance: 'manual' });
+  });
+
+  it('with only owner values, a spot outside the block is level ground as before', () => {
+    const got = findSpots(
+      input({
+        terrain: {
+          grid: null,
+          ownerSlopes: [
+            { id: 'b1', ring: square('b1', 'field', [-20, 0], 9).ring, slopePct: 9, aspectDeg: 0 }
+          ]
+        }
+      })
+    );
+    const outside = got.candidates.filter((c) => factor(c, 'slope')?.key === 'slope.flat');
+    expect(outside.length).toBeGreaterThan(0);
+    for (const c of outside) expect(factor(c, 'facing')).toBeUndefined();
+  });
+
+  it('rescoring with the soil at each spot keeps the terrain', () => {
+    const inp = input({ terrain: { grid: planeGrid(box, 12, 0), ownerSlopes: [] } });
+    const first = findSpots(inp);
+    const again = rescoreWithSoil(inp, first.candidates, new Map());
+    expect(again).toEqual(first.candidates);
   });
 });

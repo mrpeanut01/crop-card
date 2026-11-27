@@ -253,7 +253,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           profile: farmProfile,
           hasLocation,
           aiEnabled,
-          settings: read
+          settings: read,
+          beginnerTips: locals.user!.beginnerTips,
+          seenTips: locals.user!.seenTips
         }),
         dismissed: getGettingStartedDismissedAt(read) !== null
       }

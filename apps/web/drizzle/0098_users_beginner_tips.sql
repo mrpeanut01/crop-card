@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `beginner_tips` integer;

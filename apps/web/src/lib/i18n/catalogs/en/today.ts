@@ -389,6 +389,8 @@ export const enToday = {
   'today.who.mine': 'Mine',
   'today.who.moreForEveryone.one': '{count} more task for everyone',
   'today.who.moreForEveryone.other': '{count} more tasks for everyone',
+  'gs.start.title': 'Read how to start',
+  'gs.start.blurb': 'A short guide to your first season, one step at a time.',
   'gs.location.title': 'Set your farm location',
   'gs.location.blurb': 'Weather, frost dates and spray windows all start from here.',
   'gs.area.title': 'Put your first area on the map',

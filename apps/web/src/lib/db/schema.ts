@@ -73,6 +73,8 @@ export const users = sqliteTable('users', {
   /** Last signed-in request, written at most once an hour per user by
    *  `revalidateCookieUser`. Read only by the operator usage report. */
   lastSeenAt: integer('last_seen_at', { mode: 'timestamp_ms' }),
+  /** Beginner tips on each main screen. Null means never asked, read as off. */
+  beginnerTips: integer('beginner_tips', { mode: 'boolean' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)

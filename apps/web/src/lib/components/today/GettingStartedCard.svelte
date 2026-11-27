@@ -4,6 +4,8 @@
   import { page } from '$app/state';
   import { createT } from '$lib/i18n';
   import { Check, ChevronRight } from 'lucide-svelte';
+  import { hintState, initHints, markHintSeen } from '$lib/client/hints';
+  import { START_READ_KEY } from '$lib/tips';
   import {
     gettingStartedItems,
     gettingStartedMode,
@@ -68,6 +70,7 @@
   }
 
   onMount(() => {
+    if (facts.beginnerTips) void initHints(page.data?.user?.id ?? null);
     loadPinned()
       .then((v) => (pinned = v))
       .catch(() => (pinned = null));
@@ -75,7 +78,11 @@
 
   const items = $derived(
     gettingStartedItems(
-      { ...facts, hasPinnedCards: pinned ?? facts.hasPinnedCards },
+      {
+        ...facts,
+        hasPinnedCards: pinned ?? facts.hasPinnedCards,
+        startRead: facts.startRead === true || $hintState.seen.has(START_READ_KEY)
+      },
       page.data?.locale
     )
   );
@@ -142,7 +149,11 @@
         <ol class="items">
           {#each items as item (item.id)}
             <li class:done={item.done} class:optional={item.optional} data-item={item.id}>
-              <a href={item.href} class="row">
+              <a
+                href={item.href}
+                class="row"
+                onclick={item.id === 'start' ? () => void markHintSeen(START_READ_KEY) : undefined}
+              >
                 <span class="tick" aria-hidden="true">
                   {#if item.done}<Check size={14} strokeWidth={2.5} />{/if}
                 </span>

@@ -6,7 +6,7 @@ import { activeAssignmentsForUser } from '$lib/db/users';
 import { runWithTenantAsync } from '$lib/db/tenant';
 import { db } from '$lib/db/client';
 import { owners, users, helperAssignments } from '$lib/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { lookupByPlaintext, touchToken } from '$lib/server/apiTokens';
 import { LOCALE_HEADER, OWNER_HEADER } from '$lib/client/swTenantKey';
 import {
@@ -692,6 +692,13 @@ export function withOwnerHeader(response: Response, ownerId: string, locale?: st
  * this cookie was issued (the session is cleared). A lost membership downgrades to a partial session, which routes the user
  * to the Owner-picker or onboarding rather than into the old farm.
  */
+/** Dismissed beginner tips, read inside the per-request user statement so
+ *  a page can render the right tip on the server without another query.
+ *  Only users with tips on pay for the lookup. */
+const SEEN_TIPS_SQL = sql<
+  string | null
+>`case when ${users.beginnerTips} = 1 then (select group_concat(h.hint_key) from user_hints h where h.user_id = ${users.id} and substr(h.hint_key, 1, 4) = 'tip_') end`;
+
 export function revalidateCookieUser(
   user: import('$lib/server/auth').AuthenticatedUser
 ): import('$lib/server/auth').AuthenticatedUser | null {
@@ -701,6 +708,8 @@ export function revalidateCookieUser(
       phone: users.phone,
       isSuperadmin: users.isSuperadmin,
       locale: users.locale,
+      beginnerTips: users.beginnerTips,
+      seenTips: SEEN_TIPS_SQL,
       sessionsValidAfter: users.sessionsValidAfter,
       lastSeenAt: users.lastSeenAt
     })
@@ -717,7 +726,9 @@ export function revalidateCookieUser(
     email: row.email,
     phone: row.phone,
     isSuperadmin: row.isSuperadmin,
-    locale: row.locale
+    locale: row.locale,
+    beginnerTips: row.beginnerTips === true,
+    seenTips: row.seenTips ? row.seenTips.split(',') : []
   };
   if (!fresh.activeOwnerId) return { ...fresh, impersonating: false };
   if (fresh.impersonating) {

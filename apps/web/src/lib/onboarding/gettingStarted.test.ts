@@ -24,6 +24,25 @@ const BLANK: GettingStartedFacts = {
 const ids = (f: GettingStartedFacts) => gettingStartedItems(f).map((i) => i.id);
 
 describe('gettingStartedItems', () => {
+  it('puts "Read how to start" first, only for a user with beginner tips on', () => {
+    expect(ids({ ...BLANK, profile: 'garden' })).not.toContain('start');
+    expect(ids({ ...BLANK, profile: 'garden', beginnerTips: false })).not.toContain('start');
+    const items = gettingStartedItems({ ...BLANK, profile: 'garden', beginnerTips: true });
+    expect(items[0]).toMatchObject({
+      id: 'start',
+      href: '/start',
+      title: 'Read how to start',
+      done: false,
+      optional: true
+    });
+    expect(gettingStartedItems({ ...BLANK, beginnerTips: true, startRead: true })[0]).toMatchObject(
+      { id: 'start', done: true }
+    );
+    expect(gettingStartedItems({ ...BLANK, beginnerTips: true }, 'es')[0].title).toBe(
+      'Lee cómo empezar'
+    );
+  });
+
   it('shows the garden bed item only when the profile includes a garden', () => {
     expect(ids({ ...BLANK, profile: 'garden' })).toContain('bed');
     expect(ids({ ...BLANK, profile: 'mixed' })).toContain('bed');

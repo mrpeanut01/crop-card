@@ -401,6 +401,8 @@ export const esToday: Partial<Record<MessageKey, string>> = {
   'today.who.mine': 'Mías',
   'today.who.moreForEveryone.one': '{count} tarea más para todos',
   'today.who.moreForEveryone.other': '{count} tareas más para todos',
+  'gs.start.title': 'Lee cómo empezar',
+  'gs.start.blurb': 'Una guía corta para tu primera temporada, paso a paso.',
   'gs.location.title': 'Indica la ubicación de tu granja',
   'gs.location.blurb':
     'El clima, las fechas de helada y las ventanas de aplicación parten de aquí.',

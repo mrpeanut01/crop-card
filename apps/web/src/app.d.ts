@@ -27,6 +27,10 @@ declare global {
       locale?: string;
       /** Enabled languages, English first; one entry hides every picker. */
       locales?: string[];
+      /** The signed-in user asked for beginner tips (`users.beginner_tips`). */
+      beginnerTips?: boolean;
+      /** Beginner tips this user already dismissed, as hint keys. */
+      seenTips?: string[];
       user?: {
         id: string;
         email: string | null;

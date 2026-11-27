@@ -8,6 +8,7 @@
 
 import { designerHref } from '$lib/garden/design';
 import { t, type MessageKey } from '$lib/i18n';
+import { START_GUIDE_HREF } from '$lib/tips';
 import { profileIncludesFarm, profileIncludesGarden, type FarmProfile } from './profile';
 
 export interface GettingStartedFacts {
@@ -36,12 +37,18 @@ export interface GettingStartedFacts {
   hasGardenBrief?: boolean;
   /** The owner picked the herbs tile on onboarding screen 2 (37A). */
   herbsAnswered?: boolean;
+  /** The signed-in user asked for beginner tips. Adds "Read how to start". */
+  beginnerTips?: boolean;
+  /** The user followed the how-to-start link (hint key `tip_start_read`).
+   *  The page fills this in from the hint store. */
+  startRead?: boolean;
 }
 
 /** Per-Owner setting written when the owner skips the planning assistant. */
 export const ASSISTANT_SKIPPED_SETTING = 'onboarding_assistant_skipped';
 
 export type GettingStartedItemId =
+  | 'start'
   | 'brief'
   | 'location'
   | 'area'
@@ -64,6 +71,7 @@ export interface GettingStartedItem {
 }
 
 export const GETTING_STARTED_HREFS: Record<GettingStartedItemId, string> = {
+  start: START_GUIDE_HREF,
   brief: '/plan/brief',
   location: '/settings/farm',
   area: '/settings/farm/map',
@@ -93,6 +101,7 @@ export function gettingStartedItems(
   });
 
   const items: GettingStartedItem[] = [
+    ...(f.beginnerTips ? [item('start', f.startRead === true, true)] : []),
     item('location', f.hasLocation),
     item('area', f.hasMappedArea),
     item('crop', f.hasPlanting)

@@ -45,6 +45,11 @@ export interface AuthenticatedUser {
   /** `users.locale`, filled when the request boundary re-reads the user
    *  row (32F, F5-3). Never read from the cookie. */
   locale?: string | null;
+  /** `users.beginner_tips`, from the same per-request read. Unset (Bearer
+   *  tokens, never asked) reads as off. */
+  beginnerTips?: boolean;
+  /** Beginner tips this user dismissed (`tip_` hint keys), same read. */
+  seenTips?: string[];
 }
 
 export function currentUser(event: RequestEvent): AuthenticatedUser | null {

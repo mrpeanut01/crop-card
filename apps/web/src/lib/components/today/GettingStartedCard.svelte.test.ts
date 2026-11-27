@@ -87,4 +87,28 @@ describe('GettingStartedCard', () => {
       expect(all.container.querySelector('[data-testid^="getting-started"]')).toBeNull()
     );
   });
+
+  it('marks "Read how to start" done once its link is followed', async () => {
+    localStorage.clear();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ hints: [] }), { status: 200 }))
+    );
+    render(GettingStartedCard, {
+      props: {
+        facts: { ...FACTS, beginnerTips: true },
+        dismissed: false,
+        loadPinned: async () => false
+      }
+    });
+    const first = screen.getByTestId('getting-started').querySelector('li');
+    expect(first).toHaveAttribute('data-item', 'start');
+    expect(first).not.toHaveClass('done');
+    const link = screen.getByRole('link', { name: /Read how to start/ });
+    expect(link).toHaveAttribute('href', '/start');
+    link.addEventListener('click', (e) => e.preventDefault());
+    await fireEvent.click(link);
+    await waitFor(() => expect(first).toHaveClass('done'));
+    vi.unstubAllGlobals();
+  });
 });

@@ -11,6 +11,7 @@ import { _requestSchema as blockCreate } from '../blocks/+server';
 import { _requestSchema as blockPatch } from '../blocks/[id]/+server';
 import { _requestSchema as blockProtection } from '../blocks/[id]/protections/+server';
 import { _requestSchema as hintsPost } from '../me/hints/+server';
+import { _requestSchema as beginnerTipsPost } from '../me/beginner-tips/+server';
 import { _requestSchema as gardenPlantings } from '../garden/plantings/+server';
 import { _requestSchema as gardenSuccession } from '../garden/beds/[blockId]/succession/+server';
 import { _requestSchema as gardenFill } from '../garden/beds/[blockId]/fill/+server';
@@ -111,6 +112,7 @@ describe('openapi.json', () => {
     ['/api/blocks/{id}', 'patch', blockPatch],
     ['/api/blocks/{id}/protections', 'post', blockProtection],
     ['/api/me/hints', 'post', hintsPost],
+    ['/api/me/beginner-tips', 'post', beginnerTipsPost],
     ['/api/garden/plantings', 'post', gardenPlantings],
     ['/api/garden/beds/{blockId}/succession', 'post', gardenSuccession],
     ['/api/garden/beds/{blockId}/fill', 'post', gardenFill],

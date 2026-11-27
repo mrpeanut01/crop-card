@@ -17,6 +17,8 @@
   import Banner from '$lib/components/ui/Banner.svelte';
   import UpdateToast from '$lib/components/ui/UpdateToast.svelte';
   import DemoBanner from '$lib/components/demo/DemoBanner.svelte';
+  import BeginnerTip from '$lib/components/ui/BeginnerTip.svelte';
+  import { tipForRoute } from '$lib/tips';
   import { setClientClockOffset } from '$lib/demo/clientClock';
 
   const { data, children } = $props();
@@ -30,6 +32,7 @@
     setClientClockOffset(demoClockOffset());
   });
   const tr = $derived(createT(data.locale));
+  const routeTip = $derived(tipForRoute(page.route.id, page.data));
 
   let pendingCount = $state<number | null>(null);
   let online = $state(true);
@@ -305,6 +308,11 @@
 <a class="skip-link" href="#main-content">{tr('entry.layout.skip')}</a>
 
 <main id="main-content" tabindex="-1">
+  {#if routeTip}
+    {#key routeTip}
+      <BeginnerTip tip={routeTip} />
+    {/key}
+  {/if}
   {@render children()}
 </main>
 

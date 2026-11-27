@@ -39,6 +39,7 @@ export const SCORE_FACTOR_IDS = [
   'soil-drainage',
   'soil-depth',
   'slope',
+  'facing',
   'water-distance',
   'house-distance',
   'tree-roots'
@@ -72,12 +73,14 @@ const w = (
   slope: number,
   water: number,
   house: number,
-  roots: number
+  roots: number,
+  facing: number
 ): Record<ScoreFactorId, number> => ({
   sun,
   'soil-drainage': drainage,
   'soil-depth': depth,
   slope,
+  facing,
   'water-distance': water,
   'house-distance': house,
   'tree-roots': roots
@@ -85,48 +88,52 @@ const w = (
 
 // Sizes and weights below are app-owned starting values and a rough guide.
 // They are not an extension recommendation.
+/** How much the way the ground faces counts for goals that want strong sun.
+ *  Small beside the sun hours themselves. */
+export const FACING_WEIGHT = 1;
+
 export const GOALS: Readonly<Record<PlantingGoal, GoalSpec>> = {
   'vegetable-garden': {
     defaultFootprint: { widthFt: 20, lengthFt: 30 },
     areaKind: 'garden',
     maxBoxM: GARDEN_BOX_MAX_M,
-    weights: w(5, 3, 1, 2, 2, 1, 2)
+    weights: w(5, 3, 1, 2, 2, 1, 2, FACING_WEIGHT)
   },
   'herb-garden': {
     defaultFootprint: { widthFt: 4, lengthFt: 8 },
     areaKind: 'garden',
     maxBoxM: GARDEN_BOX_MAX_M,
-    weights: w(5, 3, 1, 1, 2, 3, 2)
+    weights: w(5, 3, 1, 1, 2, 3, 2, FACING_WEIGHT)
   },
   'flower-garden': {
     defaultFootprint: { widthFt: 6, lengthFt: 12 },
     areaKind: 'garden',
     maxBoxM: GARDEN_BOX_MAX_M,
-    weights: w(4, 3, 1, 1, 2, 2, 2)
+    weights: w(4, 3, 1, 1, 2, 2, 2, FACING_WEIGHT)
   },
   'raised-beds': {
     defaultFootprint: { widthFt: 12, lengthFt: 16 },
     areaKind: 'garden',
     maxBoxM: GARDEN_BOX_MAX_M,
-    weights: w(5, 1, 0, 3, 2, 2, 1)
+    weights: w(5, 1, 0, 3, 2, 2, 1, FACING_WEIGHT)
   },
   'fruit-trees': {
     defaultFootprint: { widthFt: 40, lengthFt: 60 },
     areaKind: 'orchard',
     maxBoxM: FIELD_BOX_MAX_M,
-    weights: w(5, 4, 3, 1, 1, 0, 1)
+    weights: w(5, 4, 3, 1, 1, 0, 1, FACING_WEIGHT)
   },
   'berry-patch': {
     defaultFootprint: { widthFt: 10, lengthFt: 30 },
     areaKind: 'garden',
     maxBoxM: GARDEN_BOX_MAX_M,
-    weights: w(4, 4, 2, 1, 2, 1, 2)
+    weights: w(4, 4, 2, 1, 2, 1, 2, FACING_WEIGHT)
   },
   'row-crop-field': {
     defaultFootprint: { widthFt: 100, lengthFt: 200 },
     areaKind: 'field',
     maxBoxM: FIELD_BOX_MAX_M,
-    weights: w(3, 4, 2, 4, 1, 0, 1)
+    weights: w(3, 4, 2, 4, 1, 0, 1, 0)
   }
 };
 
@@ -165,6 +172,7 @@ export type FactorId =
   | 'soil-drainage'
   | 'soil-depth'
   | 'slope'
+  | 'facing'
   | 'water-distance'
   | 'house-distance'
   | 'overlap'
@@ -183,6 +191,8 @@ export interface Factor {
   key: string;
   params: Record<string, string | number>;
   provenance: FactorProvenance;
+  /** Where a `data` fact came from when it is not the soil survey. */
+  source?: 'elevation';
 }
 
 export type Confidence = 'high' | 'medium' | 'low';
@@ -235,4 +245,8 @@ export interface SunEstimate {
   /** True when a shading obstacle's height was an app default. */
   heightGuessed: boolean;
   provenance: 'fallback';
+  /** Only on sloping ground: how strongly the sun lands on the slope at the
+   *  two ends of the season, next to level ground in the same place
+   *  (1 = the same). */
+  relativeStrength?: number;
 }

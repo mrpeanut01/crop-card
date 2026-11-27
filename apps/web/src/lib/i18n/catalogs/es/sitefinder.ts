@@ -89,6 +89,8 @@ export const esSitefinder: Partial<Record<MessageKey, string>> = {
   'sitefinder.results.photoSource':
     'Foto aérea: USDA NAIP a través de USGS The National Map. Dominio público.',
 
+  'sitefinder.results.elevationSource': 'Elevación: USGS 3DEP. Dominio público.',
+
   'sitefinder.spot.title': 'Lugar {n}',
   'sitefinder.spot.soilTitle': 'Lo que dice el estudio de suelos aquí',
   'sitefinder.spot.soilSource': 'Estudio de suelos del USDA',
@@ -104,6 +106,7 @@ export const esSitefinder: Partial<Record<MessageKey, string>> = {
 
   'sitefinder.prov.survey': 'Estudio de suelos',
   'sitefinder.prov.map': 'Tu mapa',
+  'sitefinder.prov.elevation': 'Elevación',
   'sitefinder.prov.estimate': 'Cálculo aproximado',
   'sitefinder.label.best': 'La mejor opción',
   'sitefinder.label.good': 'Buena',
@@ -151,6 +154,19 @@ export const esSitefinder: Partial<Record<MessageKey, string>> = {
   'sitefinder.f.slope.moderate': 'El estudio de suelos marca una pendiente moderada aquí.',
   'sitefinder.f.slope.steep': 'El estudio de suelos marca una pendiente fuerte aquí.',
   'sitefinder.f.slope.very-steep': 'El estudio de suelos marca una pendiente muy fuerte aquí.',
+  'sitefinder.f.slope.here.flat': 'El terreno aquí es casi plano.',
+  'sitefinder.f.slope.here.gentle': 'El terreno aquí tiene una pendiente suave.',
+  'sitefinder.f.slope.here.moderate': 'El terreno aquí tiene una pendiente moderada.',
+  'sitefinder.f.slope.here.steep': 'El terreno aquí tiene una pendiente fuerte.',
+  'sitefinder.f.slope.here.very-steep': 'El terreno aquí tiene una pendiente muy fuerte.',
+  'sitefinder.f.terrain.coarse':
+    'Esto viene de datos de elevación poco detallados, así que no se ven los desniveles pequeños ni las terrazas.',
+  'sitefinder.f.facing.south':
+    'Baja hacia el {dir}, así que recibe sol más fuerte en primavera y otoño.',
+  'sitefinder.f.facing.north':
+    'Baja hacia el {dir}, así que el sol es más débil aquí en primavera y otoño.',
+  'sitefinder.f.facing.east': 'Baja hacia el {dir}, así que da al sol de la mañana.',
+  'sitefinder.f.facing.west': 'Baja hacia el {dir}, así que da al sol de la tarde.',
   'sitefinder.f.water.dist': 'A unos {dist} de tu agua ({name}).',
   'sitefinder.f.water.unknown': 'Marca tu llave de agua en el mapa para tomarla en cuenta.',
   'sitefinder.f.house.dist': 'A unos {dist} de tu casa.',
@@ -194,6 +210,12 @@ export const esSitefinder: Partial<Record<MessageKey, string>> = {
   'sitefinder.unchecked.title': 'Lo que no pude revisar',
   'sitefinder.unchecked.shade':
     'La sombra. No hay árboles ni edificios dibujados en tu mapa y no se leyó ninguna foto, así que el cálculo del sol supone cielo abierto.',
+  'sitefinder.unchecked.outside':
+    'La sombra de cerros o cosas altas que están fuera del recuadro de búsqueda.',
+  'sitefinder.unchecked.terrainUnavailable':
+    'La pendiente del terreno y hacia dónde da. No se pudo conectar con los datos de elevación, así que el cálculo del sol supone terreno plano. Eso es demasiado optimista en un terreno que baja hacia el norte.',
+  'sitefinder.unchecked.terrainNoData':
+    'La pendiente del terreno y hacia dónde da. No hay datos de elevación para este terreno, así que el cálculo del sol supone terreno plano. Eso es demasiado optimista en un terreno que baja hacia el norte.',
   'sitefinder.unchecked.water': 'El agua. No hay ninguna llave de agua marcada en tu mapa.',
   'sitefinder.unchecked.soilUnavailable':
     'El suelo. No se pudo conectar con el estudio de suelos del USDA. Inténtalo de nuevo más tarde.',

@@ -1,8 +1,10 @@
 /**
  * Estimated hours of direct sun at a point, from the sun's path and the
  * shadows of the obstacles around it. Pure and client-safe. This is a rough
- * guide (P-6): flat ground, simple shapes, one height per obstacle. It is
- * never shown as a measurement or as an extension recommendation.
+ * guide (P-6): simple shapes, one height per obstacle, and the ground as one
+ * flat plane that may be tilted (Phase 38E). Level or unknown ground gives
+ * exactly the level-ground estimate. It is never shown as a measurement or
+ * as an extension recommendation.
  */
 
 import { feetToMeters, shadowLengthMeters, solarPosition } from '$lib/calendar/solar';
@@ -19,6 +21,9 @@ import type { Obstacle, SunEstimate, SunSeason } from './types';
 /** Sun lower than this is not counted: it is weak and usually blocked by
  *  things far outside the search box. */
 export const MIN_SUN_ELEVATION_DEG = 10;
+/** On sloping ground the sun must also stand this far above the ground's
+ *  own plane to count: lower than that it only grazes the surface. */
+export const MIN_SURFACE_SUN_DEG = 3;
 export const SUN_STEP_HOURS = 0.5;
 /** Shadows longer than this are ignored. */
 export const MAX_SHADOW_M = 150;
@@ -124,7 +129,45 @@ export function shadeFraction(p: XY, s: SunSample, c: ShadeCaster, day: number):
   return c.deciduous && !inLeaf(c.deciduous, day) ? BARE_TREE_SHADE_FRACTION : 1;
 }
 
+/** Sloping ground as the sun math sees it: how steep, and the compass
+ *  bearing it faces (downhill). */
+export interface GroundTilt {
+  slopeDeg: number;
+  aspectDeg: number;
+}
+
+interface TiltVector {
+  /** Horizontal part of the ground's upward normal (x east, y north). */
+  nx: number;
+  ny: number;
+  nz: number;
+}
+
+function tiltVector(tilt: GroundTilt | null | undefined): TiltVector | null {
+  if (!tilt || !Number.isFinite(tilt.slopeDeg) || !Number.isFinite(tilt.aspectDeg)) return null;
+  if (!(tilt.slopeDeg > 0)) return null;
+  const beta = Math.min(tilt.slopeDeg, 89) * DEG;
+  const az = tilt.aspectDeg * DEG;
+  return {
+    nx: Math.sin(beta) * Math.sin(az),
+    ny: Math.sin(beta) * Math.cos(az),
+    nz: Math.cos(beta)
+  };
+}
+
+/** The sine of the sun's height above the tilted ground. */
+function incidence(s: SunSample, n: TiltVector): number {
+  const el = s.elevationDeg * DEG;
+  return Math.cos(el) * (s.dir[0] * n.nx + s.dir[1] * n.ny) + Math.sin(el) * n.nz;
+}
+
+const MIN_SURFACE_SIN = Math.sin(MIN_SURFACE_SUN_DEG * DEG);
+
 interface DayTotal {
+  /** Sun strength on the ground summed over the lit time, for the tilted
+   *  ground and for level ground in the same place. */
+  strength: number;
+  levelStrength: number;
   hours: number;
   open: number;
   morning: number;
@@ -136,9 +179,12 @@ interface DayTotal {
 function dayTotal(
   p: XY,
   day: { day: number; samples: SunSample[] },
-  casters: readonly ShadeCaster[]
+  casters: readonly ShadeCaster[],
+  tilt: TiltVector | null
 ): DayTotal {
   const t: DayTotal = {
+    strength: 0,
+    levelStrength: 0,
     hours: 0,
     open: 0,
     morning: 0,
@@ -157,6 +203,13 @@ function dayTotal(
       }
     }
     const lit = SUN_STEP_HOURS * (1 - worst);
+    if (tilt) {
+      const inc = incidence(s, tilt);
+      t.levelStrength += lit * Math.sin(s.elevationDeg * DEG);
+      // The sun is behind the slope or only grazing it.
+      if (!(inc > MIN_SURFACE_SIN)) continue;
+      t.strength += lit * inc;
+    }
     t.open += SUN_STEP_HOURS;
     t.hours += lit;
     if (s.morning) t.morning += lit;
@@ -174,10 +227,26 @@ function dayTotal(
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-/** The sun estimate for one point in the local frame. */
-export function estimateSun(p: XY, days: SunDays, casters: readonly ShadeCaster[]): SunEstimate {
-  const summer = days.summer.map((d) => dayTotal(p, d, casters));
-  const ends = days.ends.map((d) => dayTotal(p, d, casters));
+function relativeStrength(rows: readonly DayTotal[]): number {
+  const level = rows.reduce((sum, t) => sum + t.levelStrength, 0);
+  const tilted = rows.reduce((sum, t) => sum + t.strength, 0);
+  if (!(level > 0)) return 1;
+  return Math.round((tilted / level) * 100) / 100;
+}
+
+/** The sun estimate for one point in the local frame. With a `tilt` the
+ *  ground is a slope: sun that is behind it or only grazes it is not
+ *  counted, and `relativeStrength` says how strongly the spring and fall sun
+ *  lands on it next to level ground. */
+export function estimateSun(
+  p: XY,
+  days: SunDays,
+  casters: readonly ShadeCaster[],
+  tilt?: GroundTilt | null
+): SunEstimate {
+  const n = tiltVector(tilt);
+  const summer = days.summer.map((d) => dayTotal(p, d, casters, n));
+  const ends = days.ends.map((d) => dayTotal(p, d, casters, n));
   const avg = (rows: DayTotal[], pick: (t: DayTotal) => number) =>
     rows.length ? rows.reduce((sum, t) => sum + pick(t), 0) / rows.length : 0;
 
@@ -225,7 +294,8 @@ export function estimateSun(p: XY, days: SunDays, casters: readonly ShadeCaster[
     shadedHoursSummer: round1(shaded),
     mainShade: most >= SUN_STEP_HOURS ? mainShade : null,
     heightGuessed: [...summer, ...ends].some((t) => t.guessed),
-    provenance: 'fallback'
+    provenance: 'fallback',
+    ...(n ? { relativeStrength: relativeStrength(ends) } : {})
   };
 }
 

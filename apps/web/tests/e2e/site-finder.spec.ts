@@ -4,10 +4,12 @@ import { enableFixtureClaude } from './lib/fixtureClaude';
 import { provisionHelper } from './lib/freshFarm';
 import { createOnboardedFarm, originOf, signInNewUser } from './lib/newOwner';
 
-// The main preview server runs with E2E_SOIL_FIXTURE=1 and E2E_NAIP_FIXTURE=1,
-// so the soil survey and the aerial photo are recorded answers, and a farm
-// that saved the fixture key gets a canned Claude reading. Nothing here
-// reaches USDA, USGS or Anthropic.
+// The main preview server runs with E2E_SOIL_FIXTURE=1, E2E_NAIP_FIXTURE=1 and
+// E2E_TERRAIN_FIXTURE=1, so the soil survey and the aerial photo are recorded
+// answers, the ground is one even 12% slope that faces north, and a farm that
+// saved the fixture key gets a canned Claude reading. Nothing here reaches
+// USDA, USGS or Anthropic. The magic-link server has no fixtures: its soil
+// survey and elevation are out of reach.
 const PORT = Number(process.env.E2E_PORT ?? 5173);
 const MAGIC_BASE = `http://localhost:${Number(process.env.E2E_MAGIC_PORT ?? PORT + 1)}`;
 const SHOTS = process.env.SITE_FINDER_SHOTS;
@@ -78,9 +80,34 @@ test.describe('Find a spot', () => {
     await first.getByTestId('spot-soil').locator('summary').click();
     await expect(first.getByTestId('spot-soil')).toContainText('Tankerville');
 
+    // The lay of the land, from the elevation fixture: every spot is on a
+    // moderate slope that faces north.
+    for (const card of await cards.all()) {
+      const facing = card.locator('li[data-factor="facing"]');
+      await expect(facing).toContainText(
+        'Slopes down to the north, so the sun is weaker here in spring and fall.'
+      );
+      await expect(facing).toHaveAttribute('data-source', 'elevation');
+      await expect(facing.locator('[data-provenance="data"]')).toContainText('Elevation');
+      const slope = card.locator('li[data-factor="slope"]');
+      await expect(slope).toContainText('The ground here has a moderate slope.');
+      await expect(slope.locator('[data-provenance="data"]')).toContainText('Elevation');
+      // Soil survey facts keep their own chip.
+      await expect(
+        card.locator('li[data-factor="soil-drainage"] [data-provenance="data"]').first()
+      ).toContainText('Soil survey');
+    }
+
     const unchecked = page.getByTestId('site-finder-unchecked');
     await expect(unchecked).toContainText('Call 811 before you dig');
     await expect(unchecked).toContainText('No trees or buildings are drawn');
+    await expect(unchecked).toContainText(
+      'Shade from hills or tall things outside the search box.'
+    );
+    await expect(unchecked).not.toContainText('assumes level ground');
+    await expect(page.getByTestId('site-finder-elevation-source')).toHaveText(
+      'Elevation: USGS 3DEP. Public domain.'
+    );
     expect(await overflowPx(page)).toBeLessThanOrEqual(0);
 
     await cards.nth(2).getByTestId('spot-dismiss').click();
@@ -140,6 +167,10 @@ test.describe('Find a spot', () => {
       'Changes since the aerial photo was taken'
     );
     await expect(results).toContainText('USDA NAIP');
+    await expect(page.getByTestId('site-finder-elevation-source')).toBeVisible();
+    await expect(
+      page.getByTestId('spot-card').first().locator('li[data-factor="facing"]')
+    ).toContainText('Slopes down to the north');
 
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/site-finder-1280.png`, fullPage: true });
     await page.setViewportSize({ width: 375, height: 812 });
@@ -279,6 +310,17 @@ test.describe('Find a spot in Spanish', () => {
     const unchecked = page.getByTestId('site-finder-unchecked');
     await expect(unchecked).toContainText('Llama al 811 antes de cavar');
     await expect(unchecked).toContainText('No se pudo conectar con el estudio de suelos del USDA');
+    // No elevation on this server either: the page says the sun estimate
+    // assumes level ground, and no spot claims a facing direction.
+    await expect(unchecked).toContainText(
+      'La sombra de cerros o cosas altas que están fuera del recuadro de búsqueda.'
+    );
+    await expect(unchecked).toContainText(
+      'No se pudo conectar con los datos de elevación, así que el cálculo del sol supone terreno plano.'
+    );
+    await expect(unchecked).toContainText('un terreno que baja hacia el norte');
+    await expect(page.locator('li[data-factor="facing"]')).toHaveCount(0);
+    await expect(page.getByTestId('site-finder-elevation-source')).toHaveCount(0);
     await expect(page.locator('body')).not.toContainText('sitefinder.');
     expect(await overflowPx(page)).toBeLessThanOrEqual(0);
   });

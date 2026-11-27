@@ -4,6 +4,9 @@ import type { SoilLookup } from '$lib/soil/types';
 import { es } from '$lib/i18n/catalogs/es';
 import { en } from '$lib/i18n/catalogs/en';
 import {
+  FACING_FLOOR_STRENGTH,
+  FACING_GOOD_STRENGTH,
+  FACING_OK_STRENGTH,
   GOOD_SCORE,
   HOUSE_FAR_M,
   WATER_FAR_M,
@@ -13,6 +16,9 @@ import {
   depthScore,
   distanceValue,
   drainageScore,
+  facingScore,
+  facingValue,
+  facingVerdict,
   houseScore,
   slopeScore,
   sunScore,
@@ -31,7 +37,27 @@ import {
   spotLabelText
 } from './explain';
 import { survey } from './testSupport';
-import { GOALS, PLANTING_GOALS, SCORE_FACTOR_IDS, type Factor, type SunEstimate } from './types';
+import type { SpotTerrain } from './terrain';
+import {
+  FACING_WEIGHT,
+  GOALS,
+  PLANTING_GOALS,
+  SCORE_FACTOR_IDS,
+  type Factor,
+  type SunEstimate
+} from './types';
+
+function ground(patch: Partial<SpotTerrain> = {}): SpotTerrain {
+  return {
+    slopePct: 10,
+    slopeDeg: Math.atan(0.1) * (180 / Math.PI),
+    aspectDeg: 0,
+    provenance: 'data',
+    resolutionM: 1,
+    coarse: false,
+    ...patch
+  };
+}
 
 const ok = (patch = {}): SoilLookup => ({ status: 'ok', survey: survey(patch) });
 const dist = fc.double({ min: 0, max: 500, noNaN: true });
@@ -126,6 +152,102 @@ describe('soil factors', () => {
   });
 });
 
+describe('the lay of the land', () => {
+  it("the spot's own slope wins over the soil survey's and says where it came from", () => {
+    const fromSurvey = slopeScore(ok({ slopePct: 2 }));
+    expect(fromSurvey.factors[0]).toMatchObject({ key: 'slope.flat', provenance: 'data' });
+    expect(fromSurvey.factors[0].source).toBeUndefined();
+
+    const fromElevation = slopeScore(ok({ slopePct: 2 }), ground({ slopePct: 20 }));
+    expect(fromElevation.value).toBe(slopeScore(ok({ slopePct: 20 })).value);
+    expect(fromElevation.factors[0]).toMatchObject({
+      key: 'slope.here.steep',
+      provenance: 'data',
+      source: 'elevation',
+      verdict: 'poor'
+    });
+
+    const fromOwner = slopeScore(
+      ok({ slopePct: 20 }),
+      ground({ slopePct: 1, provenance: 'manual' })
+    );
+    expect(fromOwner.factors[0]).toMatchObject({ key: 'slope.here.flat', provenance: 'manual' });
+    expect(fromOwner.factors[0].source).toBeUndefined();
+    expect(slopeScore({ status: 'unavailable' }, ground()).value).not.toBeNull();
+    expect(slopeScore({ status: 'unavailable' }).value).toBeNull();
+  });
+
+  it('uses the same steepness bands for elevation data as for the survey', () => {
+    for (const slopePct of [0, 2.9, 3, 7.9, 8, 14.9, 15, 29.9, 30, 60]) {
+      expect(slopeScore({ status: 'no-data' }, ground({ slopePct })).value).toBe(
+        slopeScore(ok({ slopePct })).value
+      );
+    }
+  });
+
+  it('stronger sun on the slope never scores lower, with named bands', () => {
+    const r = fc.double({ min: 0, max: 1.6, noNaN: true });
+    fc.assert(
+      fc.property(r, r, (a, b) => {
+        expect(facingValue(Math.max(a, b))).toBeGreaterThanOrEqual(facingValue(Math.min(a, b)));
+      })
+    );
+    expect(facingValue(1)).toBe(1);
+    expect(facingValue(1.3)).toBe(1);
+    expect(facingValue(FACING_FLOOR_STRENGTH)).toBe(0);
+    expect(facingVerdict(FACING_GOOD_STRENGTH)).toBe('good');
+    expect(facingVerdict(FACING_GOOD_STRENGTH - 0.01)).toBe('ok');
+    expect(facingVerdict(FACING_OK_STRENGTH)).toBe('ok');
+    expect(facingVerdict(FACING_OK_STRENGTH - 0.01)).toBe('poor');
+  });
+
+  it('names the way the ground faces and tags it', () => {
+    const north = facingScore(ground({ aspectDeg: 350 }), { relativeStrength: 0.9 });
+    expect(north.factors[0]).toMatchObject({
+      id: 'facing',
+      key: 'facing.north',
+      params: { dir: 'n' },
+      verdict: 'ok',
+      provenance: 'data',
+      source: 'elevation'
+    });
+    expect(
+      facingScore(ground({ aspectDeg: 135 }), { relativeStrength: 1.07 }).factors[0]
+    ).toMatchObject({ key: 'facing.south', params: { dir: 'se' }, verdict: 'good' });
+    expect(facingScore(ground({ aspectDeg: 90 }), { relativeStrength: 0.99 }).factors[0].key).toBe(
+      'facing.east'
+    );
+    expect(facingScore(ground({ aspectDeg: 270 }), { relativeStrength: 0.99 }).factors[0].key).toBe(
+      'facing.west'
+    );
+    expect(
+      facingScore(ground({ aspectDeg: 0, slopePct: 40 }), { relativeStrength: 0.64 }).factors[0]
+        .verdict
+    ).toBe('poor');
+    const owner = facingScore(ground({ aspectDeg: 180, provenance: 'manual' }), {
+      relativeStrength: 1.1
+    });
+    expect(owner.factors[0].provenance).toBe('manual');
+    expect(owner.factors[0].source).toBeUndefined();
+  });
+
+  it('level ground counts in full and adds no second line', () => {
+    expect(facingScore(ground({ slopePct: 1, aspectDeg: null }), {})).toEqual({
+      id: 'facing',
+      value: 1,
+      factors: []
+    });
+  });
+
+  it('carries a small weight for the goals that want strong sun and none for a row-crop field', () => {
+    for (const goal of PLANTING_GOALS) {
+      const weights = GOALS[goal].weights;
+      expect(weights.facing).toBe(goal === 'row-crop-field' ? 0 : FACING_WEIGHT);
+      if (weights.facing > 0) expect(weights.facing).toBeLessThan(weights.sun);
+    }
+  });
+});
+
 describe('sun and trees', () => {
   it('more sun never scores lower', () => {
     const h = fc.double({ min: 0, max: 15, noNaN: true });
@@ -175,8 +297,8 @@ describe('combine', () => {
     fc.assert(
       fc.property(
         fc.constantFrom(...PLANTING_GOALS),
-        fc.array(v, { minLength: 7, maxLength: 7 }),
-        fc.integer({ min: 0, max: 6 }),
+        fc.array(v, { minLength: SCORE_FACTOR_IDS.length, maxLength: SCORE_FACTOR_IDS.length }),
+        fc.integer({ min: 0, max: SCORE_FACTOR_IDS.length - 1 }),
         v,
         (goal, values, i, bump) => {
           const base = SCORE_FACTOR_IDS.map((id, n) => ({ id, value: values[n], factors: [] }));
@@ -289,7 +411,40 @@ describe('explain', () => {
       key: 'ai.note',
       params: { text: 'Open lawn.' },
       provenance: 'ai'
-    }
+    },
+    {
+      id: 'slope',
+      verdict: 'good',
+      key: 'slope.here.flat',
+      params: { coarse: 0 },
+      provenance: 'data',
+      source: 'elevation'
+    },
+    {
+      id: 'slope',
+      verdict: 'ok',
+      key: 'slope.here.moderate',
+      params: { coarse: 1 },
+      provenance: 'data',
+      source: 'elevation'
+    },
+    {
+      id: 'facing',
+      verdict: 'ok',
+      key: 'facing.north',
+      params: { dir: 'n' },
+      provenance: 'data',
+      source: 'elevation'
+    },
+    {
+      id: 'facing',
+      verdict: 'good',
+      key: 'facing.south',
+      params: { dir: 'sw' },
+      provenance: 'manual'
+    },
+    { id: 'facing', verdict: 'good', key: 'facing.east', params: { dir: 'e' }, provenance: 'data' },
+    { id: 'facing', verdict: 'good', key: 'facing.west', params: { dir: 'w' }, provenance: 'data' }
   ];
 
   it('writes plain English sentences', () => {
@@ -303,6 +458,18 @@ describe('explain', () => {
     expect(text[6]).toBe('About 40 ft from your water (Tap).');
     expect(text[7]).toBe('Mark your water tap on the map to include it.');
     expect(text[11]).toBe('Claude saw: Open lawn.');
+    expect(text[12]).toBe('The ground here is nearly level.');
+    expect(text[13]).toBe(
+      'The ground here has a moderate slope. This is from coarse elevation data, so small bumps and terraces do not show.'
+    );
+    expect(text[14]).toBe(
+      'Slopes down to the north, so the sun is weaker here in spring and fall.'
+    );
+    expect(text[15]).toBe(
+      'Slopes down to the southwest, so it gets stronger sun in spring and fall.'
+    );
+    expect(text[16]).toBe('Slopes down to the east, so it faces the morning sun.');
+    expect(text[17]).toBe('Slopes down to the west, so it faces the afternoon sun.');
     expect(factorText(factors[6], { units: 'metric' })).toBe('About 12 m from your water (Tap).');
     expect(distanceText(30.48, us)).toBe('100 ft');
   });
@@ -331,6 +498,12 @@ describe('explain', () => {
     expect(factorText(factors[1], { ...us, locale: 'es' })).toBe(
       'Un árbol al sur da sombra a este lugar por la tarde.'
     );
+    expect(factorText(factors[14], { ...us, locale: 'es' })).toBe(
+      'Baja hacia el norte, así que el sol es más débil aquí en primavera y otoño.'
+    );
+    expect(factorText(factors[13], { ...us, locale: 'es' })).toBe(
+      'El terreno aquí tiene una pendiente moderada. Esto viene de datos de elevación poco detallados, así que no se ven los desniveles pequeños ni las terrazas.'
+    );
   });
 
   it('every factor key the engine can emit has a sentence in both languages', () => {
@@ -354,6 +527,16 @@ describe('explain', () => {
       'slope.moderate',
       'slope.steep',
       'slope.very-steep',
+      'slope.here.flat',
+      'slope.here.gentle',
+      'slope.here.moderate',
+      'slope.here.steep',
+      'slope.here.very-steep',
+      'terrain.coarse',
+      'facing.north',
+      'facing.south',
+      'facing.east',
+      'facing.west',
       'water.dist',
       'water.unknown',
       'house.dist',
@@ -395,5 +578,7 @@ describe('explain', () => {
     const lines = factorLines({ factors }, us);
     expect(lines).toHaveLength(factors.length);
     expect(lines[0]).toMatchObject({ id: 'sun', verdict: 'good', provenance: 'fallback' });
+    expect(lines[0].source).toBeUndefined();
+    expect(lines[12]).toMatchObject({ id: 'slope', provenance: 'data', source: 'elevation' });
   });
 });

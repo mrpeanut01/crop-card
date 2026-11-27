@@ -88,6 +88,8 @@ export const enSitefinder = {
   'sitefinder.results.photoSource':
     'Aerial photo: USDA NAIP through USGS The National Map. Public domain.',
 
+  'sitefinder.results.elevationSource': 'Elevation: USGS 3DEP. Public domain.',
+
   'sitefinder.spot.title': 'Spot {n}',
   'sitefinder.spot.soilTitle': 'What the soil survey says here',
   'sitefinder.spot.soilSource': 'USDA soil survey',
@@ -103,6 +105,7 @@ export const enSitefinder = {
 
   'sitefinder.prov.survey': 'Soil survey',
   'sitefinder.prov.map': 'Your map',
+  'sitefinder.prov.elevation': 'Elevation',
   'sitefinder.prov.estimate': 'Rough estimate',
   'sitefinder.label.best': 'Best match',
   'sitefinder.label.good': 'Good',
@@ -150,6 +153,19 @@ export const enSitefinder = {
   'sitefinder.f.slope.moderate': 'The soil survey maps a moderate slope here.',
   'sitefinder.f.slope.steep': 'The soil survey maps a steep slope here.',
   'sitefinder.f.slope.very-steep': 'The soil survey maps a very steep slope here.',
+  'sitefinder.f.slope.here.flat': 'The ground here is nearly level.',
+  'sitefinder.f.slope.here.gentle': 'The ground here has a gentle slope.',
+  'sitefinder.f.slope.here.moderate': 'The ground here has a moderate slope.',
+  'sitefinder.f.slope.here.steep': 'The ground here has a steep slope.',
+  'sitefinder.f.slope.here.very-steep': 'The ground here has a very steep slope.',
+  'sitefinder.f.terrain.coarse':
+    'This is from coarse elevation data, so small bumps and terraces do not show.',
+  'sitefinder.f.facing.south':
+    'Slopes down to the {dir}, so it gets stronger sun in spring and fall.',
+  'sitefinder.f.facing.north':
+    'Slopes down to the {dir}, so the sun is weaker here in spring and fall.',
+  'sitefinder.f.facing.east': 'Slopes down to the {dir}, so it faces the morning sun.',
+  'sitefinder.f.facing.west': 'Slopes down to the {dir}, so it faces the afternoon sun.',
   'sitefinder.f.water.dist': 'About {dist} from your water ({name}).',
   'sitefinder.f.water.unknown': 'Mark your water tap on the map to include it.',
   'sitefinder.f.house.dist': 'About {dist} from your house.',
@@ -192,6 +208,11 @@ export const enSitefinder = {
   'sitefinder.unchecked.title': 'What I could not check',
   'sitefinder.unchecked.shade':
     'Shade. No trees or buildings are drawn on your map and no photo was read, so the sun estimate assumes open sky.',
+  'sitefinder.unchecked.outside': 'Shade from hills or tall things outside the search box.',
+  'sitefinder.unchecked.terrainUnavailable':
+    'The slope of the ground and the way it faces. Elevation data could not be reached, so the sun estimate assumes level ground. That is too generous on ground that slopes down to the north.',
+  'sitefinder.unchecked.terrainNoData':
+    'The slope of the ground and the way it faces. There is no elevation data for this ground, so the sun estimate assumes level ground. That is too generous on ground that slopes down to the north.',
   'sitefinder.unchecked.water': 'Water. No water tap is marked on your map.',
   'sitefinder.unchecked.soilUnavailable':
     'Soil. The USDA soil survey could not be reached. Try again later.',

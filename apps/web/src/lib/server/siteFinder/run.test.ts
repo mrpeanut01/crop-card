@@ -31,6 +31,7 @@ vi.mock('$lib/server/anthropicClient', () => ({
 }));
 
 import { db } from '$lib/db/client';
+import { createBlock, updateBlock } from '$lib/db/blocks';
 import { createField } from '$lib/db/fields';
 import { createMapFeature } from '$lib/db/mapFeatures';
 import { aiCallLog, helperAssignments, owners, users } from '$lib/db/schema';
@@ -50,11 +51,14 @@ import { resetSoilRateLimit } from '$lib/server/soil/ssurgo.server';
 import type { SoilLookup } from '$lib/soil/types';
 import type { SiteFinderRequest } from '$lib/siteFinder/apiSchemas';
 import { boxAround, localFrame, toLonLat, type XY } from '$lib/siteFinder/geometry';
-import { survey } from '$lib/siteFinder/testSupport';
+import { factorText } from '$lib/siteFinder/explain';
+import type { TerrainLookup } from '$lib/siteFinder/terrain';
+import { planeGrid, survey } from '$lib/siteFinder/testSupport';
 import type { LonLat } from '$lib/siteFinder/types';
 import { buildSiteReadPrompt } from './aiSiteRead';
 import type { NaipFetcher } from './naip.server';
 import { MAX_SOIL_LOOKUPS, loadSiteData, runSiteFinder, sunSeasonFromSettings } from './run';
+import { TERRAIN_PER_MINUTE, resetTerrainRateLimit } from './terrain.server';
 
 const DAY = 86_400_000;
 const CENTER: LonLat = [-77.69888, 39.07881];
@@ -132,6 +136,7 @@ function run(
   opts: {
     naip?: ReturnType<typeof naip>;
     soilAt?: (lat: number, lon: number) => Promise<SoilLookup>;
+    terrainFor?: (box: SiteFinderRequest['box']) => Promise<TerrainLookup>;
     locale?: string;
   } = {}
 ) {
@@ -142,6 +147,9 @@ function run(
       locale: opts.locale,
       naipFetcher: (opts.naip ?? naip()).fetcher,
       soilAt: opts.soilAt ?? (async () => okSoil),
+      // No elevation unless a test asks for it: the ground is level, as it
+      // was before slopes were read.
+      terrainFor: opts.terrainFor ?? (async () => ({ status: 'unavailable' })),
       sprayTerms: ['roundup']
     })
   );
@@ -169,6 +177,7 @@ beforeEach(() => {
   resetGuardLedger();
   resetFreePoolCache();
   resetSoilRateLimit();
+  resetTerrainRateLimit();
 });
 afterEach(() => {
   if (savedKey === undefined) delete process.env.ANTHROPIC_API_KEY;
@@ -345,6 +354,194 @@ describe('the deterministic finder', () => {
       expect(season.startDay).toBe(121);
       expect(season.endDay).toBe(274);
     });
+  });
+});
+
+describe('the lay of the land (Phase 38E)', () => {
+  const northSlope = (slopePct = 12, resolutionM: number | null = 1) => {
+    const calls: Array<SiteFinderRequest['box']> = [];
+    return {
+      calls,
+      terrainFor: async (box: SiteFinderRequest['box']): Promise<TerrainLookup> => {
+        calls.push(box);
+        return { status: 'ok', grid: planeGrid(box, slopePct, 0, { resolutionM }) };
+      }
+    };
+  };
+  const factor = (c: { factors: Array<{ id: string }> }, id: string) =>
+    c.factors.find((x) => x.id === id) as
+      { key: string; provenance: string; source?: string; verdict: string } | undefined;
+
+  it('reads the slope and the way each spot faces from the elevation grid, once per run', async () => {
+    const f = farm();
+    const terrain = northSlope();
+    const out = await run(f, { useAerial: false }, terrain);
+    expect(terrain.calls).toHaveLength(1);
+    expect(terrain.calls[0]).toEqual(req().box);
+    expect(out.terrain).toEqual({ status: 'ok', source: 'USGS 3DEP', resolutionM: 1 });
+    expect(out.candidates).toHaveLength(3);
+    for (const c of out.candidates) {
+      expect(factor(c, 'facing')).toMatchObject({
+        key: 'facing.north',
+        provenance: 'data',
+        source: 'elevation'
+      });
+      expect(factor(c, 'slope')).toMatchObject({
+        key: 'slope.here.moderate',
+        provenance: 'data',
+        source: 'elevation'
+      });
+    }
+    const line = out.candidates[0].factors.find((x) => x.id === 'facing')!;
+    expect(factorText(line, { units: 'us' })).toBe(
+      'Slopes down to the north, so the sun is weaker here in spring and fall.'
+    );
+    expect(factorText(line, { units: 'us', locale: 'es' })).toBe(
+      'Baja hacia el norte, así que el sol es más débil aquí en primavera y otoño.'
+    );
+    // Not an AI call: nothing is logged and no budget is touched.
+    expect(claude.calls).toHaveLength(0);
+    expect(logRows(f.ownerId)).toHaveLength(0);
+  });
+
+  it('runs with no key and for a farm with AI turned off, as every demo farm is', async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    const noKey = await run(farm(), {}, northSlope());
+    expect(noKey.fallbackReason).toBe('no-key');
+    expect(noKey.terrain.status).toBe('ok');
+    expect(factor(noKey.candidates[0], 'facing')?.key).toBe('facing.north');
+
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-unit-test';
+    const off = farm();
+    runWithTenant(off.ownerId, () => setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, '0'));
+    const out = await run(off, {}, northSlope());
+    expect(out.fallbackReason).toBe('over-cap');
+    expect(out.terrain.status).toBe('ok');
+    expect(factor(out.candidates[0], 'facing')?.key).toBe('facing.north');
+  });
+
+  it('unreachable or missing elevation gives exactly the level-ground result and says so', async () => {
+    const f = farm();
+    const level = await run(f, { useAerial: false });
+    expect(level.terrain).toEqual({ status: 'unavailable', source: 'USGS 3DEP' });
+    for (const c of level.candidates) {
+      expect(factor(c, 'facing')).toBeUndefined();
+      // The soil survey's slope for the map unit is still used for steepness.
+      expect(factor(c, 'slope')).toMatchObject({ key: 'slope.flat', provenance: 'data' });
+      expect(factor(c, 'slope')?.source).toBeUndefined();
+    }
+    const noData = await run(
+      f,
+      { useAerial: false },
+      { terrainFor: async () => ({ status: 'no-data' }) }
+    );
+    expect(noData.terrain).toEqual({ status: 'no-data', source: 'USGS 3DEP' });
+    expect(noData.candidates).toEqual(level.candidates);
+    const thrown = await run(
+      f,
+      { useAerial: false },
+      {
+        terrainFor: async () => {
+          throw new Error('boom');
+        }
+      }
+    );
+    expect(thrown.terrain.status).toBe('unavailable');
+    expect(thrown.candidates).toEqual(level.candidates);
+  });
+
+  it('a level grid changes only where the slope line comes from', async () => {
+    const f = farm();
+    const level = await run(f, { useAerial: false });
+    const flat = await run(f, { useAerial: false }, northSlope(0.5));
+    expect(flat.candidates.map((c) => c.id)).toEqual(level.candidates.map((c) => c.id));
+    for (const [i, c] of flat.candidates.entries()) {
+      expect(factor(c, 'facing')).toBeUndefined();
+      expect(factor(c, 'slope')).toMatchObject({ key: 'slope.here.flat', source: 'elevation' });
+      expect(factor(c, 'sun')).toEqual(factor(level.candidates[i], 'sun'));
+    }
+  });
+
+  it('says when the elevation data is coarser than the spot', async () => {
+    const out = await run(farm(), { useAerial: false }, northSlope(12, 30));
+    expect(out.terrain.resolutionM).toBe(30);
+    const line = out.candidates[0].factors.find((x) => x.id === 'slope')!;
+    expect(factorText(line, { units: 'us' })).toMatch(/coarse elevation data/);
+  });
+
+  it("the owner's slope for a drawn block wins over the elevation grid, tagged manual", async () => {
+    const f = farm();
+    const areaId = runWithTenant(f.ownerId, () => {
+      const area = createField({
+        name: 'Old garden',
+        kind: 'garden',
+        geometryGeojson: polygon([0, 0], 40)
+      });
+      const block = createBlock({
+        name: 'Bed',
+        fieldId: area.id,
+        geometryGeojson: polygon([0, 0], 40)
+      });
+      updateBlock(block.id, { slopePercent: 6, slopeAspectDeg: 180 });
+      const other = createBlock({ name: 'Half', geometryGeojson: polygon([200, 200], 5) });
+      updateBlock(other.id, { slopePercent: 9 });
+      return area.id;
+    });
+    runWithTenant(f.ownerId, () => {
+      const slopes = loadSiteData().ownerSlopes;
+      expect(slopes).toHaveLength(1);
+      expect(slopes[0]).toMatchObject({ slopePct: 6, aspectDeg: 180 });
+    });
+    const out = await run(f, { useAerial: false, allowOverlapAreaIds: [areaId] }, northSlope(20));
+    expect(out.candidates.length).toBeGreaterThan(0);
+    for (const c of out.candidates) {
+      expect(factor(c, 'slope')).toMatchObject({ key: 'slope.here.gentle', provenance: 'manual' });
+      expect(factor(c, 'slope')?.source).toBeUndefined();
+      expect(factor(c, 'facing')).toMatchObject({ key: 'facing.south', provenance: 'manual' });
+    }
+    // With the elevation service out of reach the owner's values still count.
+    const offline = await run(f, { useAerial: false, allowOverlapAreaIds: [areaId] });
+    expect(offline.terrain.status).toBe('unavailable');
+    expect(factor(offline.candidates[0], 'facing')).toMatchObject({ provenance: 'manual' });
+  });
+
+  it("never reads another Owner's block slopes", async () => {
+    const mine = farm();
+    const theirs = farm();
+    runWithTenant(theirs.ownerId, () => {
+      const block = createBlock({ name: 'Their bed', geometryGeojson: polygon([0, 0], 28) });
+      updateBlock(block.id, { slopePercent: 30, slopeAspectDeg: 0 });
+    });
+    runWithTenant(mine.ownerId, () => expect(loadSiteData().ownerSlopes).toEqual([]));
+    const out = await run(mine, { useAerial: false });
+    expect(out.candidates.every((c) => !factor(c, 'facing'))).toBe(true);
+  });
+
+  it('a user past the per-minute limit gets level ground, not an error', async () => {
+    const f = farm();
+    const terrain = northSlope();
+    for (let i = 0; i < TERRAIN_PER_MINUTE; i++) {
+      resetSoilRateLimit();
+      expect((await run(f, { useAerial: false }, terrain)).terrain.status).toBe('ok');
+    }
+    resetSoilRateLimit();
+    const over = await run(f, { useAerial: false }, terrain);
+    expect(over.terrain.status).toBe('unavailable');
+    expect(over.candidates).toHaveLength(3);
+    expect(terrain.calls).toHaveLength(TERRAIN_PER_MINUTE);
+  });
+
+  it("keeps the terrain when Claude's reading is used, and tells Claude nothing about it", async () => {
+    const f = farm();
+    const out = await run(f, {}, northSlope());
+    expect(out.provenance).toBe('ai');
+    expect(out.terrain.status).toBe('ok');
+    expect(out.candidates.every((c) => factor(c, 'facing')?.key === 'facing.north')).toBe(true);
+    const sent = JSON.stringify(claude.calls);
+    expect(sent).not.toMatch(/elevation|3DEP|aspect|facing|percent|12%/i);
+    // The prompt is the one Phase 38D shipped: its only mention of slope is
+    // the instruction not to guess it.
+    expect(sent.match(/slope/gi)).toHaveLength(1);
   });
 });
 

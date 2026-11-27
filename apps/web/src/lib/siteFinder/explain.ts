@@ -45,15 +45,20 @@ export function factorText(f: Factor, opts: ExplainOptions): string {
     });
     return f.params.guessed ? `${line} ${t(locale, key('f.shade.guessed'))}` : line;
   }
+  if (f.id === 'facing') {
+    return t(locale, key(`f.${f.key}`), { dir: t(locale, key(`dir.${f.params.dir}`)) });
+  }
   const params: Record<string, string | number> = { ...f.params };
   if (typeof f.params.m === 'number') params.dist = distanceText(f.params.m, opts);
-  return t(locale, key(`f.${f.key}`), params);
+  const line = t(locale, key(`f.${f.key}`), params);
+  return f.params.coarse ? `${line} ${t(locale, key('f.terrain.coarse'))}` : line;
 }
 
 export interface FactorLine {
   id: Factor['id'];
   verdict: FactorVerdict;
   provenance: FactorProvenance;
+  source?: Factor['source'];
   text: string;
 }
 
@@ -63,6 +68,7 @@ export function factorLines(c: Pick<Candidate, 'factors'>, opts: ExplainOptions)
       id: f.id,
       verdict: f.verdict,
       provenance: f.provenance,
+      ...(f.source ? { source: f.source } : {}),
       text: factorText(f, opts)
     }))
     .filter((l) => l.text.trim().length > 0);

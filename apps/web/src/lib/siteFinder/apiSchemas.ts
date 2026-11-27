@@ -17,6 +17,7 @@ import {
   type SunSeason
 } from './types';
 import type { BlockReason } from './candidates';
+import { TERRAIN_SOURCE_NAME, type TerrainLookup } from './terrain';
 
 export const MAX_ALLOW_OVERLAP_IDS = 50;
 /** Slack on the box size cap, for rounding on the way from the map. */
@@ -104,4 +105,15 @@ export interface SiteFinderResponse {
   hasHouse: boolean;
   tooBig: boolean;
   imagery: { source: typeof NAIP_SOURCE_NAME; used: boolean };
+  /** Whether the ground's slope and facing direction could be read from
+   *  USGS 3DEP elevation for this box. Not `ok` means spots without the
+   *  owner's own block values were treated as level ground. */
+  terrain: SiteFinderTerrain;
+}
+
+export interface SiteFinderTerrain {
+  status: TerrainLookup['status'];
+  source: typeof TERRAIN_SOURCE_NAME;
+  /** Ground size of one cell of the elevation data, in metres. */
+  resolutionM?: number;
 }

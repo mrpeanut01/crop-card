@@ -33,6 +33,7 @@ import {
   combine,
   depthScore,
   drainageScore,
+  facingScore,
   houseScore,
   slopeScore,
   sunScore,
@@ -41,6 +42,7 @@ import {
   type FactorScore
 } from './score';
 import { estimateSun, shadeCasters, sunDays, type ShadeCaster, type SunDays } from './sun';
+import { spotTerrain, tiltOf, type TerrainInput } from './terrain';
 import {
   GOALS,
   type AreaShape,
@@ -105,6 +107,10 @@ export interface FinderInput {
   /** True when trees and buildings were checked: at least one is drawn, or
    *  Claude read the aerial photo. */
   shadeChecked: boolean;
+  /** The lay of the land, when it is known: the elevation grid over the box
+   *  and the owner's own slope values for drawn blocks. Without it every
+   *  spot is treated as level ground. */
+  terrain?: TerrainInput | null;
 }
 
 export type BlockReason = 'outside-box' | 'outside-boundary' | 'area' | 'obstacle';
@@ -213,7 +219,8 @@ function blockReason(ctx: Ctx, r: Rect): BlockReason | null {
 function scoreRect(ctx: Ctx, id: string, r: Rect, soil: SoilLookup): Candidate {
   const { input } = ctx;
   const c: XY = [(r.minX + r.maxX) / 2, (r.minY + r.maxY) / 2];
-  const sun = estimateSun(c, ctx.days, ctx.casters);
+  const terrain = spotTerrain(input.terrain, ctx.frame, r);
+  const sun = estimateSun(c, ctx.days, ctx.casters, tiltOf(terrain));
 
   let water: { m: number; name: string } | null = null;
   for (const w of ctx.water) {
@@ -235,7 +242,8 @@ function scoreRect(ctx: Ctx, id: string, r: Rect, soil: SoilLookup): Candidate {
     sunScore(sun),
     drainageScore(soil),
     depthScore(soil),
-    slopeScore(soil),
+    slopeScore(soil, terrain),
+    ...(terrain ? [facingScore(terrain, sun)] : []),
     waterScore(water),
     houseScore(house),
     treeScore(tree, input.shadeChecked)

@@ -1659,7 +1659,8 @@ export const aiCallLog = tenantScoped(
           'planting-window',
           'garden-fill',
           'photo-help',
-          'garden-brief'
+          'garden-brief',
+          'site-finder'
         ]
       }).notNull(),
       model: text('model').notNull(),

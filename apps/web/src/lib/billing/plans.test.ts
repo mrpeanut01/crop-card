@@ -69,6 +69,7 @@ describe('plan definitions', () => {
     ['garden-fill', 3, 10, 20],
     ['photo-help', 3, 10, 20],
     ['garden-brief', 8, 20, 40],
+    ['site-finder', 1, 5, 10],
     ['inputs', 2, 10, 20],
     ['shortNames', 2, 5, 10],
     ['scan-barcode', 10, 40, 60],

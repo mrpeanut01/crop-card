@@ -87,6 +87,12 @@ export const enTips = {
     'This calendar shows when to start seeds indoors, set plants out and sow outside. It works from the frost dates of this farm, the usual last freezing night of spring and first one of fall.',
   'tips.calendar.action': 'Open Plan',
 
+  'tips.site_finder.title': 'Pick a place before you dig',
+  'tips.site_finder.body':
+    'Most food plants want plenty of sun, ground that drains after rain, and water close by. Say what you want to plant, move the box over the ground to search, and CropCard suggests places to try. It is a rough guide, so walk the ground too.',
+  'tips.site_finder.bodyOther':
+    'This page suggests places on the farm for a new garden or field, from sun, shade, water and the soil survey. The owner runs it and adds the Area.',
+
   'tips.onboard.question': 'Is this your first time growing?',
   'tips.onboard.yes': 'Yes, show me tips as I go',
   'tips.onboard.no': 'No, I have done this before',

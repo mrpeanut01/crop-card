@@ -30,7 +30,7 @@ export const esStart: Partial<Record<MessageKey, string>> = {
   'start.garden.s2.body':
     'Observa dónde da el sol a lo largo del día y elige un lugar que reciba bastante. Quédate cerca de una llave de agua, porque vas a cargar agua seguido. Evita el terreno donde quedan charcos después de la lluvia.',
   'start.garden.s2.app':
-    'Dibuja el lugar en un mapa o descríbelo por su tamaño y luego agrega tus camas de cultivo. Puedes marcar dónde está el agua.',
+    'Dibuja el lugar en un mapa o descríbelo por su tamaño y luego agrega tus camas de cultivo. Puedes marcar dónde está el agua. ¿No sabes dónde? Buscar un lugar te sugiere sitios según el sol, la sombra, tu agua y el estudio de suelos.',
   'start.garden.s3.title': 'Conoce tus fechas de helada',
   'start.garden.s3.body':
     'Casi toda la siembra se organiza alrededor de dos fechas: la última helada de primavera y la primera helada de otoño. El tiempo entre las dos es tu temporada principal de cultivo. Tu oficina de extensión puede decirte qué es lo normal donde vives.',

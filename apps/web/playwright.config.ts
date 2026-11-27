@@ -62,6 +62,8 @@ export default defineConfig({
       // WEATHER_FEEDS=off keeps live NWS/NCEI weather out of every spec.
       // The E2E_SOIL_FIXTURE flag answers soil survey lookups with one recorded
       // USDA response (lib/server/soil/ssurgo.server.ts).
+      // The E2E_NAIP_FIXTURE flag answers Find a spot's aerial photo request with one
+      // recorded USDA NAIP photo (lib/server/siteFinder/naip.server.ts).
       // ENABLE_DEV_ROUTES=1 unlocks /_dev/primitives for the visual baseline
       // spec (production never sets this flag — the dev page stays gated).
       command:
@@ -71,7 +73,7 @@ export default defineConfig({
         `touch ${BUILD_MARKER} && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
-        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret WEATHER_FEEDS=off ENABLE_DEV_ROUTES=1 E2E_DEGREE_DAY_FIXTURE=1 E2E_SOIL_FIXTURE=1 E2E_CLAUDE_FIXTURE=1 PLUGINS_DIR=${PLUGINS_DIR} ${STRIPE_E2E_ENV} ${VAULT_ENV} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
+        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret WEATHER_FEEDS=off ENABLE_DEV_ROUTES=1 E2E_DEGREE_DAY_FIXTURE=1 E2E_SOIL_FIXTURE=1 E2E_NAIP_FIXTURE=1 E2E_CLAUDE_FIXTURE=1 PLUGINS_DIR=${PLUGINS_DIR} ${STRIPE_E2E_ENV} ${VAULT_ENV} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
       port: PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000

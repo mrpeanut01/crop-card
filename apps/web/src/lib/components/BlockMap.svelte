@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { SATELLITE_TILE_ATTRIBUTION, SATELLITE_TILE_URL } from '$lib/farm/mapTiles';
   import { escapeHtml } from '$lib/html';
   /**
    * Interactive map for /plan?tab=layout.
@@ -566,15 +567,11 @@
     }
     markMapReady();
 
-    const satellite = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {
-        maxZoom: MAP_MAX_ZOOM,
-        maxNativeZoom: TILE_NATIVE_MAX_ZOOM,
-        attribution:
-          'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
-      }
-    );
+    const satellite = L.tileLayer(SATELLITE_TILE_URL, {
+      maxZoom: MAP_MAX_ZOOM,
+      maxNativeZoom: TILE_NATIVE_MAX_ZOOM,
+      attribution: SATELLITE_TILE_ATTRIBUTION
+    });
     const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: MAP_MAX_ZOOM,
       maxNativeZoom: TILE_NATIVE_MAX_ZOOM,

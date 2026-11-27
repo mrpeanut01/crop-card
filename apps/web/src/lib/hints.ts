@@ -27,6 +27,7 @@ export const HINT_KEYS = [
   'tip_fertility',
   'tip_animals',
   'tip_calendar',
+  'tip_site_finder',
   'tip_start_read'
 ] as const;
 

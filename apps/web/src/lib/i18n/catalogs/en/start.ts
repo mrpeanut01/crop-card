@@ -29,7 +29,7 @@ export const enStart = {
   'start.garden.s2.body':
     'Watch where the sun falls through the day and choose a place that gets plenty of it. Stay close to a water tap, because you will carry water often. Avoid ground where puddles stay after rain.',
   'start.garden.s2.app':
-    'Draw the spot on a map or sketch it by size, then add your beds. You can mark where the water is.',
+    'Draw the spot on a map or sketch it by size, then add your beds. You can mark where the water is. Not sure where? Find a spot suggests places from the sun, the shade, your water and the soil survey.',
   'start.garden.s3.title': 'Learn your frost dates',
   'start.garden.s3.body':
     'Most planting is timed around two dates: the last frost in spring and the first frost in fall. The time between them is your main growing season. Your extension office can tell you what is usual where you live.',

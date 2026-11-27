@@ -4,6 +4,7 @@
   import type { CircleMarker, Map as LMap } from 'leaflet';
   import { createT } from '$lib/i18n';
   import { page } from '$app/state';
+  import { SATELLITE_TILE_ATTRIBUTION, SATELLITE_TILE_URL } from '$lib/farm/mapTiles';
 
   let {
     lat,
@@ -50,15 +51,11 @@
         lat != null ? 15 : 11
       );
       L.control.zoom({ zoomInTitle: tr('map.zoomIn'), zoomOutTitle: tr('map.zoomOut') }).addTo(map);
-      L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        {
-          maxZoom: 21,
-          maxNativeZoom: 19,
-          attribution:
-            'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
-        }
-      ).addTo(map);
+      L.tileLayer(SATELLITE_TILE_URL, {
+        maxZoom: 21,
+        maxNativeZoom: 19,
+        attribution: SATELLITE_TILE_ATTRIBUTION
+      }).addTo(map);
       if (lat != null && lon != null) placePin(lat, lon, false);
       map.on('click', (e) => {
         const la = Number(e.latlng.lat.toFixed(5));

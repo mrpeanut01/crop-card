@@ -58,6 +58,7 @@ import {
 import { bedLayoutRequestSchema } from '../src/lib/plan/bedLayoutApi.ts';
 import { keepInOneBedRequestSchema } from '../src/lib/plan/keepInOneBed.ts';
 import { gardenBriefChatSchema, gardenBriefPutSchema } from '../src/lib/garden/brief/schema.ts';
+import { siteFinderRequestSchema } from '../src/lib/siteFinder/apiSchemas.ts';
 import {
   journalEntrySchema,
   photoHelpSchema,
@@ -2646,6 +2647,53 @@ const paths = {
         }),
         400: { description: 'Invalid body, or an id that is not a herb (`UNKNOWN_PLUGIN`).' },
         403: { description: 'Not the owner.' }
+      }
+    }
+  },
+
+  '/api/site-finder': {
+    post: {
+      summary: 'Find places for a new plot inside a search box',
+      description:
+        "Owner only. Lays plot-sized rectangles over the search box, drops the ones on buildings, water, pavement and Areas that are not open to planting, and returns up to three that do not overlap, ranked by an app-owned rough guide: estimated sun from the sun's path and the shadows of drawn shade sources, the USDA NRCS soil survey at the spot, distance to a marked water point and to the house, and trees close by. With `useAerial: true` the server also fetches one USDA NAIP aerial photo (USGS The National Map, public domain) and asks Claude to read it through `aiTry()` and the `site-finder` allowance; the answer is checked on the server (positions inside the photo, capped counts, text through the spray-advice guard) and one bad item drops the whole reading. What Claude saw is tagged `ai` and joins the ranking as obstacles; the order is always the engine's. With no key, over a limit, no photo, a slow call or an unusable reading the same result comes back tagged `fallback` with `fallbackReason` and a banner `message`. Saves nothing: the owner creates the Area through `POST /api/fields` and adds a tree through `POST /api/shade-sources`. An Area id in `allowOverlapAreaIds` that is not the active Owner's is 400 `FOREIGN_REF`. Not gated by the season close-out.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(siteFinderRequestSchema),
+      responses: {
+        200: jsonResponse('The places to try.', {
+          type: 'object',
+          required: [
+            'provenance',
+            'candidates',
+            'obstacles',
+            'seen',
+            'aiSpots',
+            'soil',
+            'season',
+            'imagery'
+          ],
+          properties: {
+            provenance: { type: 'string', enum: ['ai', 'fallback'] },
+            fallbackReason: { type: ['string', 'null'] },
+            message: { type: ['string', 'null'] },
+            aiLimit: { type: ['object', 'null'] },
+            candidates: { type: 'array', maxItems: 3, items: { type: 'object' } },
+            obstacles: { type: 'array', items: { type: 'object' } },
+            seen: { type: 'array', items: { type: 'object' } },
+            aiSpots: { type: 'array', items: { type: 'object' } },
+            aiCaveats: { type: ['string', 'null'] },
+            soil: { type: 'object' },
+            soilBySpot: { type: 'object' },
+            season: { type: 'object' },
+            shadeChecked: { type: 'boolean' },
+            hasWaterPoint: { type: 'boolean' },
+            hasHouse: { type: 'boolean' },
+            tooBig: { type: 'boolean' },
+            imagery: { type: 'object' }
+          }
+        }),
+        400: { description: 'Invalid body, or an Area id of another farm (`FOREIGN_REF`).' },
+        403: { description: 'Not the owner.' },
+        429: { description: 'Too many searches in a minute.' }
       }
     }
   },

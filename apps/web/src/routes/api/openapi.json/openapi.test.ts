@@ -69,6 +69,7 @@ import { _requestSchema as organicPack } from '../organic/pack.zip/+server';
 import { _requestSchema as treatmentLogCsv } from '../animals/treatments.csv/+server';
 import { _requestSchema as treatmentLogPdf } from '../animals/treatments.pdf/+server';
 import { _requestSchema as soilSurveyQuery } from '../soil/survey/+server';
+import { _requestSchema as siteFinder } from '../site-finder/+server';
 import { soilAreaResponseSchema, soilLookupSchema } from '$lib/soil/apiSchemas';
 
 interface Operation {
@@ -136,6 +137,7 @@ describe('openapi.json', () => {
     ['/api/plantings/{id}/journal', 'post', journalEntry],
     ['/api/journal/record', 'post', journalRecord],
     ['/api/plantings/{id}/photo-help', 'post', photoHelp],
+    ['/api/site-finder', 'post', siteFinder],
     ['/api/animals', 'post', animalCreate],
     ['/api/animals/{id}', 'patch', animalPatch],
     ['/api/animals/move', 'post', animalMove],

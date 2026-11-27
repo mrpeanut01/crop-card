@@ -100,6 +100,12 @@ export interface SafeFetchResponse {
   cancel(): void;
 }
 
+/** What `safeFetch` itself returns: the same response with a byte read for
+ *  an image. The body is read once, as text or as bytes. */
+export interface SafeFetchBinaryResponse extends SafeFetchResponse {
+  readBytes(): Promise<{ bytes: Uint8Array; truncated: boolean }>;
+}
+
 const DEFAULT_TIMEOUT_MS = 12_000;
 const DEFAULT_MAX_BYTES = 2_000_000;
 const DEFAULT_MAX_REDIRECTS = 5;
@@ -380,7 +386,7 @@ function abortable<T>(p: Promise<T>, signal: AbortSignal): Promise<T> {
 export async function safeFetch(
   rawUrl: string,
   opts: SafeFetchOptions = {}
-): Promise<SafeFetchResponse> {
+): Promise<SafeFetchBinaryResponse> {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
   const maxRedirects = opts.maxRedirects ?? DEFAULT_MAX_REDIRECTS;
@@ -431,6 +437,28 @@ export async function safeFetch(
 
       const finalUrl = url.toString();
       let consumed = false;
+      /** Feeds the decoded body to `onChunk` up to `maxBytes`, then stops
+       *  reading. Returns whether the body was cut short. */
+      const readBody = async (onChunk: (chunk: Uint8Array) => void): Promise<boolean> => {
+        if (consumed) throw new Error('body already read');
+        consumed = true;
+        const it = res.body[Symbol.asyncIterator]();
+        let bytes = 0;
+        try {
+          for (;;) {
+            const { value, done: end } = await abortable(it.next(), signal);
+            if (end) return false;
+            const room = maxBytes - bytes;
+            const chunk = value.byteLength > room ? value.subarray(0, room) : value;
+            bytes += chunk.byteLength;
+            onChunk(chunk);
+            if (bytes >= maxBytes) return true;
+          }
+        } finally {
+          res.destroy();
+          done();
+        }
+      };
       return {
         url: finalUrl,
         status: res.status,
@@ -440,32 +468,28 @@ export async function safeFetch(
           done();
         },
         readText: async () => {
-          if (consumed) throw new Error('body already read');
-          consumed = true;
           const decoder = new TextDecoder('utf-8');
-          const it = res.body[Symbol.asyncIterator]();
           let text = '';
-          let bytes = 0;
-          let truncated = false;
-          try {
-            for (;;) {
-              const { value, done: end } = await abortable(it.next(), signal);
-              if (end) break;
-              const room = maxBytes - bytes;
-              const chunk = value.byteLength > room ? value.subarray(0, room) : value;
-              bytes += chunk.byteLength;
-              text += decoder.decode(chunk, { stream: true });
-              if (bytes >= maxBytes) {
-                truncated = true;
-                break;
-              }
-            }
-            text += decoder.decode();
-            return { text, truncated };
-          } finally {
-            res.destroy();
-            done();
+          const truncated = await readBody((chunk) => {
+            text += decoder.decode(chunk, { stream: true });
+          });
+          text += decoder.decode();
+          return { text, truncated };
+        },
+        readBytes: async () => {
+          const parts: Uint8Array[] = [];
+          let size = 0;
+          const truncated = await readBody((chunk) => {
+            parts.push(chunk.slice());
+            size += chunk.byteLength;
+          });
+          const bytes = new Uint8Array(size);
+          let at = 0;
+          for (const part of parts) {
+            bytes.set(part, at);
+            at += part.byteLength;
           }
+          return { bytes, truncated };
         }
       };
     }

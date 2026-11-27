@@ -25,6 +25,9 @@
     <p class="kicker">{tr('plan.farm.kicker', { year: data.seasonYear })}</p>
     <h1 class="serif">{setUp ? tr('plan.farm.titleSetUp') : tr('plan.farm.title')}</h1>
     <p class="lede">{setUp ? tr('plan.farm.ledeSetUp') : tr('plan.farm.lede')}</p>
+    <a class="find-spot" href="/plan/site-finder" data-testid="farm-find-spot"
+      >{tr('sitefinder.entry.farmLink')}</a
+    >
     {#if !setUp}
       <ol class="steps" aria-label={tr('plan.farm.progress')}>
         {#each steps as s, i (s.label)}
@@ -192,5 +195,12 @@
   .continue.disabled {
     opacity: 0.45;
     cursor: not-allowed;
+  }
+  .find-spot {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--color-forest);
+    font-weight: 600;
   }
 </style>

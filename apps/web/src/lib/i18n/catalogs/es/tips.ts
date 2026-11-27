@@ -87,6 +87,12 @@ export const esTips: Partial<Record<MessageKey, string>> = {
     'Este calendario muestra cuándo empezar las semillas bajo techo, cuándo sacar las plantas y cuándo sembrar afuera. Se basa en las fechas de helada de esta granja: la última noche de helada habitual de la primavera y la primera del otoño.',
   'tips.calendar.action': 'Abrir Plan',
 
+  'tips.site_finder.title': 'Elige un lugar antes de cavar',
+  'tips.site_finder.body':
+    'Casi todas las plantas de comer quieren bastante sol, un terreno que drene después de la lluvia y agua cerca. Di qué quieres sembrar, mueve el recuadro sobre el terreno donde buscar y CropCard te sugiere lugares para probar. Es una guía aproximada, así que también camina el terreno.',
+  'tips.site_finder.bodyOther':
+    'Esta página sugiere lugares de la granja para un huerto o un campo nuevo, según el sol, la sombra, el agua y el estudio de suelos. El propietario la usa y agrega el Área.',
+
   'tips.onboard.question': '¿Es la primera vez que cultivas?',
   'tips.onboard.yes': 'Sí, muéstrame consejos sobre la marcha',
   'tips.onboard.no': 'No, ya lo he hecho antes',

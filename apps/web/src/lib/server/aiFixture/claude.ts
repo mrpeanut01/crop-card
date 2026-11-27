@@ -32,6 +32,7 @@ import {
 } from './types';
 import { gardenBriefFixture } from './gardenBrief';
 import { photoMarksFixture } from './photoMarks';
+import { siteFinderFixture } from './siteFinder';
 
 export { E2E_FIXTURE_API_KEY, FIXTURE_REFINE_INVALID, FIXTURE_REFINE_VALID };
 
@@ -267,7 +268,8 @@ export const allocationFixture: FixtureEntry = {
 export const FIXTURE_ENTRIES: readonly FixtureEntry[] = [
   allocationFixture,
   gardenBriefFixture,
-  photoMarksFixture
+  photoMarksFixture,
+  siteFinderFixture
 ];
 
 /** The first matching entry's answer, or FixtureNoAnswerError. */

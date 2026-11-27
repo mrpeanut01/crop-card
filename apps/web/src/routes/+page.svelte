@@ -4,7 +4,7 @@
   import type { SignInChannel } from '$lib/identity';
   import AlphaBanner from '$lib/components/feedback/AlphaBanner.svelte';
   import type { ActionData, PageData } from './$types';
-  import { createT } from '$lib/i18n';
+  import { createT, type MessageKey } from '$lib/i18n';
   import { page } from '$app/state';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -53,6 +53,14 @@
     };
   }
 
+  const GROUPS = [
+    { id: 'garden', items: [1, 2, 3, 4] },
+    { id: 'fields', items: [1, 2, 3, 4, 5] },
+    { id: 'animals', items: [1, 2, 3, 4] },
+    { id: 'records', items: [1, 2, 3, 4] }
+  ] as const;
+  const DAILY = [1, 2, 3, 4] as const;
+
   const demoRoles = $derived([
     { role: 'owner', label: tr('entry.land.demoOwner'), sub: tr('entry.land.demoOwnerSub') },
     { role: 'helper', label: tr('entry.land.demoHelper'), sub: tr('entry.land.demoHelperSub') },
@@ -74,7 +82,7 @@
   <meta name="description" content={tr('entry.land.description')} />
 </svelte:head>
 
-<section class="landing" aria-labelledby="hero-title">
+<main class="landing" aria-labelledby="hero-title">
   <section class="hero">
     <div class="hero-inner">
       <a href="/" class="brand" aria-label={tr('entry.land.homeAria')}>
@@ -101,25 +109,11 @@
         {tr('entry.land.lede')}
       </p>
 
-      <ul class="bullets" aria-label={tr('entry.land.bulletsAria')}>
-        <li>
-          <span class="bullet-mark" aria-hidden="true">✓</span>
-          {tr('entry.land.b1')}
-        </li>
-        <li>
-          <span class="bullet-mark" aria-hidden="true">✓</span>
-          {tr('entry.land.b2')}
-        </li>
-        <li>
-          <span class="bullet-mark" aria-hidden="true">✓</span>
-          {tr('entry.land.b3')}
-        </li>
-        <li>
-          <span class="bullet-mark" aria-hidden="true">✓</span>
-          {tr('entry.land.b4')}
-        </li>
-      </ul>
+      <p class="who">{tr('entry.land.who')}</p>
 
+      <p class="hero-links">
+        <a href="/start" data-testid="start-link">{tr('entry.land.startLink')}</a>
+      </p>
       <p class="pricing-link">
         {tr('entry.land.freePre')} <a href="/pricing">{tr('entry.land.freeLink')}</a>
       </p>
@@ -399,7 +393,7 @@
     </div>
 
     {#if data.demoEnabled && !data.inviteToken}
-      <div class="tour-card" data-testid="demo-card">
+      <div class="tour-card" id="demo-farm" data-testid="demo-card">
         {#if data.demoExpired}
           <p class="tour-note" role="status">{tr('entry.demo.expired')}</p>
         {/if}
@@ -416,14 +410,51 @@
         </form>
       </div>
     {/if}
-
-    <footer class="auth-footer">
-      <small>
-        {tr('entry.land.footer')}
-      </small>
-    </footer>
   </section>
-</section>
+
+  <section class="features" aria-labelledby="do-title">
+    <div class="features-inner">
+      <h2 id="do-title">{tr('entry.land.do.title')}</h2>
+      <p class="features-lede">{tr('entry.land.do.lede')}</p>
+
+      <div class="groups">
+        {#each GROUPS as g (g.id)}
+          <section class="group" aria-labelledby="do-{g.id}" data-testid="do-{g.id}">
+            <h3 id="do-{g.id}">{tr(`entry.land.do.${g.id}.title`)}</h3>
+            <ul>
+              {#each g.items as n (n)}
+                <li>{tr(`entry.land.do.${g.id}.${n}` as MessageKey)}</li>
+              {/each}
+            </ul>
+          </section>
+        {/each}
+      </div>
+
+      <section class="daily" aria-labelledby="do-daily">
+        <h3 id="do-daily">{tr('entry.land.do.daily.title')}</h3>
+        <ul>
+          {#each DAILY as n (n)}
+            <li>{tr(`entry.land.do.daily.${n}`)}</li>
+          {/each}
+        </ul>
+      </section>
+
+      <section class="newbie" aria-labelledby="new-title" data-testid="new-to-growing">
+        <div>
+          <h2 id="new-title">{tr('entry.land.new.title')}</h2>
+          <p>{tr('entry.land.new.body')}</p>
+        </div>
+        <a class="newbie-btn" href="/start">{tr('entry.land.new.cta')}</a>
+      </section>
+
+      <footer class="auth-footer">
+        <small>
+          {tr('entry.land.footer')}
+        </small>
+      </footer>
+    </div>
+  </section>
+</main>
 
 <style>
   .tour-card {
@@ -475,7 +506,8 @@
     opacity: 0.7;
     cursor: progress;
   }
-  /* Layout — split-screen on desktop, stacked on mobile (form first). */
+  /* Layout: hero and sign-in side by side on desktop, stacked on phones
+     (short hero, then the form), with the feature sections full width below. */
   .landing {
     min-height: 100vh;
     display: grid;
@@ -494,15 +526,13 @@
     background:
       radial-gradient(1200px 600px at 0% 0%, #e7f1e6 0%, transparent 60%),
       linear-gradient(180deg, #f5f7f4 0%, #eef3eb 100%);
-    padding: 2rem 1.5rem;
+    padding: 1.25rem 1.5rem 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    order: 2; /* mobile: hero below form */
   }
   @media (min-width: 960px) {
     .hero {
-      order: 1;
       padding: 4rem 3rem;
     }
   }
@@ -516,7 +546,7 @@
     gap: 0.5rem;
     text-decoration: none;
     color: #1f5e3a;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
     min-height: auto; /* override the global 48px */
   }
   .brand-text {
@@ -525,8 +555,8 @@
     letter-spacing: -0.01em;
   }
   h1 {
-    margin: 0 0 1rem;
-    font-size: clamp(2rem, 4.2vw, 2.75rem);
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.75rem, 4.2vw, 2.75rem);
     line-height: 1.1;
     letter-spacing: -0.02em;
     color: #14422a;
@@ -539,29 +569,33 @@
     -webkit-text-fill-color: transparent;
   }
   .lede {
-    margin: 0 0 1.5rem;
+    margin: 0 0 0.75rem;
     color: #3d4742;
     font-size: 1.05rem;
     line-height: 1.55;
     max-width: 32rem;
   }
-  .bullets {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 1.5rem;
-    display: grid;
-    gap: 0.6rem;
-  }
-  .bullets li {
-    display: grid;
-    grid-template-columns: 1.5rem 1fr;
-    gap: 0.5rem;
+  .who {
+    margin: 0;
     color: #3d4742;
-    line-height: 1.5;
+    line-height: 1.55;
+    display: none;
   }
-  .bullet-mark {
+  .hero-links {
+    margin: 0.5rem 0 0;
+  }
+  .hero-links a,
+  .pricing-link a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
     color: #1f5e3a;
-    font-weight: 700;
+    font-weight: 600;
+  }
+  .pricing-link {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #3d4742;
   }
   .hero-art {
     width: 100%;
@@ -569,7 +603,19 @@
     margin-top: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    display: block;
+    display: none;
+  }
+  @media (min-width: 960px) {
+    .brand {
+      margin-bottom: 1.5rem;
+    }
+    .who,
+    .hero-art {
+      display: block;
+    }
+    .hero-links {
+      margin-top: 1rem;
+    }
   }
 
   /* ── Auth (right column) ───────────────────────────────────────── */
@@ -579,13 +625,13 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    order: 1; /* mobile: form first */
+    border-top: 1px solid #e6ebe5;
     border-bottom: 1px solid #e6ebe5;
   }
   @media (min-width: 960px) {
     .auth {
-      order: 2;
       padding: 4rem 3rem;
+      border-top: none;
       border-bottom: none;
       border-left: 1px solid #e6ebe5;
     }
@@ -796,16 +842,128 @@
     font-size: 0.8rem;
   }
 
-  .pricing-link {
-    margin: 0.75rem 0 0;
+  /* ── What you can do (full width) ──────────────────────────────── */
+  .features {
+    grid-column: 1 / -1;
+    padding: 2.5rem 1.5rem 3rem;
+    background: #f5f7f4;
+  }
+  .features-inner {
+    max-width: 68rem;
+    margin: 0 auto;
+  }
+  .features h2 {
+    font-size: 1.6rem;
+  }
+  .features-lede {
+    margin: 0 0 1.5rem;
+    color: #3d4742;
+  }
+  .groups {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  @media (min-width: 640px) {
+    .groups {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1100px) {
+    .groups {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .group {
+    min-width: 0;
+    background: white;
+    border: 1px solid #dfe6dd;
+    border-radius: 0.875rem;
+    padding: 1.25rem;
+  }
+  .features h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+    color: #14422a;
+  }
+  .group ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .group li {
+    position: relative;
+    padding-left: 1.25rem;
+    color: #3d4742;
+    line-height: 1.5;
+  }
+  .group li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #4a8b54;
+  }
+  .daily {
+    margin-top: 1.5rem;
+  }
+  .daily ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .daily li {
+    padding: 0.5rem 0.875rem;
+    border-radius: 999px;
+    background: #e7f1e6;
+    border: 1px solid #c4dcb6;
+    color: #1d3a24;
     font-size: 0.95rem;
   }
-  .pricing-link a {
+  .newbie {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-radius: 0.875rem;
+    background: #fff7e0;
+    border: 1px solid #ead9a4;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .newbie > div {
+    flex: 1 1 18rem;
+    min-width: 0;
+  }
+  .newbie h2 {
+    font-size: 1.35rem;
+    margin: 0 0 0.25rem;
+  }
+  .newbie p {
+    margin: 0;
+    color: #4a4330;
+    line-height: 1.5;
+  }
+  .newbie-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     min-height: 48px;
-    color: #1f5e3a;
+    padding: 0 1.25rem;
+    border-radius: 0.5rem;
+    background: #1f5e3a;
+    color: white;
     font-weight: 600;
+    text-decoration: none;
   }
   .auth-footer {
     margin-top: 2rem;

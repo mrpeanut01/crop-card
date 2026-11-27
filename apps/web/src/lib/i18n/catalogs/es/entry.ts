@@ -80,16 +80,59 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
     'El propietario de la granja canceló esta invitación. Pídele que envíe una nueva si aún necesitas acceso.',
   'entry.invite.reason.revoked.title': 'Esta invitación fue revocada',
   'entry.invite.title': 'Aceptar invitación · CropCard',
+  'entry.land.title': 'CropCard: planea, cultiva y lleva registros de jardines y granjas',
+  'entry.land.description':
+    'Una app para jardines, campos y animales. Planea qué sembrar, ve qué hay que hacer hoy y lleva tus registros. Funciona sin conexión, en inglés y en español. Empezar es gratis.',
+  'entry.land.h1a': 'Planéalo, cultívalo,',
+  'entry.land.h1b': 'anótalo.',
+  'entry.land.lede':
+    'CropCard es una app para quienes cultivan. Te ayuda a planear qué sembrar, te muestra qué hay que hacer hoy y guarda tus registros en un solo lugar.',
+  'entry.land.who':
+    'Úsala para unas camas elevadas o macetas de hierbas, un huerto para vender, campos de granos y heno, o una granja con animales. No necesitas experiencia para empezar.',
+  'entry.land.startLink': '¿Empiezas a cultivar? Lee cómo empezar',
+  'entry.land.freePre':
+    'Los controles de seguridad, los registros y las exportaciones son gratis en todos los planes.',
+  'entry.land.footer':
+    'CropCard sigue funcionando sin señal. Lo que registras sin conexión se guarda en tu dispositivo y se envía cuando vuelves a tener conexión.',
+  'entry.land.do.title': 'Lo que puedes hacer',
+  'entry.land.do.lede': 'Usa las partes que necesites y deja el resto.',
+  'entry.land.do.garden.title': 'Para tu jardín',
+  'entry.land.do.garden.1': 'Dibuja tus camas de cultivo y coloca cada cultivo en ellas.',
+  'entry.land.do.garden.2':
+    'Responde unas pocas preguntas y recibe una lista corta de hierbas para cultivar.',
+  'entry.land.do.garden.3':
+    'Recibe un calendario de siembra armado con tus propias fechas de helada.',
+  'entry.land.do.garden.4': 'Ve cuándo una cama puede necesitar agua, según la lluvia reciente.',
+  'entry.land.do.fields.title': 'Para tus campos',
+  'entry.land.do.fields.1': 'Planea qué cultivo va en cada campo, paso a paso.',
+  'entry.land.do.fields.2':
+    'Revisa una aspersión antes de mezclar: la cantidad para tu tanque y cuánto esperar antes de volver a entrar o de cosechar.',
+  'entry.land.do.fields.3': 'Calibra tu aspersora, para saber cuánto aplica en realidad.',
+  'entry.land.do.fields.4': 'Anota lo que ves al recorrer un campo y registra cada cosecha.',
+  'entry.land.do.fields.5':
+    'Lleva la cuenta de la semilla, el fertilizante y los productos de aspersión que tienes.',
+  'entry.land.do.animals.title': 'Para los animales',
+  'entry.land.do.animals.1':
+    'Lleva una lista de tus animales, bandadas y mascotas, y de dónde vive cada uno.',
+  'entry.land.do.animals.2': 'Registra tratamientos, huevos y leche.',
+  'entry.land.do.animals.3':
+    'Ve una retención de huevos, leche o carne hasta que pase el tiempo de espera después de un tratamiento.',
+  'entry.land.do.animals.4': 'Recibe recordatorios de vacunas y otros cuidados regulares.',
+  'entry.land.do.records.title': 'Para registros e inspecciones',
+  'entry.land.do.records.1': 'Cada aspersión, cosecha y tratamiento se guarda con su fecha.',
+  'entry.land.do.records.2': 'Exporta tus registros en CSV o PDF cuando un inspector los pida.',
+  'entry.land.do.records.3': 'Arma un paquete de registros para tu certificador orgánico.',
+  'entry.land.do.records.4': 'Invita ayudantes a registrar el trabajo mientras tú sigues a cargo.',
+  'entry.land.do.daily.title': 'Todos los días',
+  'entry.land.do.daily.1': 'Las tareas de hoy en tarjetas',
+  'entry.land.do.daily.2': 'Tarjetas para imprimir para el establo o la camioneta',
+  'entry.land.do.daily.3': 'Funciona sin señal en el campo',
+  'entry.land.do.daily.4': 'Inglés y español',
+  'entry.land.new.title': '¿Empiezas a cultivar?',
+  'entry.land.new.body':
+    'Lee una guía corta para empezar un jardín o un campo pequeño, paso a paso. No necesitas una cuenta para leerla.',
+  'entry.land.new.cta': 'Lee cómo empezar',
   'entry.land.artAria': 'Un campo estilizado con hileras sembradas, un sol y un establo',
-  'entry.land.b1':
-    'Controles de seguridad en cada aspersión que no te dejan aplicar con un tanque contaminado',
-  'entry.land.b2':
-    'Asistente de calibración de 1/128 de acre: el ayudante lo envía y el propietario lo aprueba',
-  'entry.land.b3':
-    'App que funciona sin conexión: registra aspersiones en el campo y sincroniza al volver a la camioneta',
-  'entry.land.b4':
-    'Exportaciones en CSV y PDF listas para inspectores de costos compartidos y reportes del USDA',
-  'entry.land.bulletsAria': 'Lo que hace CropCard',
   'entry.land.checkEmail': 'Revisa tu correo.',
   'entry.land.checkTexts': 'Revisa tus mensajes.',
   'entry.land.checking': 'Verificando…',
@@ -106,24 +149,15 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'entry.land.demoInspectorSub': 'Solo lectura',
   'entry.land.demoOwner': 'Propietario',
   'entry.land.demoOwnerSub': 'Acceso total',
-  'entry.land.description':
-    'El sistema de registros de granja que funciona sin conexión: planificación de aspersiones, calibración, calendario de siembra y registro de cosecha.',
   'entry.land.email': 'Correo electrónico',
   'entry.land.emailMe': 'Envíame un enlace por correo →',
-  'entry.land.footer':
-    'CropCard funciona sin conexión: tus registros viven primero en tu dispositivo y después se sincronizan con la nube.',
   'entry.land.freeLink': 'Ver planes y precios',
-  'entry.land.freePre': 'Gratis para siempre para registros, seguridad y exportaciones.',
-  'entry.land.h1a': 'La tarjeta de campo,',
-  'entry.land.h1b': 'modernizada.',
   'entry.land.hintEmail':
     'Escribe tu correo y te enviaremos un enlace para iniciar sesión. ¿Eres nuevo? Configuraremos tu granja en el siguiente paso.',
   'entry.land.hintPhone':
     'Inicia sesión con un mensaje de texto. ¿Eres nuevo? Configuraremos tu granja en el siguiente paso.',
   'entry.land.homeAria': 'Inicio de CropCard',
   'entry.land.invited': 'Te invitaron a una granja. Inicia sesión para aceptar.',
-  'entry.land.lede':
-    'Planea aspersiones, registra cosechas, calibra equipo. Funciona sin conexión, es cómodo de usar con guantes y cumple con la regla de retención de 2 años. Hecho para productores de parcelas pequeñas que anotan en el tablero de la camioneta.',
   'entry.land.mobile': 'Número de celular',
   'entry.land.newCode': 'Enviar un código nuevo',
   'entry.land.newEmail': 'Enviar otro correo',
@@ -139,7 +173,6 @@ export const esEntry: Partial<Record<MessageKey, string>> = {
   'entry.land.signInBtn': 'Iniciar sesión →',
   'entry.land.signingIn': 'Iniciando sesión…',
   'entry.land.textMe': 'Envíame un código por mensaje →',
-  'entry.land.title': 'CropCard · Planea, asperja y cosecha en una sola tarjeta',
   'entry.land.useEmail': 'Usar correo electrónico',
   'entry.land.usePhone': 'Usar un número de teléfono',
   'entry.layout.anotherFarm': 'otra granja',

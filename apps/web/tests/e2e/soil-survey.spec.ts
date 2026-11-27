@@ -188,7 +188,7 @@ test.describe('soil survey', () => {
     page.on('request', (r) => {
       if (r.url().includes('/api/soil/')) lookups.push(r.url());
     });
-    await page.goto(`/plan?area=${ids.drawnAreaId}`);
+    await page.goto(`/plan?field=${ids.drawnAreaId}`);
     await page.waitForLoadState('networkidle');
     // An empty season opens the planning wizard on its own.
     const wizard = page.locator('.aw-modal');

@@ -621,7 +621,7 @@
   /* ── Auth (right column) ───────────────────────────────────────── */
   .auth {
     background: white;
-    padding: 2rem 1.5rem;
+    padding: 1rem 1.5rem 2rem;
     display: flex;
     flex-direction: column;
     justify-content: center;

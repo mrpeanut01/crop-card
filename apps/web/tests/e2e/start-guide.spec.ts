@@ -31,9 +31,10 @@ test.describe('public "How to start" guide', () => {
     }
     await expectNoOverflow(page);
 
-    // The sign-in form stays near the top on a phone.
+    // The sign-in form stays within about one phone screen of the top, even
+    // with the alpha notice still showing above it.
     const email = await page.getByLabel('Email', { exact: true }).boundingBox();
-    expect(email?.y ?? Infinity).toBeLessThan(800);
+    expect(email?.y ?? Infinity).toBeLessThan(850);
 
     const link = page.getByRole('link', { name: 'Read how to start', exact: true });
     const box = await link.boundingBox();

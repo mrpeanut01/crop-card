@@ -119,6 +119,7 @@ const ANONYMOUS_PATHS = new Set([
   '/api/openapi.json', // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
   '/api/billing/stripe-webhook', // Stripe POSTs without a session; the signature is the auth.
   '/pricing', // Public plan comparison; static content, no tenant data.
+  '/start', // Public beginner guide; static content, no tenant data.
   '/demo', // Starts a throwaway demo farm; rate limited in lib/server/demo/lifecycle.ts.
   '/api/email/pingram-webhook', // Pingram POSTs delivery events; the signature is the auth.
   '/api/email/unsubscribe', // RFC 8058 one-click from the mail client; the signed token is the auth.

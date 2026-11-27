@@ -135,7 +135,9 @@ test.describe('demo farm from the sign-in page', () => {
     page.once('dialog', (d) => d.accept());
     const phase = page.locator('[data-testid^="demo-ff-phase-"]').first();
     const when = (await phase.locator('.ff-when').textContent())!.trim();
+    const dateBefore = (await page.getByTestId('demo-date').textContent())!;
     await phase.click();
+    await expect(page.getByTestId('demo-date')).not.toHaveText(dateBefore, { timeout: 15_000 });
     await page.waitForURL('**/today');
     await expect(page.getByTestId('demo-date')).toContainText(when.split(' ')[0]);
     for (const path of ['/plan', '/records', '/harvest', '/animals']) {

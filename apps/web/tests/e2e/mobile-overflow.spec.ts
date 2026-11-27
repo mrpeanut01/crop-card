@@ -23,7 +23,8 @@ const ROUTES = [
   '/settings/ai',
   '/settings/farm',
   '/forage',
-  '/pricing'
+  '/pricing',
+  '/start'
 ];
 
 test.use({ viewport: { width: 375, height: 800 } });
